@@ -1,0 +1,12 @@
+.search-site-shell--login { background: #fff; }
+.search-page--login { min-height: 832px; padding: 250px 0 27px; background: #fff; }
+.search-page--login .search-catalog { margin-top: 0; }
+.search-page--login .search-sidebar h2 { margin-bottom: 10px; }
+
+@media (max-width: 900px) {
+  .search-page--login { min-height: 100vh; padding-top: 156px; padding-bottom: 36px; }
+}
+
+@media (max-width: 650px) {
+  .search-page--login { padding-top: 142px; padding-bottom: 28px; }
+}
