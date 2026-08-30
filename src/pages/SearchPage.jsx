@@ -3,12 +3,39 @@ import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
 import '../styles/search.css'
 
-const categories = [
-  { key: 'player-id', label: 'Player ID Top-Up', icon: searchAssets.categoryPlayerId },
-  { key: 'login', label: 'Top-Up with Login', icon: searchAssets.categoryLogin },
-  { key: 'items', label: 'In-Game Items', icon: searchAssets.categoryItems },
-  { key: 'accounts', label: 'Game Accounts', icon: searchAssets.categoryAccounts },
-  { key: 'merchandise', label: 'Merchandise', icon: searchAssets.categoryMerchandise },
+const categoryDefinitions = [
+  {
+    key: 'player-id',
+    label: 'Player ID Top-Up',
+    loginLabel: 'Top Up Via ID',
+    icon: searchAssets.categoryPlayerId,
+    route: '/search',
+  },
+  {
+    key: 'login',
+    label: 'Top-Up with Login',
+    loginLabel: 'Top Up Via Login',
+    icon: searchAssets.categoryLogin,
+    route: '/search/login',
+  },
+  {
+    key: 'items',
+    label: 'In-Game Items',
+    loginLabel: 'Item Game',
+    icon: searchAssets.categoryItems,
+  },
+  {
+    key: 'accounts',
+    label: 'Game Accounts',
+    loginLabel: 'Akun Game',
+    icon: searchAssets.categoryAccounts,
+  },
+  {
+    key: 'merchandise',
+    label: 'Merchandise',
+    loginLabel: 'Merchandise',
+    icon: searchAssets.categoryMerchandise,
+  },
 ]
 
 const popularGames = [
@@ -44,11 +71,12 @@ function filterGames(items, query, letter) {
   })
 }
 
-export default function SearchPage() {
+export default function SearchPage({ mode = 'player-id' }) {
+  const isLoginMode = mode === 'login'
   const initialQuery = new URLSearchParams(window.location.search).get('q') || ''
   const [query, setQuery] = useState(initialQuery)
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery)
-  const [activeCategory, setActiveCategory] = useState('player-id')
+  const [activeCategory, setActiveCategory] = useState(isLoginMode ? 'login' : 'player-id')
   const [activeLetter, setActiveLetter] = useState('M')
   const [letterFiltering, setLetterFiltering] = useState(false)
 
@@ -82,37 +110,48 @@ export default function SearchPage() {
     setLetterFiltering(true)
   }
 
+  function handleCategory(category) {
+    setActiveCategory(category.key)
+    if (category.route && category.route !== window.location.pathname) {
+      window.location.href = category.route
+    }
+  }
+
   return (
-    <div className="search-site-shell">
-      <Navbar variant="catalog" />
+    <div className={`search-site-shell${isLoginMode ? ' search-site-shell--login' : ''}`}>
+      <Navbar variant={isLoginMode ? 'loginCatalog' : 'catalog'} />
 
-      <main className="search-page">
+      <main className={`search-page${isLoginMode ? ' search-page--login' : ''}`}>
         <div className="search-page__container">
-          <p className="search-breadcrumb"><a href="/">Home</a> / Categories</p>
-          <h1>Browse Categories</h1>
-          <p className="search-page__intro">Find the game, top-up method, or product you’re looking for.</p>
+          {!isLoginMode && (
+            <>
+              <p className="search-breadcrumb"><a href="/">Home</a> / Categories</p>
+              <h1>Browse Categories</h1>
+              <p className="search-page__intro">Find the game, top-up method, or product you’re looking for.</p>
+            </>
+          )}
 
-          <section className="search-catalog" aria-label="Browse Zetruv categories">
+          <section className="search-catalog" aria-label={isLoginMode ? 'Explore kategori via login' : 'Browse Zetruv categories'}>
             <aside className="search-sidebar">
-              <h2>Categories</h2>
+              <h2>{isLoginMode ? 'Kategori' : 'Categories'}</h2>
               <div className="search-category-list">
-                {categories.map((category) => (
+                {categoryDefinitions.map((category) => (
                   <button
                     type="button"
                     key={category.key}
                     className={`search-category${activeCategory === category.key ? ' active' : ''}`}
-                    onClick={() => setActiveCategory(category.key)}
+                    onClick={() => handleCategory(category)}
                   >
                     <span className="search-category__icon"><img src={category.icon} alt="" /></span>
-                    <span>{category.label}</span>
+                    <span>{isLoginMode ? category.loginLabel : category.label}</span>
                     {activeCategory === category.key && <i aria-hidden="true" />}
                   </button>
                 ))}
               </div>
 
               <button className="search-help-card" type="button">
-                <strong>Need Help?</strong>
-                <span>Chat with our support team.</span>
+                <strong>{isLoginMode ? 'Admin Support' : 'Need Help?'}</strong>
+                <span>{isLoginMode ? 'Chat admin jika terjadi kendala' : 'Chat with our support team.'}</span>
               </button>
             </aside>
 
@@ -122,10 +161,10 @@ export default function SearchPage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search games or categories"
-                  aria-label="Search games or categories"
+                  placeholder={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
+                  aria-label={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
                 />
-                <button type="submit">Search</button>
+                <button type="submit">{isLoginMode ? 'Cari' : 'Search'}</button>
               </form>
 
               <div className="alphabet-filter" aria-label="Filter games alphabetically">
@@ -143,8 +182,8 @@ export default function SearchPage() {
               </div>
 
               <div className="search-section-heading">
-                <h2>Popular Games</h2>
-                <span>Most searched</span>
+                <h2>{isLoginMode ? 'Kategori Populer' : 'Popular Games'}</h2>
+                <span>{isLoginMode ? 'Paling sering dicari' : 'Most searched'}</span>
               </div>
 
               {filteredPopular.length > 0 ? (
@@ -152,13 +191,15 @@ export default function SearchPage() {
                   {filteredPopular.map((game) => <GameCard key={game.id} game={game} />)}
                 </div>
               ) : (
-                <div className="search-empty">No games found. Try another keyword or letter.</div>
+                <div className="search-empty">
+                  {isLoginMode ? 'Game tidak ditemukan. Coba kata kunci atau huruf lain.' : 'No games found. Try another keyword or letter.'}
+                </div>
               )}
 
               <div className="search-section-heading search-section-heading--more">
                 <div>
-                  <h2>More Games</h2>
-                  <p>Browse more games available for top-up on Zetruv.</p>
+                  <h2>{isLoginMode ? 'Kategori Lainnya' : 'More Games'}</h2>
+                  <p>{isLoginMode ? 'Game top-up yang tersedia di katalog Zetruv' : 'Browse more games available for top-up on Zetruv.'}</p>
                 </div>
               </div>
 
