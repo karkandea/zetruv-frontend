@@ -1,8 +1,13 @@
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+
+  if (path === '/product/mobile-legends' || path === '/product-detail/mobile-legends') {
+    return <ProductDetailPage />
+  }
 
   if (path === '/search/login' || path === '/categories/login') {
     return <SearchPage mode="login" />
