@@ -51,9 +51,13 @@ const popularGames = [
 const moreGames = popularGames.slice(3)
 const alphabet = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'V', 'W']
 
-function GameCard({ game }) {
+function GameCard({ game, href }) {
+  function handleClick() {
+    if (href) window.location.href = href
+  }
+
   return (
-    <button className="search-game-card" type="button" aria-label={`Open ${game.name}`}>
+    <button className="search-game-card" type="button" aria-label={`Open ${game.name}`} onClick={handleClick}>
       <img src={game.image} alt="" />
       <span className="search-game-card__copy">
         <strong>{game.name}</strong>
@@ -116,6 +120,11 @@ export default function SearchPage({ mode = 'player-id' }) {
     if (category.route && category.route !== window.location.pathname) {
       window.location.href = category.route
     }
+  }
+
+  function gameHref(game) {
+    if (!isLoginMode && game.id === 'mlbb') return '/product/mobile-legends'
+    return undefined
   }
 
   return (
@@ -189,7 +198,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
               {filteredPopular.length > 0 ? (
                 <div className="search-game-grid">
-                  {filteredPopular.map((game) => <GameCard key={game.id} game={game} />)}
+                  {filteredPopular.map((game) => <GameCard key={game.id} game={game} href={gameHref(game)} />)}
                 </div>
               ) : (
                 <div className="search-empty">
@@ -206,7 +215,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
               {filteredMore.length > 0 && (
                 <div className="search-game-grid">
-                  {filteredMore.map((game) => <GameCard key={`more-${game.id}`} game={game} />)}
+                  {filteredMore.map((game) => <GameCard key={`more-${game.id}`} game={game} href={gameHref(game)} />)}
                 </div>
               )}
             </div>
