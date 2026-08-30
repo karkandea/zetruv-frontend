@@ -124,6 +124,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   function gameHref(game) {
     if (!isLoginMode && game.id === 'mlbb') return '/product/mobile-legends'
+    if (isLoginMode && game.id === 'genshin') return '/product/genshin-impact/login'
     return undefined
   }
 
