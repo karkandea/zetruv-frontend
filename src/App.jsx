@@ -2,9 +2,14 @@ import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import ProductDetailLoginPage from './pages/ProductDetailLoginPage'
+import LeaderboardPage from './pages/LeaderboardPage'
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+
+  if (path === '/leaderboard') {
+    return <LeaderboardPage />
+  }
 
   if (
     path === '/product/genshin-impact/login'
