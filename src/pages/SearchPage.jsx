@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
 import '../styles/search.css'
+import '../styles/search-login.css'
 
 const categoryDefinitions = [
   {
