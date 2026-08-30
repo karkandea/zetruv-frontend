@@ -3,7 +3,9 @@ import { assets } from '../data/assets'
 export default function Navbar({ variant = 'default' }) {
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
+  const isLeaderboard = variant === 'leaderboard'
   const isLoggedIn = isCatalog || isLoginCatalog
+  const homeActive = variant === 'default' || isLoginCatalog
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
@@ -42,13 +44,13 @@ export default function Navbar({ variant = 'default' }) {
       <div className="navbar__bottom">
         <div className="design-container navbar__bottom-inner">
           <nav className="navlinks" aria-label="Main navigation">
-            <a className={!isCatalog ? 'active' : ''} href="/"><img src={assets.home} alt="" />Home</a>
+            <a className={homeActive ? 'active' : ''} href="/"><img src={assets.home} alt="" />Home</a>
             <a href="/search" className={`navlinks__product${isCatalog ? ' active' : ''}`}>
               {isCatalog ? 'Shop' : 'Product'} <img src={assets.navDown} alt="" />
             </a>
             <a href="#article"><img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}</a>
             <a href="#transaction"><img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}</a>
-            <a href="#leaderboard"><img src={assets.leaderboard} alt="" />Leaderboard</a>
+            <a className={isLeaderboard ? 'active' : ''} href="/leaderboard"><img src={assets.leaderboard} alt="" />Leaderboard</a>
           </nav>
 
           {!isLoggedIn && (
