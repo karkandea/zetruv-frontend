@@ -50,15 +50,17 @@ export default function SearchPage() {
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery)
   const [activeCategory, setActiveCategory] = useState('player-id')
   const [activeLetter, setActiveLetter] = useState('M')
+  const [letterFiltering, setLetterFiltering] = useState(false)
 
+  const effectiveLetter = letterFiltering ? activeLetter : ''
   const filteredPopular = useMemo(
-    () => filterGames(popularGames, submittedQuery, activeLetter),
-    [submittedQuery, activeLetter],
+    () => filterGames(popularGames, submittedQuery, effectiveLetter),
+    [submittedQuery, effectiveLetter],
   )
 
   const filteredMore = useMemo(
-    () => filterGames(moreGames, submittedQuery, activeLetter),
-    [submittedQuery, activeLetter],
+    () => filterGames(moreGames, submittedQuery, effectiveLetter),
+    [submittedQuery, effectiveLetter],
   )
 
   function handleSearch(event) {
@@ -72,7 +74,12 @@ export default function SearchPage() {
   }
 
   function handleLetter(letter) {
-    setActiveLetter((current) => current === letter ? '' : letter)
+    if (letterFiltering && activeLetter === letter) {
+      setLetterFiltering(false)
+      return
+    }
+    setActiveLetter(letter)
+    setLetterFiltering(true)
   }
 
   return (
