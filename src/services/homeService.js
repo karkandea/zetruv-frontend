@@ -1,5 +1,13 @@
 import { apiRequest, hasBackend } from '../api/httpClient'
-import { homepageMock } from '../data/mockData'
+
+async function getDevelopmentHomepageMock() {
+  if (!import.meta.env.DEV) {
+    throw new Error('Homepage mock data is development-only')
+  }
+
+  const { homepageMock } = await import('../data/mockData')
+  return homepageMock
+}
 
 function formatCountdown(endsAt) {
   if (!endsAt) return undefined
@@ -62,7 +70,9 @@ function adaptHomepageResponse(result = {}) {
 }
 
 export async function getHomepageData() {
-  if (!hasBackend) return homepageMock
+  if (!hasBackend) {
+    return getDevelopmentHomepageMock()
+  }
 
   try {
     const result = await apiRequest('/homepage')
@@ -70,7 +80,7 @@ export async function getHomepageData() {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Homepage API unavailable, using frontend mock data.', error)
-      return homepageMock
+      return getDevelopmentHomepageMock()
     }
     throw error
   }
