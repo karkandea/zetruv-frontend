@@ -19,7 +19,7 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   exit 1
 fi
 
-for cmd in nginx curl npm python3 getent; do
+for cmd in nginx curl npm python3 dig; do
   command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd is required." >&2; exit 1; }
 done
 
@@ -29,11 +29,17 @@ done
   exit 1
 }
 
-if ! getent ahostsv4 "$DOMAIN" >/tmp/zetruv-admin-dns.txt 2>/dev/null; then
-  echo "DNS for $DOMAIN does not resolve yet." >&2
-  echo "Create an A record for 'admin' pointing to this VPS, then rerun." >&2
+DNS_CF="$(dig +short @1.1.1.1 "$DOMAIN" A | sed -n '1p')"
+DNS_GOOGLE="$(dig +short @8.8.8.8 "$DOMAIN" A | sed -n '1p')"
+if [[ -z "$DNS_CF" || -z "$DNS_GOOGLE" ]]; then
+  echo "DNS for $DOMAIN is not visible on both public resolvers yet." >&2
+  echo "Cloudflare: ${DNS_CF:-<empty>}" >&2
+  echo "Google: ${DNS_GOOGLE:-<empty>}" >&2
   exit 2
 fi
+
+echo "DNS Cloudflare: $DNS_CF"
+echo "DNS Google: $DNS_GOOGLE"
 
 echo "=== ADMIN BUILD ==="
 npm install --no-audit --no-fund
