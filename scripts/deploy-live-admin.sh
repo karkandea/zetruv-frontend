@@ -131,14 +131,15 @@ nginx -t
 systemctl reload nginx
 
 echo '=== ADMIN LOCAL HTTP SMOKE ==='
-HTTP_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://${DOMAIN}/")
+HTTP_CODE=$(curl --noproxy '*' -sS -D /tmp/zetruv-admin-http.headers -H "Host: ${DOMAIN}" -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://127.0.0.1/")
 if [[ "$HTTP_CODE" != "200" ]]; then
+  cat /tmp/zetruv-admin-http.headers >&2 || true
   fail "Admin local HTTP smoke returned $HTTP_CODE"
 fi
 
 grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || fail "Admin local HTTP page does not reference expected asset $EXPECTED_JS"
 
-API_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://${DOMAIN}/api/v1/homepage")
+API_CODE=$(curl --noproxy '*' -sS -H "Host: ${DOMAIN}" -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://127.0.0.1/api/v1/homepage")
 if [[ "$API_CODE" != "200" ]]; then
   fail "Admin-domain local API proxy returned $API_CODE"
 fi
