@@ -8,7 +8,6 @@ import JockeyGames from '../components/JockeyGames'
 import Merchandise from '../components/Merchandise'
 import SupportChat from '../components/SupportChat'
 import Footer from '../components/Footer'
-import { homepageMock } from '../data/mockData'
 import { getHomepageData } from '../services/homeService'
 
 const emptyHomepage = {
@@ -23,7 +22,7 @@ const emptyHomepage = {
 }
 
 export default function HomePage() {
-  const [data, setData] = useState(import.meta.env.DEV ? homepageMock : emptyHomepage)
+  const [data, setData] = useState(emptyHomepage)
 
   useEffect(() => {
     let active = true
