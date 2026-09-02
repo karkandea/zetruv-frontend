@@ -131,14 +131,14 @@ nginx -t
 systemctl reload nginx
 
 echo '=== ADMIN LOCAL HTTP SMOKE ==='
-HTTP_CODE=$(curl --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://${DOMAIN}/")
+HTTP_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://${DOMAIN}/")
 if [[ "$HTTP_CODE" != "200" ]]; then
   fail "Admin local HTTP smoke returned $HTTP_CODE"
 fi
 
 grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || fail "Admin local HTTP page does not reference expected asset $EXPECTED_JS"
 
-API_CODE=$(curl --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://${DOMAIN}/api/v1/homepage")
+API_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://${DOMAIN}/api/v1/homepage")
 if [[ "$API_CODE" != "200" ]]; then
   fail "Admin-domain local API proxy returned $API_CODE"
 fi
@@ -160,11 +160,11 @@ if command -v certbot >/dev/null 2>&1; then
   systemctl reload nginx
 
   echo '=== ADMIN LOCAL HTTPS SMOKE ==='
-  HTTPS_CODE=$(curl --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-https.html -w '%{http_code}' "https://${DOMAIN}/")
+  HTTPS_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-https.html -w '%{http_code}' "https://${DOMAIN}/")
   [[ "$HTTPS_CODE" == "200" ]] || fail "Admin local HTTPS smoke returned $HTTPS_CODE"
   grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-https.html || fail "Admin local HTTPS page does not reference expected asset $EXPECTED_JS"
 
-  HTTPS_API_CODE=$(curl --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-api-https.json -w '%{http_code}' "https://${DOMAIN}/api/v1/homepage")
+  HTTPS_API_CODE=$(curl --noproxy '*' --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-api-https.json -w '%{http_code}' "https://${DOMAIN}/api/v1/homepage")
   [[ "$HTTPS_API_CODE" == "200" ]] || fail "Admin local HTTPS API proxy returned $HTTPS_API_CODE"
 
   echo "PASS: admin console live at https://${DOMAIN}"
