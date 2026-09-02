@@ -11,27 +11,29 @@ import Footer from '../components/Footer'
 import { homepageMock } from '../data/mockData'
 import { getHomepageData } from '../services/homeService'
 
-function mergeHomepageData(result = {}) {
-  return {
-    ...homepageMock,
-    ...result,
-    serviceCategories: result.serviceCategories ?? homepageMock.serviceCategories,
-    popularGames: result.popularGames ?? homepageMock.popularGames,
-    recentPurchases: result.recentPurchases ?? homepageMock.recentPurchases,
-    flashSale: result.flashSale ?? homepageMock.flashSale,
-    jockeyGames: result.jockeyGames ?? result.trending ?? homepageMock.jockeyGames,
-    merchandise: result.merchandise ?? homepageMock.merchandise,
-  }
+const emptyHomepage = {
+  hero: null,
+  serviceCategories: [],
+  popularGames: [],
+  recentPurchases: [],
+  flashSale: [],
+  flashSaleEndsAt: undefined,
+  jockeyGames: [],
+  merchandise: [],
 }
 
 export default function HomePage() {
-  const [data, setData] = useState(homepageMock)
+  const [data, setData] = useState(import.meta.env.DEV ? homepageMock : emptyHomepage)
 
   useEffect(() => {
     let active = true
-    getHomepageData().then((result) => {
-      if (active) setData(mergeHomepageData(result))
-    })
+    getHomepageData()
+      .then((result) => {
+        if (active) setData(result)
+      })
+      .catch((error) => {
+        console.error('Homepage API unavailable.', error)
+      })
     return () => { active = false }
   }, [])
 
@@ -39,7 +41,7 @@ export default function HomePage() {
     <div className="site-shell">
       <Navbar />
       <main>
-        <Hero />
+        <Hero hero={data.hero} />
         <ServiceCategories items={data.serviceCategories} />
         <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} />
         <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} />
