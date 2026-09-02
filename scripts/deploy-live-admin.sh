@@ -29,17 +29,20 @@ done
   exit 1
 }
 
-DNS_CF="$(dig +short @1.1.1.1 "$DOMAIN" A | sed -n '1p')"
-DNS_GOOGLE="$(dig +short @8.8.8.8 "$DOMAIN" A | sed -n '1p')"
+DNS_CF="$(dig +short @1.1.1.1 "$DOMAIN" A | tail -n 1)"
+DNS_GOOGLE="$(dig +short @8.8.8.8 "$DOMAIN" A | tail -n 1)"
+echo "DNS Cloudflare: ${DNS_CF:-<empty>}"
+echo "DNS Google: ${DNS_GOOGLE:-<empty>}"
 if [[ -z "$DNS_CF" || -z "$DNS_GOOGLE" ]]; then
-  echo "DNS for $DOMAIN is not visible on both public resolvers yet." >&2
-  echo "Cloudflare: ${DNS_CF:-<empty>}" >&2
-  echo "Google: ${DNS_GOOGLE:-<empty>}" >&2
+  echo "DNS for $DOMAIN does not resolve publicly yet." >&2
+  echo "Create an A record for 'admin.zetruv' pointing to this VPS, then rerun." >&2
   exit 2
 fi
 
-echo "DNS Cloudflare: $DNS_CF"
-echo "DNS Google: $DNS_GOOGLE"
+if [[ "$DNS_CF" != "$DNS_GOOGLE" ]]; then
+  echo "Public DNS resolvers disagree for $DOMAIN; wait for propagation before deploying." >&2
+  exit 2
+fi
 
 echo "=== ADMIN BUILD ==="
 npm install --no-audit --no-fund
@@ -87,6 +90,14 @@ rollback() {
     nginx -t >/dev/null 2>&1 && systemctl reload nginx >/dev/null 2>&1
   fi
 }
+
+fail() {
+  echo "$1" >&2
+  rollback
+  trap - ERR
+  exit 1
+}
+
 trap rollback ERR
 
 DEPLOYED=1
@@ -119,21 +130,17 @@ ln -sfn "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 nginx -t
 systemctl reload nginx
 
-HTTP_CODE=$(curl -sS -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://${DOMAIN}/")
+echo '=== ADMIN LOCAL HTTP SMOKE ==='
+HTTP_CODE=$(curl --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://${DOMAIN}/")
 if [[ "$HTTP_CODE" != "200" ]]; then
-  echo "Admin HTTP smoke returned $HTTP_CODE" >&2
-  exit 1
+  fail "Admin local HTTP smoke returned $HTTP_CODE"
 fi
 
-grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || {
-  echo "Admin HTTP page does not reference expected asset $EXPECTED_JS" >&2
-  exit 1
-}
+grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || fail "Admin local HTTP page does not reference expected asset $EXPECTED_JS"
 
-API_CODE=$(curl -sS -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://${DOMAIN}/api/v1/homepage")
+API_CODE=$(curl --resolve "${DOMAIN}:80:127.0.0.1" -sS -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://${DOMAIN}/api/v1/homepage")
 if [[ "$API_CODE" != "200" ]]; then
-  echo "Admin-domain API proxy returned $API_CODE" >&2
-  exit 1
+  fail "Admin-domain local API proxy returned $API_CODE"
 fi
 
 python3 - <<'PY'
@@ -144,21 +151,21 @@ if not isinstance(data, dict):
     raise SystemExit('Admin-domain API proxy did not return a JSON object.')
 PY
 
+echo 'PASS: admin local HTTP + API proxy smoke'
+
 if command -v certbot >/dev/null 2>&1; then
   echo '=== ADMIN SSL ==='
   certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --redirect --register-unsafely-without-email
   nginx -t
   systemctl reload nginx
 
-  HTTPS_CODE=$(curl -sS -o /tmp/zetruv-admin-https.html -w '%{http_code}' "https://${DOMAIN}/")
-  [[ "$HTTPS_CODE" == "200" ]] || { echo "Admin HTTPS smoke returned $HTTPS_CODE" >&2; exit 1; }
-  grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-https.html || {
-    echo "Admin HTTPS page does not reference expected asset $EXPECTED_JS" >&2
-    exit 1
-  }
+  echo '=== ADMIN LOCAL HTTPS SMOKE ==='
+  HTTPS_CODE=$(curl --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-https.html -w '%{http_code}' "https://${DOMAIN}/")
+  [[ "$HTTPS_CODE" == "200" ]] || fail "Admin local HTTPS smoke returned $HTTPS_CODE"
+  grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-https.html || fail "Admin local HTTPS page does not reference expected asset $EXPECTED_JS"
 
-  HTTPS_API_CODE=$(curl -sS -o /tmp/zetruv-admin-api-https.json -w '%{http_code}' "https://${DOMAIN}/api/v1/homepage")
-  [[ "$HTTPS_API_CODE" == "200" ]] || { echo "Admin HTTPS API proxy returned $HTTPS_API_CODE" >&2; exit 1; }
+  HTTPS_API_CODE=$(curl --resolve "${DOMAIN}:443:127.0.0.1" -sS -o /tmp/zetruv-admin-api-https.json -w '%{http_code}' "https://${DOMAIN}/api/v1/homepage")
+  [[ "$HTTPS_API_CODE" == "200" ]] || fail "Admin local HTTPS API proxy returned $HTTPS_API_CODE"
 
   echo "PASS: admin console live at https://${DOMAIN}"
 else
