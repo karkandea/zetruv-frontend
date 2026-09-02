@@ -21,13 +21,15 @@ export default function Merchandise({ items = [] }) {
               <div className="merch-card__body">
                 <div className="merch-card__copy">
                   <h3>{item.name}</h3>
-                  <p>{item.variant}</p>
+                  {item.variant && <p>{item.variant}</p>}
                   <strong>{rupiah(item.price)}</strong>
                 </div>
-                <div className="merch-card__meta">
-                  <span>{item.sold} terjual</span>
-                  <span className="merch-rating">{item.rating}<img src={assets.star} alt="" /></span>
-                </div>
+                {(item.sold != null || item.rating != null) && (
+                  <div className="merch-card__meta">
+                    {item.sold != null && <span>{item.sold} terjual</span>}
+                    {item.rating != null && <span className="merch-rating">{item.rating}<img src={assets.star} alt="" /></span>}
+                  </div>
+                )}
               </div>
             </article>
           ))}

@@ -19,18 +19,19 @@ npm run dev
 
 ## Backend integration
 
-Backend is intentionally separated from this repository. Configure:
+The live Zetruv deployment uses the backend through the same origin:
 
-```env
-VITE_API_BASE_URL=https://your-backend.example.com/v1
+```text
+https://zetruv.dualangka.com/api/v1
 ```
 
-The frontend currently expects these contracts:
+Production builds automatically default to `/api/v1`, so `VITE_API_BASE_URL` is optional for the normal VPS deployment. Set it only when the frontend must target a different backend origin.
 
-- `GET /homepage` → homepage content such as registered user count, flash-sale items, countdown, and trending games.
-- `POST /support/reports` → `{ name, phone, description }`.
+During local `vite dev`, leaving `VITE_API_BASE_URL` empty keeps the existing mock-data workflow for frontend-only development. Production does not silently fall back to mock data when the API fails.
 
-Until `VITE_API_BASE_URL` is configured, the app automatically uses `src/data/mockData.js` so frontend development can continue independently from the backend team.
+The homepage service adapts the backend `GET /homepage` contract into the current UI view model, including service categories, popular games, recent purchases, flash sale, joki products, merchandise, and the first CMS hero image.
+
+`POST /support/reports` is still expected by the floating support form but is not part of the current backend feature set yet; production requests will fail instead of reporting a fake mock success.
 
 ## Structure
 
@@ -57,4 +58,5 @@ The first pass references exact Figma MCP exports so the UI can be matched quick
 - Responsive desktop/tablet/mobile behavior
 - Footer
 - Floating support form based on the Figma chatbot frame
-- Backend-ready service layer with mock fallback
+- Production homepage backed by same-origin `/api/v1`
+- Mock fallback limited to local development
