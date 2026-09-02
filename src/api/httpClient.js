@@ -1,4 +1,5 @@
-const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+const baseUrl = configuredBaseUrl || (import.meta.env.PROD ? '/api/v1' : '')
 
 export const hasBackend = Boolean(baseUrl)
 
