@@ -1,0 +1,68 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: zetruv-frontend-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Prepare SSH
+        shell: bash
+        env:
+          DEPLOY_KEY: ${{ secrets.ZETRUV_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/zetruv_deploy
+          chmod 600 ~/.ssh/zetruv_deploy
+          cat > ~/.ssh/known_hosts <<'EOF'
+          103.175.207.127 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKyHS1/DY5s1UimsXtof+FZdoRV5Gc3d38eeLv86quRr
+          EOF
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Resolve target
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${GITHUB_REF_NAME}" in
+            dev)
+              echo "environment=dev" >> "$GITHUB_OUTPUT"
+              ;;
+            main)
+              echo "environment=staging" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Deploy exact commit
+        shell: bash
+        env:
+          TARGET_ENV: ${{ steps.target.outputs.environment }}
+        run: |
+          set -euo pipefail
+          ssh \
+            -i ~/.ssh/zetruv_deploy \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            zetruv-deploy@103.175.207.127 \
+            "deploy ${TARGET_ENV} ${GITHUB_SHA}"
