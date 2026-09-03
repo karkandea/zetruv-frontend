@@ -22,6 +22,7 @@ ADMIN_JS_FILE="dist-admin${ADMIN_JS}"
 grep -Fq '/api/v1' "$ADMIN_JS_FILE" || { echo 'FAIL: admin bundle does not target /api/v1' >&2; exit 1; }
 grep -Fq '/cms/auth/login' "$ADMIN_JS_FILE" || { echo 'FAIL: admin login API contract missing from bundle' >&2; exit 1; }
 grep -Fq 'Zetruv Admin' dist-admin/index.html || { echo 'FAIL: wrong HTML entry built' >&2; exit 1; }
+grep -Fq 'lucide' "$ADMIN_JS_FILE" || { echo 'FAIL: Lucide icon library missing from admin bundle' >&2; exit 1; }
 
 if grep -Fq 'popular-ml' "$ADMIN_JS_FILE"; then
   echo 'FAIL: storefront homepage mock leaked into admin bundle' >&2
@@ -29,4 +30,4 @@ if grep -Fq 'popular-ml' "$ADMIN_JS_FILE"; then
 fi
 
 echo "Admin JS asset: $ADMIN_JS"
-echo 'PASS: admin build is isolated from storefront and targets the live CMS API'
+echo 'PASS: admin build is isolated from storefront, targets the live CMS API, and includes Lucide icons'
