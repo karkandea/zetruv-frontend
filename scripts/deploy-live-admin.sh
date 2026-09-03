@@ -13,6 +13,7 @@ BACKUP_ROOT="/var/backups/zetruv-admin/${STAMP}"
 CONFIG_BACKUP="${NGINX_AVAILABLE}.backup-${STAMP}"
 DEPLOYED=0
 CONFIG_CHANGED=0
+HTTP_REDIRECTED=0
 
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   echo 'Run this deploy script as root.' >&2
@@ -132,27 +133,37 @@ systemctl reload nginx
 
 echo '=== ADMIN LOCAL HTTP SMOKE ==='
 HTTP_CODE=$(curl --noproxy '*' -sS -D /tmp/zetruv-admin-http.headers -H "Host: ${DOMAIN}" -o /tmp/zetruv-admin-http.html -w '%{http_code}' "http://127.0.0.1/")
-if [[ "$HTTP_CODE" != "200" ]]; then
-  cat /tmp/zetruv-admin-http.headers >&2 || true
-  fail "Admin local HTTP smoke returned $HTTP_CODE"
-fi
+case "$HTTP_CODE" in
+  200)
+    grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || fail "Admin local HTTP page does not reference expected asset $EXPECTED_JS"
 
-grep -Fq "$EXPECTED_JS" /tmp/zetruv-admin-http.html || fail "Admin local HTTP page does not reference expected asset $EXPECTED_JS"
+    API_CODE=$(curl --noproxy '*' -sS -H "Host: ${DOMAIN}" -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://127.0.0.1/api/v1/homepage")
+    [[ "$API_CODE" == "200" ]] || fail "Admin-domain local API proxy returned $API_CODE"
 
-API_CODE=$(curl --noproxy '*' -sS -H "Host: ${DOMAIN}" -o /tmp/zetruv-admin-api.json -w '%{http_code}' "http://127.0.0.1/api/v1/homepage")
-if [[ "$API_CODE" != "200" ]]; then
-  fail "Admin-domain local API proxy returned $API_CODE"
-fi
-
-python3 - <<'PY'
+    python3 - <<'PY'
 import json
 with open('/tmp/zetruv-admin-api.json', encoding='utf-8') as f:
     data = json.load(f)
 if not isinstance(data, dict):
     raise SystemExit('Admin-domain API proxy did not return a JSON object.')
 PY
-
-echo 'PASS: admin local HTTP + API proxy smoke'
+    echo 'PASS: admin local HTTP + API proxy smoke'
+    ;;
+  301|308)
+    HTTP_LOCATION=$(awk 'BEGIN{IGNORECASE=1} /^Location:/ {sub(/\r$/, ""); print $2; exit}' /tmp/zetruv-admin-http.headers)
+    EXPECTED_LOCATION="https://${DOMAIN}/"
+    if [[ "$HTTP_LOCATION" != "$EXPECTED_LOCATION" ]]; then
+      cat /tmp/zetruv-admin-http.headers >&2 || true
+      fail "Admin HTTP redirect target was '${HTTP_LOCATION:-<empty>}' instead of '$EXPECTED_LOCATION'"
+    fi
+    HTTP_REDIRECTED=1
+    echo "PASS: admin HTTP redirects to ${EXPECTED_LOCATION}"
+    ;;
+  *)
+    cat /tmp/zetruv-admin-http.headers >&2 || true
+    fail "Admin local HTTP smoke returned $HTTP_CODE"
+    ;;
+esac
 
 if command -v certbot >/dev/null 2>&1; then
   echo '=== ADMIN SSL ==='
@@ -170,6 +181,9 @@ if command -v certbot >/dev/null 2>&1; then
 
   echo "PASS: admin console live at https://${DOMAIN}"
 else
+  if [[ "$HTTP_REDIRECTED" == "1" ]]; then
+    fail 'Admin redirects to HTTPS but certbot is unavailable to verify/configure TLS.'
+  fi
   echo "PASS: admin console live over HTTP at http://${DOMAIN}"
   echo 'certbot is not installed; SSL was not configured.'
 fi
