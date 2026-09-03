@@ -4,6 +4,7 @@ import AdminApp from '../src/admin/AdminApp'
 import LucideIconLayer from '../src/admin/LucideIconLayer'
 import '../src/admin/admin.css'
 import '../src/admin/admin-reference.css'
+import '../src/admin/admin-icons.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
