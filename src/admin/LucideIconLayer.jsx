@@ -3,16 +3,16 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import {
   ArrowLeft,
   ArrowRight,
-  BadgePercent,
   Check,
   ExternalLink,
   FileText,
   Gamepad2,
-  House,
+  Hash,
   LayoutDashboard,
   LogOut,
   PackageOpen,
   PanelsTopLeft,
+  Plus,
   Settings,
   ShoppingBag,
   X,
@@ -28,6 +28,7 @@ const ICONS = {
   '◎': ShoppingBag,
   '⚙': Settings,
   '◇': Gamepad2,
+  '#': Hash,
   '↗': LogOut,
   '×': X,
   '✓': Check,
@@ -39,6 +40,8 @@ const CANDIDATES = [
   '.admin-sidebar nav i',
   '.admin-stat-grid article > i',
   '.admin-promo-icon',
+  '.admin-thumb',
+  '.admin-product-cell i',
   '.admin-modal > header button',
   '.admin-promo-items button',
   '.admin-coverage-list span',
@@ -54,6 +57,7 @@ function iconMarkup(Icon, className = 'admin-lucide-icon') {
 
 function replaceExactTokens() {
   document.querySelectorAll(CANDIDATES).forEach((node) => {
+    if (node.querySelector('img,svg')) return
     const token = node.textContent?.trim()
     const Icon = ICONS[token]
     if (!Icon) return
@@ -71,20 +75,12 @@ function replaceStorefrontLinkIcon() {
 }
 
 function replaceActionPrefixes() {
-  const actionMap = [
-    ['+ New promotion', BadgePercent],
-    ['+ Add variant', PackageOpen],
-    ['+ Add', PackageOpen],
-  ]
-
   document.querySelectorAll('.admin-button').forEach((button) => {
     if (button.querySelector('svg')) return
-    const label = button.textContent?.trim()
-    const match = actionMap.find(([text]) => text === label)
-    if (!match) return
-    const [text, Icon] = match
-    button.textContent = text.replace(/^\+\s*/, '')
-    button.insertAdjacentHTML('afterbegin', iconMarkup(Icon, 'admin-lucide-icon admin-lucide-icon--button'))
+    const label = button.textContent?.trim() || ''
+    if (!label.startsWith('+ ')) return
+    button.textContent = label.replace(/^\+\s*/, '')
+    button.insertAdjacentHTML('afterbegin', iconMarkup(Plus, 'admin-lucide-icon admin-lucide-icon--button'))
   })
 }
 
