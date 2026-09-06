@@ -1,18 +1,34 @@
 import { assets } from '../data/assets'
 
+const productLinks = [
+  { label: 'Browse All Categories', href: '/search', arrow: true },
+  { label: 'Top Up Via ID', href: '/search' },
+  { label: 'Top Up Login', href: '/search/login' },
+  { label: 'Voucher Game', href: '/search?q=voucher' },
+  { label: 'Joki Game', href: '/#jockey' },
+  { label: 'Merchandise', href: '/#merchandise' },
+]
+
 export default function Navbar({ variant = 'default' }) {
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
+  const isHomeLoggedIn = variant === 'homeLoggedIn'
   const isLeaderboard = variant === 'leaderboard'
-  const isLoggedIn = isCatalog || isLoginCatalog
-  const homeActive = variant === 'default' || isLoginCatalog
+  const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn
+  const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
   const searchAction = isLoginCatalog ? '/search/login' : '/search'
 
+  const navbarClasses = [
+    'navbar',
+    isLoggedIn ? 'navbar--catalog' : '',
+    isHomeLoggedIn ? 'navbar--home-final' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <header className={`navbar${isLoggedIn ? ' navbar--catalog' : ''}`}>
+    <header className={navbarClasses}>
       <div className="navbar__top design-container">
         <a className="brand" href="/" aria-label="Zetruv home">
           <img src={assets.logo} alt="Zetruv" />
@@ -45,9 +61,21 @@ export default function Navbar({ variant = 'default' }) {
         <div className="design-container navbar__bottom-inner">
           <nav className="navlinks" aria-label="Main navigation">
             <a className={homeActive ? 'active' : ''} href="/"><img src={assets.home} alt="" />Home</a>
-            <a href="/search" className={`navlinks__product${isCatalog ? ' active' : ''}`}>
-              {isCatalog ? 'Shop' : 'Product'} <img src={assets.navDown} alt="" />
-            </a>
+
+            <div className="nav-product-menu">
+              <a href="/search" className={`navlinks__product${isCatalog ? ' active' : ''}`}>
+                {isCatalog ? 'Shop' : 'Product'} <img src={assets.navDown} alt="" />
+              </a>
+              <div className="product-dropdown" aria-label="Product categories">
+                {productLinks.map((link) => (
+                  <a href={link.href} key={link.label}>
+                    <span>{link.label}</span>
+                    {link.arrow && <img src={assets.productDropdownArrow} alt="" />}
+                  </a>
+                ))}
+              </div>
+            </div>
+
             <a href="#article"><img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}</a>
             <a href="#transaction"><img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}</a>
             <a className={isLeaderboard ? 'active' : ''} href="/leaderboard"><img src={assets.leaderboard} alt="" />Leaderboard</a>
