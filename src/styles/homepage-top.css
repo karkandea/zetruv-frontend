@@ -43,11 +43,21 @@
 }
 
 .nav-product-menu:hover .product-dropdown,
-.nav-product-menu:focus-within .product-dropdown {
+.nav-product-menu:focus-within .product-dropdown,
+.nav-product-menu.is-open .product-dropdown {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+.nav-product-menu.is-open > .navlinks__product {
+  opacity: 1;
+  border-bottom-color: #fff;
+}
+
+.nav-product-menu.is-open > .navlinks__product img {
+  transform: rotate(180deg);
 }
 
 .product-dropdown a {
