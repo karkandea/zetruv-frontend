@@ -18,6 +18,12 @@ export default function Navbar({ variant = 'default' }) {
   const isLeaderboard = variant === 'leaderboard'
   const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
+  const [activeNav, setActiveNav] = useState(() => {
+    if (isLeaderboard) return 'leaderboard'
+    if (isCatalog) return 'product'
+    if (homeActive) return 'home'
+    return ''
+  })
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
@@ -62,16 +68,26 @@ export default function Navbar({ variant = 'default' }) {
       <div className="navbar__bottom">
         <div className="design-container navbar__bottom-inner">
           <nav className="navlinks" aria-label="Main navigation">
-            <a className={homeActive ? 'active' : ''} href="/"><img src={assets.home} alt="" />Home</a>
+            <a
+              className={activeNav === 'home' ? 'active' : ''}
+              href="/"
+              onClick={() => {
+                setActiveNav('home')
+                setIsProductOpen(false)
+              }}
+            >
+              <img src={assets.home} alt="" />Home
+            </a>
 
             <div className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
               <a
                 href="/search"
-                className={`navlinks__product${isCatalog || isProductOpen ? ' active' : ''}`}
+                className={`navlinks__product${activeNav === 'product' || isCatalog || isProductOpen ? ' active' : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isProductOpen}
                 onClick={(event) => {
                   event.preventDefault()
+                  setActiveNav('product')
                   setIsProductOpen((open) => !open)
                 }}
               >
@@ -87,9 +103,36 @@ export default function Navbar({ variant = 'default' }) {
               </div>
             </div>
 
-            <a href="#article"><img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}</a>
-            <a href="#transaction"><img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}</a>
-            <a className={isLeaderboard ? 'active' : ''} href="/leaderboard"><img src={assets.leaderboard} alt="" />Leaderboard</a>
+            <a
+              className={activeNav === 'article' ? 'active' : ''}
+              href="#article"
+              onClick={() => {
+                setActiveNav('article')
+                setIsProductOpen(false)
+              }}
+            >
+              <img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}
+            </a>
+            <a
+              className={activeNav === 'transaction' ? 'active' : ''}
+              href="#transaction"
+              onClick={() => {
+                setActiveNav('transaction')
+                setIsProductOpen(false)
+              }}
+            >
+              <img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}
+            </a>
+            <a
+              className={activeNav === 'leaderboard' ? 'active' : ''}
+              href="/leaderboard"
+              onClick={() => {
+                setActiveNav('leaderboard')
+                setIsProductOpen(false)
+              }}
+            >
+              <img src={assets.leaderboard} alt="" />Leaderboard
+            </a>
           </nav>
 
           {!isLoggedIn && (
