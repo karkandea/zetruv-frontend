@@ -5,15 +5,6 @@ export const assets = {
   heroBackground: 'https://www.figma.com/api/mcp/asset/aa256062-9cd2-4c19-a480-93b5bf864d38.png',
   heroShowcase: 'https://www.figma.com/api/mcp/asset/1a94a73c-7495-4c44-b7fb-ba269a51a164.png',
 
-  homepageHeroArtwork: 'https://www.figma.com/api/mcp/asset/bb925ede-8011-4f0b-bcd0-c986ad5762f1.png',
-  homepageCategoryTopUp: 'https://www.figma.com/api/mcp/asset/ab9c3a0b-649b-4437-8876-5e26d91aa457.png',
-  homepageCategoryVoucher: 'https://www.figma.com/api/mcp/asset/3ccd3cd9-4b42-42ac-8375-58c626616096.png',
-  homepageCategoryJockey: 'https://www.figma.com/api/mcp/asset/fa0d3771-28f5-49b7-aaeb-136b7a963907.png',
-  homepageCategoryMerch: 'https://www.figma.com/api/mcp/asset/9bc151c6-d84a-4058-af08-da742c40bc84.png',
-  homepageCategoryAccount: 'https://www.figma.com/api/mcp/asset/80556325-4e7f-47a6-ab2b-9716d96a48ac.png',
-  homepageCategoryRing: 'https://www.figma.com/api/mcp/asset/bccf9b28-9771-4910-99dc-0a05f0b6e36c.svg',
-  productDropdownArrow: 'https://www.figma.com/api/mcp/asset/be6230b6-7782-43bc-8fc7-7b4cfe60af61.svg',
-
   search: 'https://www.figma.com/api/mcp/asset/8a10fc1c-f6f1-480c-a357-cf6309bf7aff.svg',
   flagEn: 'https://www.figma.com/api/mcp/asset/2bde7797-76ca-4695-857c-ac44aa8a8b31.svg',
   cart: 'https://www.figma.com/api/mcp/asset/98a6a018-ac19-428a-a1e5-806fd5c1b12e.svg',

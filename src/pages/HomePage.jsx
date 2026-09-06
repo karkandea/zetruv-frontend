@@ -38,9 +38,9 @@ export default function HomePage() {
 
   return (
     <div className="site-shell">
-      <Navbar variant="homeLoggedIn" />
+      <Navbar />
       <main>
-        <Hero />
+        <Hero hero={data.hero} />
         <ServiceCategories items={data.serviceCategories} />
         <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} />
         <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} />
