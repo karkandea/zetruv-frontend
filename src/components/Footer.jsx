@@ -24,7 +24,7 @@ export default function Footer() {
 
       <div className="footer__content">
         <div className="footer__brand">
-          <img className="footer-logo" src={assets.logo} alt="Zetruv" />
+          <img className="footer-logo" src={assets.footerLogo || assets.logo} alt="Zetruv" />
           <p>Your gaming adventure is about to begin, before that let's top up first to make your story easier. Top up the game here, will make you more prepared to face all challenges. Easy transactions, Process only takes a few seconds!</p>
           <div className="socials">{socials.map((src, index) => <img src={src} alt="" key={src + index} />)}</div>
         </div>
@@ -32,8 +32,8 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h3>Page</h3>
-            <a href="#home">Homepage</a>
-            <a href="#enter">Enter</a>
+            <a href="/">Homepage</a>
+            <a href="#login">Enter</a>
             <a href="#register">Registration</a>
             <a href="#transaction">Check Transaction</a>
           </div>
