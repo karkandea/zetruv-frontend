@@ -13,9 +13,8 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
   return (
     <section className="popular-recent" aria-label="Popular games and recent purchases">
       <div className="popular-recent__column">
-        <header className="compact-heading compact-heading--button">
+        <header className="compact-heading">
           <div><img src={assets.popularHeader} alt="" /><h2>Game Populer</h2></div>
-          <button className="yellow-button" type="button">Lihat Semua</button>
         </header>
         <div className="mini-panel mini-panel--popular">
           {popular.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
