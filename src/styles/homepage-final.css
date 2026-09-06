@@ -183,6 +183,10 @@
   gap: 8px;
 }
 
+.site-shell--homepage-final .flash-heading__title img {
+  object-fit: contain;
+}
+
 .site-shell--homepage-final .flash-heading h2 {
   font-size: 24px;
   line-height: 36px;
