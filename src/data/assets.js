@@ -49,7 +49,7 @@ export const assets = {
   flashMobileLegends: 'https://www.figma.com/api/mcp/asset/b8214b14-7091-45cf-970e-8784c60c2887.png',
   flashPubg: 'https://www.figma.com/api/mcp/asset/8845ee02-2b94-464b-a45b-4d886ef030e2.png',
   flashValorant: 'https://www.figma.com/api/mcp/asset/231e722b-7c11-408f-b7ef-ba9fb8dc4d0a.png',
-  fire: 'https://www.figma.com/api/mcp/asset/00557af2-52f5-4703-a009-c07a3412dafd.svg',
+  fire: 'https://www.figma.com/api/mcp/asset/3c1e503b-038e-4f8d-add3-dff45259b9f3.svg',
   diamond: 'https://www.figma.com/api/mcp/asset/4beba82f-7e47-4da7-a176-c9774d3c8cc3.svg',
   expandLeft: 'https://www.figma.com/api/mcp/asset/e79567e4-b1f6-437e-a195-44b01faeb7c1.svg',
 
