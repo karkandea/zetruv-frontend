@@ -7,7 +7,7 @@ const productLinks = [
   { label: 'Top Up Login', href: '/search/login' },
   { label: 'Voucher Game', href: '/search?q=voucher' },
   { label: 'Joki Game', href: '/#jockey' },
-  { label: 'Merchandise', href: '/#merchandise' },
+  { label: 'Merchandise', href: '/#merch' },
 ]
 
 export default function Navbar({ variant = 'default' }) {
