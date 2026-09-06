@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { assets } from '../data/assets'
 
 const productLinks = [
@@ -10,6 +11,7 @@ const productLinks = [
 ]
 
 export default function Navbar({ variant = 'default' }) {
+  const [isProductOpen, setIsProductOpen] = useState(false)
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
   const isHomeLoggedIn = variant === 'homeLoggedIn'
@@ -62,11 +64,20 @@ export default function Navbar({ variant = 'default' }) {
           <nav className="navlinks" aria-label="Main navigation">
             <a className={homeActive ? 'active' : ''} href="/"><img src={assets.home} alt="" />Home</a>
 
-            <div className="nav-product-menu">
-              <a href="/search" className={`navlinks__product${isCatalog ? ' active' : ''}`}>
+            <div className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
+              <a
+                href="/search"
+                className={`navlinks__product${isCatalog || isProductOpen ? ' active' : ''}`}
+                aria-haspopup="true"
+                aria-expanded={isProductOpen}
+                onClick={(event) => {
+                  event.preventDefault()
+                  setIsProductOpen((open) => !open)
+                }}
+              >
                 {isCatalog ? 'Shop' : 'Product'} <img src={assets.navDown} alt="" />
               </a>
-              <div className="product-dropdown" aria-label="Product categories">
+              <div className="product-dropdown" aria-label="Product categories" aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a href={link.href} key={link.label}>
                     <span>{link.label}</span>
