@@ -1471,3 +1471,50 @@
     gap: 28px;
   }
 }
+
+/* Footer coordinate lock — exact Figma 3870:12567 desktop */
+@media (min-width: 901px) {
+  .site-shell--homepage-final .footer.footer--figma-final {
+    padding: 0;
+  }
+
+  .site-shell--homepage-final .footer--figma-final .footer__content {
+    position: absolute;
+    top: 49px;
+    left: 50%;
+    width: 1170px;
+    height: 168.828px;
+    margin: 0;
+    display: block;
+    transform: translateX(-50%);
+  }
+
+  .site-shell--homepage-final .footer--figma-final .footer__brand {
+    position: absolute;
+    top: 22.414px;
+    left: 0;
+    width: 493px;
+    height: 124px;
+    margin: 0;
+  }
+
+  .site-shell--homepage-final .footer--figma-final .footer__links {
+    position: absolute;
+    top: 0;
+    left: 525px;
+    width: 645px;
+    height: 168.828px;
+    margin: 0;
+  }
+
+  .site-shell--homepage-final .footer--figma-final .footer__copyright {
+    position: absolute;
+    top: 249.828px;
+    left: 50%;
+    width: 1170px;
+    height: 29px;
+    margin: 0;
+    padding-top: 12px;
+    transform: translateX(-50%);
+  }
+}
