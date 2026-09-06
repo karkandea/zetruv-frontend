@@ -82,7 +82,7 @@ export default function Navbar({ variant = 'default' }) {
             <div className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
               <a
                 href="/search"
-                className={`navlinks__product${activeNav === 'product' || isCatalog || isProductOpen ? ' active' : ''}`}
+                className={`navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isProductOpen}
                 onClick={(event) => {
