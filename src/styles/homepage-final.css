@@ -1042,3 +1042,178 @@
     width: 48px;
   }
 }
+
+
+/* Final Figma footer — node 3870:12567 */
+.site-shell--homepage-final .footer {
+  width: 100%;
+  height: 328px;
+  margin-top: 100px;
+  margin-bottom: 32px;
+  overflow: hidden;
+  padding: 49px 55px;
+  color: #fff;
+  background: #050318;
+}
+
+.site-shell--homepage-final .footer__glow {
+  top: 0;
+  width: 780px;
+  height: 328px;
+  transform: none;
+  opacity: 1;
+  object-fit: contain;
+}
+
+.site-shell--homepage-final .footer__glow--left {
+  left: 0;
+}
+
+.site-shell--homepage-final .footer__glow--right {
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.site-shell--homepage-final .footer__content {
+  width: min(1170px, 100%);
+  height: 169px;
+  grid-template-columns: 493px minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.site-shell--homepage-final .footer__brand,
+.site-shell--homepage-final .footer__brand p {
+  width: 493px;
+}
+
+.site-shell--homepage-final .footer-logo {
+  width: 76px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.site-shell--homepage-final .footer__links {
+  height: 169px;
+  gap: 50px;
+}
+
+.site-shell--homepage-final .footer__column,
+.site-shell--homepage-final .footer__column h3,
+.site-shell--homepage-final .footer__payments h3 {
+  font-size: 12px;
+  line-height: 19px;
+}
+
+.site-shell--homepage-final .footer__support-payment,
+.site-shell--homepage-final .payment-grid {
+  width: 206px;
+}
+
+.site-shell--homepage-final .payment-grid {
+  grid-template-columns: repeat(6, 23px);
+  gap: 12px;
+}
+
+.site-shell--homepage-final .payment-mark {
+  width: 23px;
+  height: 16.414px;
+  overflow: visible;
+  border-radius: 1.313px;
+  background: transparent;
+}
+
+.site-shell--homepage-final .payment-mark img {
+  width: 23px;
+  height: 16.414px;
+  object-fit: contain;
+}
+
+.site-shell--homepage-final .footer__copyright {
+  width: min(1170px, 100%);
+  height: 29px;
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid #fff;
+  color: rgba(255, 255, 255, .45);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+/* Floating support button stays visible while the page scrolls. */
+.site-shell--homepage-final > .contact-fab {
+  position: fixed;
+  z-index: 90;
+  top: auto;
+  right: 38px;
+  bottom: 32px;
+  width: 160px;
+  height: 42px;
+  justify-content: center;
+  box-shadow: 0 10px 28px rgba(5, 3, 24, .24);
+}
+
+/* Every clicked navigation item uses the same active treatment as Product. */
+.site-shell--homepage-final .navlinks a.active {
+  opacity: 1;
+  border-bottom-color: #fff;
+}
+
+@media (max-width: 900px) {
+  .site-shell--homepage-final .footer {
+    height: auto;
+    min-height: 328px;
+    margin-bottom: 24px;
+    padding: 42px 32px;
+  }
+
+  .site-shell--homepage-final .footer__content {
+    height: auto;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .site-shell--homepage-final .footer__brand,
+  .site-shell--homepage-final .footer__brand p {
+    width: 100%;
+  }
+
+  .site-shell--homepage-final .footer__links {
+    height: auto;
+    justify-content: flex-start;
+  }
+
+  .site-shell--homepage-final .footer__copyright {
+    width: 100%;
+  }
+
+  .site-shell--homepage-final > .contact-fab {
+    right: 20px;
+    bottom: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .site-shell--homepage-final .footer {
+    padding: 42px 24px;
+    margin-bottom: 20px;
+  }
+
+  .site-shell--homepage-final .footer__links {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .site-shell--homepage-final .footer__support-payment {
+    width: 100%;
+  }
+
+  .site-shell--homepage-final > .contact-fab {
+    right: 14px;
+    bottom: 14px;
+    width: 150px;
+    height: 40px;
+    padding-inline: 12px;
+    font-size: 10px;
+  }
+}
