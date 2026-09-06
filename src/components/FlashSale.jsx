@@ -14,7 +14,7 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
             <img src={assets.fire} alt="" />
             <h2 id="flash-title">Flash Sale</h2>
           </div>
-          <div className="countdown-line"><span>Will be end at</span><strong>{countdown}</strong></div>
+          <div className="countdown-line"><strong>{countdown || '01:04:35'}</strong></div>
         </div>
 
         <div className="flash-carousel">
