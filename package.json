@@ -13,7 +13,10 @@
     "build:admin:dev": "vite build --config vite.admin.config.js --mode dev",
     "build:all:dev": "npm run build:storefront:dev && npm run build:admin:dev",
     "preview": "vite preview",
-    "preview:admin": "vite preview --config vite.admin.config.js"
+    "preview:admin": "vite preview --config vite.admin.config.js",
+    "build:storefront:staging": "vite build --mode staging",
+    "build:admin:staging": "vite build --config vite.admin.config.js --mode staging",
+    "build:all:staging": "npm run build:storefront:staging && npm run build:admin:staging"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
