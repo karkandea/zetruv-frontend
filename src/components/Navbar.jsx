@@ -11,7 +11,7 @@ const productLinks = [
   { label: 'Merchandise', href: '/#merch' },
 ]
 
-export default function Navbar({ variant = 'default' }) {
+export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [authMode, setAuthMode] = useState(null)
   const productMenuRef = useRef(null)
@@ -34,6 +34,16 @@ export default function Navbar({ variant = 'default' }) {
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
   const searchAction = isLoginCatalog ? '/search/login' : '/search'
+  const searchPlaceholder = isHomeLoggedIn
+    ? 'Cari game atau voucher'
+    : isCatalog
+      ? 'Search games, vouchers, or products'
+      : 'Search game or voucher'
+  const languageLabel = isHomeLoggedIn ? 'ID' : 'EN'
+  const cartLabel = isHomeLoggedIn ? 'Keranjang' : 'Cart'
+  const productLabel = isHomeLoggedIn ? 'Produk' : isCatalog ? 'Shop' : 'Product'
+  const articleLabel = isHomeLoggedIn ? 'Artikel' : isCatalog ? 'Articles' : 'Article'
+  const transactionLabel = isHomeLoggedIn ? 'Cek Transaksi' : isCatalog ? 'Track Order' : 'Check Transaction'
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -78,7 +88,7 @@ export default function Navbar({ variant = 'default' }) {
           <input
             name="q"
             defaultValue={initialQuery}
-            placeholder={isCatalog ? 'Search games, vouchers, or products' : 'Search game or voucher'}
+            placeholder={searchPlaceholder}
             aria-label="Search games, vouchers, or products"
           />
         </form>
@@ -86,11 +96,11 @@ export default function Navbar({ variant = 'default' }) {
         <div className="navbar__quick-actions">
           <button className="nav-pill navbar-control" type="button" aria-label="Change language">
             <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
-            <span>EN</span>
+            <span>{languageLabel}</span>
           </button>
           <button className="nav-pill navbar-control" type="button">
             <img src={assets.cart} alt="" />
-            <span>Cart</span>
+            <span>{cartLabel}</span>
           </button>
           {isLoggedIn && <span className="nav-avatar" aria-label="Signed in as M">M</span>}
         </div>
@@ -124,7 +134,7 @@ export default function Navbar({ variant = 'default' }) {
                   setIsProductOpen((open) => !open)
                 }}
               >
-                {isCatalog ? 'Shop' : 'Product'} <img src={assets.navDown} alt="" />
+                {productLabel} <img src={assets.navDown} alt="" />
               </a>
               <div className="product-dropdown" aria-label="Product categories" aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
@@ -142,7 +152,7 @@ export default function Navbar({ variant = 'default' }) {
               aria-current={activeNav === 'article' ? 'page' : undefined}
               onClick={() => selectNav('article')}
             >
-              <img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}
+              <img src={assets.transaction} alt="" />{articleLabel}
             </a>
 
             <a
@@ -151,7 +161,7 @@ export default function Navbar({ variant = 'default' }) {
               aria-current={activeNav === 'transaction' ? 'page' : undefined}
               onClick={() => selectNav('transaction')}
             >
-              <img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}
+              <img src={assets.transaction} alt="" />{transactionLabel}
             </a>
 
             <a
@@ -193,6 +203,7 @@ export default function Navbar({ variant = 'default' }) {
           mode={authMode}
           onModeChange={setAuthMode}
           onClose={() => setAuthMode(null)}
+          onAuthenticated={onAuthenticated}
         />
       )}
     </>
