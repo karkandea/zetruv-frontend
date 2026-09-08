@@ -28,6 +28,7 @@ export const assets = {
   register: 'https://www.figma.com/api/mcp/asset/b23c25fc-2cd2-4ea9-a6c0-9cdb0a0b549c.svg',
   authHero: 'https://www.figma.com/api/mcp/asset/7cf9dd34-2722-4171-ba3f-7e39b4a66b2e.png',
   authEye: 'https://www.figma.com/api/mcp/asset/543e2c30-2f91-474a-a24e-f0bf3fcdc413.svg',
+  authBackArrow: '/assets/auth/forgot-back.png',
 
   categoryTopUp: 'https://www.figma.com/api/mcp/asset/feffa99f-8e79-4ed0-9a0c-32eda3c6bc77.png',
   categoryVoucher: 'https://www.figma.com/api/mcp/asset/63e8efa1-0fb9-431b-8dd5-30d76806d18d.png',
