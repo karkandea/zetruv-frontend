@@ -2,7 +2,15 @@ import { assets } from '../data/assets'
 
 const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(value)}`
 
+const fallbackItems = [
+  { id: 'ml-flash', name: 'Mobile Legend', image: assets.flashMobileLegends, price: 10000, originalPrice: 50000, item: '100 Diamond' },
+  { id: 'pubg-flash', name: 'PUBG Mobile', image: assets.flashPubg, price: 10000, originalPrice: 50000, item: '100 Diamond' },
+  { id: 'valorant-flash', name: 'Valorant', image: assets.flashValorant, price: 10000, originalPrice: 50000, item: '100 Diamond' },
+]
+
 export default function FlashSale({ items = [], countdown = '01:04:35' }) {
+  const displayItems = items.length ? items : fallbackItems
+
   return (
     <section className="flash-section" aria-labelledby="flash-title">
       <div className="flash-card">
@@ -14,13 +22,13 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
             <img src={assets.fire} alt="" />
             <h2 id="flash-title">Flash Sale</h2>
           </div>
-          <div className="countdown-line"><span>Will be end at</span><strong>{countdown}</strong></div>
+          <div className="countdown-line"><strong>{countdown || '01:04:35'}</strong></div>
         </div>
 
         <div className="flash-carousel">
           <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Previous flash sale"><img src={assets.expandLeft} alt="" /></button>
           <div className="flash-grid">
-            {items.slice(0, 3).map((item) => (
+            {displayItems.slice(0, 3).map((item) => (
               <article className="sale-item" key={item.id}>
                 <div className="sale-item__image"><img src={item.image} alt={item.name} /></div>
                 <div className="sale-item__body">

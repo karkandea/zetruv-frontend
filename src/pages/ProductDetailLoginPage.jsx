@@ -46,22 +46,30 @@ export default function ProductDetailLoginPage() {
       <Navbar variant="loginCatalog" />
 
       <main className="login-product-page">
-        <section className="login-product-hero" style={{ backgroundImage: `url(${media.heroBackground})` }}>
+        <section className="login-product-hero">
+          <img className="login-product-hero__background" src={media.heroBackground} alt="" />
           <div className="login-product-hero__shade" />
+
           <div className="login-product-container login-product-hero__content">
             <div className="login-product-cover">
               <img src={media.gameCover} alt="Genshin Impact" />
             </div>
+
             <div className="login-product-hero__copy">
-              <h1>Genshin Impact</h1>
-              <div className="login-product-rating-line">
-                <strong>HoYoverse</strong>
-                <span>4,6</span>
-                <HeroStars />
-                <span>(2rb)</span>
+              <div className="login-product-title-block">
+                <h1>Genshin Impact</h1>
+                <div className="login-product-rating-line">
+                  <strong>HoYoverse</strong>
+                  <span className="login-product-rating-group">
+                    <b>4,6</b>
+                    <HeroStars />
+                    <em>(2rb)</em>
+                  </span>
+                </div>
               </div>
+
               <div className="login-product-benefits">
-                <span><img src={media.badgeFast} alt="" />Proses Cepat</span>
+                <span><img className="login-product-benefit-fast" src={media.badgeFast} alt="" />Proses Cepat</span>
                 <span><img src={media.badgeSupport} alt="" />Dukungan Chat 24/7</span>
                 <span><img src={media.badgeGlobal} alt="" />Global Region</span>
               </div>
@@ -72,10 +80,10 @@ export default function ProductDetailLoginPage() {
         <div className="login-product-body">
           <div className="login-product-container login-product-layout">
             <section className="login-package-panel">
-              <div className="login-package-heading">
-                <h2>Pilih Paket</h2>
-                <p>Pilih paket dulu. Data login game baru diminta setelah kamu masuk ke checkout.</p>
-              </div>
+              <h2>Pilih Paket</h2>
+              <p className="login-package-description">
+                Pilih paket dulu. Data login game baru diminta setelah kamu masuk ke checkout.
+              </p>
 
               <div className="login-package-grid">
                 {packages.map((item) => {
@@ -114,11 +122,19 @@ export default function ProductDetailLoginPage() {
                   <span>{rupiah(selected.price)} / item</span>
                 </div>
                 <div className="login-quantity-stepper">
-                  <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Kurangi jumlah">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                    aria-label="Kurangi jumlah"
+                  >
                     <img src={media.minus} alt="" />
                   </button>
                   <strong>{quantity}</strong>
-                  <button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Tambah jumlah">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => value + 1)}
+                    aria-label="Tambah jumlah"
+                  >
                     <img src={media.plus} alt="" />
                   </button>
                 </div>
