@@ -360,3 +360,179 @@
     max-width: 360px;
   }
 }
+
+
+/* Forgot password — Figma 3894:21646 / Auth Card 3894:21868 */
+.auth-modal__content--forgot {
+  width: 430px;
+  height: 527px;
+  flex: 0 0 430px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 24px;
+  padding: 32px 40px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.auth-back-login {
+  width: 109px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex: 0 0 20px;
+  padding: 0;
+  border: 0;
+  color: #010154;
+  background: #fff;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity .15s ease, transform .12s ease;
+}
+
+.auth-back-login img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 16px;
+  object-fit: contain;
+  transform: rotate(180deg);
+}
+
+.auth-back-login:hover {
+  opacity: .72;
+}
+
+.auth-back-login:active {
+  transform: translateX(-2px);
+}
+
+.auth-back-login:focus-visible {
+  outline: 2px solid #a0b2ff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.auth-forgot-heading {
+  width: 350px;
+  height: 98px;
+  display: flex;
+  flex: 0 0 98px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.auth-forgot-heading h2 {
+  width: 350px;
+  height: 42px;
+  margin: 0;
+  color: #1b1b1e;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 28px;
+  line-height: 42px;
+  font-weight: 700;
+}
+
+.auth-forgot-heading p {
+  width: 350px;
+  height: 50px;
+  margin: 0;
+  color: #616675;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.auth-reset-form {
+  width: 350px;
+  height: 107px;
+  display: flex;
+  flex: 0 0 107px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.auth-reset-email {
+  width: 350px;
+  height: 45px;
+  flex: 0 0 45px;
+  color: #616675;
+}
+
+.auth-reset-email::placeholder {
+  color: #616675;
+  opacity: .58;
+}
+
+.auth-reset-submit {
+  width: 350px;
+  height: 46px;
+  flex: 0 0 46px;
+  font-weight: 500;
+}
+
+.auth-security-note {
+  width: 350px;
+  height: 40px;
+  flex: 0 0 40px;
+  margin: 0;
+  color: #616675;
+  opacity: .88;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 19px;
+  font-weight: 400;
+}
+
+@media (max-width: 900px) {
+  .auth-modal__content--forgot {
+    width: 52%;
+    flex-basis: 52%;
+    padding: 32px 34px;
+  }
+
+  .auth-forgot-heading,
+  .auth-forgot-heading h2,
+  .auth-forgot-heading p,
+  .auth-reset-form,
+  .auth-reset-email,
+  .auth-reset-submit,
+  .auth-security-note {
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .auth-modal__content--forgot {
+    width: 100%;
+    height: auto;
+    min-height: 470px;
+    flex-basis: 100%;
+    padding: 32px 28px;
+  }
+
+  .auth-forgot-heading {
+    height: auto;
+    flex-basis: auto;
+  }
+
+  .auth-forgot-heading h2,
+  .auth-forgot-heading p,
+  .auth-security-note {
+    height: auto;
+  }
+}
