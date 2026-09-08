@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
+import AuthModal from './AuthModal'
 
 const productLinks = [
   { label: 'Browse All Categories', href: '/search', arrow: true },
@@ -12,6 +13,7 @@ const productLinks = [
 
 export default function Navbar({ variant = 'default' }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [authMode, setAuthMode] = useState(null)
   const productMenuRef = useRef(null)
 
   const isCatalog = variant === 'catalog'
@@ -64,7 +66,8 @@ export default function Navbar({ variant = 'default' }) {
   }
 
   return (
-    <header className={navbarClasses}>
+    <>
+      <header className={navbarClasses}>
       <div className="navbar__top design-container">
         <a className="brand navbar-control" href="/" aria-label="Zetruv home">
           <img src={assets.logo} alt="Zetruv" />
@@ -163,12 +166,35 @@ export default function Navbar({ variant = 'default' }) {
 
           {!isLoggedIn && (
             <div className="auth-actions">
-              <button className="btn btn--outline navbar-control" type="button"><img src={assets.login} alt="" />Login</button>
-              <button className="btn btn--ghost navbar-control" type="button"><img src={assets.register} alt="" />Register</button>
+              <button
+                className="btn btn--outline navbar-control"
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setAuthMode('login')}
+              >
+                <img src={assets.login} alt="" />Login
+              </button>
+              <button
+                className="btn btn--ghost navbar-control"
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setAuthMode('register')}
+              >
+                <img src={assets.register} alt="" />Register
+              </button>
             </div>
           )}
         </div>
       </div>
-    </header>
+      </header>
+
+      {authMode && (
+        <AuthModal
+          mode={authMode}
+          onModeChange={setAuthMode}
+          onClose={() => setAuthMode(null)}
+        />
+      )}
+    </>
   )
 }
