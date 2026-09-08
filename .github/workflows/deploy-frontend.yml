@@ -46,5 +46,5 @@ jobs:
           if [[ "${TARGET_ENV}" == "dev" ]]; then
             sudo -u zetruv-deploy /usr/local/bin/deploy-zetruv-frontend-dev "${GITHUB_SHA}"
           else
-            sudo -u zetruv-deploy /usr/local/bin/deploy-zetruv-frontend "${TARGET_ENV}" "${GITHUB_SHA}"
+            sudo -u zetruv-deploy /usr/local/bin/deploy-zetruv-frontend-staging "${GITHUB_SHA}"
           fi
