@@ -3,7 +3,7 @@ import { stableIcons } from './stableIcons'
 // Exact exports from the Zetruv Figma redesign. The UI consumes these through
 // data/props so backend/CDN URLs can replace them later without changing layout.
 export const assets = {
-  logo: 'https://www.figma.com/api/mcp/asset/18e54276-12af-43aa-809f-90e7a67a1700.png',
+  logo: '/assets/home/navbar-logo.png',
   heroBackground: 'https://www.figma.com/api/mcp/asset/aa256062-9cd2-4c19-a480-93b5bf864d38.png',
   heroShowcase: 'https://www.figma.com/api/mcp/asset/1a94a73c-7495-4c44-b7fb-ba269a51a164.png',
 
