@@ -27,6 +27,10 @@ const emptyHomepage = {
 
 export default function HomePage() {
   const [data, setData] = useState(emptyHomepage)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.sessionStorage.getItem('zetruv-auth-preview') === '1'
+  })
 
   useEffect(() => {
     let active = true
@@ -42,7 +46,13 @@ export default function HomePage() {
 
   return (
     <div className="site-shell site-shell--homepage-final">
-      <Navbar />
+      <Navbar
+        variant={isAuthenticated ? 'homeLoggedIn' : 'default'}
+        onAuthenticated={() => {
+          window.sessionStorage.setItem('zetruv-auth-preview', '1')
+          setIsAuthenticated(true)
+        }}
+      />
       <main>
         <Hero />
         <ServiceCategories />
