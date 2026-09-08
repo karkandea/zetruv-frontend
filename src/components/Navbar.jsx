@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 
 const productLinks = [
@@ -12,22 +12,45 @@ const productLinks = [
 
 export default function Navbar({ variant = 'default' }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const productMenuRef = useRef(null)
+
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
   const isHomeLoggedIn = variant === 'homeLoggedIn'
   const isLeaderboard = variant === 'leaderboard'
   const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
+
   const [activeNav, setActiveNav] = useState(() => {
     if (isLeaderboard) return 'leaderboard'
     if (isCatalog) return 'product'
     if (homeActive) return 'home'
     return ''
   })
+
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
   const searchAction = isLoginCatalog ? '/search/login' : '/search'
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (productMenuRef.current && !productMenuRef.current.contains(event.target)) {
+        setIsProductOpen(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') setIsProductOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   const navbarClasses = [
     'navbar',
@@ -35,10 +58,15 @@ export default function Navbar({ variant = 'default' }) {
     isHomeLoggedIn ? 'navbar--home-final' : '',
   ].filter(Boolean).join(' ')
 
+  function selectNav(name) {
+    setActiveNav(name)
+    if (name !== 'product') setIsProductOpen(false)
+  }
+
   return (
     <header className={navbarClasses}>
       <div className="navbar__top design-container">
-        <a className="brand" href="/" aria-label="Zetruv home">
+        <a className="brand navbar-control" href="/" aria-label="Zetruv home">
           <img src={assets.logo} alt="Zetruv" />
         </a>
 
@@ -53,11 +81,11 @@ export default function Navbar({ variant = 'default' }) {
         </form>
 
         <div className="navbar__quick-actions">
-          <button className="nav-pill" type="button" aria-label="Change language">
+          <button className="nav-pill navbar-control" type="button" aria-label="Change language">
             <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
             <span>EN</span>
           </button>
-          <button className="nav-pill" type="button">
+          <button className="nav-pill navbar-control" type="button">
             <img src={assets.cart} alt="" />
             <span>Cart</span>
           </button>
@@ -69,22 +97,24 @@ export default function Navbar({ variant = 'default' }) {
         <div className="design-container navbar__bottom-inner">
           <nav className="navlinks" aria-label="Main navigation">
             <a
-              className={activeNav === 'home' ? 'active' : ''}
+              className={`navbar-control${activeNav === 'home' ? ' active' : ''}`}
               href="/"
-              onClick={() => {
-                setActiveNav('home')
-                setIsProductOpen(false)
-              }}
+              aria-current={activeNav === 'home' ? 'page' : undefined}
+              onClick={() => selectNav('home')}
             >
               <img src={assets.home} alt="" />Home
             </a>
 
-            <div className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
+            <div
+              ref={productMenuRef}
+              className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}
+            >
               <a
                 href="/search"
-                className={`navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
+                className={`navbar-control navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isProductOpen}
+                aria-current={activeNav === 'product' ? 'page' : undefined}
                 onClick={(event) => {
                   event.preventDefault()
                   setActiveNav('product')
@@ -95,7 +125,7 @@ export default function Navbar({ variant = 'default' }) {
               </a>
               <div className="product-dropdown" aria-label="Product categories" aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
-                  <a href={link.href} key={link.label}>
+                  <a className="navbar-control" href={link.href} key={link.label}>
                     <span>{link.label}</span>
                     {link.arrow && <img src={assets.productDropdownArrow} alt="" />}
                   </a>
@@ -104,32 +134,28 @@ export default function Navbar({ variant = 'default' }) {
             </div>
 
             <a
-              className={activeNav === 'article' ? 'active' : ''}
+              className={`navbar-control${activeNav === 'article' ? ' active' : ''}`}
               href="#article"
-              onClick={() => {
-                setActiveNav('article')
-                setIsProductOpen(false)
-              }}
+              aria-current={activeNav === 'article' ? 'page' : undefined}
+              onClick={() => selectNav('article')}
             >
               <img src={assets.transaction} alt="" />{isCatalog ? 'Articles' : 'Article'}
             </a>
+
             <a
-              className={activeNav === 'transaction' ? 'active' : ''}
+              className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`}
               href="#transaction"
-              onClick={() => {
-                setActiveNav('transaction')
-                setIsProductOpen(false)
-              }}
+              aria-current={activeNav === 'transaction' ? 'page' : undefined}
+              onClick={() => selectNav('transaction')}
             >
               <img src={assets.transaction} alt="" />{isCatalog ? 'Track Order' : 'Check Transaction'}
             </a>
+
             <a
-              className={activeNav === 'leaderboard' ? 'active' : ''}
+              className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`}
               href="/leaderboard"
-              onClick={() => {
-                setActiveNav('leaderboard')
-                setIsProductOpen(false)
-              }}
+              aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
+              onClick={() => selectNav('leaderboard')}
             >
               <img src={assets.leaderboard} alt="" />Leaderboard
             </a>
@@ -137,8 +163,8 @@ export default function Navbar({ variant = 'default' }) {
 
           {!isLoggedIn && (
             <div className="auth-actions">
-              <button className="btn btn--outline" type="button"><img src={assets.login} alt="" />Login</button>
-              <button className="btn btn--ghost" type="button"><img src={assets.register} alt="" />Register</button>
+              <button className="btn btn--outline navbar-control" type="button"><img src={assets.login} alt="" />Login</button>
+              <button className="btn btn--ghost navbar-control" type="button"><img src={assets.register} alt="" />Register</button>
             </div>
           )}
         </div>
