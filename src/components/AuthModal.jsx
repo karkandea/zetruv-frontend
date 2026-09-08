@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 
-export default function AuthModal({ mode = 'login', onModeChange, onClose }) {
+export default function AuthModal({ mode = 'login', onModeChange, onClose, onAuthenticated }) {
   const [passwordVisible, setPasswordVisible] = useState(false)
   const dialogRef = useRef(null)
   const isRegister = mode === 'register'
@@ -29,6 +29,11 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose }) {
 
   function handleSubmit(event) {
     event.preventDefault()
+
+    if (!isRegister) {
+      onAuthenticated?.()
+      onClose?.()
+    }
   }
 
   return (
