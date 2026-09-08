@@ -54,8 +54,8 @@ function fallbackProductImage(product) {
 }
 
 function productHref(product) {
-  if (product.kind === 'TopUpGame' && product.slug === 'mobile-legends') {
-    return '/product/mobile-legends'
+  if (product.kind === 'TopUpGame') {
+    return `/product/${product.slug}`
   }
 
   if (product.kind === 'TopUpLogin' && product.slug === 'genshin-impact') {
