@@ -78,7 +78,6 @@ function CatalogCard({ product, categoryLabel }) {
       type="button"
       aria-label={`Open ${product.name}`}
       onClick={handleClick}
-      disabled={!href}
     >
       <img src={product.thumbnailUrl || fallbackProductImage(product)} alt="" />
       <span className="search-game-card__copy">
@@ -239,10 +238,8 @@ export default function SearchPage({ mode = 'player-id' }) {
   }
 
   function handleCategory(category) {
-    setActiveKind(category.kind)
-    setLetterFiltering(false)
-
     const url = new URL(window.location.href)
+
     if (category.kind === 'TopUpLogin') {
       url.pathname = '/search/login'
       url.searchParams.delete('kind')
@@ -252,7 +249,7 @@ export default function SearchPage({ mode = 'player-id' }) {
       else url.searchParams.set('kind', category.kind)
     }
 
-    window.history.pushState({}, '', `${url.pathname}${url.search}`)
+    window.location.href = `${url.pathname}${url.search}`
   }
 
   const loading = loadingCatalog || loadingProducts
