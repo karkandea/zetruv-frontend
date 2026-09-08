@@ -8,12 +8,12 @@ export const assets = {
   heroShowcase: 'https://www.figma.com/api/mcp/asset/1a94a73c-7495-4c44-b7fb-ba269a51a164.png',
 
   homepageHeroArtwork: 'https://www.figma.com/api/mcp/asset/1f39928e-3525-4639-aeea-123431ca9485.png',
-  homepageCategoryTopUp: 'https://www.figma.com/api/mcp/asset/b1e03741-c147-4314-98bc-2242e50e4635.png',
-  homepageCategoryVoucher: 'https://www.figma.com/api/mcp/asset/17307a70-e2a4-4a52-a14b-b88f6cbee78f.png',
-  homepageCategoryJockey: 'https://www.figma.com/api/mcp/asset/db39607a-812e-453b-a947-ffbb0566c2b8.png',
-  homepageCategoryMerch: 'https://www.figma.com/api/mcp/asset/93347dee-04c5-4f26-9f78-a2b83abcbb6f.png',
-  homepageCategoryAccount: 'https://www.figma.com/api/mcp/asset/152713b9-bdf8-441e-8a0c-8b9c0e760c2c.png',
-  homepageCategoryRing: 'https://www.figma.com/api/mcp/asset/bccf9b28-9771-4910-99dc-0a05f0b6e36c.svg',
+  homepageCategoryTopUp: '/assets/home/category-topup.png',
+  homepageCategoryVoucher: '/assets/home/category-voucher.png',
+  homepageCategoryJockey: '/assets/home/category-jockey.png',
+  homepageCategoryMerch: '/assets/home/category-merch.png',
+  homepageCategoryAccount: '/assets/home/category-account.png',
+  homepageCategoryRing: '/assets/home/category-ring.png',
   productDropdownArrow: 'https://www.figma.com/api/mcp/asset/be6230b6-7782-43bc-8fc7-7b4cfe60af61.svg',
 
   search: 'https://www.figma.com/api/mcp/asset/8a10fc1c-f6f1-480c-a357-cf6309bf7aff.svg',
