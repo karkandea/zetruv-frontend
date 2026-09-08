@@ -1,15 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { productDetailAssets as media } from '../data/productDetailAssets'
+import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
-
-const skuOptions = [
-  { id: '5', name: '5 Diamond', price: 1234, image: media.diamond5, flashSale: true },
-  { id: '50', name: '50 Diamond', price: 10234, image: media.diamond50 },
-  { id: '100', name: '100 Diamond', price: 3234, image: media.diamond100 },
-  { id: '250', name: '250 Diamond', price: 3234, image: media.diamond250 },
-  { id: '500', name: '500 Diamond', price: 3234, image: media.diamond500 },
-]
 
 const reviews = [
   { name: 'D***h', tags: ['Proses cepat', 'Produk sesuai'] },
@@ -18,6 +11,20 @@ const reviews = [
 ]
 
 const rupiah = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
+
+function variantIcon(variant, index) {
+  const amount = Number.parseInt((variant.name.match(/\d+/) || [])[0], 10)
+
+  if (!Number.isNaN(amount)) {
+    if (amount <= 5) return media.diamond5
+    if (amount <= 50) return media.diamond50
+    if (amount <= 100) return media.diamond100
+    if (amount <= 250) return media.diamond250
+    return media.diamond500
+  }
+
+  return [media.diamond5, media.diamond50, media.diamond100, media.diamond250, media.diamond500][index % 5]
+}
 
 function Stars({ size = 'large' }) {
   const star = size === 'small' ? media.reviewStarFilled : media.star
@@ -51,26 +58,88 @@ function RatingDistribution() {
   )
 }
 
-export default function ProductDetailPage() {
+export default function ProductDetailPage({ slug = 'mobile-legends' }) {
+  const [product, setProduct] = useState(null)
+  const [loadError, setLoadError] = useState('')
+  const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState('diamonds')
-  const [selectedId, setSelectedId] = useState('5')
+  const [selectedId, setSelectedId] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [userId, setUserId] = useState('')
   const [zone, setZone] = useState('')
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProduct() {
+      setLoading(true)
+      setLoadError('')
+
+      try {
+        const result = await getCatalogProduct(slug)
+
+        if (result.fulfillmentMethod !== 'AUTO_ID') {
+          throw new Error('This product does not use the Top Up Via ID flow.')
+        }
+
+        if (!cancelled) {
+          setProduct(result)
+          setSelectedId(result.variants?.[0]?.id || '')
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setProduct(null)
+          setLoadError(error.message || 'Product could not be loaded.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadProduct()
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
+  const skuOptions = product?.variants || []
   const selected = useMemo(
-    () => skuOptions.find((item) => item.id === selectedId) || skuOptions[0],
-    [selectedId],
+    () => skuOptions.find((item) => item.id === selectedId) || skuOptions[0] || null,
+    [skuOptions, selectedId],
   )
 
-  const subtotal = selected.price * quantity
+  const subtotal = (selected?.price || 0) * quantity
   const serviceFee = 2000
   const total = subtotal + serviceFee
   const accountVerified = false
+  const publisher = product?.game?.publisher || product?.game?.name || 'Zetruv'
+  const coverImage = product?.thumbnailUrl || media.gameCover
 
   function selectSku(id) {
     setSelectedId(id)
     setQuantity(1)
+  }
+
+  if (loading) {
+    return (
+      <div className="product-detail-shell">
+        <Navbar variant="loginCatalog" />
+        <main className="product-detail-page">
+          <div className="product-detail-container"><div className="sku-empty">Loading product…</div></div>
+        </main>
+      </div>
+    )
+  }
+
+  if (loadError || !product) {
+    return (
+      <div className="product-detail-shell">
+        <Navbar variant="loginCatalog" />
+        <main className="product-detail-page">
+          <div className="product-detail-container"><div className="sku-empty">{loadError || 'Product not found.'}</div></div>
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -82,12 +151,12 @@ export default function ProductDetailPage() {
           <div className="product-hero__shade" />
           <div className="product-detail-container product-hero__content">
             <div className="product-game-cover">
-              <img src={media.gameCover} alt="Mobile Legends: Bang Bang" />
+              <img src={coverImage} alt={product.name} />
             </div>
             <div className="product-hero__copy">
-              <h1>Mobile Legends: Bang Bang</h1>
+              <h1>{product.name}</h1>
               <div className="product-rating-line">
-                <strong>Moonton</strong>
+                <strong>{publisher}</strong>
                 <span className="product-rating-number">4,6</span>
                 <Stars />
                 <span>(2rb)</span>
@@ -112,25 +181,29 @@ export default function ProductDetailPage() {
             </div>
 
             {category === 'diamonds' ? (
-              <div className="sku-grid">
-                {skuOptions.map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={`sku-card${selectedId === item.id ? ' active' : ''}`}
-                    onClick={() => selectSku(item.id)}
-                  >
-                    {item.flashSale && (
-                      <span className="sku-flash"><img src={media.fire} alt="" />Flashsale</span>
-                    )}
-                    <img className="sku-card__icon" src={item.image} alt="" />
-                    <span className="sku-card__copy">
-                      <strong>{item.name}</strong>
-                      <small>{rupiah(item.price)}</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
+              skuOptions.length > 0 ? (
+                <div className="sku-grid">
+                  {skuOptions.map((item, index) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={`sku-card${selectedId === item.id ? ' active' : ''}`}
+                      onClick={() => selectSku(item.id)}
+                    >
+                      {item.compareAtPrice > item.price && (
+                        <span className="sku-flash"><img src={media.fire} alt="" />Promo</span>
+                      )}
+                      <img className="sku-card__icon" src={variantIcon(item, index)} alt="" />
+                      <span className="sku-card__copy">
+                        <strong>{item.name}</strong>
+                        <small>{rupiah(item.price)}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="sku-empty">Belum ada item aktif untuk produk ini.</div>
+              )
             ) : (
               <div className="sku-empty">Produk Starlight akan tampil di sini setelah data backend tersedia.</div>
             )}
@@ -179,20 +252,21 @@ export default function ProductDetailPage() {
               </label>
             </div>
 
-            <div className="selected-item-box">
-              <div className="selected-item-row">
-                <div>
-                  <strong>{selected.name}</strong>
-                  <span>{rupiah(selected.price)} / item</span>
-                </div>
-                <div className="quantity-stepper">
-                  <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity"><img src={media.minus} alt="" /></button>
-                  <strong>{quantity}</strong>
-                  <button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Increase quantity"><img src={media.plus} alt="" /></button>
+            {selected && (
+              <div className="selected-item-box">
+                <div className="selected-item-row">
+                  <div>
+                    <strong>{selected.name}</strong>
+                    <span>{rupiah(selected.price)} / item</span>
+                  </div>
+                  <div className="quantity-stepper">
+                    <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity"><img src={media.minus} alt="" /></button>
+                    <strong>{quantity}</strong>
+                    <button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Increase quantity"><img src={media.plus} alt="" /></button>
+                  </div>
                 </div>
               </div>
-              <small>Total saat ini: {Number(selected.id) * quantity} Diamond</small>
-            </div>
+            )}
 
             <div className="order-summary">
               <h2>Ringkasan</h2>
@@ -205,8 +279,8 @@ export default function ProductDetailPage() {
             <div className="order-total"><strong>Total</strong><b>{rupiah(total)}</b></div>
 
             <div className="product-cta-stack">
-              <button type="button" disabled={!accountVerified}>Tambah ke Keranjang</button>
-              <button type="button" disabled={!accountVerified}>Tambah &amp; Lihat Keranjang</button>
+              <button type="button" disabled={!accountVerified || !selected}>Tambah ke Keranjang</button>
+              <button type="button" disabled={!accountVerified || !selected}>Tambah &amp; Lihat Keranjang</button>
             </div>
           </aside>
         </div>
