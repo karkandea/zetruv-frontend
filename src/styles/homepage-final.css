@@ -1518,3 +1518,271 @@
     transform: translateX(-50%);
   }
 }
+
+/* Supervisor feedback pass — navbar/category/joki/fab/merch */
+
+/* 1) Navbar asset sizing + complete interaction states */
+.site-shell--homepage-final .brand {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  flex: 0 0 52.071px;
+}
+
+.site-shell--homepage-final .brand img {
+  width: 52.071px;
+  height: 18px;
+  display: block;
+  object-fit: cover;
+}
+
+.site-shell--homepage-final .navbar-control {
+  transition:
+    opacity .15s ease,
+    color .15s ease,
+    background-color .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease,
+    transform .12s ease;
+}
+
+.site-shell--homepage-final .navlinks > a,
+.site-shell--homepage-final .nav-product-menu > a {
+  opacity: .5;
+}
+
+.site-shell--homepage-final .navlinks > a:hover,
+.site-shell--homepage-final .nav-product-menu > a:hover,
+.site-shell--homepage-final .navlinks > a:focus-visible,
+.site-shell--homepage-final .nav-product-menu > a:focus-visible {
+  opacity: .82;
+}
+
+.site-shell--homepage-final .navlinks > a.active,
+.site-shell--homepage-final .nav-product-menu > a.active,
+.site-shell--homepage-final .nav-product-menu.is-open > a {
+  opacity: 1;
+  border-bottom-color: #fff;
+}
+
+.site-shell--homepage-final .navlinks > a:active,
+.site-shell--homepage-final .nav-product-menu > a:active {
+  opacity: 1;
+  transform: translateY(1px);
+}
+
+.site-shell--homepage-final .navlinks > a:focus-visible,
+.site-shell--homepage-final .nav-product-menu > a:focus-visible,
+.site-shell--homepage-final .nav-pill:focus-visible,
+.site-shell--homepage-final .auth-actions .btn:focus-visible,
+.site-shell--homepage-final .searchbox:focus-within {
+  outline: 2px solid #a0b2ff;
+  outline-offset: 2px;
+}
+
+.site-shell--homepage-final .nav-pill:hover,
+.site-shell--homepage-final .auth-actions .btn:hover {
+  border-color: rgba(255,255,255,.45);
+  background: rgba(255,255,255,.11);
+  transform: translateY(-1px);
+}
+
+.site-shell--homepage-final .nav-pill:active,
+.site-shell--homepage-final .auth-actions .btn:active {
+  transform: translateY(0) scale(.97);
+  background: rgba(255,255,255,.16);
+}
+
+.site-shell--homepage-final .auth-actions .btn--outline:hover {
+  border-color: #c5d0ff;
+  color: #c5d0ff;
+  box-shadow: 0 0 0 3px rgba(160,178,255,.08);
+}
+
+.site-shell--homepage-final .product-dropdown a {
+  border-radius: 8px;
+}
+
+.site-shell--homepage-final .product-dropdown a:hover,
+.site-shell--homepage-final .product-dropdown a:focus-visible {
+  opacity: 1;
+  background: rgba(255,255,255,.08);
+}
+
+.site-shell--homepage-final .product-dropdown a:active {
+  background: rgba(255,255,255,.14);
+  transform: scale(.99);
+}
+
+/* 2) Category cards: exact 126px geometry so artwork and both text rows are visible. */
+.site-shell--homepage-final .service-categories--homepage-final .service-category {
+  padding: 14px 18px;
+  gap: 12px;
+  overflow: visible;
+}
+
+.site-shell--homepage-final .service-categories--homepage-final .service-category strong {
+  height: 18px;
+  min-height: 18px;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.site-shell--homepage-final .service-categories--homepage-final .service-category small {
+  width: 144px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  display: block;
+}
+
+.site-shell--homepage-final .service-categories--homepage-final .service-category:hover {
+  border-color: #bfc6dc;
+  box-shadow: 0 8px 22px rgba(6,5,82,.08);
+  transform: translateY(-2px);
+}
+
+.site-shell--homepage-final .service-categories--homepage-final .service-category:active {
+  transform: translateY(0) scale(.99);
+}
+
+/* 3) Joki card captions sit over the artwork so Figma's 5px backdrop blur is visible. */
+.site-shell--homepage-final .jockey-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.site-shell--homepage-final .jockey-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 197px;
+  z-index: 0;
+}
+
+.site-shell--homepage-final .jockey-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-shell--homepage-final .jockey-card__caption {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 75px;
+  background: linear-gradient(74.32deg, rgba(0,0,0,.48) 19.8%, rgba(102,102,102,.30) 148.28%);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+/* 4) Floating support button — exact 160x42 Figma treatment and no wrapping. */
+.site-shell--homepage-final > .contact-fab {
+  box-sizing: border-box;
+  width: 160px;
+  height: 42px;
+  min-width: 160px;
+  min-height: 42px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 16px 0 12px;
+  border: 2px solid #fff;
+  border-radius: 40px;
+  color: #fff;
+  background: #010154;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 12px 30px rgba(1,1,84,.24);
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.site-shell--homepage-final > .contact-fab img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: contain;
+}
+
+.site-shell--homepage-final > .contact-fab:hover {
+  background: #0b0b70;
+  box-shadow: 0 14px 34px rgba(1,1,84,.34);
+  transform: translateY(-2px);
+}
+
+.site-shell--homepage-final > .contact-fab:active {
+  transform: translateY(0) scale(.98);
+}
+
+.site-shell--homepage-final > .contact-fab:focus-visible {
+  outline: 3px solid rgba(160,178,255,.8);
+  outline-offset: 3px;
+}
+
+/* 5) Merchandise carousel controls reuse the Flash Sale arrow language. */
+.site-shell--homepage-final .merchandise__panel {
+  position: relative;
+  overflow: visible;
+}
+
+.site-shell--homepage-final .merchandise__viewport {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.site-shell--homepage-final .merchandise__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.site-shell--homepage-final .merchandise__track {
+  height: 100%;
+  align-items: flex-end;
+  width: max-content;
+  padding-right: 24px;
+}
+
+.site-shell--homepage-final .merchandise__arrow {
+  top: 50%;
+  margin-top: -24px;
+  z-index: 5;
+  border: 1px solid rgba(8,8,75,.08);
+  box-shadow: 0 8px 18px rgba(3,5,31,.18);
+}
+
+.site-shell--homepage-final .merchandise__arrow--left {
+  left: -20px;
+}
+
+.site-shell--homepage-final .merchandise__arrow--right {
+  right: -20px;
+}
+
+.site-shell--homepage-final .merchandise__arrow:hover {
+  transform: translateY(-1px);
+}
+
+.site-shell--homepage-final .merchandise__arrow--right:hover {
+  transform: rotate(180deg) translateY(1px);
+}
+
+.site-shell--homepage-final .merchandise__arrow:active {
+  box-shadow: 0 4px 10px rgba(3,5,31,.18);
+}
+
+@media (max-width: 900px) {
+  .site-shell--homepage-final .merchandise__arrow {
+    display: none;
+  }
+}
