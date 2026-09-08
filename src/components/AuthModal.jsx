@@ -5,6 +5,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   const [passwordVisible, setPasswordVisible] = useState(false)
   const dialogRef = useRef(null)
   const isRegister = mode === 'register'
+  const isForgot = mode === 'forgot'
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -23,6 +24,10 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     }
   }, [onClose])
 
+  useEffect(() => {
+    setPasswordVisible(false)
+  }, [mode])
+
   function handleBackdrop(event) {
     if (event.target === event.currentTarget) onClose?.()
   }
@@ -30,7 +35,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   function handleSubmit(event) {
     event.preventDefault()
 
-    if (!isRegister) {
+    if (!isRegister && !isForgot) {
       onAuthenticated?.()
       onClose?.()
     }
@@ -39,10 +44,10 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   return (
     <div className="auth-modal-backdrop" role="presentation" onMouseDown={handleBackdrop}>
       <section
-        className="auth-modal"
+        className={`auth-modal${isForgot ? ' auth-modal--forgot' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label={isRegister ? 'Register' : 'Login'}
+        aria-label={isForgot ? 'Forgot password' : isRegister ? 'Register' : 'Login'}
         tabIndex={-1}
         ref={dialogRef}
       >
@@ -52,88 +57,129 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
           </div>
         </div>
 
-        <div className="auth-modal__content">
-          <div className="auth-modal__content-inner">
-            <div className="auth-tabs" role="tablist" aria-label="Authentication">
-              <button
-                className={`auth-tab${!isRegister ? ' active' : ''}`}
-                type="button"
-                role="tab"
-                aria-selected={!isRegister}
-                onClick={() => onModeChange?.('login')}
-              >
-                Login
-              </button>
-              <button
-                className={`auth-tab${isRegister ? ' active' : ''}`}
-                type="button"
-                role="tab"
-                aria-selected={isRegister}
-                onClick={() => onModeChange?.('register')}
-              >
-                Register
-              </button>
-            </div>
+        {isForgot ? (
+          <div className="auth-modal__content auth-modal__content--forgot">
+            <button
+              className="auth-back-login"
+              type="button"
+              onClick={() => onModeChange?.('login')}
+            >
+              <img src={assets.authBackArrow} alt="" />
+              <span>Back to login</span>
+            </button>
 
-            <div className="auth-heading">
-              <h2>{isRegister ? 'Register' : 'Login'}</h2>
+            <div className="auth-forgot-heading">
+              <h2>Forgot password?</h2>
               <p>
-                {isRegister
-                  ? 'Create your account and start the adventure'
-                  : 'Please login to your account and start the adventure'}
+                Enter the email associated with your account. We’ll send you a secure link to reset your password.
               </p>
             </div>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              {isRegister && (
-                <input
-                  className="auth-input"
-                  type="text"
-                  name="name"
-                  placeholder="Name"
-                  autoComplete="name"
-                />
-              )}
-
+            <form className="auth-reset-form" onSubmit={handleSubmit}>
               <input
-                className="auth-input"
+                className="auth-input auth-reset-email"
                 type="email"
-                name="email"
+                name="reset-email"
                 placeholder="Email"
                 autoComplete="email"
               />
-
-              <div className="auth-password-group">
-                <div className="auth-password">
-                  <input
-                    type={passwordVisible ? 'text' : 'password'}
-                    name="password"
-                    placeholder="Password"
-                    autoComplete={isRegister ? 'new-password' : 'current-password'}
-                  />
-                  <button
-                    className="auth-password__toggle"
-                    type="button"
-                    aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                    onClick={() => setPasswordVisible((visible) => !visible)}
-                  >
-                    <img src={assets.authEye} alt="" />
-                  </button>
-                </div>
-
-                {!isRegister && (
-                  <button className="auth-forgot" type="button">
-                    Forget password?
-                  </button>
-                )}
-              </div>
-
-              <button className="auth-submit" type="submit">
-                {isRegister ? 'Register' : 'Login'}
+              <button className="auth-submit auth-reset-submit" type="submit">
+                Send reset link
               </button>
             </form>
+
+            <p className="auth-security-note">
+              For security, we’ll show the same confirmation whether or not an account exists for that email.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="auth-modal__content">
+            <div className="auth-modal__content-inner">
+              <div className="auth-tabs" role="tablist" aria-label="Authentication">
+                <button
+                  className={`auth-tab${!isRegister ? ' active' : ''}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={!isRegister}
+                  onClick={() => onModeChange?.('login')}
+                >
+                  Login
+                </button>
+                <button
+                  className={`auth-tab${isRegister ? ' active' : ''}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={isRegister}
+                  onClick={() => onModeChange?.('register')}
+                >
+                  Register
+                </button>
+              </div>
+
+              <div className="auth-heading">
+                <h2>{isRegister ? 'Register' : 'Login'}</h2>
+                <p>
+                  {isRegister
+                    ? 'Create your account and start the adventure'
+                    : 'Please login to your account and start the adventure'}
+                </p>
+              </div>
+
+              <form className="auth-form" onSubmit={handleSubmit}>
+                {isRegister && (
+                  <input
+                    className="auth-input"
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    autoComplete="name"
+                  />
+                )}
+
+                <input
+                  className="auth-input"
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  autoComplete="email"
+                />
+
+                <div className="auth-password-group">
+                  <div className="auth-password">
+                    <input
+                      type={passwordVisible ? 'text' : 'password'}
+                      name="password"
+                      placeholder="Password"
+                      autoComplete={isRegister ? 'new-password' : 'current-password'}
+                    />
+                    <button
+                      className="auth-password__toggle"
+                      type="button"
+                      aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                      onClick={() => setPasswordVisible((visible) => !visible)}
+                    >
+                      <img src={assets.authEye} alt="" />
+                    </button>
+                  </div>
+
+                  {!isRegister && (
+                    <button
+                      className="auth-forgot"
+                      type="button"
+                      onClick={() => onModeChange?.('forgot')}
+                    >
+                      Forget password?
+                    </button>
+                  )}
+                </div>
+
+                <button className="auth-submit" type="submit">
+                  {isRegister ? 'Register' : 'Login'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   )
