@@ -13,7 +13,14 @@ const productLinks = [
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
-  const [authMode, setAuthMode] = useState(null)
+  const [authMode, setAuthMode] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const verifyState = new URLSearchParams(window.location.search).get('verify-email')
+    if (verifyState === 'pending') return 'register-verify'
+    if (verifyState === 'success') return 'register-verified'
+    if (verifyState === 'expired') return 'register-expired'
+    return null
+  })
   const productMenuRef = useRef(null)
 
   const isCatalog = variant === 'catalog'
