@@ -305,7 +305,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   </div>
 
                   {!isRegister && (
-                    <button className="auth-forgot" type="button" onClick={() => onModeChange?.('forgot')}>
+                    <button
+                      className="auth-forgot"
+                      type="button"
+                      onPointerDown={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        onModeChange?.('forgot')
+                      }}
+                    >
                       Forget password?
                     </button>
                   )}
