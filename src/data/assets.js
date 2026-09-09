@@ -31,6 +31,9 @@ export const assets = {
   authBackArrow: '/assets/auth/forgot-back.png',
   authMail: '/assets/auth/forgot-mail.png',
   authSuccess: '/assets/auth/forgot-success.png',
+  authRegisterVerify: '/assets/auth/register-verify.png',
+  authRegisterVerified: '/assets/auth/register-verified.png',
+  authRegisterExpired: '/assets/auth/register-expired.png',
 
   categoryTopUp: 'https://www.figma.com/api/mcp/asset/feffa99f-8e79-4ed0-9a0c-32eda3c6bc77.png',
   categoryVoucher: 'https://www.figma.com/api/mcp/asset/63e8efa1-0fb9-431b-8dd5-30d76806d18d.png',
