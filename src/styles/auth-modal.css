@@ -899,3 +899,10 @@
     height: auto;
   }
 }
+
+.auth-forgot {
+  position: relative;
+  z-index: 4;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
