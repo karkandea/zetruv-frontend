@@ -14,18 +14,26 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
+  const [registerEmail, setRegisterEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [resendSeconds, setResendSeconds] = useState(45)
   const dialogRef = useRef(null)
 
   const isRegister = mode === 'register'
+  const isRegisterVerify = mode === 'register-verify'
+  const isRegisterVerified = mode === 'register-verified'
+  const isRegisterExpired = mode === 'register-expired'
+  const isRegisterFlow = isRegisterVerify || isRegisterVerified || isRegisterExpired
+
   const isForgotRequest = mode === 'forgot'
   const isForgotCheck = mode === 'forgot-check'
   const isForgotNew = mode === 'forgot-new'
   const isForgotSuccess = mode === 'forgot-success'
   const isForgotFlow = isForgotRequest || isForgotCheck || isForgotNew || isForgotSuccess
-  const maskedEmail = useMemo(() => maskEmail(resetEmail), [resetEmail])
+
+  const maskedResetEmail = useMemo(() => maskEmail(resetEmail), [resetEmail])
+  const maskedRegisterEmail = useMemo(() => maskEmail(registerEmail), [registerEmail])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -50,12 +58,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   }, [mode])
 
   useEffect(() => {
-    if (!isForgotCheck || resendSeconds <= 0) return undefined
+    const needsTimer = isForgotCheck || isRegisterVerify
+    if (!needsTimer || resendSeconds <= 0) return undefined
+
     const timer = window.setInterval(() => {
       setResendSeconds((seconds) => Math.max(0, seconds - 1))
     }, 1000)
+
     return () => window.clearInterval(timer)
-  }, [isForgotCheck, resendSeconds])
+  }, [isForgotCheck, isRegisterVerify, resendSeconds])
 
   function handleBackdrop(event) {
     if (event.target === event.currentTarget) onClose?.()
@@ -63,10 +74,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
   function handleAuthSubmit(event) {
     event.preventDefault()
-    if (!isRegister) {
-      onAuthenticated?.()
-      onClose?.()
+
+    if (isRegister) {
+      setResendSeconds(45)
+      onModeChange?.('register-verify')
+      return
     }
+
+    onAuthenticated?.()
+    onClose?.()
   }
 
   function handleResetRequest(event) {
@@ -80,19 +96,26 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     onModeChange?.('forgot-success')
   }
 
+  function handleResend() {
+    if (resendSeconds === 0) setResendSeconds(45)
+  }
+
   return (
     <div className="auth-modal-backdrop" role="presentation" onMouseDown={handleBackdrop}>
       <section
-        className={`auth-modal${isForgotFlow ? ' auth-modal--forgot-flow' : ''}`}
+        className={`auth-modal${isForgotFlow || isRegisterFlow ? ' auth-modal--state-flow' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={
-          isForgotRequest ? 'Forgot password'
-            : isForgotCheck ? 'Check your email'
-              : isForgotNew ? 'Create a new password'
-                : isForgotSuccess ? 'Password updated'
-                  : isRegister ? 'Register'
-                    : 'Login'
+          isRegisterVerify ? 'Verify your email'
+            : isRegisterVerified ? 'Email verified'
+              : isRegisterExpired ? 'Verification link expired'
+                : isForgotRequest ? 'Forgot password'
+                  : isForgotCheck ? 'Check your email'
+                    : isForgotNew ? 'Create a new password'
+                      : isForgotSuccess ? 'Password updated'
+                        : isRegister ? 'Register'
+                          : 'Login'
         }
         tabIndex={-1}
         ref={dialogRef}
@@ -102,6 +125,86 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             <img src={assets.authHero} alt="" />
           </div>
         </div>
+
+        {isRegisterVerify && (
+          <div className="auth-modal__content auth-modal__content--register-verify">
+            <div className="auth-register-icon auth-register-icon--verify">
+              <img src={assets.authRegisterVerify} alt="" />
+            </div>
+
+            <div className="auth-register-heading auth-register-heading--verify">
+              <h2>Verify your email</h2>
+              <p>
+                We sent a verification link to {maskedRegisterEmail}. Open the email and click Verify email to activate your account.
+              </p>
+            </div>
+
+            <button className="auth-secondary auth-register-edit" type="button" onClick={() => onModeChange?.('register')}>
+              Edit email address
+            </button>
+
+            <div className="auth-register-resend">
+              <span>Didn’t get it?</span>
+              <button type="button" disabled={resendSeconds > 0} onClick={handleResend}>
+                {resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
+              </button>
+            </div>
+
+            <p className="auth-register-note">Verification links expire after 24 hours.</p>
+          </div>
+        )}
+
+        {isRegisterVerified && (
+          <div className="auth-modal__content auth-modal__content--register-verified">
+            <div className="auth-register-icon auth-register-icon--verified">
+              <img src={assets.authRegisterVerified} alt="" />
+            </div>
+
+            <div className="auth-register-heading auth-register-heading--verified">
+              <h2>Email verified</h2>
+              <p>Your email has been verified successfully. Sign in to continue to your Zetruv account.</p>
+            </div>
+
+            <button className="auth-submit auth-register-primary" type="button" onClick={() => onModeChange?.('login')}>
+              Continue to login
+            </button>
+
+            <p className="auth-register-ready">Your account is now verified and ready to use.</p>
+          </div>
+        )}
+
+        {isRegisterExpired && (
+          <div className="auth-modal__content auth-modal__content--register-expired">
+            <div className="auth-register-icon auth-register-icon--expired">
+              <img src={assets.authRegisterExpired} alt="" />
+            </div>
+
+            <div className="auth-register-heading auth-register-heading--expired">
+              <h2>Verification link expired</h2>
+              <p>This link is no longer valid. Request a new verification email to finish setting up your account.</p>
+            </div>
+
+            <div className="auth-register-actions">
+              <button
+                className="auth-submit auth-register-primary"
+                type="button"
+                onClick={() => {
+                  setResendSeconds(45)
+                  onModeChange?.('register-verify')
+                }}
+              >
+                Send new verification email
+              </button>
+              <button className="auth-secondary" type="button" onClick={() => onModeChange?.('login')}>
+                Back to login
+              </button>
+            </div>
+
+            <p className="auth-register-note auth-register-note--expired">
+              For security, only the most recent verification link will work.
+            </p>
+          </div>
+        )}
 
         {isForgotRequest && (
           <div className="auth-modal__content auth-modal__content--forgot">
@@ -143,7 +246,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             <div className="auth-state-heading auth-state-heading--check">
               <h2>Check your email</h2>
               <p>
-                If an account exists for {maskedEmail}, a password reset link is on the way. The link expires in 15 minutes.
+                If an account exists for {maskedResetEmail}, a password reset link is on the way. The link expires in 15 minutes.
               </p>
             </div>
 
@@ -158,13 +261,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
             <div className="auth-resend">
               <span>Didn’t get the email?</span>
-              <button
-                type="button"
-                disabled={resendSeconds > 0}
-                onClick={() => {
-                  if (resendSeconds === 0) setResendSeconds(45)
-                }}
-              >
+              <button type="button" disabled={resendSeconds > 0} onClick={handleResend}>
                 {resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
               </button>
             </div>
@@ -250,7 +347,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
           </div>
         )}
 
-        {!isForgotFlow && (
+        {!isForgotFlow && !isRegisterFlow && (
           <div className="auth-modal__content">
             <div className="auth-modal__content-inner">
               <div className="auth-tabs" role="tablist" aria-label="Authentication">
@@ -284,7 +381,19 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   <input className="auth-input" type="text" name="name" placeholder="Name" autoComplete="name" />
                 )}
 
-                <input className="auth-input" type="email" name="email" placeholder="Email" autoComplete="email" />
+                {isRegister ? (
+                  <input
+                    className="auth-input"
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    autoComplete="email"
+                    value={registerEmail}
+                    onChange={(event) => setRegisterEmail(event.target.value)}
+                  />
+                ) : (
+                  <input className="auth-input" type="email" name="email" placeholder="Email" autoComplete="email" />
+                )}
 
                 <div className="auth-password-group">
                   <div className="auth-password">
