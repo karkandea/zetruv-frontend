@@ -11,16 +11,15 @@ export default function App() {
     return <LeaderboardPage />
   }
 
-  if (
-    path === '/product/genshin-impact/login'
-    || path === '/product-detail/genshin-impact/login'
-    || path === '/product/login/genshin-impact'
-  ) {
-    return <ProductDetailLoginPage />
+  const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
+    || path.match(/^\/product\/login\/([^/]+)$/)
+  if (loginProductMatch) {
+    return <ProductDetailLoginPage slug={decodeURIComponent(loginProductMatch[1])} />
   }
 
-  if (path === '/product/mobile-legends' || path === '/product-detail/mobile-legends') {
-    return <ProductDetailPage />
+  const productMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)$/)
+  if (productMatch) {
+    return <ProductDetailPage slug={decodeURIComponent(productMatch[1])} />
   }
 
   if (path === '/search/login' || path === '/categories/login') {

@@ -19,3 +19,7 @@ export async function getCatalogProducts({
 
   return apiRequest(`/catalog/products?${params.toString()}`)
 }
+
+export async function getCatalogProduct(slug) {
+  return apiRequest(`/catalog/products/${encodeURIComponent(slug)}`)
+}
