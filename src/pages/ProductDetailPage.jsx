@@ -1,71 +1,67 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { productDetailAssets as media } from '../data/productDetailAssets'
+import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
 
-const skuOptions = [
-  { id: '5', name: '5 Diamond', price: 1234, image: media.diamond5, flashSale: true },
-  { id: '50', name: '50 Diamond', price: 10234, image: media.diamond50 },
-  { id: '100', name: '100 Diamond', price: 3234, image: media.diamond100 },
-  { id: '250', name: '250 Diamond', price: 3234, image: media.diamond250 },
-  { id: '500', name: '500 Diamond', price: 3234, image: media.diamond500 },
-]
+const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 
-const reviews = [
-  { name: 'D***h', tags: ['Proses cepat', 'Produk sesuai'] },
-  { name: 'A***n', tags: ['Akun langsung masuk', 'Respon cepat'] },
-  { name: 'R***a', tags: ['Transaksi mudah', 'Direkomendasikan'] },
-]
-
-const rupiah = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
-
-function Stars({ size = 'large' }) {
-  const star = size === 'small' ? media.reviewStarFilled : media.star
-  return (
-    <span className={`product-stars product-stars--${size}`} aria-label="4.6 out of 5 stars">
-      {[0, 1, 2, 3].map((index) => <img src={star} alt="" key={index} />)}
-      <img src={size === 'small' ? star : media.starPartial} alt="" />
-    </span>
-  )
+function variantIcon(name = '') {
+  if (/\b5\b/.test(name)) return media.diamond5
+  if (/\b50\b/.test(name)) return media.diamond50
+  if (/\b100\b/.test(name)) return media.diamond100
+  if (/\b250\b/.test(name)) return media.diamond250
+  if (/\b500\b/.test(name)) return media.diamond500
+  return media.diamond100
 }
 
-function RatingDistribution() {
-  const rows = [
-    { score: 5, width: '86%' },
-    { score: 4, width: '11%' },
-    { score: 3, width: '2%' },
-    { score: 2, width: '0.7%' },
-    { score: 1, width: '0.5%' },
-  ]
-
-  return (
-    <div className="rating-distribution">
-      {rows.map((row) => (
-        <div className="rating-row" key={row.score}>
-          <span>{row.score}</span>
-          <img src={media.reviewStarSmall} alt="" />
-          <i><b style={{ width: row.width }} /></i>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export default function ProductDetailPage() {
-  const [category, setCategory] = useState('diamonds')
-  const [selectedId, setSelectedId] = useState('5')
+export default function ProductDetailPage({ slug = 'mobile-legends' }) {
+  const [product, setProduct] = useState(null)
+  const [selectedId, setSelectedId] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [userId, setUserId] = useState('')
   const [zone, setZone] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError('')
+
+    getCatalogProduct(slug)
+      .then((data) => {
+        if (cancelled) return
+        if (data.kind === 'TopUpLogin') {
+          window.location.replace(`/product/${data.slug}/login`)
+          return
+        }
+        setProduct(data)
+        const first = data.variants?.find((item) => item.isAvailable) || data.variants?.[0]
+        setSelectedId(first?.id || '')
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Product could not be loaded.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [slug])
 
   const selected = useMemo(
-    () => skuOptions.find((item) => item.id === selectedId) || skuOptions[0],
-    [selectedId],
+    () => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0] || null,
+    [product, selectedId],
   )
 
-  const subtotal = selected.price * quantity
-  const serviceFee = 2000
+  const unitPrice = selected?.effectivePrice ?? selected?.price ?? 0
+  const regularPrice = selected?.price ?? unitPrice
+  const subtotal = unitPrice * quantity
+  const discount = Math.max(0, regularPrice - unitPrice) * quantity
+  const serviceFee = 0
   const total = subtotal + serviceFee
+  const maxQuantity = selected?.stockQuantity ?? 99
   const accountVerified = false
 
   function selectSku(id) {
@@ -73,25 +69,37 @@ export default function ProductDetailPage() {
     setQuantity(1)
   }
 
+  if (loading || error || !product || !selected) {
+    return (
+      <div className="product-detail-shell">
+        <Navbar variant="loginCatalog" />
+        <main className="product-detail-page">
+          <div className="product-detail-container product-detail-layout">
+            <div className="sku-empty">{loading ? 'Loading product…' : error || 'Product is not available.'}</div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  const cover = product.thumbnailUrl || product.game?.imageUrl || media.gameCover
+  const hero = product.images?.[0]?.url || media.heroBackground
+  const publisher = product.game?.publisher || product.game?.name || product.category?.name
+
   return (
     <div className="product-detail-shell">
       <Navbar variant="loginCatalog" />
 
       <main className="product-detail-page">
-        <section className="product-hero" style={{ backgroundImage: `url(${media.heroBackground})` }}>
+        <section className="product-hero" style={{ backgroundImage: `url(${hero})` }}>
           <div className="product-hero__shade" />
           <div className="product-detail-container product-hero__content">
             <div className="product-game-cover">
-              <img src={media.gameCover} alt="Mobile Legends: Bang Bang" />
+              <img src={cover} alt={product.name} />
             </div>
             <div className="product-hero__copy">
-              <h1>Mobile Legends: Bang Bang</h1>
-              <div className="product-rating-line">
-                <strong>Moonton</strong>
-                <span className="product-rating-number">4,6</span>
-                <Stars />
-                <span>(2rb)</span>
-              </div>
+              <h1>{product.name}</h1>
+              <div className="product-rating-line"><strong>{publisher}</strong></div>
               <div className="product-benefits">
                 <span><img src={media.badgeFast} alt="" />Proses Cepat</span>
                 <span><img src={media.badgeSupport} alt="" />Dukungan Chat 24/7</span>
@@ -105,108 +113,79 @@ export default function ProductDetailPage() {
           <section className="product-selection-panel">
             <div className="product-selection-heading">
               <h2>Pilih Item</h2>
-              <div className="product-category-tabs">
-                <button className={category === 'diamonds' ? 'active' : ''} type="button" onClick={() => setCategory('diamonds')}>Diamonds</button>
-                <button className={category === 'starlight' ? 'active' : ''} type="button" onClick={() => setCategory('starlight')}>Starlight</button>
-              </div>
+              <div className="product-category-tabs"><button className="active" type="button" disabled>{product.category?.name || 'Item'}</button></div>
             </div>
 
-            {category === 'diamonds' ? (
-              <div className="sku-grid">
-                {skuOptions.map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={`sku-card${selectedId === item.id ? ' active' : ''}`}
-                    onClick={() => selectSku(item.id)}
-                  >
-                    {item.flashSale && (
-                      <span className="sku-flash"><img src={media.fire} alt="" />Flashsale</span>
-                    )}
-                    <img className="sku-card__icon" src={item.image} alt="" />
-                    <span className="sku-card__copy">
-                      <strong>{item.name}</strong>
-                      <small>{rupiah(item.price)}</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="sku-empty">Produk Starlight akan tampil di sini setelah data backend tersedia.</div>
-            )}
+            <div className="sku-grid">
+              {product.variants.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={`sku-card${selectedId === item.id ? ' active' : ''}`}
+                  onClick={() => selectSku(item.id)}
+                  disabled={!item.isAvailable}
+                >
+                  {item.isOnSale && <span className="sku-flash"><img src={media.fire} alt="" />Flashsale</span>}
+                  <img className="sku-card__icon" src={variantIcon(item.name)} alt="" />
+                  <span className="sku-card__copy">
+                    <strong>{item.name}</strong>
+                    <small>{rupiah(item.effectivePrice ?? item.price)}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
 
             <section className="product-reviews">
               <h2>Ulasan Produk</h2>
-              <div className="rating-summary">
-                <div className="rating-summary__score">
-                  <div><img src={media.reviewStar} alt="" /><strong>4.8</strong><span>/5</span></div>
-                  <small>394 Ulasan</small>
-                </div>
-                <RatingDistribution />
-              </div>
-
-              <div className="review-divider" />
-              <h3>Ulasan Terakhir</h3>
-              <div className="review-grid">
-                {reviews.map((review) => (
-                  <article className="review-card" key={review.name}>
-                    <div className="review-card__top">
-                      <strong>{review.name}</strong>
-                      <Stars size="small" />
-                      <span>Hari ini</span>
-                    </div>
-                    <div className="review-tags">
-                      {review.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <div className="sku-empty">Ulasan belum tersedia untuk produk ini.</div>
             </section>
           </section>
 
           <aside className="product-order-panel">
-            <div className="product-account-fields">
-              <label>
-                <span>User ID</span>
-                <div className="product-input-wrap">
-                  <img src={media.userIcon} alt="" />
-                  <input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder="User ID" />
-                </div>
-              </label>
-              <label>
-                <span>Zona</span>
-                <input value={zone} onChange={(event) => setZone(event.target.value)} placeholder="(ID Zona)" />
-              </label>
-            </div>
+            {product.requiresGameAccountValidation && (
+              <div className="product-account-fields">
+                <label>
+                  <span>User ID</span>
+                  <div className="product-input-wrap">
+                    <img src={media.userIcon} alt="" />
+                    <input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder="User ID" />
+                  </div>
+                </label>
+                <label>
+                  <span>Zona</span>
+                  <input value={zone} onChange={(event) => setZone(event.target.value)} placeholder="(ID Zona)" />
+                </label>
+              </div>
+            )}
 
             <div className="selected-item-box">
               <div className="selected-item-row">
                 <div>
                   <strong>{selected.name}</strong>
-                  <span>{rupiah(selected.price)} / item</span>
+                  <span>{rupiah(unitPrice)} / item</span>
                 </div>
                 <div className="quantity-stepper">
                   <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity"><img src={media.minus} alt="" /></button>
                   <strong>{quantity}</strong>
-                  <button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Increase quantity"><img src={media.plus} alt="" /></button>
+                  <button type="button" onClick={() => setQuantity((value) => Math.min(maxQuantity, value + 1))} disabled={quantity >= maxQuantity} aria-label="Increase quantity"><img src={media.plus} alt="" /></button>
                 </div>
               </div>
-              <small>Total saat ini: {Number(selected.id) * quantity} Diamond</small>
+              <small>{selected.isOnSale ? `Promo aktif sampai ${new Date(selected.promotionEndsAt).toLocaleString('id-ID')}` : selected.name}</small>
             </div>
 
             <div className="order-summary">
               <h2>Ringkasan</h2>
-              <div><span>Subtotal</span><strong>{rupiah(subtotal)}</strong></div>
+              <div><span>Subtotal</span><strong>{rupiah(regularPrice * quantity)}</strong></div>
               <div><span>Biaya layanan</span><strong>{rupiah(serviceFee)}</strong></div>
-              <div><span>Diskon</span><strong className="discount">Rp0</strong></div>
+              <div><span>Diskon</span><strong className="discount">-{rupiah(discount)}</strong></div>
             </div>
 
             <div className="order-separator" />
             <div className="order-total"><strong>Total</strong><b>{rupiah(total)}</b></div>
 
             <div className="product-cta-stack">
-              <button type="button" disabled={!accountVerified}>Tambah ke Keranjang</button>
-              <button type="button" disabled={!accountVerified}>Tambah &amp; Lihat Keranjang</button>
+              <button type="button" disabled={!accountVerified || !selected.isAvailable}>Tambah ke Keranjang</button>
+              <button type="button" disabled={!accountVerified || !selected.isAvailable}>Tambah &amp; Lihat Keranjang</button>
             </div>
           </aside>
         </div>
