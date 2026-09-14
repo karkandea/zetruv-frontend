@@ -3,17 +3,17 @@ import { stableIcons } from './stableIcons'
 // Exact exports from the Zetruv Figma redesign. The UI consumes these through
 // data/props so backend/CDN URLs can replace them later without changing layout.
 export const assets = {
-  logo: 'https://www.figma.com/api/mcp/asset/18e54276-12af-43aa-809f-90e7a67a1700.png',
+  logo: '/assets/home/navbar-logo.png',
   heroBackground: 'https://www.figma.com/api/mcp/asset/aa256062-9cd2-4c19-a480-93b5bf864d38.png',
   heroShowcase: 'https://www.figma.com/api/mcp/asset/1a94a73c-7495-4c44-b7fb-ba269a51a164.png',
 
   homepageHeroArtwork: 'https://www.figma.com/api/mcp/asset/1f39928e-3525-4639-aeea-123431ca9485.png',
-  homepageCategoryTopUp: 'https://www.figma.com/api/mcp/asset/b1e03741-c147-4314-98bc-2242e50e4635.png',
-  homepageCategoryVoucher: 'https://www.figma.com/api/mcp/asset/17307a70-e2a4-4a52-a14b-b88f6cbee78f.png',
-  homepageCategoryJockey: 'https://www.figma.com/api/mcp/asset/db39607a-812e-453b-a947-ffbb0566c2b8.png',
-  homepageCategoryMerch: 'https://www.figma.com/api/mcp/asset/93347dee-04c5-4f26-9f78-a2b83abcbb6f.png',
-  homepageCategoryAccount: 'https://www.figma.com/api/mcp/asset/152713b9-bdf8-441e-8a0c-8b9c0e760c2c.png',
-  homepageCategoryRing: 'https://www.figma.com/api/mcp/asset/bccf9b28-9771-4910-99dc-0a05f0b6e36c.svg',
+  homepageCategoryTopUp: '/assets/home/category-topup.png',
+  homepageCategoryVoucher: '/assets/home/category-voucher.png',
+  homepageCategoryJockey: '/assets/home/category-jockey.png',
+  homepageCategoryMerch: '/assets/home/category-merch.png',
+  homepageCategoryAccount: '/assets/home/category-account.png',
+  homepageCategoryRing: '/assets/home/category-ring.png',
   productDropdownArrow: 'https://www.figma.com/api/mcp/asset/be6230b6-7782-43bc-8fc7-7b4cfe60af61.svg',
 
   search: 'https://www.figma.com/api/mcp/asset/8a10fc1c-f6f1-480c-a357-cf6309bf7aff.svg',
@@ -26,6 +26,14 @@ export const assets = {
   login: 'https://www.figma.com/api/mcp/asset/d5b2eae0-5599-4ae0-bc30-d4d7b5be03af.svg',
   loginGlow: 'https://www.figma.com/api/mcp/asset/91c020ca-b199-4b8d-ac2a-529605b55576.svg',
   register: 'https://www.figma.com/api/mcp/asset/b23c25fc-2cd2-4ea9-a6c0-9cdb0a0b549c.svg',
+  authHero: 'https://www.figma.com/api/mcp/asset/7cf9dd34-2722-4171-ba3f-7e39b4a66b2e.png',
+  authEye: 'https://www.figma.com/api/mcp/asset/543e2c30-2f91-474a-a24e-f0bf3fcdc413.svg',
+  authBackArrow: '/assets/auth/forgot-back.png',
+  authMail: '/assets/auth/forgot-mail.png',
+  authSuccess: '/assets/auth/forgot-success.png',
+  authRegisterVerify: '/assets/auth/register-verify.png',
+  authRegisterVerified: '/assets/auth/register-verified.png',
+  authRegisterExpired: '/assets/auth/register-expired.png',
 
   categoryTopUp: 'https://www.figma.com/api/mcp/asset/feffa99f-8e79-4ed0-9a0c-32eda3c6bc77.png',
   categoryVoucher: 'https://www.figma.com/api/mcp/asset/63e8efa1-0fb9-431b-8dd5-30d76806d18d.png',
