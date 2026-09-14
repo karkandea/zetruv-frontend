@@ -8,6 +8,7 @@ import './styles/redesign-c.css'
 import './styles/homepage-top.css'
 import './styles/homepage-final.css'
 import './styles/auth-modal.css'
+import './styles/commerce.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

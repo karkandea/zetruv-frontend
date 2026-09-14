@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
+import { cartCount, onCartChange, readCart } from '../services/cartService'
 
 const productLinks = [
   { label: 'Browse All Categories', href: '/search', arrow: true },
@@ -13,6 +14,7 @@ const productLinks = [
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
   const [authMode, setAuthMode] = useState(() => {
     if (typeof window === 'undefined') return null
     const verifyState = new URLSearchParams(window.location.search).get('verify-email')
@@ -51,6 +53,8 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const productLabel = isHomeLoggedIn ? 'Produk' : isCatalog ? 'Shop' : 'Product'
   const articleLabel = isHomeLoggedIn ? 'Artikel' : isCatalog ? 'Articles' : 'Article'
   const transactionLabel = isHomeLoggedIn ? 'Cek Transaksi' : isCatalog ? 'Track Order' : 'Check Transaction'
+
+  useEffect(() => onCartChange(setCartItems), [])
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -105,10 +109,11 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
             <span>{languageLabel}</span>
           </button>
-          <button className="nav-pill navbar-control" type="button">
+          <a className="nav-pill navbar-control" href="/cart" aria-label={`${cartLabel} (${cartCount(cartItems)})`}>
             <img src={assets.cart} alt="" />
             <span>{cartLabel}</span>
-          </button>
+            {cartCount(cartItems) > 0 && <b className="nav-cart-count">{cartCount(cartItems)}</b>}
+          </a>
           {isLoggedIn && <span className="nav-avatar" aria-label="Signed in as M">M</span>}
         </div>
       </div>

@@ -17,7 +17,9 @@ export async function apiRequest(path, options = {}) {
   })
 
   if (!response.ok) {
-    const message = await response.text().catch(() => '')
+    const raw = await response.text().catch(() => '')
+    let message = raw
+    try { message = JSON.parse(raw)?.message || raw } catch { /* plain text response */ }
     throw new Error(message || `Request failed with status ${response.status}`)
   }
 

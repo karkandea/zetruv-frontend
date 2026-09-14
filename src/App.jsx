@@ -3,13 +3,17 @@ import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import ProductDetailLoginPage from './pages/ProductDetailLoginPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrderStatusPage from './pages/OrderStatusPage'
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
 
-  if (path === '/leaderboard') {
-    return <LeaderboardPage />
-  }
+  if (path === '/leaderboard') return <LeaderboardPage />
+  if (path === '/cart') return <CartPage />
+  if (path === '/checkout') return <CheckoutPage />
+  if (path === '/order-status' || path === '/track-order') return <OrderStatusPage />
 
   const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
     || path.match(/^\/product\/login\/([^/]+)$/)
