@@ -169,7 +169,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
 
             <a
               className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`}
-              href="#transaction"
+              href="/order-status"
               aria-current={activeNav === 'transaction' ? 'page' : undefined}
               onClick={() => selectNav('transaction')}
             >
