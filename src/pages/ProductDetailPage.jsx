@@ -4,6 +4,7 @@ import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getCatalogProduct } from '../services/catalogService'
 import { addCartItem } from '../services/cartService'
 import { validateGameAccount } from '../services/commerceService'
+import DynamicProductFields, { buildInputPayload, fieldsForScope, inputPayloadKey, inputPayloadLabel } from '../components/DynamicProductFields'
 import '../styles/product-detail.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
@@ -21,8 +22,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const [product, setProduct] = useState(null)
   const [selectedId, setSelectedId] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [userId, setUserId] = useState('')
-  const [zone, setZone] = useState('')
+  const [accountValues, setAccountValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
@@ -46,6 +46,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   }, [slug])
 
   const selected = useMemo(() => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0] || null, [product, selectedId])
+  const accountSchema = useMemo(() => fieldsForScope(product, 'AccountValidation'), [product])
   const unitPrice = selected?.effectivePrice ?? selected?.price ?? 0
   const regularPrice = selected?.price ?? unitPrice
   const subtotal = unitPrice * quantity
@@ -63,11 +64,13 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       let accountLabel = null
       let accountKey = 'default'
       if (product.requiresGameAccountValidation) {
-        if (!userId.trim() || !zone.trim()) throw new Error('Isi User ID dan Zona sebelum menambahkan item.')
-        accountFields = { userId: userId.trim(), zone: zone.trim() }
+        if (!accountSchema.length) throw new Error('Data akun untuk produk ini belum dikonfigurasi.')
+        const built = buildInputPayload(accountSchema, accountValues)
+        if (built.error) throw new Error(built.error)
+        accountFields = built.payload
         validation = await validateGameAccount(product.id, accountFields)
-        accountLabel = validation.accountDisplayName || `${userId.trim()} (${zone.trim()})`
-        accountKey = `${userId.trim()}:${zone.trim()}`
+        accountLabel = validation.accountDisplayName || inputPayloadLabel(accountSchema, accountFields)
+        accountKey = inputPayloadKey(accountSchema, accountFields)
       }
 
       addCartItem({
@@ -111,7 +114,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       <div className="product-detail-container product-detail-layout"><section className="product-selection-panel"><div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className="active" type="button" disabled>{product.category?.name || 'Item'}</button></div></div>
         <div className="sku-grid">{product.variants.map((item) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} onClick={() => selectSku(item.id)} disabled={!item.isAvailable}>{item.isOnSale && <span className="sku-flash"><img src={media.fire} alt="" />Flashsale</span>}<img className="sku-card__icon" src={variantIcon(item.name)} alt="" /><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span></button>)}</div>
         <section className="product-reviews"><h2>Ulasan Produk</h2><div className="sku-empty">Ulasan belum tersedia untuk produk ini.</div></section></section>
-        <aside className="product-order-panel">{product.requiresGameAccountValidation && <div className="product-account-fields"><label><span>User ID</span><div className="product-input-wrap"><img src={media.userIcon} alt="" /><input value={userId} onChange={(e) => { setUserId(e.target.value); setNotice(''); setActionError('') }} placeholder="User ID" /></div></label><label><span>Zona</span><input value={zone} onChange={(e) => { setZone(e.target.value); setNotice(''); setActionError('') }} placeholder="(ID Zona)" /></label></div>}
+        <aside className="product-order-panel">{product.requiresGameAccountValidation && <DynamicProductFields fields={accountSchema} values={accountValues} className="product-account-fields" onChange={(key, value) => { setAccountValues((current) => ({ ...current, [key]: value })); setNotice(''); setActionError('') }} />}
           <div className="selected-item-box"><div className="selected-item-row"><div><strong>{selected.name}</strong><span>{rupiah(unitPrice)} / item</span></div><div className="quantity-stepper"><button type="button" onClick={() => setQuantity((v) => Math.max(1, v - 1))}><img src={media.minus} alt="" /></button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((v) => Math.min(maxQuantity, v + 1))} disabled={quantity >= maxQuantity}><img src={media.plus} alt="" /></button></div></div><small>{selected.isOnSale ? `Promo aktif sampai ${new Date(selected.promotionEndsAt).toLocaleString('id-ID')}` : selected.name}</small></div>
           <div className="order-summary"><h2>Ringkasan</h2><div><span>Subtotal</span><strong>{rupiah(regularPrice * quantity)}</strong></div>{discount > 0 && <div><span>Diskon</span><strong className="discount">-{rupiah(discount)}</strong></div>}</div><div className="order-separator" /><div className="order-total"><strong>Total</strong><b>{rupiah(subtotal)}</b></div>
           {actionError && <p className="pdp-action-message is-error">{actionError}</p>}{notice && <p className="pdp-action-message is-success">{notice}</p>}

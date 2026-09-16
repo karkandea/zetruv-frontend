@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { clearCartGroup, readCart } from '../services/cartService'
 import { createCheckoutOrder, initiatePayment, validateGameAccount } from '../services/commerceService'
+import { getCatalogProduct } from '../services/catalogService'
+import DynamicProductFields, { buildInputPayload, fieldsForScope } from '../components/DynamicProductFields'
 import '../styles/commerce.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
@@ -14,14 +16,37 @@ function isValidationFresh(item) {
 
 export default function CheckoutPage() {
   const requestedMethod = new URLSearchParams(window.location.search).get('method') || ''
-  const cart = readCart()
+  const [cart] = useState(() => readCart())
   const method = requestedMethod || cart[0]?.fulfillmentMethod || ''
   const items = useMemo(() => cart.filter((item) => item.fulfillmentMethod === method), [cart, method])
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '' })
   const [credentials, setCredentials] = useState({})
+  const [productSchemas, setProductSchemas] = useState({})
+  const [schemaLoading, setSchemaLoading] = useState(method === 'MANUAL_LOGIN')
+  const [schemaError, setSchemaError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+
+  useEffect(() => {
+    if (method !== 'MANUAL_LOGIN' || !items.length) {
+      setSchemaLoading(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const slugs = [...new Set(items.map((item) => item.productSlug))]
+    setSchemaLoading(true)
+    setSchemaError('')
+    Promise.all(slugs.map(async (slug) => {
+      const product = await getCatalogProduct(slug)
+      return [slug, fieldsForScope(product, 'LoginCredential')]
+    }))
+      .then((entries) => { if (!cancelled) setProductSchemas(Object.fromEntries(entries)) })
+      .catch((err) => { if (!cancelled) setSchemaError(err.message || 'Konfigurasi data login tidak bisa dimuat.') })
+      .finally(() => { if (!cancelled) setSchemaLoading(false) })
+    return () => { cancelled = true }
+  }, [method, items])
 
   function setCredential(cartKey, key, value) {
     setCredentials((current) => ({ ...current, [cartKey]: { ...(current[cartKey] || {}), [key]: value } }))
@@ -48,12 +73,11 @@ export default function CheckoutPage() {
 
         let loginCredentials = null
         if (method === 'MANUAL_LOGIN') {
-          const value = credentials[item.cartKey] || {}
-          if (!value.login?.trim() || !value.password?.trim()) {
-            throw new Error(`Login dan password wajib diisi untuk ${item.productName} · ${item.variantName}.`)
-          }
-          loginCredentials = { login: value.login.trim(), password: value.password }
-          if (value.server?.trim()) loginCredentials.server = value.server.trim()
+          const schema = productSchemas[item.productSlug] || []
+          if (!schema.length) throw new Error(`Data login untuk ${item.productName} belum dikonfigurasi.`)
+          const built = buildInputPayload(schema, credentials[item.cartKey] || {})
+          if (built.error) throw new Error(`${item.productName}: ${built.error}`)
+          loginCredentials = built.payload
         }
 
         checkoutItems.push({
@@ -106,10 +130,10 @@ export default function CheckoutPage() {
                 </article>
               ))}</section>
 
-              {method === 'MANUAL_LOGIN' && <section className="checkout-card"><h2>Data login game</h2><p className="checkout-note">Data ini dienkripsi oleh backend dan otomatis dibersihkan setelah fulfillment selesai / expired.</p>{items.map((item) => <div className="credential-block" key={item.cartKey}><strong>{item.productName} · {item.variantName}</strong><div className="checkout-fields"><label>Email / Username<input autoComplete="off" value={credentials[item.cartKey]?.login || ''} onChange={(e) => setCredential(item.cartKey, 'login', e.target.value)} /></label><label>Password<input type="password" autoComplete="new-password" value={credentials[item.cartKey]?.password || ''} onChange={(e) => setCredential(item.cartKey, 'password', e.target.value)} /></label><label>Server / Region (opsional)<input value={credentials[item.cartKey]?.server || ''} onChange={(e) => setCredential(item.cartKey, 'server', e.target.value)} /></label></div></div>)}</section>}
+              {method === 'MANUAL_LOGIN' && <section className="checkout-card"><h2>Data login game</h2><p className="checkout-note">Data ini dienkripsi oleh backend dan otomatis dibersihkan setelah fulfillment selesai / expired.</p>{schemaLoading && <p className="checkout-note">Memuat konfigurasi data login…</p>}{schemaError && <p className="checkout-error">{schemaError}</p>}{!schemaLoading && !schemaError && items.map((item) => <div className="credential-block" key={item.cartKey}><strong>{item.productName} · {item.variantName}</strong><DynamicProductFields fields={productSchemas[item.productSlug] || []} values={credentials[item.cartKey] || {}} onChange={(key, value) => setCredential(item.cartKey, key, value)} /></div>)}</section>}
             </div>
 
-            <aside className="checkout-summary"><small>RINGKASAN</small>{items.map((item) => <div key={item.cartKey}><span>{item.variantName} ×{item.quantity}</span><strong>{rupiah(item.unitPrice * item.quantity)}</strong></div>)}<hr /><div className="checkout-grand"><span>Total</span><strong>{rupiah(total)}</strong></div>{error && <p className="checkout-error">{error}</p>}<button type="submit" disabled={submitting}>{submitting ? 'Memproses…' : 'Buat order & lanjut bayar'}</button><small>Harga final divalidasi ulang oleh backend saat order dibuat.</small></aside>
+            <aside className="checkout-summary"><small>RINGKASAN</small>{items.map((item) => <div key={item.cartKey}><span>{item.variantName} ×{item.quantity}</span><strong>{rupiah(item.unitPrice * item.quantity)}</strong></div>)}<hr /><div className="checkout-grand"><span>Total</span><strong>{rupiah(total)}</strong></div>{error && <p className="checkout-error">{error}</p>}<button type="submit" disabled={submitting || schemaLoading || Boolean(schemaError)}>{submitting ? 'Memproses…' : 'Buat order & lanjut bayar'}</button><small>Harga final divalidasi ulang oleh backend saat order dibuat.</small></aside>
           </form>
         )}
       </main>
