@@ -117,15 +117,18 @@ try {
   }
 
   await navigate('https://admin-dev.zetruv.com')
-  const adminBundle = await evaluate(`(async () => {
-    const urls = [...document.scripts].map((script) => script.src).filter(Boolean)
-    const text = (await Promise.all(urls.map((url) => fetch(url).then((response) => response.text())))).join('\n')
-    return {
-      hasInputPanel: text.includes('Customer input fields'),
-      hasAddField: text.includes('Add customer input field'),
-      hasScopeCopy: text.includes('Non-sensitive account fields collected before validation'),
-    }
-  })()`)
+  const scriptUrls = await evaluate(`[...document.scripts].map((script) => script.src).filter(Boolean)`)
+  if (!scriptUrls.length) throw new Error('Admin DEV did not expose any script bundle')
+  const adminText = (await Promise.all(scriptUrls.map(async (url) => {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Admin bundle ${url} returned ${response.status}`)
+    return response.text()
+  }))).join('\n')
+  const adminBundle = {
+    hasInputPanel: adminText.includes('Customer input fields'),
+    hasAddField: adminText.includes('Add customer input field'),
+    hasScopeCopy: adminText.includes('Non-sensitive account fields collected before validation'),
+  }
   console.log('ADMIN_LIVE_BUNDLE_PROOF', JSON.stringify(adminBundle))
   if (!adminBundle.hasInputPanel || !adminBundle.hasAddField || !adminBundle.hasScopeCopy) {
     throw new Error('Live admin bundle does not contain dynamic schema editor')
