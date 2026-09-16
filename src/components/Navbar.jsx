@@ -86,6 +86,11 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     if (name !== 'product') setIsProductOpen(false)
   }
 
+  function handleAuthenticated() {
+    if (typeof window !== 'undefined') window.sessionStorage.setItem('zetruv-auth-preview', '1')
+    onAuthenticated?.()
+  }
+
   return (
     <>
       <header className={navbarClasses}>
@@ -130,10 +135,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               <img src={assets.home} alt="" />Home
             </a>
 
-            <div
-              ref={productMenuRef}
-              className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}
-            >
+            <div ref={productMenuRef} className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
               <a
                 href="/search"
                 className={`navbar-control navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
@@ -158,50 +160,23 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               </div>
             </div>
 
-            <a
-              className={`navbar-control${activeNav === 'article' ? ' active' : ''}`}
-              href="#article"
-              aria-current={activeNav === 'article' ? 'page' : undefined}
-              onClick={() => selectNav('article')}
-            >
+            <a className={`navbar-control${activeNav === 'article' ? ' active' : ''}`} href="#article" aria-current={activeNav === 'article' ? 'page' : undefined} onClick={() => selectNav('article')}>
               <img src={assets.transaction} alt="" />{articleLabel}
             </a>
-
-            <a
-              className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`}
-              href="/order-status"
-              aria-current={activeNav === 'transaction' ? 'page' : undefined}
-              onClick={() => selectNav('transaction')}
-            >
+            <a className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`} href="/order-status" aria-current={activeNav === 'transaction' ? 'page' : undefined} onClick={() => selectNav('transaction')}>
               <img src={assets.transaction} alt="" />{transactionLabel}
             </a>
-
-            <a
-              className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`}
-              href="/leaderboard"
-              aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
-              onClick={() => selectNav('leaderboard')}
-            >
+            <a className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`} href="/leaderboard" aria-current={activeNav === 'leaderboard' ? 'page' : undefined} onClick={() => selectNav('leaderboard')}>
               <img src={assets.leaderboard} alt="" />Leaderboard
             </a>
           </nav>
 
           {!isLoggedIn && (
             <div className="auth-actions">
-              <button
-                className="btn btn--outline navbar-control"
-                type="button"
-                aria-haspopup="dialog"
-                onClick={() => setAuthMode('login')}
-              >
+              <button className="btn btn--outline navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>
                 <img src={assets.login} alt="" />Login
               </button>
-              <button
-                className="btn btn--ghost navbar-control"
-                type="button"
-                aria-haspopup="dialog"
-                onClick={() => setAuthMode('register')}
-              >
+              <button className="btn btn--ghost navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('register')}>
                 <img src={assets.register} alt="" />Register
               </button>
             </div>
@@ -211,12 +186,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
       </header>
 
       {authMode && (
-        <AuthModal
-          mode={authMode}
-          onModeChange={setAuthMode}
-          onClose={() => setAuthMode(null)}
-          onAuthenticated={onAuthenticated}
-        />
+        <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
       )}
     </>
   )
