@@ -65,8 +65,9 @@
 .product-order-panel { min-width: 0; padding: 16px; border: 1px solid #e0e3eb; border-radius: 16px; background: #fff; }
 .product-account-fields { display: flex; flex-direction: column; gap: 20px; }
 .product-account-fields label { display: flex; flex-direction: column; gap: 4px; color: #000; font-size: 12px; font-weight: 500; }
-.product-account-fields input { width: 100%; height: 45px; padding: 0 16px; border: 0; outline: 0; border-radius: 16px; color: #1e1e1e; background: rgba(0,0,0,.05); font-size: 14px; }
+.product-account-fields input, .product-account-fields select { width: 100%; height: 45px; padding: 0 16px; border: 0; outline: 0; border-radius: 16px; color: #1e1e1e; background: rgba(0,0,0,.05); font-size: 14px; }
 .product-account-fields input::placeholder { color: #a7a7a7; opacity: 1; }
+.product-account-fields label > small { color: #777b87; font-size: 10px; font-weight: 400; line-height: 1.4; }
 .product-input-wrap { display: flex; align-items: center; gap: 8px; height: 45px; padding: 0 16px; border-radius: 16px; background: rgba(0,0,0,.05); }
 .product-input-wrap img { width: 16px; height: 16px; }
 .product-input-wrap input { height: auto; padding: 0; background: transparent; border-radius: 0; }
