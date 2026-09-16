@@ -1,0 +1,32 @@
+name: Temporary Dynamic Schema Verification
+
+on:
+  push:
+    branches:
+      - fix/unavailable-search-card
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Build storefront and admin
+        run: npm run build:all:dev
+      - name: Resolve Chrome
+        run: |
+          set -euo pipefail
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+      - name: Verify live Genshin checkout and admin schema editor
+        run: node scripts/verify-dynamic-schema-live.mjs
