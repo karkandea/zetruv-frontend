@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { cmsRequest, getAdminSession, loginAdmin, logoutAdmin } from './api'
+import ProviderMappingPage from './ProviderMappingPage'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 const storefrontHost = STOREFRONT_URL ? new URL(STOREFRONT_URL).host : 'Storefront DEV'
@@ -9,6 +10,7 @@ const NAV = [
   ['dashboard', 'Overview', '⌂'],
   ['homepage', 'Homepage', '◫'],
   ['catalog', 'Catalog', '▦'],
+  ['provider-mapping', 'Provider Mapping', '⇄'],
   ['promotions', 'Promotions', '⚡'],
   ['articles', 'Articles', '✎'],
   ['orders', 'Orders', '◎'],
@@ -123,6 +125,7 @@ function Shell({ session, onLogout }) {
     dashboard: <Dashboard />,
     homepage: <HomepagePage />,
     catalog: <CatalogPage />,
+    'provider-mapping': <ProviderMappingPage />,
     promotions: <PromotionsPage />,
     articles: <ArticlesPage />,
     orders: <OrdersPage />,
