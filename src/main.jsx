@@ -9,6 +9,7 @@ import './styles/homepage-top.css'
 import './styles/homepage-final.css'
 import './styles/auth-modal.css'
 import './styles/commerce.css'
+import './styles/via-login-flow.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
