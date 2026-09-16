@@ -54,6 +54,7 @@ function fallbackProductImage(product) {
 }
 
 function productHref(product) {
+  if (!product.isAvailable) return undefined
   if (product.kind === 'TopUpGame') return `/product/${product.slug}`
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
   return undefined
@@ -70,8 +71,9 @@ function CatalogCard({ product, categoryLabel }) {
     <button
       className="search-game-card"
       type="button"
-      aria-label={`Open ${product.name}`}
+      aria-label={product.isAvailable ? `Open ${product.name}` : `${product.name} unavailable`}
       onClick={handleClick}
+      disabled={!product.isAvailable}
     >
       <img src={product.thumbnailUrl || fallbackProductImage(product)} alt="" />
       <span className="search-game-card__copy">
