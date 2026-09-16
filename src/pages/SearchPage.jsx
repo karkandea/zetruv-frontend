@@ -16,7 +16,7 @@ const CATEGORY_PRESENTATION = {
     key: 'login',
     label: 'Top Up Via Login',
     icon: searchAssets.categoryLogin,
-    route: '/search/login',
+    route: '/product/genshin-impact/login',
   },
   GameVoucher: {
     key: 'voucher',
@@ -234,16 +234,15 @@ export default function SearchPage({ mode = 'player-id' }) {
   }
 
   function handleCategory(category) {
-    const url = new URL(window.location.href)
-
-    if (category.kind === 'TopUpLogin') {
-      url.pathname = '/search/login'
-      url.searchParams.delete('kind')
-    } else {
-      url.pathname = '/search'
-      if (category.kind === 'TopUpGame') url.searchParams.delete('kind')
-      else url.searchParams.set('kind', category.kind)
+    if (category.route) {
+      window.location.href = category.route
+      return
     }
+
+    const url = new URL(window.location.href)
+    url.pathname = '/search'
+    if (category.kind === 'TopUpGame') url.searchParams.delete('kind')
+    else url.searchParams.set('kind', category.kind)
 
     window.location.href = `${url.pathname}${url.search}`
   }
