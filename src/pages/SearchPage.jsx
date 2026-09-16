@@ -125,7 +125,16 @@ function CatalogCard({ product, categoryLabel }) {
       onClick={handleClick}
       disabled={!available}
     >
-      <img src={product.thumbnailUrl || fallbackProductImage(product)} alt="" />
+      <img
+        src={product.thumbnailUrl || fallbackProductImage(product)}
+        alt=""
+        onError={(event) => {
+          const fallback = fallbackProductImage(product)
+          if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) {
+            event.currentTarget.src = fallback
+          }
+        }}
+      />
       <span className="search-game-card__copy">
         <strong>{product.name}</strong>
         <small>{publisherForProduct(product, product.gameName || categoryLabel)}</small>
