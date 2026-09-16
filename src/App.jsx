@@ -17,7 +17,9 @@ import {
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  const flow = new URLSearchParams(window.location.search).get('flow')
+  const params = new URLSearchParams(window.location.search)
+  const flow = params.get('flow')
+  const kind = params.get('kind')
 
   if (path === '/leaderboard') return <LeaderboardPage />
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
@@ -35,6 +37,7 @@ export default function App() {
   const accountListingMatch = path.match(/^\/game-accounts\/([^/]+)$/)
   if (accountListingMatch) return <GameAccountListingPage gameSlug={decodeURIComponent(accountListingMatch[1])} />
   if (path === '/game-accounts') return <GameAccountsPage />
+  if ((path === '/search' || path === '/categories') && kind === 'GameAccount') return <GameAccountsPage />
 
   const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
     || path.match(/^\/product\/login\/([^/]+)$/)
