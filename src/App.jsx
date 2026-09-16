@@ -7,15 +7,34 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
+import {
+  GameAccountsPage,
+  GameAccountListingPage,
+  GameAccountDetailPage,
+  GameAccountCartPage,
+  GameAccountCheckoutPage,
+} from './pages/GameAccountPages'
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  const flow = new URLSearchParams(window.location.search).get('flow')
 
   if (path === '/leaderboard') return <LeaderboardPage />
+  if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
+  if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
   if (path === '/cart') return <CartPage />
   if (path === '/checkout') return <CheckoutPage />
   if (path === '/payment') return <PaymentPage />
   if (path === '/order-status' || path === '/track-order') return <OrderStatusPage />
+
+  const accountDetailMatch = path.match(/^\/game-accounts\/([^/]+)\/([^/]+)$/)
+  if (accountDetailMatch) {
+    return <GameAccountDetailPage gameSlug={decodeURIComponent(accountDetailMatch[1])} accountSlug={decodeURIComponent(accountDetailMatch[2])} />
+  }
+
+  const accountListingMatch = path.match(/^\/game-accounts\/([^/]+)$/)
+  if (accountListingMatch) return <GameAccountListingPage gameSlug={decodeURIComponent(accountListingMatch[1])} />
+  if (path === '/game-accounts') return <GameAccountsPage />
 
   const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
     || path.match(/^\/product\/login\/([^/]+)$/)
