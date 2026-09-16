@@ -14,7 +14,7 @@
 .search-category__icon { width: 32px; height: 32px; flex: none; overflow: hidden; border-radius: 10px; }
 .search-category__icon img { width: 100%; height: 100%; object-fit: cover; }
 .search-category > i { position: absolute; top: 11px; right: 1px; width: 4px; height: 34px; border-radius: 2px; background: #fed218; }
-.search-help-card { width: 100%; min-height: 86px; margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 18px; border-radius: 16px; color: white; background: #010154; text-align: left; cursor: pointer; }
+.search-help-card { width: 100%; min-height: 86px; margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 18px; border: 0; border-radius: 16px; color: white; background: #010154; text-align: left; cursor: pointer; }
 .search-help-card strong { font-size: 14px; line-height: 21px; font-weight: 600; }
 .search-help-card span { color: #d1d6ff; font-size: 11px; line-height: 16px; }
 
@@ -23,7 +23,7 @@
 .catalog-search > img { width: 18px; height: 18px; }
 .catalog-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #1e1e1e; background: transparent; font-size: 13px; }
 .catalog-search input::placeholder { color: #707070; opacity: 1; }
-.catalog-search button { height: 34px; border-radius: 10px; color: white; background: #010154; font-size: 12px; font-weight: 600; cursor: pointer; }
+.catalog-search button { height: 34px; border: 0; border-radius: 10px; color: white; background: #010154; font-size: 12px; font-weight: 600; cursor: pointer; }
 
 .alphabet-filter { min-height: 34px; display: flex; align-items: center; gap: 12px; padding-top: 5px; overflow-x: auto; color: #707070; scrollbar-width: none; }
 .alphabet-filter::-webkit-scrollbar { display: none; }
@@ -40,6 +40,7 @@
 .search-game-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 244px)); gap: 18px 28px; margin-top: 10px; }
 .search-game-card { width: 244px; height: 82px; display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 12px; align-items: center; padding: 9px; overflow: hidden; border: 1px solid #e3e5f0; border-radius: 14px; color: #1e1e1e; background: #fbfafa; text-align: left; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .search-game-card:hover { transform: translateY(-1px); border-color: #cfd4e4; box-shadow: 0 8px 20px rgba(1,1,84,.06); }
+.search-game-card:disabled { cursor: default; opacity: .48; transform: none; box-shadow: none; }
 .search-game-card > img { width: 62px; height: 62px; border-radius: 12px; object-fit: cover; }
 .search-game-card__copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .search-game-card__copy strong { overflow: hidden; color: #1e1e1e; font-size: 13px; line-height: 19px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -48,6 +49,212 @@
 
 .nav-avatar { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; color: white; background: #108ee9; font-family: Inter, Arial, sans-serif; font-size: 12px; font-weight: 700; }
 .navbar--catalog .navlinks a.active { border-bottom-color: white; }
+
+/* Browse Categories — exact desktop treatment from Figma 3870:10217 */
+@media (min-width: 901px) {
+  .search-page--browse {
+    min-height: 870px;
+    padding-top: 157px;
+    padding-bottom: 24px;
+  }
+
+  .search-page--browse .search-page__container {
+    width: 1152px;
+    max-width: calc(100% - 40px);
+  }
+
+  .search-page--browse .search-breadcrumb {
+    width: 300px;
+    height: 18px;
+    color: #707070;
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .search-page--browse h1 {
+    width: 420px;
+    margin: 10px 0 0;
+    color: #1e1e1e;
+    font-size: 30px;
+    line-height: 45px;
+    font-weight: 600;
+  }
+
+  .search-page--browse .search-page__intro {
+    width: 520px;
+    height: 20px;
+    margin: -2px 0 0;
+    color: #707070;
+    font-size: 13px;
+    line-height: 20px;
+  }
+
+  .search-catalog--browse {
+    width: 1152px;
+    height: 581px;
+    min-height: 581px;
+    margin-top: 18px;
+    grid-template-columns: 248px 904px;
+    border: 1px solid #e3e5f0;
+    border-radius: 22px;
+    background: #fff;
+  }
+
+  .search-sidebar--browse {
+    width: 248px;
+    height: 579px;
+    min-height: 579px;
+    padding: 24px 14px 18px;
+    overflow: hidden;
+    background: #f6f7fb;
+  }
+
+  .search-sidebar--browse h2 {
+    width: 100%;
+    height: 30px;
+    margin: 0 10px 10px;
+    color: #1e1e1e;
+    font-size: 16px;
+    line-height: 30px;
+    font-weight: 600;
+  }
+
+  .search-sidebar--browse .search-category-list {
+    gap: 8px;
+  }
+
+  .search-sidebar--browse .search-category {
+    width: 220px;
+    height: 58px;
+    flex: 0 0 58px;
+    gap: 12px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    color: #1e1e1e;
+    background: #f6f7fb;
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 400;
+  }
+
+  .search-sidebar--browse .search-category:hover {
+    background: #f0f2f9;
+  }
+
+  .search-sidebar--browse .search-category.active {
+    border-color: #e3e5f0;
+    color: #1e1e1e;
+    background: #fff;
+    font-weight: 600;
+  }
+
+  .search-sidebar--browse .search-category__icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border: 1px solid #e3e5f0;
+    border-radius: 10px;
+    background: #f2f4ff;
+  }
+
+  .search-sidebar--browse .search-category__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .search-sidebar--browse .search-category > i {
+    top: 11px;
+    right: 1px;
+    width: 4px;
+    height: 34px;
+    border-radius: 2px;
+    background: #fed218;
+  }
+
+  .search-sidebar--browse .search-help-card {
+    width: 220px;
+    min-height: 82px;
+    margin-top: auto;
+    gap: 9px;
+    padding: 18px;
+    border-radius: 16px;
+    background: #010154;
+  }
+
+  .search-catalog__content--browse {
+    width: 904px;
+    height: 555px;
+    min-height: 555px;
+    padding: 24px 28px 44px;
+    overflow: hidden;
+    border-radius: 22px;
+    background: #fff;
+  }
+
+  .search-catalog__content--browse .catalog-search {
+    width: 848px;
+    height: 46px;
+  }
+
+  .search-catalog__content--browse .catalog-search button {
+    width: 100px;
+    height: 34px;
+  }
+
+  .search-game-grid--browse-primary {
+    width: 788px;
+    height: 182px;
+    margin-top: 88px;
+    grid-template-columns: repeat(3, 244px);
+    grid-template-rows: repeat(2, 82px);
+    gap: 18px 28px;
+  }
+
+  .search-catalog__content--browse .search-game-card__copy {
+    align-self: start;
+    padding-top: 4px;
+  }
+
+  .search-section-heading--browse-more {
+    width: 430px;
+    min-height: 42px;
+    margin-top: 34px;
+    display: block;
+  }
+
+  .search-section-heading--browse-more h2 {
+    height: 24px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .search-section-heading--browse-more p {
+    height: 17px;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 17px;
+  }
+
+  .search-game-grid--browse-more {
+    width: 788px;
+    height: 82px;
+    margin-top: 10px;
+    grid-template-columns: repeat(3, 244px);
+    grid-template-rows: 82px;
+    gap: 28px;
+  }
+
+  .search-empty--browse {
+    width: 788px;
+    min-height: 182px;
+    margin-top: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 
 @media (max-width: 1100px) {
   .search-page__container { width: calc(100% - 32px); }
@@ -66,6 +273,9 @@
   .search-category__icon { width: 28px; height: 28px; }
   .search-help-card { min-height: auto; margin-top: 14px; }
   .search-catalog__content { padding: 20px; }
+
+  .search-page--browse .search-game-grid--browse-primary { margin-top: 32px; }
+  .search-page--browse .search-section-heading--browse-more { margin-top: 28px; }
 }
 
 @media (max-width: 650px) {
