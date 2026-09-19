@@ -31,7 +31,7 @@ function normalizeAccount(item, index) {
   return {
     ...fallback,
     id: item.id ?? fallback.id,
-    image: item.thumbnailUrl || item.imageUrl || item.image || fallback.image,
+    image: fallback.image,
     title: item.title || item.name || fallback.title,
     meta: item.description || item.region || fallback.meta,
     price: numericPrice != null
