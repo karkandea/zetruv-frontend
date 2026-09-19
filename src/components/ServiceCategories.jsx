@@ -16,8 +16,8 @@ export default function ServiceCategories() {
         {homepageCategories.map((item) => (
           <a className="service-category" href={item.href} key={item.id}>
             <span className="service-category__icon">
-              <img className="service-category__ring" src={assets.homepageCategoryRing} alt="" />
-              <img className="service-category__image" src={item.image} alt="" />
+              <img className="service-category__ring" src={assets.homepageCategoryRing} alt="" decoding="async" />
+              <img className="service-category__image" src={item.image} alt="" decoding="async" />
             </span>
             <strong>{item.label}</strong>
             <small>{item.subtitle}</small>
