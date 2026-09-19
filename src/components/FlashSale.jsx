@@ -30,7 +30,7 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
           <div className="flash-grid">
             {displayItems.slice(0, 3).map((item, index) => (
               <article className="sale-item" key={item.id}>
-                <div className="sale-item__image"><img src={item.image} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackItems[index]?.image || assets.flashMobileLegends }} /></div>
+                <div className="sale-item__image"><img src={fallbackItems[index]?.image || assets.flashMobileLegends} alt={item.name} loading="lazy" decoding="async" /></div>
                 <div className="sale-item__body">
                   <div className="sale-item__info">
                     <h3>{item.name}</h3>
