@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section className="hero hero--homepage-final" id="home">
       <div className="homepage-hero-card">
-        <img className="homepage-hero-card__art" src={assets.homepageHeroArtwork} alt="" />
+        <img className="homepage-hero-card__art" src={assets.homepageHeroArtwork} alt="" fetchPriority="high" decoding="async" />
         <div className="homepage-hero-card__scrim" />
         <div className="homepage-hero-card__copy">
           <h1>Semua kebutuhan game kamu, satu tempat.</h1>
