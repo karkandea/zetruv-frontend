@@ -14,12 +14,12 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
   return (
     <section className="flash-section" aria-labelledby="flash-title">
       <div className="flash-card">
-        <img className="flash-decor flash-decor--left" src={assets.flashDecor} alt="" />
-        <img className="flash-decor flash-decor--right" src={assets.flashDecor} alt="" />
+        <img className="flash-decor flash-decor--left" src={assets.flashDecor} alt="" loading="lazy" decoding="async" />
+        <img className="flash-decor flash-decor--right" src={assets.flashDecor} alt="" loading="lazy" decoding="async" />
 
         <div className="flash-heading">
           <div className="flash-heading__title">
-            <img src={assets.fire} alt="" />
+            <img src={assets.fire} alt="" loading="lazy" decoding="async" />
             <h2 id="flash-title">Flash Sale</h2>
           </div>
           <div className="countdown-line"><strong>{countdown || '01:04:35'}</strong></div>
@@ -28,9 +28,9 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
         <div className="flash-carousel">
           <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Previous flash sale"><img src={assets.expandLeft} alt="" /></button>
           <div className="flash-grid">
-            {displayItems.slice(0, 3).map((item) => (
+            {displayItems.slice(0, 3).map((item, index) => (
               <article className="sale-item" key={item.id}>
-                <div className="sale-item__image"><img src={item.image} alt={item.name} /></div>
+                <div className="sale-item__image"><img src={item.image} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackItems[index]?.image || assets.flashMobileLegends }} /></div>
                 <div className="sale-item__body">
                   <div className="sale-item__info">
                     <h3>{item.name}</h3>
