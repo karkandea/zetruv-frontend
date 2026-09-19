@@ -56,7 +56,7 @@ export default function GameAccounts({ items = [] }) {
       <div className="homepage-accounts__row">
         {cards.map((account) => (
           <article className="homepage-account-card" key={account.id}>
-            <img className="homepage-account-card__preview" src={account.image} alt={account.title} />
+            <img className="homepage-account-card__preview" src={account.image} alt={account.title} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = assets.accountPreviewOne }} />
             <span className="homepage-account-card__status">TERSEDIA</span>
             <div className="homepage-account-card__info">
               <strong>{account.title}</strong>
