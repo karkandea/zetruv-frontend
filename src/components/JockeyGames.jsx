@@ -20,9 +20,9 @@ export default function JockeyGames({ items = [] }) {
     <section className="jockey-section" id="jockey" aria-labelledby="jockey-title">
       <h2 id="jockey-title">Joki Game</h2>
       <div className="jockey-grid">
-        {displayItems.slice(0, 10).map((game) => (
+        {displayItems.slice(0, 10).map((game, index) => (
           <article className="jockey-card" key={game.id}>
-            <div className="jockey-card__image"><img src={game.image} alt={game.name} /></div>
+            <div className="jockey-card__image"><img src={game.image} alt={game.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackGames[index]?.image || assets.mobileLegends }} /></div>
             <div className="jockey-card__caption">
               <strong>{game.name}</strong>
               <span>{game.publisher}</span>
