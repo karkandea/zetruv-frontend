@@ -26,8 +26,8 @@ export default function Merchandise({ items = [] }) {
 
   return (
     <section className="merchandise" id="merch" aria-labelledby="merchandise-title">
-      <img className="merchandise__arc merchandise__arc--left" src={assets.merchStadiumLeft} alt="" />
-      <img className="merchandise__arc merchandise__arc--right" src={assets.merchStadiumRight} alt="" />
+      <img className="merchandise__arc merchandise__arc--left" src={assets.merchStadiumLeft} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true }} />
+      <img className="merchandise__arc merchandise__arc--right" src={assets.merchStadiumRight} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true }} />
 
       <div className="merchandise__header">
         <div>
@@ -52,7 +52,7 @@ export default function Merchandise({ items = [] }) {
             {displayItems.map((item) => (
               <article className="merch-card" key={item.id}>
                 <div className="merch-card__image">
-                  <img src={item.image || assets.jersey} alt={item.name} />
+                  <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = assets.jersey }} />
                   <span className="merch-card__chip">JERSEY</span>
                 </div>
                 <div className="merch-card__body">
