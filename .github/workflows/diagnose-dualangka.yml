@@ -1,0 +1,30 @@
+name: Diagnose Dualangka Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/diagnose-dualangka.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - name: Inspect legacy dualangka deploy target
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "USER=$(id)"
+          echo "=== deploy scripts ==="
+          ls -l /usr/local/bin/deploy-zetruv-frontend* || true
+          echo "=== target ==="
+          ls -ld /var/www/zetruv-frontend || true
+          readlink -f /var/www/zetruv-frontend || true
+          echo "=== target git/dist ==="
+          ls -ld /var/www/zetruv-frontend/.git /var/www/zetruv-frontend/dist 2>/dev/null || true
+          echo "=== nginx references ==="
+          grep -R "zetruv.dualangka.com\|/var/www/zetruv-frontend" /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null || true
