@@ -478,7 +478,11 @@
 .site-shell--homepage-final .merchandise__arc {
   position: absolute;
   z-index: 0;
+  display: block;
+  border: 2px solid transparent;
+  border-radius: 50%;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 .site-shell--homepage-final .merchandise__arc--left {
@@ -486,6 +490,7 @@
   top: 250px;
   width: 560px;
   height: 560px;
+  border-color: rgba(127, 163, 255, .13);
 }
 
 .site-shell--homepage-final .merchandise__arc--right {
@@ -493,6 +498,7 @@
   top: -210px;
   width: 500px;
   height: 500px;
+  border-color: rgba(255, 255, 255, .12);
 }
 
 .site-shell--homepage-final .merchandise__header,
