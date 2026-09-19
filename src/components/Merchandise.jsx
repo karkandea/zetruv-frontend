@@ -26,8 +26,8 @@ export default function Merchandise({ items = [] }) {
 
   return (
     <section className="merchandise" id="merch" aria-labelledby="merchandise-title">
-      <img className="merchandise__arc merchandise__arc--left" src={assets.merchStadiumLeft} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true }} />
-      <img className="merchandise__arc merchandise__arc--right" src={assets.merchStadiumRight} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true }} />
+      <span className="merchandise__arc merchandise__arc--left" aria-hidden="true" />
+      <span className="merchandise__arc merchandise__arc--right" aria-hidden="true" />
 
       <div className="merchandise__header">
         <div>
