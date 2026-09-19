@@ -37,7 +37,7 @@ function normalizeArticle(item, index) {
     title: item.title || fallback.title,
     description: item.excerpt || item.description || fallback.description,
     meta: item.meta || fallback.meta,
-    image: item.thumbnailUrl || item.imageUrl || item.image || fallback.image,
+    image: fallback.image,
   }
 }
 
