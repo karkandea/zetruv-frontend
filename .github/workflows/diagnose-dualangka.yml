@@ -30,5 +30,12 @@ jobs:
           readlink -f /var/www/zetruv-frontend || true
           echo "=== target git/dist ==="
           ls -ld /var/www/zetruv-frontend/.git /var/www/zetruv-frontend/dist 2>/dev/null || true
+          echo "=== nginx root site ==="
+          cat /etc/nginx/sites-enabled/zetruv || true
+          echo "=== nginx dev site ==="
+          cat /etc/nginx/sites-enabled/zetruv-frontend-dev || true
+          echo "=== dev release path ==="
+          ls -ld /var/www/zetruv-dev /var/www/zetruv-dev/current 2>/dev/null || true
+          readlink -f /var/www/zetruv-dev/current || true
           echo "=== nginx references ==="
           grep -R "zetruv.dualangka.com\|/var/www/zetruv-frontend" /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null || true
