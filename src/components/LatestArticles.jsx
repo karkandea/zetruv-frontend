@@ -58,7 +58,7 @@ export default function LatestArticles({ items = [] }) {
       <div className="homepage-articles__grid">
         {articles.map((article, index) => (
           <article className={`homepage-article-card homepage-article-card--${index + 1}`} key={article.id}>
-            <img src={article.image} alt="" />
+            <img src={article.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = [assets.articleOne, assets.articleTwo, assets.articleThree][index] || assets.articleOne }} />
             <div className="homepage-article-card__body">
               <span>{article.category}</span>
               <h3>{article.title}</h3>
