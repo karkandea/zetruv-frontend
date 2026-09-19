@@ -15,7 +15,7 @@ const fallbackItems = Array.from({ length: 8 }, (_, index) => ({
 
 export default function Merchandise({ items = [] }) {
   const viewportRef = useRef(null)
-  const displayItems = fallbackItems.map((fallback, index) => ({ ...fallback, ...(items[index] || {}) }))
+  const displayItems = fallbackItems.map((fallback, index) => ({ ...fallback, ...(items[index] || {}), image: fallback.image }))
 
   function slide(direction) {
     viewportRef.current?.scrollBy({
