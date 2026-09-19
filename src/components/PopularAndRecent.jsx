@@ -14,10 +14,10 @@ const fallbackRecent = [
   { id: 'recent-val', name: '100+ VP Valorant', image: assets.recentValorant },
 ]
 
-function MiniItem({ item, fallbackImage }) {
+function MiniItem({ item, image }) {
   return (
     <article className="mini-game">
-      <span className="mini-game__image"><img src={item.image} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackImage }} /></span>
+      <span className="mini-game__image"><img src={image} alt={item.name} loading="lazy" decoding="async" /></span>
       <span>{item.name}</span>
     </article>
   )
@@ -34,7 +34,7 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
           <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>Game Populer</h2></div>
         </header>
         <div className="mini-panel mini-panel--popular">
-          {popularItems.slice(0, 10).map((item, index) => <MiniItem item={item} fallbackImage={fallbackPopular[index]?.image || assets.popularPubgAlt} key={item.id} />)}
+          {popularItems.slice(0, 10).map((item, index) => <MiniItem item={item} image={fallbackPopular[index]?.image || assets.popularPubgAlt} key={item.id} />)}
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
           <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>Terakhir Dibeli</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
-          {recentItems.slice(0, 3).map((item, index) => <MiniItem item={item} fallbackImage={fallbackRecent[index]?.image || assets.recentMl} key={item.id} />)}
+          {recentItems.slice(0, 3).map((item, index) => <MiniItem item={item} image={fallbackRecent[index]?.image || assets.recentMl} key={item.id} />)}
         </div>
       </div>
     </section>
