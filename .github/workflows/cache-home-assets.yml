@@ -1,0 +1,97 @@
+name: Cache homepage Figma assets
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/cache-home-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Download exact homepage assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/assets/home/final
+
+          curl -L --fail --retry 3 -o public/assets/home/final/hero.png "https://www.figma.com/api/mcp/asset/319e7d6e-11df-452c-b98f-cb17f568a300.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/flash-decor.png "https://www.figma.com/api/mcp/asset/b36892bf-8a35-44f6-97dd-1485023d75ea.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/fire.png "https://www.figma.com/api/mcp/asset/25358e2d-80d4-4fac-a59d-de116ad92155.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/flash-mobile-legends.png "https://www.figma.com/api/mcp/asset/864f8ab6-48fe-4da7-be80-cf22ed65e92c.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/flash-pubg.png "https://www.figma.com/api/mcp/asset/2a502f78-7724-4487-abf6-1b7b8a4358b7.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/flash-valorant.png "https://www.figma.com/api/mcp/asset/a1b29a0e-946c-453d-8894-2c1228e82b90.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-free-fire.png "https://www.figma.com/api/mcp/asset/b81a6b66-f627-4736-90de-b920da8fce00.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-fc-mobile.png "https://www.figma.com/api/mcp/asset/0248a217-985e-4444-a85c-ac8078621a0b.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-undawn.png "https://www.figma.com/api/mcp/asset/745d7737-5ea1-4cf1-b160-3b760f0b6be2.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/merch-jersey.png "https://www.figma.com/api/mcp/asset/232dddb7-f625-4079-a707-969c3c78d9bc.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/article-1.png "https://www.figma.com/api/mcp/asset/3aa58c4c-bf0f-4d69-816c-d44f82cde00d.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/article-2.png "https://www.figma.com/api/mcp/asset/4a12f223-f9f3-4565-9b26-3815a819665c.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/article-3.png "https://www.figma.com/api/mcp/asset/2d83cd5e-5e31-4c3e-a82c-51b4157dfd62.png"
+
+      - name: Point homepage to local assets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("src/data/assets.js")
+          s = p.read_text()
+
+          replacements = {
+              "homepageHeroArtwork": "/assets/home/final/hero.png",
+              "popularHeader": "/assets/home/category-topup.png",
+              "recentHeader": "/assets/home/category-topup.png",
+              "popularMl": "/assets/search/mobile-legends.webp",
+              "popularFreeFire": "/assets/home/final/joki-free-fire.png",
+              "popularValorant": "/assets/search/valorant.webp",
+              "popularPubg": "/assets/search/pubg-mobile.webp",
+              "popularPubgAlt": "/assets/search/pubg-mobile.webp",
+              "recentMl": "/assets/search/mobile-legends.webp",
+              "recentPubg": "/assets/search/pubg-mobile.webp",
+              "recentValorant": "/assets/search/valorant.webp",
+              "flashDecor": "/assets/home/final/flash-decor.png",
+              "flashMobileLegends": "/assets/home/final/flash-mobile-legends.png",
+              "flashPubg": "/assets/home/final/flash-pubg.png",
+              "flashValorant": "/assets/home/final/flash-valorant.png",
+              "fire": "/assets/home/final/fire.png",
+              "mobileLegends": "/assets/search/mobile-legends.webp",
+              "pubg": "/assets/search/pubg-mobile.webp",
+              "valorant": "/assets/search/valorant.webp",
+              "codm": "/assets/search/cod-mobile.webp",
+              "freeFire": "/assets/home/final/joki-free-fire.png",
+              "genshin": "/assets/search/genshin-impact.webp",
+              "fcMobile": "/assets/home/final/joki-fc-mobile.png",
+              "starRail": "/assets/search/star-rail.webp",
+              "undawn": "/assets/home/final/joki-undawn.png",
+              "jersey": "/assets/home/final/merch-jersey.png",
+              "accountPreviewOne": "/assets/game-accounts/dota-2.png",
+              "accountPreviewTwo": "/assets/game-accounts/dota-2.png",
+              "articleOne": "/assets/home/final/article-1.png",
+              "articleTwo": "/assets/home/final/article-2.png",
+              "articleThree": "/assets/home/final/article-3.png",
+          }
+
+          for key, value in replacements.items():
+              s = re.sub(rf"(^\s*{re.escape(key)}:\s*)['\"][^'\"]*['\"]", rf"\1'{value}'", s, flags=re.M)
+
+          p.write_text(s)
+          PY
+
+      - name: Commit cached assets
+        shell: bash
+        run: |
+          git config user.name "Zetruv Asset Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/assets/home/final src/data/assets.js
+          git commit -m "fix: cache homepage Figma assets locally"
+          git push origin dev
