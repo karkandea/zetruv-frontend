@@ -14,10 +14,10 @@ const fallbackRecent = [
   { id: 'recent-val', name: '100+ VP Valorant', image: assets.recentValorant },
 ]
 
-function MiniItem({ item }) {
+function MiniItem({ item, fallbackImage }) {
   return (
     <article className="mini-game">
-      <span className="mini-game__image"><img src={item.image} alt={item.name} /></span>
+      <span className="mini-game__image"><img src={item.image} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackImage }} /></span>
       <span>{item.name}</span>
     </article>
   )
@@ -31,19 +31,19 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
     <section className="popular-recent" aria-label="Popular games and recent purchases">
       <div className="popular-recent__column">
         <header className="compact-heading">
-          <div><img src={assets.popularHeader} alt="" /><h2>Game Populer</h2></div>
+          <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>Game Populer</h2></div>
         </header>
         <div className="mini-panel mini-panel--popular">
-          {popularItems.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
+          {popularItems.slice(0, 10).map((item, index) => <MiniItem item={item} fallbackImage={fallbackPopular[index]?.image || assets.popularPubgAlt} key={item.id} />)}
         </div>
       </div>
 
       <div className="popular-recent__column">
         <header className="compact-heading">
-          <div><img src={assets.recentHeader} alt="" /><h2>Terakhir Dibeli</h2></div>
+          <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>Terakhir Dibeli</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
-          {recentItems.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
+          {recentItems.slice(0, 3).map((item, index) => <MiniItem item={item} fallbackImage={fallbackRecent[index]?.image || assets.recentMl} key={item.id} />)}
         </div>
       </div>
     </section>
