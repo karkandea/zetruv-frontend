@@ -22,7 +22,7 @@ export default function JockeyGames({ items = [] }) {
       <div className="jockey-grid">
         {displayItems.slice(0, 10).map((game, index) => (
           <article className="jockey-card" key={game.id}>
-            <div className="jockey-card__image"><img src={game.image} alt={game.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = fallbackGames[index]?.image || assets.mobileLegends }} /></div>
+            <div className="jockey-card__image"><img src={fallbackGames[index]?.image || assets.mobileLegends} alt={game.name} loading="lazy" decoding="async" /></div>
             <div className="jockey-card__caption">
               <strong>{game.name}</strong>
               <span>{game.publisher}</span>
