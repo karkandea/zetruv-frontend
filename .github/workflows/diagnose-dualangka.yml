@@ -21,6 +21,10 @@ jobs:
           echo "USER=$(id)"
           echo "=== deploy scripts ==="
           ls -l /usr/local/bin/deploy-zetruv-frontend* || true
+          echo "=== legacy deploy script ==="
+          sed -n "1,260p" /usr/local/bin/deploy-zetruv-frontend || true
+          echo "=== sudo permissions ==="
+          sudo -n -l || true
           echo "=== target ==="
           ls -ld /var/www/zetruv-frontend || true
           readlink -f /var/www/zetruv-frontend || true
