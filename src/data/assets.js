@@ -81,8 +81,6 @@ export const assets = {
   articleOne: '/assets/home/final/article-1.png',
   articleTwo: '/assets/home/final/article-2.png',
   articleThree: '/assets/home/final/article-3.png',
-  merchStadiumLeft: 'https://www.figma.com/api/mcp/asset/da089e38-f75b-434e-b87b-4e1da89f94da.svg',
-  merchStadiumRight: 'https://www.figma.com/api/mcp/asset/481c4a46-7c9a-449d-9381-9434913e1e7b.svg',
 
   trustSecurity: 'https://www.figma.com/api/mcp/asset/4dcc5632-dfde-4913-aac6-0cffcffed957.svg',
   trustMoney: 'https://www.figma.com/api/mcp/asset/84036aac-5965-43d4-b615-809e4596617e.svg',
