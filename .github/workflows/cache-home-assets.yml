@@ -36,6 +36,23 @@ jobs:
           curl -L --fail --retry 3 -o public/assets/home/final/article-1.png "https://www.figma.com/api/mcp/asset/3aa58c4c-bf0f-4d69-816c-d44f82cde00d.png"
           curl -L --fail --retry 3 -o public/assets/home/final/article-2.png "https://www.figma.com/api/mcp/asset/4a12f223-f9f3-4565-9b26-3815a819665c.png"
           curl -L --fail --retry 3 -o public/assets/home/final/article-3.png "https://www.figma.com/api/mcp/asset/2d83cd5e-5e31-4c3e-a82c-51b4157dfd62.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-header.png "https://www.figma.com/api/mcp/asset/5b46adc7-2a56-421b-be29-6de9785b1f8c.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-ml.png "https://www.figma.com/api/mcp/asset/d08c5950-34ef-488c-8bb8-fa08043d32c5.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-free-fire.png "https://www.figma.com/api/mcp/asset/7a75b261-b0fb-4a8a-afa2-d73441bba7ec.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-valorant.png "https://www.figma.com/api/mcp/asset/b13a3e12-a1e7-415a-a2a5-ed04a138f0a3.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-pubg.png "https://www.figma.com/api/mcp/asset/c1eb1482-bfe3-428e-bcce-f90e09629b03.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/popular-pubg-alt.png "https://www.figma.com/api/mcp/asset/b42a2564-71c7-44db-962f-a6012c9cd864.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/recent-header.png "https://www.figma.com/api/mcp/asset/17a58b16-845a-4fe0-8197-fff6ba6e6a54.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/recent-ml.png "https://www.figma.com/api/mcp/asset/5baf2f4c-143c-4d0e-825e-9dbf51ca7481.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/recent-pubg.png "https://www.figma.com/api/mcp/asset/6268df12-8bcd-4fe1-b761-2b321d65be36.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/recent-valorant.png "https://www.figma.com/api/mcp/asset/51cb7fd6-b54d-4fbf-b61f-36f3305094ef.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-ml.png "https://www.figma.com/api/mcp/asset/3bd65b1d-0e47-424f-a103-1fa44fed3dce.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-pubg.png "https://www.figma.com/api/mcp/asset/eec5ca1d-6ce0-4dd1-8877-579e7b81c03c.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-valorant.png "https://www.figma.com/api/mcp/asset/8194f88e-44d4-4a74-82bc-10f5f9c49298.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-codm.png "https://www.figma.com/api/mcp/asset/1933264a-f347-47e4-8d15-63f7e347e2cf.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-codm-2.png "https://www.figma.com/api/mcp/asset/1345f250-7dbd-4487-ab44-d5bfa4a848fc.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-genshin.png "https://www.figma.com/api/mcp/asset/2e2ffde6-292f-4acb-9901-e453c4f283c4.png"
+          curl -L --fail --retry 3 -o public/assets/home/final/joki-star-rail.png "https://www.figma.com/api/mcp/asset/3b14a9a1-0f95-4159-99cb-d4aa3c199bf6.png"
 
       - name: Point homepage to local assets
         shell: bash
@@ -49,29 +66,29 @@ jobs:
 
           replacements = {
               "homepageHeroArtwork": "/assets/home/final/hero.png",
-              "popularHeader": "/assets/home/category-topup.png",
-              "recentHeader": "/assets/home/category-topup.png",
-              "popularMl": "/assets/search/mobile-legends.webp",
-              "popularFreeFire": "/assets/home/final/joki-free-fire.png",
-              "popularValorant": "/assets/search/valorant.webp",
-              "popularPubg": "/assets/search/pubg-mobile.webp",
-              "popularPubgAlt": "/assets/search/pubg-mobile.webp",
-              "recentMl": "/assets/search/mobile-legends.webp",
-              "recentPubg": "/assets/search/pubg-mobile.webp",
-              "recentValorant": "/assets/search/valorant.webp",
+              "popularHeader": "/assets/home/final/popular-header.png",
+              "recentHeader": "/assets/home/final/recent-header.png",
+              "popularMl": "/assets/home/final/popular-ml.png",
+              "popularFreeFire": "/assets/home/final/popular-free-fire.png",
+              "popularValorant": "/assets/home/final/popular-valorant.png",
+              "popularPubg": "/assets/home/final/popular-pubg.png",
+              "popularPubgAlt": "/assets/home/final/popular-pubg-alt.png",
+              "recentMl": "/assets/home/final/recent-ml.png",
+              "recentPubg": "/assets/home/final/recent-pubg.png",
+              "recentValorant": "/assets/home/final/recent-valorant.png",
               "flashDecor": "/assets/home/final/flash-decor.png",
               "flashMobileLegends": "/assets/home/final/flash-mobile-legends.png",
               "flashPubg": "/assets/home/final/flash-pubg.png",
               "flashValorant": "/assets/home/final/flash-valorant.png",
               "fire": "/assets/home/final/fire.png",
-              "mobileLegends": "/assets/search/mobile-legends.webp",
-              "pubg": "/assets/search/pubg-mobile.webp",
-              "valorant": "/assets/search/valorant.webp",
-              "codm": "/assets/search/cod-mobile.webp",
+              "mobileLegends": "/assets/home/final/joki-ml.png",
+              "pubg": "/assets/home/final/joki-pubg.png",
+              "valorant": "/assets/home/final/joki-valorant.png",
+              "codm": "/assets/home/final/joki-codm.png",
               "freeFire": "/assets/home/final/joki-free-fire.png",
-              "genshin": "/assets/search/genshin-impact.webp",
+              "genshin": "/assets/home/final/joki-genshin.png",
               "fcMobile": "/assets/home/final/joki-fc-mobile.png",
-              "starRail": "/assets/search/star-rail.webp",
+              "starRail": "/assets/home/final/joki-star-rail.png",
               "undawn": "/assets/home/final/joki-undawn.png",
               "jersey": "/assets/home/final/merch-jersey.png",
               "accountPreviewOne": "/assets/game-accounts/dota-2.png",
