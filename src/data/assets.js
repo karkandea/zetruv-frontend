@@ -1,4 +1,5 @@
 import { stableIcons } from './stableIcons'
+import { homepageLocalAssets } from './homepageLocalAssets'
 
 // Exact exports from the Zetruv Figma redesign. The UI consumes these through
 // data/props so backend/CDN URLs can replace them later without changing layout.
@@ -106,5 +107,6 @@ export const assets = {
   payLinkaja: '/assets/footer/payment-linkaja.png',
   payOvo: '/assets/footer/payment-ovo.png',
   payShopee: '/assets/footer/payment-shopeepay.png',
+  ...homepageLocalAssets,
   ...stableIcons,
 }
