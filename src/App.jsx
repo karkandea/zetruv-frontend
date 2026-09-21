@@ -13,6 +13,8 @@ import {
   GameAccountDetailPage,
   GameAccountCartPage,
   GameAccountCheckoutPage,
+  GameAccountPaymentPage,
+  GameAccountOrderDetailPage,
 } from './pages/GameAccountPages'
 
 export default function App() {
@@ -24,6 +26,8 @@ export default function App() {
   if (path === '/leaderboard') return <LeaderboardPage />
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
   if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
+  if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />
+  if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <GameAccountOrderDetailPage />
   if (path === '/cart') return <CartPage />
   if (path === '/checkout') return <CheckoutPage />
   if (path === '/payment') return <PaymentPage />
