@@ -58,7 +58,7 @@ jobs:
               scale = min(1, max_dim / max(im.size))
               if scale < 1:
                   resample = Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.LANCZOS
-        im = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), resample)
+                  im = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), resample)
               im.save(dst, "WEBP", quality=quality, method=6)
               print(f"{src_name}: {src.stat().st_size} -> {dst_name}: {dst.stat().st_size}, {im.size}")
           PY
