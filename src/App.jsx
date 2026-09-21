@@ -7,6 +7,7 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
+import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import {
   GameAccountsPage,
   GameAccountListingPage,
@@ -24,6 +25,9 @@ export default function App() {
   const kind = params.get('kind')
 
   if (path === '/leaderboard') return <LeaderboardPage />
+  if (path === '/articles' || path === '/article') return <ArticlesPage />
+  const articleDetailMatch = path.match(/^\/(?:articles|article)\/([^/]+)$/)
+  if (articleDetailMatch) return <ArticleDetailPage slug={decodeURIComponent(articleDetailMatch[1])} />
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
   if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
   if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />

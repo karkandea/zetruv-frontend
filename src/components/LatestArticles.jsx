@@ -52,12 +52,12 @@ export default function LatestArticles({ items = [] }) {
           <h2 id="latest-articles-title">Latest Articles</h2>
           <p>Guides, updates, and practical tips to help you shop and play with confidence.</p>
         </div>
-        <a href="#article">View all articles</a>
+        <a href="/articles">View all articles</a>
       </div>
 
       <div className="homepage-articles__grid">
         {articles.map((article, index) => (
-          <article className={`homepage-article-card homepage-article-card--${index + 1}`} key={article.id}>
+          <a className={`homepage-article-card homepage-article-card--${index + 1}`} href={index === 0 ? '/articles/5-things-to-check-before-buying-a-game-account' : '/articles'} key={article.id}>
             <img src={article.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = [assets.articleOne, assets.articleTwo, assets.articleThree][index] || assets.articleOne }} />
             <div className="homepage-article-card__body">
               <span>{article.category}</span>
@@ -65,7 +65,7 @@ export default function LatestArticles({ items = [] }) {
               <p>{article.description}</p>
               <small>{article.meta}</small>
             </div>
-          </article>
+          </a>
         ))}
       </div>
     </section>

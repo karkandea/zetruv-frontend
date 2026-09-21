@@ -29,11 +29,13 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const isLoginCatalog = variant === 'loginCatalog'
   const isHomeLoggedIn = variant === 'homeLoggedIn'
   const isLeaderboard = variant === 'leaderboard'
+  const isArticle = variant === 'article'
   const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
 
   const [activeNav, setActiveNav] = useState(() => {
     if (isLeaderboard) return 'leaderboard'
+    if (isArticle) return 'article'
     if (isCatalog) return 'product'
     if (homeActive) return 'home'
     return ''
@@ -160,7 +162,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               </div>
             </div>
 
-            <a className={`navbar-control${activeNav === 'article' ? ' active' : ''}`} href="#article" aria-current={activeNav === 'article' ? 'page' : undefined} onClick={() => selectNav('article')}>
+            <a className={`navbar-control${activeNav === 'article' ? ' active' : ''}`} href="/articles" aria-current={activeNav === 'article' ? 'page' : undefined} onClick={() => selectNav('article')}>
               <img src={assets.transaction} alt="" />{articleLabel}
             </a>
             <a className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`} href="/order-status" aria-current={activeNav === 'transaction' ? 'page' : undefined} onClick={() => selectNav('transaction')}>
