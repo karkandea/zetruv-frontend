@@ -1,0 +1,64 @@
+name: Cache Game Account Figma Assets
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/cache-game-account-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Download exact Game Account Figma artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src/assets/game-account-flow
+
+          PICKER="https://www.figma.com/api/mcp/asset/296b8b68-a85f-4d13-9970-e5868f7dd0d8"
+          LISTING="https://www.figma.com/api/mcp/asset/08ed9994-1a27-4176-b258-9f550d97cf54"
+          DETAIL="https://www.figma.com/api/mcp/asset/6d5f2ab4-e2fc-4ef3-a2be-b3dd13aa7299"
+          PAYMENT="https://www.figma.com/api/mcp/asset/8dd9ea78-f97c-43db-bf2f-32ede4afe2e5"
+          ORDER="https://www.figma.com/api/mcp/asset/3864ee8b-dd4f-415a-8d3d-70907993affe"
+
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/mobile-legends.png "$PICKER/4f163.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/dota-2.png "$PICKER/35a64.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/valorant.png "$PICKER/d38b2.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/pubg-mobile.png "$PICKER/35a64.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/genshin-impact.png "$PICKER/1b4de.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/call-of-duty-mobile.png "$PICKER/718b6.png"
+
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/dota-listing.png "$LISTING/1a176.png"
+
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/dota-detail-hero.png "$DETAIL/37b9e.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/dota-detail-thumb.png "$DETAIL/35a64.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/review-1.png "$DETAIL/2b873.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/review-2.png "$DETAIL/b3a64.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/review-3.png "$DETAIL/823d4.png"
+
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/qris.png "$PAYMENT/12960.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/order-account.png "$ORDER/5d76d.png"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/step-check.svg "$ORDER/b31b0.svg"
+          curl -L --fail --retry 3 -o src/assets/game-account-flow/step-current.svg "$ORDER/f2d66.svg"
+
+      - name: Commit local assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Zetruv Asset Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/assets/game-account-flow
+          if git diff --cached --quiet; then
+            echo "No asset changes"
+            exit 0
+          fi
+          git commit -m "assets: cache Game Account Figma artwork"
+          git push origin dev
