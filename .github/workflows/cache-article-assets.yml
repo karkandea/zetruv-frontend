@@ -1,0 +1,69 @@
+name: Cache Article Figma Assets
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/cache-article-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Download exact article artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src/assets/articles
+          BASE="https://www.figma.com/api/mcp/asset/aef2a07a-5d03-4d97-b5fc-ed30be469af2"
+
+          curl -L --fail --retry 3 -o src/assets/articles/featured.png "$BASE/4f163.png"
+          curl -L --fail --retry 3 -o src/assets/articles/thumb-a.png "$BASE/d38b2.png"
+          curl -L --fail --retry 3 -o src/assets/articles/thumb-b.png "$BASE/718b6.png"
+
+      - name: Optimize display assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          root = Path("src/assets/articles")
+          jobs = {
+              "featured.png": ("featured.webp", 1200, 88),
+              "thumb-a.png": ("thumb-a.webp", 720, 88),
+              "thumb-b.png": ("thumb-b.webp", 720, 88),
+          }
+          resample = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
+          for src_name, (dst_name, max_dim, quality) in jobs.items():
+              src = root / src_name
+              dst = root / dst_name
+              image = Image.open(src).convert("RGB")
+              scale = min(1, max_dim / max(image.size))
+              if scale < 1:
+                  image = image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))), resample)
+              image.save(dst, "WEBP", quality=quality, method=6)
+              print(src_name, "->", dst_name, dst.stat().st_size)
+          PY
+
+      - name: Commit local assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Zetruv Asset Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/assets/articles
+          if git diff --cached --quiet; then
+            echo "No asset changes"
+            exit 0
+          fi
+          git commit -m "assets: cache article Figma artwork"
+          git push origin dev
