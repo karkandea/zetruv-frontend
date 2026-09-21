@@ -1,0 +1,77 @@
+name: Optimize Game Account Assets
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/optimize-game-account-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Prepare Pillow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' || python3 -m pip install --user pillow
+          from PIL import Image
+          print(Image.__version__)
+          PY
+
+      - name: Create lightweight display assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          root = Path("src/assets/game-account-flow")
+          jobs = {
+              "mobile-legends.png": ("mobile-legends.webp", 256, 88),
+              "dota-2.png": ("dota-2.webp", 256, 88),
+              "valorant.png": ("valorant.webp", 256, 88),
+              "pubg-mobile.png": ("pubg-mobile.webp", 256, 88),
+              "genshin-impact.png": ("genshin-impact.webp", 256, 88),
+              "call-of-duty-mobile.png": ("call-of-duty-mobile.webp", 256, 88),
+              "dota-listing.png": ("dota-listing.webp", 640, 88),
+              "dota-detail-hero.png": ("dota-detail-hero.webp", 1600, 86),
+              "dota-detail-thumb.png": ("dota-detail-thumb.webp", 536, 88),
+              "review-1.png": ("review-1.webp", 96, 86),
+              "review-2.png": ("review-2.webp", 96, 86),
+              "review-3.png": ("review-3.webp", 96, 86),
+              "order-account.png": ("order-account.webp", 96, 90),
+          }
+
+          for src_name, (dst_name, max_dim, quality) in jobs.items():
+              src = root / src_name
+              dst = root / dst_name
+              im = Image.open(src).convert("RGB")
+              scale = min(1, max_dim / max(im.size))
+              if scale < 1:
+                  im = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.Resampling.LANCZOS)
+              im.save(dst, "WEBP", quality=quality, method=6)
+              print(f"{src_name}: {src.stat().st_size} -> {dst_name}: {dst.stat().st_size}, {im.size}")
+          PY
+
+      - name: Commit optimized assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Zetruv Asset Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/assets/game-account-flow/*.webp
+          if git diff --cached --quiet; then
+            echo "No optimized changes"
+            exit 0
+          fi
+          git commit -m "perf: optimize Game Account Figma artwork"
+          git push origin dev
