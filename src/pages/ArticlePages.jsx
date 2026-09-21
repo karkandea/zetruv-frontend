@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Copy, Facebook, Linkedin, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Copy, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { assets } from '../data/assets'
 import { articleAssets } from '../data/articleAssets'
@@ -258,8 +258,8 @@ function ShareRail() {
     <aside className="article-share-rail">
       <span>SHARE</span>
       <button type="button" aria-label="Copy link" onClick={copyLink}><Copy size={16} /></button>
-      <a href="#" aria-label="Share to LinkedIn"><Linkedin size={16} /></a>
-      <a href="#" aria-label="Share to Facebook"><Facebook size={16} /></a>
+      <a href="#" aria-label="Share to Twitter"><img src={assets.twitter} alt="" /></a>
+      <a href="#" aria-label="Share to Facebook"><img src={assets.facebook} alt="" /></a>
     </aside>
   )
 }
