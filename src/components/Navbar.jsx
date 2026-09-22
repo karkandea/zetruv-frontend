@@ -30,8 +30,9 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const isHomeLoggedIn = variant === 'homeLoggedIn'
   const isLeaderboard = variant === 'leaderboard'
   const isArticle = variant === 'article'
-  const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn
-  const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
+  const isAccount = variant === 'account'
+  const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn || isAccount
+  const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn || isAccount
 
   const [activeNav, setActiveNav] = useState(() => {
     if (isLeaderboard) return 'leaderboard'
@@ -121,7 +122,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             <span>{cartLabel}</span>
             {cartCount(cartItems) > 0 && <b className="nav-cart-count">{cartCount(cartItems)}</b>}
           </a>
-          {isLoggedIn && <span className="nav-avatar" aria-label="Signed in as M">M</span>}
+          {isLoggedIn && <a className="nav-avatar" href="/account" aria-label="Signed in as M">M</a>}
         </div>
       </div>
 
