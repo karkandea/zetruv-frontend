@@ -22,6 +22,22 @@
   gap: 16px;
 }
 
+
+.account-page .nav-avatar {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 999px;
+  background: #108ee9;
+  color: #fff;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .account-page .navbar__bottom-inner {
   width: min(1100px, calc(100% - 40px));
   min-height: 58px;
