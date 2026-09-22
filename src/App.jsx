@@ -8,7 +8,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
-import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountFavoritesPage } from './pages/AccountPages'
+import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import {
   GameAccountsPage,
   GameAccountListingPage,
@@ -28,6 +28,8 @@ export default function App() {
   if (path === '/account' || path === '/my-account') return <AccountOverviewPage />
   if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
   if (path === '/account/orders') return <AccountOrdersPage />
+  if (path === '/account/addresses/add') return <AccountAddressFormPage mode="add" />
+  if (path === '/account/addresses/edit') return <AccountAddressFormPage mode="edit" />
   if (path === '/account/addresses' || path === '/account/address') return <AccountAddressesPage />
   if (path === '/account/favorites' || path === '/account/favourites') return <AccountFavoritesPage />
   if (path === '/leaderboard') return <LeaderboardPage />
