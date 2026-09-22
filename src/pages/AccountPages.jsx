@@ -281,13 +281,63 @@ function AddressRow({ label, value }) {
   return <div className="address-row"><span>{label}</span><strong>{value}</strong></div>
 }
 
+function AddressField({ label, defaultValue }) {
+  return (
+    <label className="address-form__field">
+      <span>{label}</span>
+      <input defaultValue={defaultValue} />
+    </label>
+  )
+}
+
+export function AccountAddressFormPage({ mode = 'add' }) {
+  const isEdit = mode === 'edit'
+
+  return (
+    <AccountShell active="addresses">
+      <PageHeader
+        title={isEdit ? 'Ubah Alamat' : 'Tambah Alamat'}
+        description="Isi data alamat terstruktur untuk kalkulasi ongkir dan pengiriman."
+      />
+      <form
+        className="address-form"
+        onSubmit={(event) => {
+          event.preventDefault()
+          window.location.href = '/account/addresses'
+        }}
+      >
+        <div className="address-form__row">
+          <AddressField label="Label alamat" defaultValue="Rumah" />
+          <AddressField label="Nama penerima" defaultValue="Muhammad" />
+        </div>
+        <div className="address-form__row">
+          <AddressField label="Nomor HP" defaultValue="0812 3456 7878" />
+          <AddressField label="Provinsi" defaultValue="Kalimantan Barat" />
+        </div>
+        <div className="address-form__row">
+          <AddressField label="Kota / Kabupaten" defaultValue="Kota Pontianak" />
+          <AddressField label="Kecamatan" defaultValue="Pontianak Barat" />
+        </div>
+        <div className="address-form__row">
+          <AddressField label="Kode Pos" defaultValue="78113" />
+          <AddressField label="Alamat Lengkap" defaultValue="Jl. Tabrani Ahmad Gg Setara" />
+        </div>
+        <div className="address-form__actions">
+          <a className="account-btn account-btn--outline account-btn--cancel" href="/account/addresses">Batal</a>
+          <button className="account-btn account-btn--primary account-btn--address-save" type="submit">Simpan Alamat</button>
+        </div>
+      </form>
+    </AccountShell>
+  )
+}
+
 export function AccountAddressesPage() {
   return (
     <AccountShell active="addresses">
       <PageHeader
         title="Alamat"
         description="Kelola alamat yang dipakai untuk pengiriman merchandise."
-        action={<button className="account-btn account-btn--primary account-btn--add" type="button">+ Tambah Alamat</button>}
+        action={<a className="account-btn account-btn--primary account-btn--add" href="/account/addresses/add">+ Tambah Alamat</a>}
       />
       <section className="address-card">
         <header>
@@ -295,7 +345,7 @@ export function AccountAddressesPage() {
             <h2>Rumah · Alamat Utama</h2>
             <p>Muhammad · 0812 3456 7878</p>
           </div>
-          <button className="account-btn account-btn--outline account-btn--small" type="button">Ubah</button>
+          <a className="account-btn account-btn--outline account-btn--small" href="/account/addresses/edit">Ubah</a>
         </header>
         <AddressRow label="Provinsi" value="Kalimantan Barat" />
         <AddressRow label="Kota / Kabupaten" value="Kota Pontianak" />
@@ -312,7 +362,10 @@ export function AccountFavoritesPage() {
 
   return (
     <AccountShell active="favorites">
-      <PageHeader title="Favorit" description="Produk yang kamu simpan untuk dibuka kembali dengan cepat." />
+      <PageHeader
+        title="Favorit"
+        description={favorites.length ? 'Produk yang kamu simpan untuk dibuka kembali dengan cepat.' : 'Produk yang kamu simpan akan muncul di sini.'}
+      />
       <div className="favorite-grid">
         {favorites.map((item) => (
           <article className="favorite-card" key={item.id}>
@@ -332,7 +385,14 @@ export function AccountFavoritesPage() {
             </div>
           </article>
         ))}
-        {favorites.length === 0 && <div className="favorite-empty">Belum ada produk favorit.</div>}
+        {favorites.length === 0 && (
+          <div className="favorite-empty">
+            <span className="favorite-empty__icon"><img src={accountIcons.heart} alt="" /></span>
+            <strong>Belum ada produk favorit</strong>
+            <p>Simpan produk yang kamu suka supaya mudah ditemukan lagi.</p>
+            <a className="account-btn account-btn--primary favorite-empty__button" href="/search">Jelajahi Produk</a>
+          </div>
+        )}
       </div>
     </AccountShell>
   )
