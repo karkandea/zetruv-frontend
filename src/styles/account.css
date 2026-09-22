@@ -1075,7 +1075,10 @@
     height: auto;
   }
 
-  .address-form__field,
+  .address-form__field {
+    width: calc((100% - 12px) / 2);
+  }
+
   .address-form__field input {
     width: 100%;
   }
@@ -1158,6 +1161,7 @@
   }
 
   .address-form__field {
+    width: 100%;
     height: auto;
   }
 
