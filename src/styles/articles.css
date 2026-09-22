@@ -6,3 +6,357 @@
 
 @media(max-width:1180px){.article-shell .navbar__top,.article-shell .navbar__bottom-inner{width:calc(100% - 40px)}.article-index-header__inner,.article-section-inner,.article-newsletter,.article-read-next__inner{width:calc(100% - 40px)}.article-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.article-list-card,.article-list-card>img{width:100%}.article-featured-card{width:100%;grid-template-columns:47% 53%}.article-featured-card>img{width:100%}.article-featured-card h2,.article-featured-card p{width:100%}.article-footer__inner,.article-footer__copyright{width:calc(100% - 64px)}.article-footer__inner{grid-template-columns:1fr 1fr}.article-footer__brand,.article-footer__brand>p{width:100%}.article-footer__links{grid-template-columns:1fr 1fr;gap:24px}.article-detail-hero>img{width:calc(100% - 80px)}}
 @media(max-width:820px){.article-index-header{height:auto;padding-bottom:34px}.article-index-header__inner{padding-top:32px}.article-index-header h1{font-size:32px;line-height:44px}.article-index-header__inner>p{width:100%}.article-index-tools{height:auto;flex-direction:column}.article-index-tools>label{width:100%}.article-index-tools>div{height:auto;flex-wrap:wrap}.article-featured-section{height:auto;padding:28px 0}.article-featured-card{height:auto;grid-template-columns:1fr}.article-featured-card>img{height:230px}.article-featured-card>div{min-height:300px}.article-latest-section{height:auto}.article-grid{grid-template-columns:1fr}.article-list-card{height:auto}.article-list-card>img{height:210px}.article-newsletter-section{height:auto;padding:20px}.article-newsletter{height:auto;min-height:200px;flex-direction:column;align-items:flex-start;gap:20px;padding:28px}.article-newsletter>div,.article-newsletter form{width:100%}.article-detail-header{height:auto;padding:36px 20px}.article-detail-header__inner{width:100%;padding:0}.article-detail-header h1{font-size:30px;line-height:42px}.article-detail-header__inner>p{width:100%}.article-detail-hero{height:auto;padding:0 20px 34px}.article-detail-hero>img{width:100%;height:auto}.article-detail-body{height:auto}.article-reading-layout{width:calc(100% - 40px);height:auto;grid-template-columns:1fr}.article-share-rail{width:100%;height:auto;flex-direction:row;align-items:center}.article-reading-column{width:100%}.article-reading-column>p.article-lead{height:auto}.article-read-next{height:auto;padding-bottom:36px}.article-related-grid{grid-template-columns:1fr}.article-related-grid>a,.article-related-grid img{width:100%;height:auto}.article-footer{height:auto;min-height:520px;padding:36px 24px}.article-footer__inner{position:relative;top:auto;left:auto;width:100%;height:auto;display:block;transform:none}.article-footer__brand{padding:0}.article-footer__links{display:grid;grid-template-columns:1fr 1fr;margin-top:32px}.article-footer__copyright{position:relative;top:auto;left:auto;width:100%;margin-top:32px;transform:none}}
+
+/* Figma alignment overrides — Articles 3918:385 / Detail 3919:624 */
+.article-shell .article-eyebrow,
+.article-shell .article-section-heading > span,
+.article-shell .article-newsletter > div > span {
+  color: #010154;
+}
+
+.article-index-tools > label {
+  border-color: #e6e6e6;
+  border-radius: 20px;
+}
+
+.article-index-tools button {
+  border-color: #e6e6e6;
+  color: #010154;
+}
+
+.article-index-tools button.active {
+  border-color: #010154;
+  background: #010154;
+  color: #fff;
+}
+
+.article-featured-section {
+  background: #fff;
+}
+
+.article-category-pill {
+  background: #f0f2ff;
+  color: #010154;
+}
+
+.article-featured-card {
+  border-color: #e6e6e6;
+}
+
+.article-featured-card h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: normal;
+}
+
+.article-featured-card p {
+  margin-top: 0;
+  color: #6d6d6d;
+  font-size: 12px;
+  line-height: normal;
+}
+
+.article-featured-card small {
+  margin-top: 0;
+  color: #010154;
+  font-size: 10px;
+}
+
+.article-read-button {
+  position: static;
+  width: auto;
+  height: auto;
+  margin-top: 0;
+  padding: 10px 18px;
+  border-radius: 20px;
+  background: #fed218;
+  color: #010154;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.article-list-card {
+  border-color: #e6e6e6;
+}
+
+.article-list-card__body {
+  padding: 14px 16px;
+}
+
+.article-list-card .article-category-pill {
+  height: auto;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: normal;
+}
+
+.article-list-card h3 {
+  height: auto;
+  margin-top: 0;
+  font-size: 14px;
+  line-height: normal;
+}
+
+.article-list-card p {
+  height: auto;
+  margin-top: 0;
+  color: #6d6d6d;
+  font-size: 10.5px;
+  line-height: normal;
+}
+
+.article-list-card small {
+  margin-top: 0;
+  color: #010154;
+  font-size: 10px;
+}
+
+.article-newsletter-section {
+  background: #fff;
+}
+
+.article-newsletter {
+  padding: 30px 36px;
+  border: 1px solid #010154;
+  border-radius: 18px;
+  background: #f0f2ff;
+  color: #1e1e1e;
+}
+
+.article-newsletter::after {
+  display: none;
+}
+
+.article-newsletter > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.article-newsletter > div > span {
+  font-size: 10px;
+}
+
+.article-newsletter h2 {
+  margin-top: 0;
+  color: #1e1e1e;
+  font-size: 22px;
+  line-height: normal;
+}
+
+.article-newsletter p {
+  color: #6d6d6d;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.article-newsletter form {
+  height: 44px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid #e6e6e6;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.article-newsletter input {
+  color: #1e1e1e;
+  font-size: 11px;
+}
+
+.article-newsletter input::placeholder {
+  color: #6d6d6d;
+}
+
+.article-newsletter button {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 8px 18px;
+  border-radius: 16px;
+  background: #fed218;
+  color: #010154;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.article-detail-header h1 {
+  font-size: 44px;
+  line-height: 54px;
+  font-weight: 600;
+}
+
+.article-detail-header__inner > p {
+  color: #707070;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.article-detail-meta {
+  color: #707070;
+  font-size: 10px;
+}
+
+.article-detail-hero {
+  background: #fff;
+}
+
+.article-detail-hero > img {
+  border-radius: 22px;
+}
+
+.article-detail-body {
+  height: auto;
+  padding-bottom: 68px;
+}
+
+.article-reading-layout {
+  height: auto;
+}
+
+.article-reading-column > p {
+  margin: 0;
+  color: #1e1e1e;
+  font-size: 13.25px;
+  line-height: 25px;
+}
+
+.article-reading-column > p.article-lead {
+  color: #1e1e1e;
+  font-size: 15px;
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.article-editorial-section {
+  margin-top: 0;
+}
+
+.article-editorial-section > span {
+  color: #010154;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.article-editorial-section h2 {
+  color: #1e1e1e;
+  font-size: 22px;
+  line-height: 31px;
+}
+
+.article-editorial-section p {
+  color: #1e1e1e;
+  font-size: 13.25px;
+  line-height: 25px;
+}
+
+.article-editorial-section li {
+  color: #1e1e1e;
+  font-size: 12.5px;
+  line-height: 22px;
+}
+
+.article-editorial-section li > span:first-child {
+  width: 4px;
+  height: 4px;
+  margin-top: 9px;
+  flex-basis: 4px;
+  background: #010154;
+}
+
+.article-reading-column > hr {
+  margin: 0;
+  border-top-color: #e8e8e8;
+}
+
+.article-checklist li > span {
+  width: 18px;
+  height: 18px;
+}
+
+.article-checklist li strong {
+  color: #1e1e1e;
+  font-size: 12.5px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.article-editorial-note {
+  height: auto;
+  margin-top: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #f8f9ff;
+}
+
+.article-editorial-note strong {
+  color: #010154;
+  font-size: 9.5px;
+  line-height: 14px;
+}
+
+.article-editorial-note p {
+  color: #686868;
+  font-size: 11.5px;
+  line-height: 20px;
+}
+
+.article-read-next {
+  background: #fff;
+}
+
+.article-read-next__inner {
+  border-top-color: #e8e8e8;
+}
+
+.article-read-next__header {
+  height: 56px;
+}
+
+.article-read-next__header h2 {
+  font-size: 28px;
+  line-height: 38px;
+}
+
+.article-read-next__header button {
+  width: 36px;
+  height: 36px;
+  border-color: #e8e8e8;
+}
+
+.article-related-grid img {
+  border-radius: 16px;
+}
+
+.article-related-grid .article-category-pill {
+  height: auto;
+  padding: 4px 10px;
+  border-radius: 11px;
+  font-size: 9px;
+}
+
+.article-related-grid h3 {
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.article-related-grid small {
+  margin-top: 0;
+  color: #686868;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.article-view-all {
+  color: #010154;
+  font-size: 11px;
+}
+
+@media (max-width: 820px) {
+  .article-detail-header h1 {
+    font-size: 30px;
+    line-height: 42px;
+  }
+}

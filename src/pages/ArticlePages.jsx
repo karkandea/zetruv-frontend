@@ -215,7 +215,7 @@ export function ArticlesPage() {
           <div className="article-section-inner">
             <div className="article-section-heading"><span>FEATURED STORY</span><h2>Start here</h2></div>
             <a className="article-featured-card" href="/articles/5-things-to-check-before-buying-a-game-account">
-              <img src={activeArticle.image} alt="" fetchPriority="high" decoding="async" />
+              <img src={articleAssets.featured} alt="" fetchPriority="high" decoding="async" />
               <div>
                 <CategoryPill>BUYER GUIDE</CategoryPill>
                 <h2>5 Things to Check Before Buying a Game Account</h2>
@@ -287,12 +287,12 @@ export function ArticleDetailPage({ slug = '5-things-to-check-before-buying-a-ga
             <CategoryPill>{activeArticle.category}</CategoryPill>
             <h1>{activeArticle.title}</h1>
             <p>{activeArticle.description}</p>
-            <div className="article-detail-meta"><span>SEP 6, 2026</span><i /><span>ZETRUV EDITORIAL</span><i /><span>5 MIN READ</span></div>
+            <div className="article-detail-meta"><span>SEP 6, 2026</span><i /><span>ZETRUV EDITORIAL</span><i /><span>{(activeArticle.meta.match(/(\d+) min read/i)?.[1] || '5')} MIN READ</span></div>
           </div>
         </section>
 
         <section className="article-detail-hero">
-          <img src={articleAssets.featured} alt="" fetchPriority="high" decoding="async" />
+          <img src={activeArticle.image} alt="" fetchPriority="high" decoding="async" />
         </section>
 
         <section className="article-detail-body">
