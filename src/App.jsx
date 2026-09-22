@@ -8,6 +8,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
+import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountFavoritesPage } from './pages/AccountPages'
 import {
   GameAccountsPage,
   GameAccountListingPage,
@@ -24,6 +25,11 @@ export default function App() {
   const flow = params.get('flow')
   const kind = params.get('kind')
 
+  if (path === '/account' || path === '/my-account') return <AccountOverviewPage />
+  if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
+  if (path === '/account/orders') return <AccountOrdersPage />
+  if (path === '/account/addresses' || path === '/account/address') return <AccountAddressesPage />
+  if (path === '/account/favorites' || path === '/account/favourites') return <AccountFavoritesPage />
   if (path === '/leaderboard') return <LeaderboardPage />
   if (path === '/articles' || path === '/article') return <ArticlesPage />
   const articleDetailMatch = path.match(/^\/(?:articles|article)\/([^/]+)$/)
