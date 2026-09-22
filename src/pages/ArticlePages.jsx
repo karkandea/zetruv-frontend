@@ -215,7 +215,7 @@ export function ArticlesPage() {
           <div className="article-section-inner">
             <div className="article-section-heading"><span>FEATURED STORY</span><h2>Start here</h2></div>
             <a className="article-featured-card" href="/articles/5-things-to-check-before-buying-a-game-account">
-              <img src={articleAssets.featured} alt="" fetchPriority="high" decoding="async" />
+              <img src={activeArticle.image} alt="" fetchPriority="high" decoding="async" />
               <div>
                 <CategoryPill>BUYER GUIDE</CategoryPill>
                 <h2>5 Things to Check Before Buying a Game Account</h2>
@@ -264,7 +264,19 @@ function ShareRail() {
   )
 }
 
-export function ArticleDetailPage() {
+export function ArticleDetailPage({ slug = '5-things-to-check-before-buying-a-game-account' }) {
+  const featuredArticle = {
+    slug: '5-things-to-check-before-buying-a-game-account',
+    category: 'BUYER GUIDE',
+    title: '5 Things to Check Before Buying a Game Account',
+    description: 'A practical checklist for account access, recovery methods, ownership, seller credibility, and what to secure immediately after the transfer.',
+    meta: 'Buyer Guide  ·  5 min read',
+    image: articleAssets.featured,
+  }
+  const activeArticle = slug === featuredArticle.slug
+    ? featuredArticle
+    : articles.find((article) => article.slug === slug) || featuredArticle
+
   return (
     <div className="article-shell">
       <Navbar variant="article" />
@@ -272,9 +284,9 @@ export function ArticleDetailPage() {
       <main>
         <section className="article-detail-header">
           <div className="article-detail-header__inner">
-            <CategoryPill>BUYER GUIDE</CategoryPill>
-            <h1>5 Things to Check Before Buying a Game Account</h1>
-            <p>A practical checklist for account access, recovery methods, ownership, seller credibility, and what to secure immediately after the transfer.</p>
+            <CategoryPill>{activeArticle.category}</CategoryPill>
+            <h1>{activeArticle.title}</h1>
+            <p>{activeArticle.description}</p>
             <div className="article-detail-meta"><span>SEP 6, 2026</span><i /><span>ZETRUV EDITORIAL</span><i /><span>5 MIN READ</span></div>
           </div>
         </section>
