@@ -744,6 +744,63 @@
   padding: 0;
 }
 
+.address-form {
+  width: 720px;
+  height: 485px;
+  padding: 16px 18px 0;
+  border: 1px solid #e0e3eb;
+  border-radius: 16px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.address-form__row {
+  width: 684px;
+  height: 66px;
+  display: flex;
+  gap: 12px;
+}
+
+.address-form__field {
+  width: 336px;
+  height: 66px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #1b1b1e;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.address-form__field input {
+  width: 336px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #e0e3eb;
+  border-radius: 10px;
+  outline: 0;
+  background: #fff;
+  color: #616675;
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.address-form__actions {
+  width: 684px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.account-btn--address-save {
+  width: 132px;
+  padding: 0;
+}
+
 .address-card {
   width: 100%;
   height: 322px;
@@ -884,15 +941,53 @@
 
 .favorite-empty {
   grid-column: 1 / -1;
-  min-height: 180px;
-  border: 1px dashed #e0e3eb;
-  border-radius: 16px;
+  width: 100%;
+  height: 310px;
+  border: 1px solid #e0e3eb;
+  border-radius: 18px;
   background: #fff;
-  color: #616675;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  gap: 10px;
+}
+
+.favorite-empty__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: #f4f6fc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-empty__icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.favorite-empty > strong {
+  color: #1b1b1e;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.favorite-empty > p {
+  margin: 0;
+  color: #616675;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.favorite-empty__button {
+  width: 138px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
 }
 
 @media (max-width: 1120px) {
@@ -963,12 +1058,26 @@
   .account-form input,
   .account-form__locked,
   .account-note--form,
-  .account-form__actions {
+  .account-form__actions,
+  .address-form,
+  .address-form__row,
+  .address-form__actions {
     width: 100%;
   }
 
-  .account-form {
+  .account-form,
+  .address-form {
     height: auto;
+    padding-bottom: 18px;
+  }
+
+  .address-form__row {
+    height: auto;
+  }
+
+  .address-form__field,
+  .address-form__field input {
+    width: 100%;
   }
 
   .order-card {
@@ -1042,6 +1151,14 @@
   .address-card {
     height: auto;
     padding-bottom: 18px;
+  }
+
+  .address-form__row {
+    flex-direction: column;
+  }
+
+  .address-form__field {
+    height: auto;
   }
 
   .address-row {
