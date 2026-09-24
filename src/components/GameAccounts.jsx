@@ -1,74 +1,50 @@
-import { assets } from '../data/assets'
-
-const fallbackAccounts = [
-  {
-    id: 'account-1',
-    image: assets.accountPreviewOne,
-    title: 'Mythic · 119 Skin',
-    meta: 'Indonesia/Jawa Barat · Level 61',
-    price: 'Rp1.850.000',
-  },
-  {
-    id: 'account-2',
-    image: assets.accountPreviewTwo,
-    title: 'Mythical Glory · 212 Skin',
-    meta: 'Indonesia/Jawa Barat · Level 80',
-    price: 'Rp2.750.000',
-  },
-  {
-    id: 'account-3',
-    image: assets.accountPreviewOne,
-    title: 'Mythic · 71 Skin',
-    meta: 'Indonesia/Sumatera Utara · Level 44',
-    price: 'Rp1.450.000',
-  },
-]
-
-function normalizeAccount(item, index) {
-  const fallback = fallbackAccounts[index]
-  if (!item) return fallback
-  const numericPrice = item.price ?? item.minPrice
-  return {
-    ...fallback,
-    id: item.id ?? fallback.id,
-    image: fallback.image,
-    title: item.title || item.name || fallback.title,
-    meta: item.description || item.region || fallback.meta,
-    price: numericPrice != null
-      ? `Rp${new Intl.NumberFormat('id-ID').format(numericPrice)}`
-      : fallback.price,
-  }
-}
+import { accountPrice, accountProductHref, getAccountAttributes } from '../services/gameAccountPresentation'
 
 export default function GameAccounts({ items = [] }) {
-  const cards = fallbackAccounts.map((_, index) => normalizeAccount(items[index], index))
+  const cards = items.filter((item) => item?.id && item?.slug).slice(0, 3)
 
   return (
     <section className="homepage-accounts" id="game-accounts" aria-labelledby="homepage-accounts-title">
       <div className="homepage-accounts__header">
         <div>
           <h2 id="homepage-accounts-title">Akun Game Pilihan</h2>
-          <p>Temukan akun sesuai rank, region, dan koleksi yang kamu cari.</p>
+          <p>Detail akun sesuai game, langsung dari listing yang tersedia.</p>
         </div>
-        <a href="/search?q=account">Lihat Semua Akun Game</a>
+        <a href="/search?kind=GameAccount">Lihat Semua Akun Game</a>
       </div>
-
-      <div className="homepage-accounts__row">
-        {cards.map((account) => (
-          <article className="homepage-account-card" key={account.id}>
-            <img className="homepage-account-card__preview" src={account.image} alt={account.title} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = assets.accountPreviewOne }} />
-            <span className="homepage-account-card__status">TERSEDIA</span>
-            <div className="homepage-account-card__info">
-              <strong>{account.title}</strong>
-              <span>{account.meta}</span>
-            </div>
-            <div className="homepage-account-card__bottom">
-              <strong>{account.price}</strong>
-              <a href="/search?q=account">Lihat Detail</a>
-            </div>
-          </article>
-        ))}
-      </div>
+      {cards.length === 0
+        ? <div className="homepage-accounts__empty">Belum ada akun game yang ditampilkan saat ini.</div>
+        : <div className="homepage-accounts__row">
+          {cards.map((account) => {
+            const attributes = getAccountAttributes(account.accountDetails, { cardOnly: true, limit: 3 })
+            const href = accountProductHref(account)
+            return (
+              <article className="homepage-account-card" key={account.id}>
+                {account.thumbnailUrl || account.imageUrl
+                  ? <img className="homepage-account-card__preview" src={account.thumbnailUrl || account.imageUrl} alt={account.name} />
+                  : <div className="homepage-account-card__preview homepage-account-card__preview--empty" aria-hidden="true">Akun Game</div>}
+                <span className={`homepage-account-card__status${account.isAvailable ? '' : ' is-unavailable'}`}>
+                  {account.isAvailable ? 'TERSEDIA' : 'TIDAK TERSEDIA'}
+                </span>
+                <div className="homepage-account-card__info">
+                  <strong>{account.name}</strong>
+                  <span>{account.gameName || 'Game Account'}</span>
+                  {attributes.length > 0
+                    ? <div className="homepage-account-card__attributes" aria-label="Detail akun">
+                      {attributes.map((field) => <span key={field.key} title={`${field.label}: ${field.value}`}>
+                        {field.label}: {field.value}
+                      </span>)}
+                    </div>
+                    : <small>Detail akun belum tersedia.</small>}
+                </div>
+                <div className="homepage-account-card__bottom">
+                  <strong>{accountPrice(account.minPrice) || 'Harga belum tersedia'}</strong>
+                  <a href={href}>Lihat Detail</a>
+                </div>
+              </article>
+            )
+          })}
+        </div>}
     </section>
   )
 }

@@ -1,0 +1,43 @@
+/* Public catalog: all content and availability comes from backend. */
+.ga-live-state { margin: 20px 0; padding: 24px; border: 1px dashed #dce0ea; border-radius: 12px; background: #fff; color: #616675; font-size: 13px; text-align: center; }
+.ga-live-placeholder { display: grid; place-items: center; background: #edf0f7; color: #67718b; font-size: 11px; text-align: center; }
+.ga-game-card.ga-live-game-link { color: inherit; text-decoration: none; }
+.ga-live-game-link > .ga-live-placeholder { width: 72px; height: 72px; border-radius: 12px; }
+.ga-list-head > .ga-live-placeholder { width: 64px; height: 64px; border-radius: 12px; }
+.ga-account-grid.ga-live-grid { grid-template-columns: repeat(4, minmax(0,1fr)); width: 100%; }
+.ga-account-card.ga-live-card { display: flex; flex-direction: column; height: auto; min-height: 310px; overflow: hidden; }
+.ga-live-card .ga-account-art > .ga-live-placeholder { width: 100%; height: 100%; }
+.ga-live-card .ga-account-copy { height: auto; flex: 1; display: flex; flex-direction: column; }
+.ga-live-card .ga-account-copy h2 { overflow-wrap: anywhere; }
+.ga-live-card .ga-tags.ga-live-tags { flex-wrap: wrap; height: auto; min-height: 25px; }
+.ga-live-card .ga-tags.ga-live-tags > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ga-live-card .ga-account-price-row { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 14px; }
+.ga-live-card .ga-account-price-row strong { min-width: 0; overflow-wrap: anywhere; line-height: 18px; }
+.ga-live-card .ga-account-price-row a { min-height: 40px; flex: none; display: grid; place-items: center; padding: 0 12px; background: #010154; color: #fff; border-radius: 8px; font-size: 11px; font-weight: 600; text-decoration: none; }
+.ga-live-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 24px; color: #616675; font-size: 12px; }
+.ga-live-pagination span { margin-right: auto; }
+.ga-live-pagination button { border: 1px solid #dce0ea; border-radius: 8px; background: #fff; padding: 8px 12px; color: #010154; cursor: pointer; }
+.ga-live-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.ga-live-hero .ga-detail-hero-bg { width: 100%; height: 100%; top: 0; left: 0; object-fit: cover; transform: none; }
+.ga-live-hero .ga-hero-thumb img { width: 100%; height: 100%; top: auto; left: auto; transform: none; }
+.ga-live-hero .ga-hero-thumb .ga-live-placeholder { width: 100%; height: 100%; }
+.ga-live-detail.ga-detail-card { min-height: 0; }
+.ga-live-description { margin: 12px 0; white-space: pre-wrap; color: #616675; font-size: 13px; line-height: 1.7; }
+.ga-detail-specs.ga-live-specs { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.ga-live-specs > div { height: auto; min-height: 72px; overflow-wrap: anywhere; }
+.ga-live-specs dt { color: #616675; font-size: 10px; }
+.ga-live-specs dd { margin: 5px 0 0; font-size: 13px; font-weight: 600; }
+.ga-live-gallery { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+.ga-live-gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; }
+.ga-live-reviews { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e0e3ed; }
+.ga-live-reviews p,.ga-live-note { color: #616675; font-size: 12px; line-height: 1.6; }
+.ga-live-purchase.ga-purchase-card { min-height: 0; }
+.ga-live-purchase .ga-primary-cta:disabled { opacity: .6; cursor: not-allowed; }
+.ga-live-back { display: block; margin-top: 16px; color: #010154; text-align: center; font-size: 12px; }
+@media(max-width:1180px) { .ga-account-grid.ga-live-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:680px) {
+ .ga-account-grid.ga-live-grid,.ga-detail-specs.ga-live-specs { grid-template-columns: 1fr; }
+ .ga-live-pagination { flex-wrap: wrap; }
+ .ga-live-pagination span { width: 100%; }
+ .ga-live-gallery { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
