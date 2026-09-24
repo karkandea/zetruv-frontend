@@ -5,6 +5,7 @@ import LucideIconLayer from '../src/admin/LucideIconLayer'
 import '../src/admin/admin.css'
 import '../src/admin/admin-reference.css'
 import '../src/admin/admin-icons.css'
+import '../src/admin/account-attributes.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
