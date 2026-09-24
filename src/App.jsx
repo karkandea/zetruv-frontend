@@ -9,10 +9,8 @@ import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
+import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
 import {
-  GameAccountsPage,
-  GameAccountListingPage,
-  GameAccountDetailPage,
   GameAccountCartPage,
   GameAccountCheckoutPage,
   GameAccountPaymentPage,

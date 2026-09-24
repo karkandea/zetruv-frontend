@@ -1,0 +1,28 @@
+/* Real, schema-driven Game Account cards and product detail. */
+.homepage-accounts { height: auto; min-height: 402px; }
+.homepage-accounts__row { height: auto; min-height: 332px; overflow: visible; }
+.homepage-account-card { height: auto; min-height: 332px; }
+.homepage-account-card__info { height: auto; flex: 1; min-height: 46px; overflow: visible; }
+.homepage-account-card__info > strong,
+.homepage-account-card__info > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.homepage-account-card__attributes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.homepage-account-card__attributes > span {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 4px 7px; border-radius: 6px; color: #434968; background: #f3f5fa;
+  font-size: 10px; line-height: 16px;
+}
+.homepage-account-card__info small { color: #737b89; font-size: 10px; }
+.homepage-account-card__status.is-unavailable { width: auto; padding-inline: 10px; color: #854b17; background: #fff1de; }
+.homepage-account-card__preview--empty { display: grid; place-items: center; color: #737b89; background: #f3f5fa; font-size: 12px; }
+.homepage-accounts__empty { min-height: 160px; display: grid; place-items: center; text-align: center; color: #707789; border: 1px dashed #dce1eb; border-radius: 14px; font-size: 13px; }
+.homepage-account-card__bottom > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .homepage-accounts { width: min(100% - 32px, 680px); }
+  .homepage-accounts__row { grid-template-columns: repeat(2, minmax(0,1fr)); padding: 0; }
+}
+@media (max-width: 560px) {
+  .homepage-accounts__header { height: auto; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .homepage-accounts__header > a { width: auto; padding-inline: 16px; }
+  .homepage-accounts__row { grid-template-columns: 1fr; }
+}
