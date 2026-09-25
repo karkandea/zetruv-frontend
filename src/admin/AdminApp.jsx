@@ -3,6 +3,7 @@ import { cmsRequest, getAdminSession, loginAdmin, logoutAdmin } from './api'
 import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
+import DiscountVouchersPage from './DiscountVouchersPage'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 const storefrontHost = STOREFRONT_URL ? new URL(STOREFRONT_URL).host : 'Storefront DEV'
@@ -14,6 +15,7 @@ const NAV = [
   ['catalog', 'Catalog', '▦'],
   ['provider-mapping', 'Provider Mapping', '⇄'],
   ['promotions', 'Promotions', '⚡'],
+  ['discount-vouchers', 'Discount vouchers', '◎'],
   ['articles', 'Articles', '✎'],
   ['orders', 'Orders', '◎'],
   ['site', 'Site settings', '⚙'],
@@ -129,6 +131,7 @@ function Shell({ session, onLogout }) {
     catalog: <CatalogPage />,
     'provider-mapping': <ProviderMappingPage />,
     promotions: <PromotionsPage />,
+    'discount-vouchers': <DiscountVouchersPage />,
     articles: <ArticlesPage />,
     orders: <OrdersPage />,
     site: <SitePage />,
@@ -424,7 +427,7 @@ function OrderDetail({ detail, busy, onCancel, onFulfillment, onReconcile, onShi
   return <div className="admin-order-detail">
     <div className="admin-order-summary">
       <div><small>Customer</small><strong>{detail.customerName || '—'}</strong><span>{detail.customerEmail || 'No email'}</span><span>WhatsApp: {detail.customerPhone || 'Not provided'}</span></div>
-      <div><small>Grand total</small><strong>{money(detail.grandTotal)}</strong><span>Subtotal {money(detail.subtotal)} · Discount {money(detail.discountAmount)}</span></div>
+      <div><small>Grand total</small><strong>{money(detail.grandTotal)}</strong><span>Subtotal {money(detail.subtotal)} · Discount {money(detail.discountAmount)}</span>{detail.voucherCode && <span>Voucher {detail.voucherCode} · {money(detail.voucherDiscountAmount)} discount</span>}</div>
       <div><small>Created</small><strong>{date(detail.createdAt)}</strong><span>{detail.paymentProvider || 'No payment provider'}</span></div>
     </div>
     <div className="admin-order-controls">
