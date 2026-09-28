@@ -1192,3 +1192,86 @@
     width: 100%;
   }
 }
+
+
+/* Orders empty and search-no-result states — Figma 3192:408 / 3192:582 */
+.orders-figma-empty {
+  width: 942px;
+  height: 310px;
+  border: 1px solid #e0e3eb;
+  border-radius: 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.orders-figma-empty > strong {
+  color: #1b1b1e;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.orders-figma-empty > p {
+  margin: 0;
+  color: #616675;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.orders-figma-empty > .account-btn {
+  height: 38px;
+  min-height: 38px;
+  margin-top: 2px;
+  padding: 0 22px;
+}
+
+.orders-figma-empty--search {
+  height: 260px;
+}
+
+.orders-figma-empty--search > .account-btn {
+  min-width: 136px;
+  padding: 0 18px;
+}
+
+.orders-no-result-search {
+  width: 430px;
+  height: 44px;
+  border: 1px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+}
+
+.orders-no-result-search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1b1b1e;
+  font: 400 11px Poppins, Arial, sans-serif;
+}
+
+.orders-figma-empty--inline {
+  height: 180px;
+  border-radius: 16px;
+}
+
+@media (max-width: 1120px) {
+  .orders-figma-empty {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .orders-no-result-search {
+    width: 100%;
+  }
+}
