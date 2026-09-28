@@ -1682,6 +1682,13 @@
   height: 67px;
 }
 
+.sos-account-warning__icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  object-fit: contain;
+}
+
 .sos-account-delivery {
   width: 1100px;
   min-height: 252px;
