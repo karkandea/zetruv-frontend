@@ -151,15 +151,10 @@
 }
 
 .journey-info-banner__check {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 16px;
+  height: 16px;
   flex: none;
-  color: #0a9959;
-  font-size: 18px;
-  font-weight: 700;
+  object-fit: contain;
 }
 
 .journey-info-banner--warning {
@@ -557,6 +552,10 @@
 
 .payment-state-page--failed {
   background: #fcfcff;
+}
+
+.payment-state-page--failed .payment-state-page__rule {
+  display: none;
 }
 
 .payment-state-page__rule {
