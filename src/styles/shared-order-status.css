@@ -1073,6 +1073,7 @@
 .sos-exception-page > header {
   min-height: 58px;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
@@ -1683,12 +1684,14 @@
 
 .sos-account-delivery {
   width: 1100px;
-  height: 252px;
+  min-height: 252px;
   margin-top: 18px;
-  padding: 18px;
+  padding: 18px 20px;
   border: 1px solid #dfe3ee;
   border-radius: 16px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
 }
 
 .sos-account-delivery__heading {
@@ -1698,14 +1701,17 @@
 }
 
 .sos-account-delivery dl {
-  margin: 8px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
 }
 
 .sos-account-delivery dl > div {
-  min-height: 46px;
+  min-height: 18px;
   display: grid;
   grid-template-columns: 180px 1fr;
-  align-items: center;
+  align-items: start;
 }
 
 .sos-account-delivery dt,
@@ -1731,9 +1737,8 @@
 }
 
 .sos-account-delivery > .sos-button {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
+  align-self: flex-end;
+  margin-top: 0;
 }
 
 .sos-account-checklist {
