@@ -122,12 +122,12 @@ function ProductCard({ product }) {
 
 export function PhysicalCatalogPage() {
   const [category, setCategory] = useState('Jersey')
-  const [sort, setSort] = useState('Newest')
+  const [sort, setSort] = useState('Sort: Newest')
 
   const visible = useMemo(() => {
     const rows = category === 'All' || category === 'Jersey' ? PRODUCTS : PRODUCTS.filter((item) => item.category === category)
-    if (sort === 'Price: Low') return [...rows].sort((a, b) => a.price - b.price)
-    if (sort === 'Price: High') return [...rows].sort((a, b) => b.price - a.price)
+    if (sort === 'Sort: Price Low') return [...rows].sort((a, b) => a.price - b.price)
+    if (sort === 'Sort: Price High') return [...rows].sort((a, b) => b.price - a.price)
     return rows
   }, [category, sort])
 
@@ -151,9 +151,9 @@ export function PhysicalCatalogPage() {
           </div>
           <label className="physical-sort">
             <select value={sort} onChange={(event) => setSort(event.target.value)}>
-              <option>Newest</option>
-              <option>Price: Low</option>
-              <option>Price: High</option>
+              <option>Sort: Newest</option>
+              <option>Sort: Price Low</option>
+              <option>Sort: Price High</option>
             </select>
           </label>
         </div>
