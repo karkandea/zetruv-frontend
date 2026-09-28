@@ -23,7 +23,7 @@ function writeCart(items) {
 
 export function addCartItem(item) {
   const items = readCart()
-  const key = item.cartKey || `${item.variantId}:${item.accountKey || 'default'}`
+  const key = item.cartKey || `${item.productId || item.productSlug || 'product'}:${item.variantId || 'variant'}:${item.accountKey || 'default'}`
   const index = items.findIndex((entry) => entry.cartKey === key)
   const next = { ...item, cartKey: key }
   if (index >= 0) {

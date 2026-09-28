@@ -30,7 +30,7 @@ export default function JockeyGames({ items = [] }) {
           </article>
         ))}
       </div>
-      <button className="yellow-button jockey-section__button" type="button">Lihat Semua</button>
+      <a className="yellow-button jockey-section__button" href="/search?kind=Joki">Lihat Semua</a>
     </section>
   )
 }

@@ -2,11 +2,11 @@ import { assets } from '../data/assets'
 
 const homepageCategories = [
   { id: 'topup-id', label: 'Top Up Games Via ID', subtitle: 'Digital Product', image: assets.homepageCategoryTopUp, href: '/search' },
-  { id: 'topup-login', label: 'Top Up Games Via Login', subtitle: 'Digital Product', image: assets.homepageCategoryTopUp, href: '/search/login' },
-  { id: 'voucher', label: 'Voucher Game', subtitle: 'Digital Product', image: assets.homepageCategoryVoucher, href: '/search?q=voucher' },
-  { id: 'jockey', label: 'Joki Game', subtitle: 'Digital Product', image: assets.homepageCategoryJockey, href: '#jockey' },
-  { id: 'merch', label: 'Merchandise', subtitle: 'Physical Product', image: assets.homepageCategoryMerch, href: '#merch' },
-  { id: 'game-account', label: 'Game Account', subtitle: 'Digital Product', image: assets.homepageCategoryAccount, href: '#game-accounts' },
+  { id: 'topup-login', label: 'Top Up Games Via Login', subtitle: 'Digital Product', image: assets.homepageCategoryTopUp, href: '/search?kind=TopUpLogin' },
+  { id: 'voucher', label: 'Voucher Game', subtitle: 'Digital Product', image: assets.homepageCategoryVoucher, href: '/search?kind=GameVoucher' },
+  { id: 'jockey', label: 'Joki Game', subtitle: 'Digital Product', image: assets.homepageCategoryJockey, href: '/search?kind=Joki' },
+  { id: 'merch', label: 'Merchandise', subtitle: 'Physical Product', image: assets.homepageCategoryMerch, href: '/merchandise' },
+  { id: 'game-account', label: 'Game Account', subtitle: 'Digital Product', image: assets.homepageCategoryAccount, href: '/game-accounts' },
 ]
 
 export default function ServiceCategories() {

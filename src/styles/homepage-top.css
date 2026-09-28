@@ -42,8 +42,6 @@
   pointer-events: none;
 }
 
-.nav-product-menu:hover .product-dropdown,
-.nav-product-menu:focus-within .product-dropdown,
 .nav-product-menu.is-open .product-dropdown {
   opacity: 1;
   visibility: visible;

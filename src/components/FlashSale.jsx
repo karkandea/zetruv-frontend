@@ -10,6 +10,7 @@ const fallbackItems = [
 
 export default function FlashSale({ items = [], countdown = '01:04:35' }) {
   const displayItems = items.length ? items : fallbackItems
+  const showSliderControls = displayItems.length >= 3
 
   return (
     <section className="flash-section" aria-labelledby="flash-title">
@@ -25,8 +26,8 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
           <div className="countdown-line"><strong>{countdown || '01:04:35'}</strong></div>
         </div>
 
-        <div className="flash-carousel">
-          <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Previous flash sale"><img src={assets.expandLeft} alt="" /></button>
+        <div className={`flash-carousel${showSliderControls ? '' : ' flash-carousel--static'}`}>
+          {showSliderControls && <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Previous flash sale"><img src={assets.expandLeft} alt="" /></button>}
           <div className="flash-grid">
             {displayItems.slice(0, 3).map((item, index) => (
               <article className="sale-item" key={item.id}>
@@ -41,10 +42,10 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
               </article>
             ))}
           </div>
-          <button className="carousel-arrow carousel-arrow--right" type="button" aria-label="Next flash sale"><img src={assets.expandLeft} alt="" /></button>
+          {showSliderControls && <button className="carousel-arrow carousel-arrow--right" type="button" aria-label="Next flash sale"><img src={assets.expandLeft} alt="" /></button>}
         </div>
 
-        <div className="carousel-dots"><b /><span /><span /><span /></div>
+        {showSliderControls && <div className="carousel-dots"><b /><span /><span /><span /></div>}
       </div>
     </section>
   )

@@ -292,3 +292,26 @@
   .search-game-grid { grid-template-columns: 1fr; }
   .search-game-card { height: 78px; }
 }
+
+/* Feedback sweep — complete search states */
+.search-query-state {
+  min-height: 22px;
+  margin-top: 8px;
+  color: #616675;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.search-query-state:empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+.catalog-search button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.search-empty--state {
+  min-height: 180px;
+}

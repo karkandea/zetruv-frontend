@@ -2,6 +2,7 @@ import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import ProductDetailLoginPage from './pages/ProductDetailLoginPage'
+import SpecialProductPage from './pages/SpecialProductPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -72,7 +73,12 @@ export default function App() {
   const accountListingMatch = path.match(/^\/game-accounts\/([^/]+)$/)
   if (accountListingMatch) return <GameAccountListingPage gameSlug={decodeURIComponent(accountListingMatch[1])} />
   if (path === '/game-accounts') return <GameAccountsPage />
-  if ((path === '/search' || path === '/categories') && kind === 'GameAccount') return <GameAccountsPage />
+
+  const voucherProductMatch = path.match(/^\/product\/voucher\/([^/]+)$/)
+  if (voucherProductMatch) return <SpecialProductPage type="voucher" slug={decodeURIComponent(voucherProductMatch[1])} />
+
+  const jokiProductMatch = path.match(/^\/product\/joki\/([^/]+)$/)
+  if (jokiProductMatch) return <SpecialProductPage type="joki" slug={decodeURIComponent(jokiProductMatch[1])} />
 
   const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
     || path.match(/^\/product\/login\/([^/]+)$/)

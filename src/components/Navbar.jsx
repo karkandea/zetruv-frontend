@@ -6,10 +6,11 @@ import { cartCount, onCartChange, readCart } from '../services/cartService'
 const productLinks = [
   { label: 'Browse All Categories', href: '/search', arrow: true },
   { label: 'Top Up Via ID', href: '/search' },
-  { label: 'Top Up Login', href: '/search/login' },
-  { label: 'Voucher Game', href: '/search?q=voucher' },
-  { label: 'Joki Game', href: '/#jockey' },
+  { label: 'Top Up Login', href: '/search?kind=TopUpLogin' },
+  { label: 'Voucher Game', href: '/search?kind=GameVoucher' },
+  { label: 'Joki Game', href: '/search?kind=Joki' },
   { label: 'Merchandise', href: '/merchandise' },
+  { label: 'Game Account', href: '/game-accounts' },
 ]
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {

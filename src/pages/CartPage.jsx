@@ -1,26 +1,113 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
-import { readCart, removeCartItem } from '../services/cartService'
-import '../styles/payment-flow.css'
+import { readCart, removeCartItem, updateCartQuantity } from '../services/cartService'
+import '../styles/digital-commerce.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
-const fallback = { cartKey:'preview-genshin-login', productName:'Genshin Impact', variantName:'980+110 Genesis Crystals', unitPrice:255000, quantity:1, fulfillmentMethod:'MANUAL_LOGIN', thumbnailUrl:'/assets/search/genshin-impact.webp' }
+
+const methodLabel = {
+  AUTO_ID: 'Top Up Via ID',
+  MANUAL_LOGIN: 'Top Up Via Login',
+  VOUCHER_CODE: 'Voucher Game',
+  JOKI_MANUAL: 'Joki Game',
+}
+
+function itemContext(item) {
+  if (item.fulfillmentMethod === 'AUTO_ID') return item.accountLabel || 'Data akun tujuan sudah tersimpan'
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Credential diisi aman saat checkout'
+  if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode voucher dikirim setelah pembayaran'
+  if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Data akun joki diisi saat checkout'
+  return 'Digital product'
+}
 
 export default function CartPage() {
-  const [isAuthenticated,setIsAuthenticated]=useState(()=>window.sessionStorage.getItem('zetruv-auth-preview')==='1')
-  const [items,setItems]=useState(()=>{const rows=readCart().filter((x)=>x.fulfillmentMethod==='MANUAL_LOGIN');return rows.length?rows:[fallback]})
-  const item=items[0]||fallback
-  const subtotal=Number(item.unitPrice||255000)*Number(item.quantity||1)
-  const total=subtotal+2000
-  const title=`${item.productName||'Genshin Impact'} · ${item.variantName||'980+110 Genesis Crystals'}`
+  const [items, setItems] = useState(() => readCart())
+  const subtotal = useMemo(() => items.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.quantity || 1), 0), [items])
+  const serviceFee = items.length ? 2000 : 0
+  const total = subtotal + serviceFee
 
-  function clear(){ if(item.cartKey!=='preview-genshin-login') removeCartItem(item.cartKey); setItems([]) }
+  function changeQty(item, nextQty) {
+    const next = Math.max(1, Math.min(item.maxQuantity || 99, nextQty))
+    setItems(updateCartQuantity(item.cartKey, next))
+  }
 
-  return <div className="flow-shell"><Navbar variant={isAuthenticated?'loginCatalog':'default'} onAuthenticated={()=>{window.sessionStorage.setItem('zetruv-auth-preview','1');setIsAuthenticated(true)}}/><main className="flow-page flow-container via-login-cart-page">
-    <header className="flow-title"><h1>Keranjang Digital</h1><p>Review produk Via Login sebelum lanjut. Credential belum diminta pada tahap ini.</p></header>
-    <div className="via-login-cart-layout">
-      <section className="via-login-cart-card"><div className="via-login-cart-head"><strong>{items.length?1:0} produk dipilih</strong><button type="button" onClick={clear}>Hapus pilihan</button></div>{items.length>0&&<><article className="via-login-cart-item"><span className="via-login-check">✓</span><div className="via-login-cart-art"><img src={item.thumbnailUrl||'/assets/search/genshin-impact.webp'} onError={(e)=>{e.currentTarget.src='/assets/search/genshin-impact.webp'}} alt=""/></div><div className="via-login-cart-copy"><h2>{title}</h2><span>Via Login</span><p>Credential belum diminta</p></div><div className="via-login-cart-price"><strong>{rupiah(subtotal)}</strong><button type="button" onClick={clear}>×</button></div></article><div className="flow-info-banner"><span>i</span><p>Data login game akan diminta setelah kamu berhasil login ke akun Zetruv dan masuk Checkout.</p></div></>}</section>
-      <aside className="via-login-summary-card"><h2>Ringkasan</h2><div className="via-summary-row"><span>{title}</span><strong>{rupiah(subtotal)}</strong></div><div className="via-summary-row"><span>Biaya layanan</span><strong>Rp2.000</strong></div><hr/><div className="via-summary-total"><span>Total</span><strong>{rupiah(total)}</strong></div><button className="primary-flow-button" onClick={()=>window.location.href='/checkout'} disabled={!items.length}>Lanjut ke Checkout →</button><p>Credential tidak pernah disimpan di keranjang.</p></aside>
+  function remove(item) {
+    setItems(removeCartItem(item.cartKey))
+  }
+
+  return (
+    <div className="digital-shell">
+      <Navbar />
+      <main className="digital-cart-page digital-container">
+        <header className="digital-page-heading">
+          <div><h1>Keranjang Digital</h1><p>Review semua produk digital sebelum melanjutkan ke checkout.</p></div>
+          <a href="/search">Lanjut Belanja</a>
+        </header>
+
+        <div className="digital-info-strip">
+          <b>i</b>
+          <span>Produk digital dapat digabung dalam satu pembayaran. Data akun yang sensitif baru diminta di checkout.</span>
+        </div>
+
+        <div className="digital-cart-layout">
+          <section className="digital-cart-list-card">
+            <div className="digital-cart-list-head">
+              <strong>{items.length} produk dipilih</strong>
+              {items.length > 0 && <span>{items.reduce((sum, item) => sum + Number(item.quantity || 1), 0)} item</span>}
+            </div>
+
+            {items.length === 0 ? (
+              <div className="digital-empty-cart">
+                <strong>Keranjang digital masih kosong</strong>
+                <p>Pilih Top Up, Voucher, atau Joki Game untuk mulai transaksi.</p>
+                <a href="/search">Browse Products</a>
+              </div>
+            ) : (
+              <div className="digital-cart-items">
+                {items.map((item) => {
+                  const lineTotal = Number(item.unitPrice || 0) * Number(item.quantity || 1)
+                  return (
+                    <article className="digital-cart-item" key={item.cartKey}>
+                      <img src={item.thumbnailUrl || '/assets/search/mobile-legends.webp'} alt="" />
+                      <div className="digital-cart-item__copy">
+                        <span>{methodLabel[item.fulfillmentMethod] || item.productKind || 'Digital Product'}</span>
+                        <h2>{item.productName} · {item.variantName}</h2>
+                        <p>{itemContext(item)}</p>
+                        <button type="button" onClick={() => remove(item)}>Hapus</button>
+                      </div>
+                      <div className="digital-cart-item__side">
+                        <strong>{rupiah(lineTotal)}</strong>
+                        <div className="digital-qty">
+                          <button type="button" onClick={() => changeQty(item, Number(item.quantity || 1) - 1)}>−</button>
+                          <span>{item.quantity || 1}</span>
+                          <button type="button" onClick={() => changeQty(item, Number(item.quantity || 1) + 1)}>+</button>
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+
+            {items.some((item) => item.fulfillmentMethod === 'MANUAL_LOGIN') && (
+              <div className="digital-login-cart-rule">
+                <strong>Top Up Via Login multi-product</strong>
+                <p>Setiap baris produk diproses sebagai target akun tersendiri. Jika beberapa item memakai akun yang sama, kamu bisa memakai ulang credential di checkout tanpa menyimpannya di cart.</p>
+              </div>
+            )}
+          </section>
+
+          <aside className="digital-cart-summary">
+            <h2>Ringkasan</h2>
+            <div><span>Subtotal</span><strong>{rupiah(subtotal)}</strong></div>
+            <div><span>Biaya layanan</span><strong>{rupiah(serviceFee)}</strong></div>
+            <hr />
+            <div className="digital-cart-summary__total"><span>Total</span><strong>{rupiah(total)}</strong></div>
+            <button type="button" disabled={!items.length} onClick={() => { window.location.href = '/checkout' }}>Lanjut ke Checkout</button>
+            <p>Login akan diminta sebagai popup jika akun Zetruv belum aktif.</p>
+          </aside>
+        </div>
+      </main>
     </div>
-  </main></div>
+  )
 }

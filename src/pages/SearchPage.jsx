@@ -13,14 +13,12 @@ const CATEGORY_PRESENTATION = {
     browseLabel: 'Top Up Games Via ID',
     loginLabel: 'Top Up Via ID',
     icon: searchAssets.categoryPlayerId,
-    route: '/search',
   },
   TopUpLogin: {
     key: 'login',
     browseLabel: 'Top Up Games Via Login',
     loginLabel: 'Top Up Via Login',
     icon: searchAssets.categoryLogin,
-    route: '/product/genshin-impact/login',
   },
   GameVoucher: {
     key: 'voucher',
@@ -56,14 +54,38 @@ const FALLBACK_CATEGORIES = CATEGORY_ORDER.map((kind, index) => ({
   iconUrl: CATEGORY_PRESENTATION[kind].icon,
 }))
 
-const BROWSE_FALLBACK_PRODUCTS = [
-  { id: 'fallback-mlbb', kind: 'TopUpGame', slug: 'mobile-legends', name: 'Mobile Legends', publisher: 'Moonton', thumbnailUrl: searchAssets.mobileLegends, isAvailable: true },
-  { id: 'fallback-pubg', kind: 'TopUpGame', slug: 'pubg-mobile', name: 'PUBG Mobile', publisher: 'Tencent', thumbnailUrl: searchAssets.pubgMobile, isAvailable: true },
-  { id: 'fallback-valorant', kind: 'TopUpGame', slug: 'valorant', name: 'Valorant', publisher: 'Riot Games', thumbnailUrl: searchAssets.valorant, isAvailable: true },
-  { id: 'fallback-genshin', kind: 'TopUpGame', slug: 'genshin-impact', name: 'Genshin Impact', publisher: 'HoYoverse', thumbnailUrl: searchAssets.genshinImpact, isAvailable: true },
-  { id: 'fallback-codm', kind: 'TopUpGame', slug: 'call-of-duty-mobile', name: 'Call of Duty Mobile', publisher: 'Activision', thumbnailUrl: searchAssets.callOfDutyMobile, isAvailable: true },
-  { id: 'fallback-star-rail', kind: 'TopUpGame', slug: 'honkai-star-rail', name: 'Honkai: Star Rail', publisher: 'HoYoverse', thumbnailUrl: searchAssets.starRail, isAvailable: true },
-]
+const FALLBACK_PRODUCTS = {
+  TopUpGame: [
+    { id: 'fallback-mlbb', kind: 'TopUpGame', slug: 'mobile-legends', name: 'Mobile Legends', publisher: 'Moonton', thumbnailUrl: searchAssets.mobileLegends, isAvailable: true },
+    { id: 'fallback-pubg', kind: 'TopUpGame', slug: 'pubg-mobile', name: 'PUBG Mobile', publisher: 'Tencent', thumbnailUrl: searchAssets.pubgMobile, isAvailable: true },
+    { id: 'fallback-valorant', kind: 'TopUpGame', slug: 'valorant', name: 'Valorant', publisher: 'Riot Games', thumbnailUrl: searchAssets.valorant, isAvailable: true },
+    { id: 'fallback-genshin', kind: 'TopUpGame', slug: 'genshin-impact', name: 'Genshin Impact', publisher: 'HoYoverse', thumbnailUrl: searchAssets.genshinImpact, isAvailable: true },
+    { id: 'fallback-codm', kind: 'TopUpGame', slug: 'call-of-duty-mobile', name: 'Call of Duty Mobile', publisher: 'Activision', thumbnailUrl: searchAssets.callOfDutyMobile, isAvailable: true },
+    { id: 'fallback-star-rail', kind: 'TopUpGame', slug: 'honkai-star-rail', name: 'Honkai: Star Rail', publisher: 'HoYoverse', thumbnailUrl: searchAssets.starRail, isAvailable: true },
+  ],
+  TopUpLogin: [
+    { id: 'login-genshin', kind: 'TopUpLogin', slug: 'genshin-impact', name: 'Genshin Impact', publisher: 'HoYoverse', thumbnailUrl: searchAssets.genshinImpact, isAvailable: true },
+  ],
+  GameVoucher: [
+    { id: 'voucher-steam', kind: 'GameVoucher', slug: 'steam-wallet-idr', name: 'Steam Wallet IDR', publisher: 'Steam', thumbnailUrl: searchAssets.categoryItems, isAvailable: true },
+    { id: 'voucher-google', kind: 'GameVoucher', slug: 'google-play-gift-code', name: 'Google Play Gift Code', publisher: 'Google Play', thumbnailUrl: searchAssets.categoryItems, isAvailable: true },
+    { id: 'voucher-ps', kind: 'GameVoucher', slug: 'playstation-store', name: 'PlayStation Store', publisher: 'PlayStation', thumbnailUrl: searchAssets.categoryItems, isAvailable: true },
+  ],
+  Joki: [
+    { id: 'joki-ml', kind: 'Joki', slug: 'mobile-legends-rank-push', name: 'Mobile Legends Rank Push', publisher: 'Joki Game', thumbnailUrl: searchAssets.mobileLegends, isAvailable: true },
+    { id: 'joki-valorant', kind: 'Joki', slug: 'valorant-rank-boost', name: 'Valorant Rank Boost', publisher: 'Joki Game', thumbnailUrl: searchAssets.valorant, isAvailable: true },
+    { id: 'joki-genshin', kind: 'Joki', slug: 'genshin-daily-abyss', name: 'Genshin Daily & Abyss', publisher: 'Joki Game', thumbnailUrl: searchAssets.genshinImpact, isAvailable: true },
+  ],
+  GameAccount: [
+    { id: 'account-dota', kind: 'GameAccount', slug: 'dota-2', name: 'Dota 2 Accounts', publisher: 'Game Account', thumbnailUrl: searchAssets.categoryAccounts, isAvailable: true },
+    { id: 'account-ml', kind: 'GameAccount', slug: 'mobile-legends', name: 'Mobile Legends Accounts', publisher: 'Game Account', thumbnailUrl: searchAssets.mobileLegends, isAvailable: true },
+  ],
+  Merchandise: [
+    { id: 'merch-jersey', kind: 'Merchandise', slug: 'zetruv-gaming-jersey', name: 'Zetruv Gaming Jersey', publisher: 'Merchandise', thumbnailUrl: searchAssets.categoryMerchandise, isAvailable: true },
+    { id: 'merch-keychain', kind: 'Merchandise', slug: 'zetruv-crest-keychain', name: 'Zetruv Crest Keychain', publisher: 'Merchandise', thumbnailUrl: searchAssets.categoryMerchandise, isAvailable: true },
+    { id: 'merch-scarf', kind: 'Merchandise', slug: 'zetruv-supporter-scarf', name: 'Zetruv Supporter Scarf', publisher: 'Merchandise', thumbnailUrl: searchAssets.categoryMerchandise, isAvailable: true },
+  ],
+}
 
 const BROWSE_PRODUCT_MATCHERS = [
   (value) => value.includes('mobile legend'),
@@ -77,6 +99,11 @@ const BROWSE_PRODUCT_MATCHERS = [
 const alphabet = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'V', 'W']
 
 function fallbackProductImage(product) {
+  if (product.kind === 'GameVoucher') return searchAssets.categoryItems
+  if (product.kind === 'Joki') return searchAssets.categoryJoki || searchAssets.categoryItems
+  if (product.kind === 'GameAccount') return searchAssets.categoryAccounts
+  if (product.kind === 'Merchandise') return searchAssets.categoryMerchandise
+
   const value = `${product.name || ''} ${product.gameName || ''}`.toLowerCase()
   if (value.includes('mobile legend')) return searchAssets.mobileLegends
   if (value.includes('pubg')) return searchAssets.pubgMobile
@@ -91,6 +118,7 @@ function publisherForProduct(product, fallback) {
   if (product.publisher) return product.publisher
   if (product.gamePublisher) return product.gamePublisher
   if (product.game?.publisher) return product.game.publisher
+  if (['GameVoucher', 'Joki', 'GameAccount', 'Merchandise'].includes(product.kind)) return CATEGORY_PRESENTATION[product.kind]?.browseLabel || fallback
 
   const value = `${product.name || ''} ${product.gameName || ''}`.toLowerCase()
   if (value.includes('mobile legend')) return 'Moonton'
@@ -106,6 +134,10 @@ function productHref(product) {
   if (product.isAvailable === false) return undefined
   if (product.kind === 'TopUpGame') return `/product/${product.slug}`
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
+  if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
+  if (product.kind === 'Joki') return `/product/joki/${product.slug}`
+  if (product.kind === 'GameAccount') return product.slug === 'dota-2' ? '/game-accounts/dota-2' : '/game-accounts'
+  if (product.kind === 'Merchandise') return product.slug === 'zetruv-gaming-jersey' ? '/merchandise/zetruv-gaming-jersey' : '/merchandise'
   return undefined
 }
 
@@ -113,16 +145,12 @@ function CatalogCard({ product, categoryLabel }) {
   const href = productHref(product)
   const available = product.isAvailable !== false
 
-  function handleClick() {
-    if (href) window.location.href = href
-  }
-
   return (
     <button
       className="search-game-card"
       type="button"
       aria-label={available ? `Open ${product.name}` : `${product.name} unavailable`}
-      onClick={handleClick}
+      onClick={() => href && (window.location.href = href)}
       disabled={!available}
     >
       <img
@@ -130,9 +158,7 @@ function CatalogCard({ product, categoryLabel }) {
         alt=""
         onError={(event) => {
           const fallback = fallbackProductImage(product)
-          if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) {
-            event.currentTarget.src = fallback
-          }
+          if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
         }}
       />
       <span className="search-game-card__copy">
@@ -169,13 +195,22 @@ function orderBrowseProducts(items) {
 
 function initialKind(mode) {
   if (mode === 'login') return 'TopUpLogin'
-  return new URLSearchParams(window.location.search).get('kind') || 'TopUpGame'
+  const requested = new URLSearchParams(window.location.search).get('kind')
+  return CATEGORY_ORDER.includes(requested) ? requested : 'TopUpGame'
+}
+
+function filterFallbackProducts(kind, search) {
+  const source = FALLBACK_PRODUCTS[kind] || []
+  const q = search.trim().toLowerCase()
+  if (q.length < 3) return source
+  return source.filter((item) => `${item.name} ${item.publisher || ''}`.toLowerCase().includes(q))
 }
 
 export default function SearchPage({ mode = 'player-id' }) {
   const isLoginMode = mode === 'login'
-  const initialQuery = new URLSearchParams(window.location.search).get('q') || ''
-  const [query, setQuery] = useState(initialQuery)
+  const rawInitialQuery = new URLSearchParams(window.location.search).get('q') || ''
+  const initialQuery = rawInitialQuery.trim().length >= 3 ? rawInitialQuery : ''
+  const [query, setQuery] = useState(rawInitialQuery)
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery)
   const [activeKind, setActiveKind] = useState(() => initialKind(mode))
   const [activeLetter, setActiveLetter] = useState('M')
@@ -186,33 +221,41 @@ export default function SearchPage({ mode = 'player-id' }) {
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [catalogError, setCatalogError] = useState('')
 
+  const trimmedQuery = query.trim()
+  const queryTooShort = trimmedQuery.length > 0 && trimmedQuery.length < 3
+
   useEffect(() => {
     let cancelled = false
-
     async function loadCategories() {
       try {
         const result = await getCatalogCategories()
-        if (cancelled) return
-
-        setCategories(result)
-
-        if (result.length > 0 && !result.some((category) => category.kind === activeKind)) {
-          setActiveKind(result[0].kind)
-        }
-      } catch (error) {
-        if (!cancelled && isLoginMode) {
-          setCatalogError(error.message || 'Catalog categories could not be loaded.')
-        }
+        if (!cancelled) setCategories(result)
+      } catch {
+        // Sidebar always has complete local category definitions.
       } finally {
         if (!cancelled) setLoadingCatalog(false)
       }
     }
-
     loadCategories()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    const next = query.trim()
+    if (next.length > 0 && next.length < 3) return undefined
+
+    const timer = window.setTimeout(() => {
+      setSubmittedQuery(next)
+      const url = new URL(window.location.href)
+      if (next) url.searchParams.set('q', next)
+      else url.searchParams.delete('q')
+      if (activeKind === 'TopUpGame') url.searchParams.delete('kind')
+      else url.searchParams.set('kind', activeKind)
+      window.history.replaceState({}, '', `${url.pathname}${url.search}`)
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [query, activeKind])
 
   useEffect(() => {
     let cancelled = false
@@ -222,19 +265,12 @@ export default function SearchPage({ mode = 'player-id' }) {
       setCatalogError('')
 
       try {
-        const result = await getCatalogProducts({
-          kind: activeKind,
-          search: submittedQuery,
-          pageSize: 50,
-        })
-
+        const result = await getCatalogProducts({ kind: activeKind, search: submittedQuery, pageSize: 50 })
         if (!cancelled) setProducts(result.items || [])
       } catch (error) {
         if (!cancelled) {
           setProducts([])
-          if (isLoginMode || activeKind !== 'TopUpGame' || submittedQuery) {
-            setCatalogError(error.message || 'Catalog products could not be loaded.')
-          }
+          setCatalogError(error.message || 'Catalog products could not be loaded.')
         }
       } finally {
         if (!cancelled) setLoadingProducts(false)
@@ -242,79 +278,45 @@ export default function SearchPage({ mode = 'player-id' }) {
     }
 
     loadProducts()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [activeKind, submittedQuery])
 
-  const categoryDefinitions = useMemo(() => {
-    return CATEGORY_ORDER.map((kind) => {
-      const presentation = CATEGORY_PRESENTATION[kind]
-      const fallback = FALLBACK_CATEGORIES.find((category) => category.kind === kind)
-      const apiCategory = categories.find((category) => category.kind === kind)
-      const category = { ...fallback, ...apiCategory }
-
-      return {
-        ...category,
-        key: presentation.key,
-        label: isLoginMode ? presentation.loginLabel : presentation.browseLabel,
-        icon: category.iconUrl || presentation.icon,
-        route: presentation.route,
-      }
-    })
-  }, [categories, isLoginMode])
+  const categoryDefinitions = useMemo(() => CATEGORY_ORDER.map((kind) => {
+    const presentation = CATEGORY_PRESENTATION[kind]
+    const fallback = FALLBACK_CATEGORIES.find((category) => category.kind === kind)
+    const apiCategory = categories.find((category) => category.kind === kind)
+    const category = { ...fallback, ...apiCategory }
+    return {
+      ...category,
+      key: presentation.key,
+      label: isLoginMode ? presentation.loginLabel : presentation.browseLabel,
+      icon: category.iconUrl || presentation.icon,
+    }
+  }), [categories, isLoginMode])
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
   const categoryLabel = activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
+  const fallbackRows = useMemo(() => filterFallbackProducts(activeKind, submittedQuery), [activeKind, submittedQuery])
+  const sourceProducts = products.length ? products : fallbackRows
   const effectiveLetter = letterFiltering ? activeLetter : ''
-
-  const filteredProducts = useMemo(
-    () => filterByLetter(products, effectiveLetter),
-    [products, effectiveLetter],
-  )
+  const filteredProducts = useMemo(() => filterByLetter(sourceProducts, effectiveLetter), [sourceProducts, effectiveLetter])
 
   const popularProducts = useMemo(() => {
     const featured = filteredProducts.filter((product) => product.isFeatured)
-    return featured.length > 0 ? featured : filteredProducts.slice(0, 6)
+    return featured.length > 0 ? featured.slice(0, 6) : filteredProducts.slice(0, 6)
   }, [filteredProducts])
 
-  const popularIds = useMemo(
-    () => new Set(popularProducts.map((product) => product.id)),
-    [popularProducts],
-  )
-
-  const moreProducts = useMemo(
-    () => filteredProducts.filter((product) => !popularIds.has(product.id)),
-    [filteredProducts, popularIds],
-  )
-
-  const browsePrimaryProducts = useMemo(() => {
-    if (activeKind !== 'TopUpGame') return orderBrowseProducts(products).slice(0, 6)
-
-    if (submittedQuery) return orderBrowseProducts(products).slice(0, 6)
-
-    const source = products.length > 0 ? products : BROWSE_FALLBACK_PRODUCTS
-    return orderBrowseProducts(source).slice(0, 6)
-  }, [activeKind, products, submittedQuery])
-
-  const browseMoreProducts = useMemo(
-    () => browsePrimaryProducts.slice(3, 6),
-    [browsePrimaryProducts],
-  )
+  const browseProducts = useMemo(() => orderBrowseProducts(filteredProducts), [filteredProducts])
+  const browsePrimaryProducts = useMemo(() => browseProducts.slice(0, 6), [browseProducts])
+  const browseMoreProducts = useMemo(() => browseProducts.slice(6, 12), [browseProducts])
+  const popularIds = useMemo(() => new Set(popularProducts.map((product) => product.id)), [popularProducts])
+  const moreProducts = useMemo(() => filteredProducts.filter((product) => !popularIds.has(product.id)).slice(0, 12), [filteredProducts, popularIds])
 
   function handleSearch(event) {
     event.preventDefault()
     const next = query.trim()
+    if (next.length > 0 && next.length < 3) return
     setSubmittedQuery(next)
-
-    const url = new URL(window.location.href)
-    if (next) url.searchParams.set('q', next)
-    else url.searchParams.delete('q')
-
-    if (!isLoginMode && activeKind !== 'TopUpGame') url.searchParams.set('kind', activeKind)
-    else if (!isLoginMode) url.searchParams.delete('kind')
-
-    window.history.replaceState({}, '', `${url.pathname}${url.search}`)
   }
 
   function handleLetter(letter) {
@@ -322,32 +324,41 @@ export default function SearchPage({ mode = 'player-id' }) {
       setLetterFiltering(false)
       return
     }
-
     setActiveLetter(letter)
     setLetterFiltering(true)
   }
 
   function handleCategory(category) {
-    if (category.route) {
-      window.location.href = category.route
-      return
-    }
-
+    setActiveKind(category.kind)
+    setLetterFiltering(false)
+    setCatalogError('')
     const url = new URL(window.location.href)
     url.pathname = '/search'
     if (category.kind === 'TopUpGame') url.searchParams.delete('kind')
     else url.searchParams.set('kind', category.kind)
-    window.location.href = `${url.pathname}${url.search}`
+    if (query.trim().length < 3) url.searchParams.delete('q')
+    window.history.pushState({}, '', `${url.pathname}${url.search}`)
   }
 
   const loading = loadingCatalog || loadingProducts
-  const browseHasFallback = !isLoginMode && activeKind === 'TopUpGame' && !submittedQuery && browsePrimaryProducts.length > 0
-  const showBrowseLoading = loading && !browseHasFallback
-  const showBrowseError = catalogError && browsePrimaryProducts.length === 0
+  const hasVisibleFallback = fallbackRows.length > 0
+  const showLoading = loading && !hasVisibleFallback && !queryTooShort
+  const showError = Boolean(catalogError) && !hasVisibleFallback && !queryTooShort
+  const noResults = !loading && !queryTooShort && filteredProducts.length === 0
+
+  const searchState = queryTooShort
+    ? 'min'
+    : showLoading
+      ? 'loading'
+      : showError
+        ? 'error'
+        : noResults
+          ? 'empty'
+          : 'results'
 
   return (
     <div className={`search-site-shell${isLoginMode ? ' search-site-shell--login' : ''}`}>
-      {isLoginMode ? <Navbar variant="loginCatalog" /> : <Navbar />}
+      <Navbar variant={isLoginMode ? 'loginCatalog' : 'default'} />
 
       <main className={`search-page${isLoginMode ? ' search-page--login' : ' search-page--browse'}`}>
         <div className="search-page__container">
@@ -359,7 +370,7 @@ export default function SearchPage({ mode = 'player-id' }) {
             </>
           )}
 
-          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label={isLoginMode ? 'Explore kategori via login' : 'Browse Zetruv categories'}>
+          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label="Browse Zetruv categories">
             <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
               <h2>{isLoginMode ? 'Kategori' : 'Categories'}</h2>
               <div className="search-category-list">
@@ -392,90 +403,64 @@ export default function SearchPage({ mode = 'player-id' }) {
                   placeholder={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
                   aria-label={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
                 />
-                <button type="submit">{isLoginMode ? 'Cari' : 'Search'}</button>
+                <button type="submit" disabled={queryTooShort}>{isLoginMode ? 'Cari' : 'Search'}</button>
               </form>
 
-              {isLoginMode ? (
+              <div className="search-query-state" aria-live="polite">
+                {searchState === 'min' && <span>Type at least 3 characters to start searching.</span>}
+                {searchState === 'loading' && <span>Loading results…</span>}
+                {searchState === 'error' && <span>Couldn’t load results. Showing available local catalog where possible.</span>}
+                {searchState === 'empty' && <span>No results found for “{submittedQuery}”. Try another keyword or category.</span>}
+              </div>
+
+              {isLoginMode && (
+                <div className="alphabet-filter" aria-label="Filter games alphabetically">
+                  <strong>A–Z</strong>
+                  {alphabet.map((letter) => (
+                    <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
+                  ))}
+                </div>
+              )}
+
+              <div className="search-section-heading">
+                <h2>{isLoginMode ? 'Kategori Populer' : categoryLabel}</h2>
+                <span>{categoryLabel}</span>
+              </div>
+
+              {searchState === 'results' && (
                 <>
-                  <div className="alphabet-filter" aria-label="Filter games alphabetically">
-                    <strong>A–Z</strong>
-                    {alphabet.map((letter) => (
-                      <button
-                        key={letter}
-                        type="button"
-                        className={activeLetter === letter && letterFiltering ? 'active' : ''}
-                        onClick={() => handleLetter(letter)}
-                      >
-                        {letter}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="search-section-heading">
-                    <h2>Kategori Populer</h2>
-                    <span>{categoryLabel}</span>
-                  </div>
-
-                  {loading ? (
-                    <div className="search-empty">Loading catalog…</div>
-                  ) : catalogError ? (
-                    <div className="search-empty">{catalogError}</div>
-                  ) : popularProducts.length > 0 ? (
-                    <div className="search-game-grid">
-                      {popularProducts.map((product) => (
+                  {(isLoginMode ? popularProducts : browsePrimaryProducts).length > 0 ? (
+                    <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-primary'}`}>
+                      {(isLoginMode ? popularProducts : browsePrimaryProducts).map((product) => (
                         <CatalogCard key={product.id} product={product} categoryLabel={categoryLabel} />
                       ))}
                     </div>
                   ) : (
-                    <div className="search-empty">Game tidak ditemukan. Coba kata kunci atau huruf lain.</div>
+                    <div className="search-empty search-empty--browse">No products found in this category.</div>
                   )}
 
-                  <div className="search-section-heading search-section-heading--more">
-                    <div>
-                      <h2>Kategori Lainnya</h2>
-                      <p>Game yang tersedia di katalog Zetruv</p>
-                    </div>
-                  </div>
-
-                  {!loading && !catalogError && moreProducts.length > 0 && (
-                    <div className="search-game-grid">
-                      {moreProducts.map((product) => (
-                        <CatalogCard key={`more-${product.id}`} product={product} categoryLabel={categoryLabel} />
-                      ))}
-                    </div>
+                  {(isLoginMode ? moreProducts : browseMoreProducts).length > 0 && (
+                    <>
+                      <div className="search-section-heading search-section-heading--more search-section-heading--browse-more">
+                        <div><h2>More Products</h2><p>Browse more products available on Zetruv.</p></div>
+                      </div>
+                      <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-more'}`}>
+                        {(isLoginMode ? moreProducts : browseMoreProducts).map((product) => (
+                          <CatalogCard key={`more-${product.id}`} product={product} categoryLabel={categoryLabel} />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </>
-              ) : (
-                <>
-                  {showBrowseLoading ? (
-                    <div className="search-empty search-empty--browse">Loading catalog…</div>
-                  ) : showBrowseError ? (
-                    <div className="search-empty search-empty--browse">{catalogError}</div>
-                  ) : browsePrimaryProducts.length > 0 ? (
-                    <div className="search-game-grid search-game-grid--browse-primary">
-                      {browsePrimaryProducts.map((product) => (
-                        <CatalogCard key={product.id} product={product} categoryLabel={categoryLabel} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="search-empty search-empty--browse">No games found. Try another keyword.</div>
-                  )}
+              )}
 
-                  <div className="search-section-heading search-section-heading--more search-section-heading--browse-more">
-                    <div>
-                      <h2>More Games</h2>
-                      <p>Browse more games available for top-up on Zetruv.</p>
-                    </div>
-                  </div>
-
-                  {browseMoreProducts.length > 0 && (
-                    <div className="search-game-grid search-game-grid--browse-more">
-                      {browseMoreProducts.map((product) => (
-                        <CatalogCard key={`more-${product.id}`} product={product} categoryLabel={categoryLabel} />
-                      ))}
-                    </div>
-                  )}
-                </>
+              {searchState !== 'results' && (
+                <div className="search-empty search-empty--browse search-empty--state">
+                  {searchState === 'min' && 'Search starts after 3 characters.'}
+                  {searchState === 'loading' && 'Loading catalog…'}
+                  {searchState === 'error' && 'Catalog could not be loaded. Please try again.'}
+                  {searchState === 'empty' && 'No products match your search.'}
+                </div>
               )}
             </div>
           </section>
