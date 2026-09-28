@@ -20,7 +20,9 @@ const orders = [
     product: 'Mobile Legends · 12 Diamond',
     detail: 'User ID 12345678 · Zona 1234',
     total: 'Rp12.234',
+    detailHref: '/account/orders/ZTR-260818-1042',
     action: 'Bayar Sekarang',
+    actionHref: '/account/orders/ZTR-260818-1042/payment',
   },
   {
     id: '#ZTR-260818-0988',
@@ -32,6 +34,7 @@ const orders = [
     detail: 'nama@email.com · Diproses admin',
     total: 'Rp76.000',
     thumbTone: 'dark',
+    detailHref: '/account/orders/ZTR-260818-0988?state=processing',
   },
   {
     id: '#ZTR-260817-0871',
@@ -43,6 +46,8 @@ const orders = [
     detail: 'Black · Size L · Pengiriman sedang berjalan',
     total: 'Rp267.000',
     action: 'Lacak Pesanan',
+    actionHref: '/account/orders/ZTR-260817-0871/tracking',
+    detailHref: '/account/orders/ZTR-260817-0871/tracking',
     thumbTone: 'neutral',
   },
   {
@@ -55,6 +60,7 @@ const orders = [
     product: 'Mobile Legends · 172 Diamonds',
     detail: 'User ID 12345678 · Zona 1234',
     total: 'Rp95.000',
+    detailHref: '/account/orders/ZTR-260816-0764?state=completed',
   },
 ]
 
@@ -226,8 +232,8 @@ function OrderCard({ order }) {
           <strong>{order.total}</strong>
         </div>
         <div className="order-card__actions">
-          <a className="account-btn account-btn--outline account-btn--detail" href="/order-status">Lihat Detail</a>
-          {order.action && <a className="account-btn account-btn--primary account-btn--order-action" href="/order-status">{order.action}</a>}
+          <a className="account-btn account-btn--outline account-btn--detail" href={order.detailHref}>Lihat Detail</a>
+          {order.action && <a className="account-btn account-btn--primary account-btn--order-action" href={order.actionHref}>{order.action}</a>}
         </div>
       </div>
     </article>
@@ -235,7 +241,9 @@ function OrderCard({ order }) {
 }
 
 export function AccountOrdersPage() {
-  const [query, setQuery] = useState('')
+  const params = new URLSearchParams(window.location.search)
+  const emptyView = params.get('view') === 'empty'
+  const [query, setQuery] = useState(params.get('query') || '')
   const [filter, setFilter] = useState('Semua')
   const primaryFilters = ['Semua', 'Belum Dibayar', 'Diproses', 'Dikirim', 'Selesai']
   const attentionFilters = ['Perlu Tindakan', 'Bermasalah']
@@ -248,6 +256,37 @@ export function AccountOrdersPage() {
     const queryMatch = !query || `${order.id} ${order.product}`.toLowerCase().includes(query.toLowerCase())
     return statusMatch && queryMatch
   }), [query, filter])
+
+  const searchNoResult = !emptyView && query.trim() && visibleOrders.length === 0
+
+  if (emptyView) {
+    return (
+      <AccountShell active="orders">
+        <PageHeader title="Pesanan Saya" description="Pantau pesanan aktif dan lihat riwayat transaksi kamu." />
+        <div className="orders-figma-empty">
+          <strong>Belum ada pesanan</strong>
+          <p>Pesanan yang kamu buat akan muncul di halaman ini.</p>
+          <a className="account-btn account-btn--primary" href="/search">Mulai Belanja</a>
+        </div>
+      </AccountShell>
+    )
+  }
+
+  if (searchNoResult) {
+    return (
+      <AccountShell active="orders">
+        <PageHeader title="Pesanan Saya" description="Pantau pesanan aktif dan lihat riwayat transaksi kamu." />
+        <label className="orders-no-result-search">
+          <input value={query} onChange={(event) => setQuery(event.target.value)} />
+        </label>
+        <div className="orders-figma-empty orders-figma-empty--search">
+          <strong>Pesanan tidak ditemukan</strong>
+          <p>Coba cek ID pesanan, nama produk, atau ubah filter status.</p>
+          <button className="account-btn account-btn--outline" type="button" onClick={() => setQuery('')}>Reset Pencarian</button>
+        </div>
+      </AccountShell>
+    )
+  }
 
   return (
     <AccountShell active="orders" tall>
@@ -274,7 +313,12 @@ export function AccountOrdersPage() {
       </div>
       <div className="order-list">
         {visibleOrders.map((order) => <OrderCard order={order} key={order.id} />)}
-        {visibleOrders.length === 0 && <div className="account-empty-state">Tidak ada pesanan yang cocok dengan filter ini.</div>}
+        {visibleOrders.length === 0 && (
+          <div className="orders-figma-empty orders-figma-empty--inline">
+            <strong>Pesanan tidak ditemukan</strong>
+            <p>Coba ubah filter status.</p>
+          </div>
+        )}
       </div>
     </AccountShell>
   )
