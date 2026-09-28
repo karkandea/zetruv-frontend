@@ -125,7 +125,7 @@ export function PhysicalCatalogPage() {
   const [sort, setSort] = useState('Newest')
 
   const visible = useMemo(() => {
-    const rows = category === 'All' ? PRODUCTS : PRODUCTS.filter((item) => item.category === category)
+    const rows = category === 'All' || category === 'Jersey' ? PRODUCTS : PRODUCTS.filter((item) => item.category === category)
     if (sort === 'Price: Low') return [...rows].sort((a, b) => a.price - b.price)
     if (sort === 'Price: High') return [...rows].sort((a, b) => b.price - a.price)
     return rows
