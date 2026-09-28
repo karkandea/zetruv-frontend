@@ -9,6 +9,7 @@ import PaymentPage from './pages/PaymentPage'
 import OrderStatusPage from './pages/OrderStatusPage'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
+import { AccountOrderDetailPage, AccountOrderPaymentPage, AccountOrderTrackingPage, AccountOrderUpdateLoginPage } from './pages/OrderJourneyPages'
 import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
 import {
   GameAccountCartPage,
@@ -25,6 +26,16 @@ export default function App() {
 
   if (path === '/account' || path === '/my-account') return <AccountOverviewPage />
   if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
+
+  const accountOrderPaymentMatch = path.match(/^\/account\/orders\/([^/]+)\/payment$/)
+  if (accountOrderPaymentMatch) return <AccountOrderPaymentPage orderId={decodeURIComponent(accountOrderPaymentMatch[1])} state={params.get('state') || 'pending'} />
+  const accountOrderTrackingMatch = path.match(/^\/account\/orders\/([^/]+)\/tracking$/)
+  if (accountOrderTrackingMatch) return <AccountOrderTrackingPage orderId={decodeURIComponent(accountOrderTrackingMatch[1])} state={params.get('state') || 'transit'} />
+  const accountOrderUpdateMatch = path.match(/^\/account\/orders\/([^/]+)\/update-login$/)
+  if (accountOrderUpdateMatch) return <AccountOrderUpdateLoginPage orderId={decodeURIComponent(accountOrderUpdateMatch[1])} />
+  const accountOrderDetailMatch = path.match(/^\/account\/orders\/([^/]+)$/)
+  if (accountOrderDetailMatch) return <AccountOrderDetailPage orderId={decodeURIComponent(accountOrderDetailMatch[1])} state={params.get('state') || 'unpaid'} />
+
   if (path === '/account/orders') return <AccountOrdersPage />
   if (path === '/account/addresses/add') return <AccountAddressFormPage mode="add" />
   if (path === '/account/addresses/edit') return <AccountAddressFormPage mode="edit" />
