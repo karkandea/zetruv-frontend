@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
+import { sharedOrderStatusAssets } from '../data/sharedOrderStatusAssets'
 import '../styles/shared-order-status.css'
 
 const HISTORY_ORDERS = [
@@ -539,7 +540,7 @@ function GameAccountPage() {
     <StatusShell>
       <main className="sos-service-page sos-game-account-page">
         <header className="sos-service-heading"><div><div><h1>Dota 2 Account — Ancient III</h1><StatusChip tone="success">DELIVERED</StatusChip></div><p>Order #ZTR-260904-2218 · Game Account</p></div><div><OutlineButton href={viewHref('invoice')}>Invoice</OutlineButton><OutlineButton href="#support">Contact Support</OutlineButton></div></header>
-        <div className="sos-warning-banner sos-account-warning"><span>◇</span><div><strong>Secure your account immediately after reveal</strong><p>Change the password, recovery email, linked phone, and 2FA before confirming receipt.</p></div></div>
+        <div className="sos-warning-banner sos-account-warning"><img className="sos-account-warning__icon" src={sharedOrderStatusAssets.secureShield} alt="" /><div><strong>Secure your account immediately after reveal</strong><p>Change the password, recovery email, linked phone, and 2FA before confirming receipt.</p></div></div>
         <section className="sos-account-delivery">
           <div className="sos-account-delivery__heading"><h2>Account delivery</h2><StatusChip tone="soft">SECURE DELIVERY</StatusChip></div>
           <dl>
