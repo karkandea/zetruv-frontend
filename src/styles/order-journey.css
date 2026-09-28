@@ -88,7 +88,7 @@
 .journey-btn--primary {
   border-color: #05055c;
   background: #05055c;
-  color: #fff;
+  color: #fff !important;
 }
 
 .order-detail-page {
