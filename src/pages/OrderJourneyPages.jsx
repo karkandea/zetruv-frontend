@@ -146,7 +146,7 @@ function StatusBadge({ label, tone = 'process', className = '' }) {
 function JourneyInfoBanner({ children, tone = 'info', check = false }) {
   return (
     <div className={`journey-info-banner journey-info-banner--${tone}`}>
-      {check ? <span className="journey-info-banner__check">✓</span> : <img src={accountIcons.info} alt="" />}
+      {check ? <img className="journey-info-banner__check" src={orderJourneyAssets.check} alt="" /> : <img src={accountIcons.info} alt="" />}
       <span>{children}</span>
     </div>
   )
