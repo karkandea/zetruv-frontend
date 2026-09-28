@@ -6,7 +6,7 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
-import OrderStatusPage from './pages/OrderStatusPage'
+import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import { AccountOrderDetailPage, AccountOrderPaymentPage, AccountOrderTrackingPage, AccountOrderUpdateLoginPage } from './pages/OrderJourneyPages'
@@ -52,7 +52,8 @@ export default function App() {
   if (path === '/cart') return <CartPage />
   if (path === '/checkout') return <CheckoutPage />
   if (path === '/payment') return <PaymentPage />
-  if (path === '/order-status' || path === '/track-order') return <OrderStatusPage />
+  if (path === '/order-status') return <SharedOrderStatusPage initialView="detail" />
+  if (path === '/track-order') return <SharedOrderStatusPage initialView="history" />
 
   const accountDetailMatch = path.match(/^\/game-accounts\/([^/]+)\/([^/]+)$/)
   if (accountDetailMatch) {
