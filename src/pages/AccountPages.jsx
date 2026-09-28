@@ -29,8 +29,9 @@ const orders = [
     tone: 'process',
     thumb: 'GAME',
     product: 'Game Via Login · 500 Coins',
-    detail: 'Akun sedang diproses oleh seller',
+    detail: 'nama@email.com · Diproses admin',
     total: 'Rp76.000',
+    thumbTone: 'dark',
   },
   {
     id: '#ZTR-260817-0871',
@@ -39,16 +40,18 @@ const orders = [
     tone: 'success',
     thumb: 'JRSY',
     product: 'Zetruv Gaming Jersey',
-    detail: 'Ukuran L · Reguler',
+    detail: 'Black · Size L · Pengiriman sedang berjalan',
     total: 'Rp267.000',
     action: 'Lacak Pesanan',
+    thumbTone: 'neutral',
   },
   {
     id: '#ZTR-260816-0764',
     date: '16 Agu 2026 · 20:14',
     status: 'SELESAI',
     tone: 'process',
-    thumb: '172D',
+    thumb: 'GAME',
+    thumbTone: 'dark',
     product: 'Mobile Legends · 172 Diamonds',
     detail: 'User ID 12345678 · Zona 1234',
     total: 'Rp95.000',
@@ -213,7 +216,7 @@ function OrderCard({ order }) {
         <span className={`order-status order-status--${order.tone}`}>{order.status}</span>
       </header>
       <div className="order-card__body">
-        <div className="order-card__thumb">{order.thumb}</div>
+        <div className={`order-card__thumb${order.thumbTone ? ` order-card__thumb--${order.thumbTone}` : ''}`}>{order.thumb}</div>
         <div className="order-card__product">
           <strong>{order.product}</strong>
           <span>{order.detail}</span>
