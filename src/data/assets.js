@@ -3,32 +3,12 @@ import { homepageLocalAssets } from './homepageLocalAssets'
 import authHero from '../assets/auth/auth-hero.png'
 import authEye from '../assets/auth/auth-eye.png'
 
-// Exact exports from the Zetruv Figma redesign. The UI consumes these through
-// data/props so backend/CDN URLs can replace them later without changing layout.
+// All runtime UI assets are local/Vite-bundled or stable inline SVG data.
+// Do not reintroduce temporary figma.com/api/mcp/asset URLs: they expire.
 export const assets = {
-  logo: '/assets/home/navbar-logo.png',
-  heroBackground: 'https://www.figma.com/api/mcp/asset/aa256062-9cd2-4c19-a480-93b5bf864d38.png',
-  heroShowcase: 'https://www.figma.com/api/mcp/asset/1a94a73c-7495-4c44-b7fb-ba269a51a164.png',
+  ...homepageLocalAssets,
+  ...stableIcons,
 
-  homepageHeroArtwork: '/assets/home/final/hero.png',
-  homepageCategoryTopUp: '/assets/home/category-topup.png',
-  homepageCategoryVoucher: '/assets/home/category-voucher.png',
-  homepageCategoryJockey: '/assets/home/category-jockey.png',
-  homepageCategoryMerch: '/assets/home/category-merch.png',
-  homepageCategoryAccount: '/assets/home/category-account.png',
-  homepageCategoryRing: '/assets/home/category-ring.png',
-  productDropdownArrow: 'https://www.figma.com/api/mcp/asset/be6230b6-7782-43bc-8fc7-7b4cfe60af61.svg',
-
-  search: 'https://www.figma.com/api/mcp/asset/8a10fc1c-f6f1-480c-a357-cf6309bf7aff.svg',
-  flagEn: 'https://www.figma.com/api/mcp/asset/2bde7797-76ca-4695-857c-ac44aa8a8b31.svg',
-  cart: 'https://www.figma.com/api/mcp/asset/98a6a018-ac19-428a-a1e5-806fd5c1b12e.svg',
-  home: 'https://www.figma.com/api/mcp/asset/887aadc6-cb56-41f8-ae91-cc266ab3cd62.svg',
-  navDown: 'https://www.figma.com/api/mcp/asset/1b7c2505-1205-401f-813e-626a61c47efe.svg',
-  transaction: 'https://www.figma.com/api/mcp/asset/3c476a14-fc33-4668-a60f-31479f4c3bcf.svg',
-  leaderboard: 'https://www.figma.com/api/mcp/asset/635bbb4e-71b6-4f1b-bac2-cd2c70ea985e.svg',
-  login: 'https://www.figma.com/api/mcp/asset/d5b2eae0-5599-4ae0-bc30-d4d7b5be03af.svg',
-  loginGlow: 'https://www.figma.com/api/mcp/asset/91c020ca-b199-4b8d-ac2a-529605b55576.svg',
-  register: 'https://www.figma.com/api/mcp/asset/b23c25fc-2cd2-4ea9-a6c0-9cdb0a0b549c.svg',
   authHero,
   authEye,
   authBackArrow: '/assets/auth/forgot-back.png',
@@ -38,77 +18,11 @@ export const assets = {
   authRegisterVerified: '/assets/auth/register-verified.png',
   authRegisterExpired: '/assets/auth/register-expired.png',
 
-  categoryTopUp: 'https://www.figma.com/api/mcp/asset/feffa99f-8e79-4ed0-9a0c-32eda3c6bc77.png',
-  categoryVoucher: 'https://www.figma.com/api/mcp/asset/63e8efa1-0fb9-431b-8dd5-30d76806d18d.png',
-  categoryJockey: 'https://www.figma.com/api/mcp/asset/5c5d382e-1fc5-4570-ac11-6288e3462eff.png',
-  categoryMerch: 'https://www.figma.com/api/mcp/asset/90a8cf7b-cf8e-4f96-b887-b6722e6ec74f.png',
-  categoryRingBlue: 'https://www.figma.com/api/mcp/asset/e139ad6e-4123-4d1b-9031-c02b64747bcf.svg',
-  categoryRingPink: 'https://www.figma.com/api/mcp/asset/4274da84-1406-4b91-abf8-ea266e2a95be.svg',
-
-  popularHeader: '/assets/home/final/popular-header.png',
-  recentHeader: '/assets/home/final/recent-header.png',
-  popularMl: '/assets/home/final/popular-ml.png',
-  popularFreeFire: '/assets/home/final/popular-free-fire.png',
-  popularValorant: '/assets/home/final/popular-valorant.png',
-  popularPubg: '/assets/home/final/popular-pubg.png',
-  popularPubgAlt: '/assets/home/final/popular-pubg-alt.png',
-  recentMl: '/assets/home/final/recent-ml.png',
-  recentPubg: '/assets/home/final/recent-pubg.png',
-  recentValorant: '/assets/home/final/recent-valorant.png',
-
-  flashDecor: '/assets/home/final/flash-decor.png',
-  flashMobileLegends: '/assets/home/final/flash-mobile-legends.png',
-  flashPubg: '/assets/home/final/flash-pubg.png',
-  flashValorant: '/assets/home/final/flash-valorant.png',
-  fire: '/assets/home/final/fire.png',
-  diamond: 'https://www.figma.com/api/mcp/asset/4beba82f-7e47-4da7-a176-c9774d3c8cc3.svg',
-  expandLeft: 'https://www.figma.com/api/mcp/asset/e79567e4-b1f6-437e-a195-44b01faeb7c1.svg',
-
-  mobileLegends: '/assets/home/final/joki-ml.png',
-  pubg: '/assets/home/final/joki-pubg.png',
-  valorant: '/assets/home/final/joki-valorant.png',
-  codm: '/assets/home/final/joki-codm.png',
-  freeFire: '/assets/home/final/joki-free-fire.png',
-  genshin: '/assets/home/final/joki-genshin.png',
-  fcMobile: '/assets/home/final/joki-fc-mobile.png',
-  starRail: '/assets/home/final/joki-star-rail.png',
-  undawn: '/assets/home/final/joki-undawn.png',
-
-  merchandiseBg: 'https://www.figma.com/api/mcp/asset/3d3226c6-9f9e-4738-baa6-9fbeca872264.png',
-  jersey: '/assets/home/final/merch-jersey.png',
-  star: 'https://www.figma.com/api/mcp/asset/8d8572e5-e65f-4b36-bc60-99ccf77b8cfd.svg',
-
-
-  accountPreviewOne: '/assets/game-accounts/dota-2.png',
-  accountPreviewTwo: '/assets/game-accounts/dota-2.png',
-  articleOne: '/assets/home/final/article-1.png',
-  articleTwo: '/assets/home/final/article-2.png',
-  articleThree: '/assets/home/final/article-3.png',
-
-  trustSecurity: 'https://www.figma.com/api/mcp/asset/4dcc5632-dfde-4913-aac6-0cffcffed957.svg',
-  trustMoney: 'https://www.figma.com/api/mcp/asset/84036aac-5965-43d4-b615-809e4596617e.svg',
-  trustSupport: 'https://www.figma.com/api/mcp/asset/c65b9cbf-8244-4728-b946-3148bd4e207b.svg',
-  chat: 'https://www.figma.com/api/mcp/asset/c367b1ee-dc82-4f70-8a67-058826b658f8.svg',
-
-  twitter: 'https://www.figma.com/api/mcp/asset/ed79b26a-18d9-490d-ac88-00c8f74204d5.svg',
-  instagram: 'https://www.figma.com/api/mcp/asset/2eb98717-86b0-4274-bed9-4f21adea0708.svg',
-  facebook: 'https://www.figma.com/api/mcp/asset/ee88b1c7-37b1-4e54-bab7-062050faa1a7.svg',
-  discord: 'https://www.figma.com/api/mcp/asset/f4889ebb-f2d1-46b1-b244-0c5ffe863cf0.svg',
-  youtube: 'https://www.figma.com/api/mcp/asset/55676a11-41cc-4232-af0c-373e381d5d83.svg',
-  footerGlow: 'https://www.figma.com/api/mcp/asset/68aa0b36-a559-4090-9a3f-2677b7b945bd.svg',
-
-  payBca: '/assets/footer/payment-bca.png',
-  payBni: '/assets/footer/payment-bni.png',
-  payBri: '/assets/footer/payment-bri.png',
-  payCimb: '/assets/footer/payment-cimb.png',
-  payDanamon: '/assets/footer/payment-danamon.png',
-  payMaybank: '/assets/footer/payment-maybank.png',
-  payPermata: '/assets/footer/payment-permata.png',
-  payDana: '/assets/footer/payment-dana.png',
-  payGopay: '/assets/footer/payment-gopay.png',
-  payLinkaja: '/assets/footer/payment-linkaja.png',
-  payOvo: '/assets/footer/payment-ovo.png',
-  payShopee: '/assets/footer/payment-shopeepay.png',
-  ...homepageLocalAssets,
-  ...stableIcons,
+  // Legacy aliases still consumed by mock/fallback data.
+  categoryTopUp: homepageLocalAssets.homepageCategoryTopUp,
+  categoryVoucher: homepageLocalAssets.homepageCategoryVoucher,
+  categoryJockey: homepageLocalAssets.homepageCategoryJockey,
+  categoryMerch: homepageLocalAssets.homepageCategoryMerch,
+  categoryRingBlue: stableIcons.homepageCategoryRing,
+  categoryRingPink: stableIcons.homepageCategoryRing,
 }
