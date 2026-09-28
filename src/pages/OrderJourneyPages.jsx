@@ -176,7 +176,7 @@ function ProductRow({ order, completed }) {
   )
 }
 
-function OrderTimeline({ config }) {
+function OrderTimeline({ config, orderId, state }) {
   return (
     <div className="journey-status-card">
       <h2>Status Pesanan</h2>
@@ -195,6 +195,9 @@ function OrderTimeline({ config }) {
           </div>
         ))}
       </div>
+      {state === 'unpaid' && (
+        <a className="journey-status-pay" href={`/account/orders/${orderId}/payment`}>Bayar Sekarang</a>
+      )}
     </div>
   )
 }
@@ -213,9 +216,6 @@ function DetailActions({ orderId, state, kind }) {
       )}
       {isCompleted && (
         <a className="journey-btn journey-btn--outline journey-btn--help" href="/#contact">Hubungi Bantuan</a>
-      )}
-      {state === 'unpaid' && kind === 'via-id' && (
-        <a className="journey-btn journey-btn--primary journey-unpaid-mobile-cta" href={`/account/orders/${orderId}/payment`}>Bayar Sekarang</a>
       )}
     </div>
   )
@@ -257,17 +257,10 @@ export function AccountOrderDetailPage({ orderId, state = 'unpaid' }) {
             <div className="journey-total-row"><span>Total</span><strong>{order.total}</strong></div>
           </section>
 
-          <OrderTimeline config={config} />
+          <OrderTimeline config={config} orderId={orderId} state={normalizedState} />
         </div>
 
-        {normalizedState === 'unpaid' ? (
-          <>
-            <a className="journey-pay-now journey-btn journey-btn--primary" href={`/account/orders/${orderId}/payment`}>Bayar Sekarang</a>
-            <DetailActions orderId={orderId} state={normalizedState} kind={order.kind} />
-          </>
-        ) : (
-          <DetailActions orderId={orderId} state={normalizedState} kind={order.kind} />
-        )}
+        <DetailActions orderId={orderId} state={normalizedState} kind={order.kind} />
       </main>
     </div>
   )
