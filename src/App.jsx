@@ -7,6 +7,7 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
+import { PhysicalCatalogPage, PhysicalProductPage, PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import { AccountOrderDetailPage, AccountOrderPaymentPage, AccountOrderTrackingPage, AccountOrderUpdateLoginPage } from './pages/OrderJourneyPages'
@@ -49,6 +50,14 @@ export default function App() {
   if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
   if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />
   if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <GameAccountOrderDetailPage />
+
+  if (path === '/merchandise') return <PhysicalCatalogPage />
+  if (path === '/merchandise/zetruv-gaming-jersey') return <PhysicalProductPage />
+  if (path === '/cart' && flow === 'physical') return <PhysicalCartPage />
+  if (path === '/checkout' && flow === 'physical') return <PhysicalCheckoutPage />
+  if (path === '/payment' && flow === 'physical') return <PhysicalPaymentPage state={params.get('state') || 'pending'} />
+  if ((path === '/order-status' || path === '/track-order') && flow === 'physical') return <PhysicalOrderTrackingPage state={params.get('state') || 'shipped'} />
+
   if (path === '/cart') return <CartPage />
   if (path === '/checkout') return <CheckoutPage />
   if (path === '/payment') return <PaymentPage />
