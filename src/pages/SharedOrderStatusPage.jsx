@@ -175,7 +175,11 @@ function HistoryPage({ processingOnly = false }) {
 const progressLabels = ['Order Placed', 'Payment Verified', 'Processing', 'Completed']
 
 function StandardProgress({ needsAction = false, completed = false }) {
-  const labels = needsAction ? ['Order Placed', 'Payment Verified', 'Needs Action', 'Processing', 'Completed'] : progressLabels
+  const labels = completed
+    ? ['Order Placed', 'Payment Verified', 'Delivered', 'Completed']
+    : needsAction
+      ? ['Order Placed', 'Payment Verified', 'Needs Action', 'Processing', 'Completed']
+      : progressLabels
   return (
     <div className={`sos-progress${needsAction ? ' sos-progress--needs-action' : ''}${completed ? ' sos-progress--completed' : ''}`}>
       <span className="sos-progress__line" />
