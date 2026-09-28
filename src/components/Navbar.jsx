@@ -9,7 +9,7 @@ const productLinks = [
   { label: 'Top Up Login', href: '/search/login' },
   { label: 'Voucher Game', href: '/search?q=voucher' },
   { label: 'Joki Game', href: '/#jockey' },
-  { label: 'Merchandise', href: '/#merch' },
+  { label: 'Merchandise', href: '/merchandise' },
 ]
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
@@ -45,6 +45,9 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
+  const physicalFlow = typeof window !== 'undefined'
+    && (window.location.pathname.startsWith('/merchandise') || new URLSearchParams(window.location.search).get('flow') === 'physical')
+  const cartHref = physicalFlow ? '/cart?flow=physical' : '/cart'
   const searchAction = isLoginCatalog ? '/search/login' : '/search'
   const searchPlaceholder = isHomeLoggedIn
     ? 'Cari game atau voucher'
@@ -117,7 +120,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
             <span>{languageLabel}</span>
           </button>
-          <a className="nav-pill navbar-control" href="/cart" aria-label={`${cartLabel} (${cartCount(cartItems)})`}>
+          <a className="nav-pill navbar-control" href={cartHref} aria-label={`${cartLabel} (${cartCount(cartItems)})`}>
             <img src={assets.cart} alt="" />
             <span>{cartLabel}</span>
             {cartCount(cartItems) > 0 && <b className="nav-cart-count">{cartCount(cartItems)}</b>}
