@@ -46,9 +46,9 @@
 
 .account-layout {
   width: min(1184px, calc(100% - 40px));
-  min-height: 705px;
+  min-height: 832px;
   margin-inline: auto;
-  padding: 34px 0;
+  padding: 161px 0 34px;
   display: grid;
   grid-template-columns: 214px minmax(0, 942px);
   gap: 28px;
@@ -56,7 +56,7 @@
 }
 
 .account-layout--tall {
-  min-height: 843px;
+  min-height: 970px;
 }
 
 .account-sidebar {
@@ -659,9 +659,10 @@
   width: 100%;
   height: 64px;
   display: grid;
-  grid-template-columns: 52px minmax(250px, 350px) 100px 1fr;
+  grid-template-columns: 52px 350px 100px auto;
   gap: 12px;
   align-items: center;
+  justify-content: start;
 }
 
 .order-card__thumb {
@@ -675,6 +676,15 @@
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
+}
+
+.order-card__thumb--dark {
+  background: #010154;
+  color: #fff;
+}
+
+.order-card__thumb--neutral {
+  background: #f0f0f7;
 }
 
 .order-card__product,
@@ -709,7 +719,7 @@
 .order-card__actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
 }
 
@@ -1025,7 +1035,7 @@
     width: calc(100% - 24px);
     grid-template-columns: 1fr;
     gap: 18px;
-    padding-top: 22px;
+    padding-top: 150px;
   }
 
   .account-sidebar,
