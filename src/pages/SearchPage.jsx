@@ -329,6 +329,15 @@ export default function SearchPage({ mode = 'player-id' }) {
   }
 
   function handleCategory(category) {
+    if (category.kind === 'Merchandise') {
+      window.location.href = '/merchandise'
+      return
+    }
+    if (category.kind === 'GameAccount') {
+      window.location.href = '/game-accounts'
+      return
+    }
+
     setActiveKind(category.kind)
     setLetterFiltering(false)
     setCatalogError('')
