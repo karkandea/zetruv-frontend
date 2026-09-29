@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
+import { searchAssets } from '../data/searchAssets'
 import jerseyCard from '../assets/physical/jersey-card.webp'
 import jerseyPro from '../assets/physical/jersey-pro.webp'
 import keychain from '../assets/physical/keychain.webp'
@@ -101,7 +102,7 @@ function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = 
 
 function ProductCard({ product }) {
   return (
-    <a className="physical-product-card" href={product.slug === 'zetruv-gaming-jersey' ? '/merchandise/zetruv-gaming-jersey' : '/merchandise/zetruv-gaming-jersey'}>
+    <a className="physical-product-card" href={product.slug === 'zetruv-gaming-jersey' ? '/merchandise/zetruv-gaming-jersey' : '/merchandise'}>
       <div className="physical-product-card__image">
         <img src={product.image} alt="" />
       </div>
@@ -131,41 +132,71 @@ export function PhysicalCatalogPage() {
     return rows
   }, [category, sort])
 
+  const categories = [
+    ['Top Up Games Via ID', searchAssets.categoryPlayerId, '/search'],
+    ['Top Up Games Via Login', searchAssets.categoryLogin, '/search?kind=TopUpLogin'],
+    ['Voucher Game', searchAssets.categoryItems, '/search?kind=GameVoucher'],
+    ['Joki Game', searchAssets.categoryJoki, '/search?kind=Joki'],
+    ['Game Accounts', searchAssets.categoryAccounts, '/game-accounts'],
+    ['Merchandise', searchAssets.categoryMerchandise, '/merchandise'],
+  ]
+
   return (
     <div className="physical-shell">
       <Navbar />
       <main className="physical-catalog">
-        <header className="physical-catalog__heading">
-          <div>
-            <h1>Merchandise</h1>
-            <p>Jerseys and fan gear for every match day.</p>
-          </div>
-          <span>24 products</span>
-        </header>
+        <div className="physical-catalog-layout">
+          <aside className="physical-catalog-sidebar">
+            <h2>Categories</h2>
+            <nav>
+              {categories.map(([label, icon, href]) => (
+                <a className={label === 'Merchandise' ? 'is-active' : ''} href={href} key={label}>
+                  <span><img src={icon} alt="" /></span>
+                  <strong>{label}</strong>
+                  {label === 'Merchandise' && <i aria-hidden="true" />}
+                </a>
+              ))}
+            </nav>
+            <a className="physical-catalog-help" href="/order-status">
+              <strong>Need Help?</strong>
+              <span>Chat with our support team.</span>
+            </a>
+          </aside>
 
-        <div className="physical-catalog__toolbar">
-          <div className="physical-filter-pills">
-            {['All', 'Jersey', 'Keychain', 'Fan Gear'].map((item) => (
-              <button className={category === item ? 'is-active' : ''} type="button" onClick={() => setCategory(item)} key={item}>{item}</button>
-            ))}
-          </div>
-          <label className="physical-sort">
-            <select value={sort} onChange={(event) => setSort(event.target.value)}>
-              <option>Sort: Newest</option>
-              <option>Sort: Price Low</option>
-              <option>Sort: Price High</option>
-            </select>
-          </label>
-        </div>
+          <section className="physical-catalog-content">
+            <header className="physical-catalog__heading">
+              <div>
+                <h1>Merchandise</h1>
+                <p>Jerseys and fan gear for every match day.</p>
+              </div>
+              <span>24 products</span>
+            </header>
 
-        <div className="physical-catalog__context">
-          <strong>{category === 'All' ? 'All products' : category}</strong>
-          <span>•</span>
-          <span>Variant availability is shown on each product page</span>
-        </div>
+            <div className="physical-catalog__toolbar">
+              <div className="physical-filter-pills">
+                {['All', 'Jersey', 'Keychain', 'Fan Gear'].map((item) => (
+                  <button className={category === item ? 'is-active' : ''} type="button" onClick={() => setCategory(item)} key={item}>{item}</button>
+                ))}
+              </div>
+              <label className="physical-sort">
+                <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                  <option>Sort: Newest</option>
+                  <option>Sort: Price Low</option>
+                  <option>Sort: Price High</option>
+                </select>
+              </label>
+            </div>
 
-        <div className="physical-product-grid">
-          {visible.map((product) => <ProductCard product={product} key={product.slug} />)}
+            <div className="physical-catalog__context">
+              <strong>{category === 'All' ? 'All products' : category}</strong>
+              <span>•</span>
+              <span>Variant availability is shown on each product page</span>
+            </div>
+
+            <div className="physical-product-grid">
+              {visible.map((product) => <ProductCard product={product} key={product.slug} />)}
+            </div>
+          </section>
         </div>
       </main>
     </div>
@@ -558,6 +589,7 @@ export function PhysicalPaymentPage({ state = 'pending' }) {
             <div className="physical-payment-provider"><strong>{config.panelTitle}</strong><span>{config.panelDesc}</span></div>
             <span className="physical-payment-label">{config.label}</span>
             <strong className={`physical-payment-status physical-payment-status--${config.statusTone}`}>{config.status}</strong>
+            {state === 'expired' && <div className="physical-payment-countdown"><span>Countdown</span><strong>00:00</strong></div>}
             <p>{config.helper}</p>
             <PhysicalButton href={config.primaryHref}>{config.primary}</PhysicalButton>
             <PhysicalButton tone="outline" href={config.secondaryHref}>{config.secondary}</PhysicalButton>
