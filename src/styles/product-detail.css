@@ -123,3 +123,73 @@
   .sku-card { padding: 20px; }
   .sku-flash { right: 8px; }
 }
+
+
+/* Review round 2 — Figma 3870:10421 destination fields */
+.pdp-account-block {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pdp-account-block > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #000;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.pdp-input,
+.pdp-account-block > label > input {
+  width: 100%;
+  height: 45px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(0,0,0,.05);
+}
+
+.pdp-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.pdp-input svg {
+  width: 16px;
+  height: 16px;
+  color: #8a8d97;
+  flex: none;
+}
+
+.pdp-input input {
+  flex: 1;
+  min-width: 0;
+  height: 45px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: #1e1e1e;
+  background: transparent;
+  font: 400 14px/21px Poppins,Arial,sans-serif;
+}
+
+.pdp-account-block > label > input {
+  padding: 0 16px;
+  outline: 0;
+  color: #1e1e1e;
+  font: 400 14px/21px Poppins,Arial,sans-serif;
+}
+
+.pdp-input input::placeholder,
+.pdp-account-block > label > input::placeholder {
+  color: #a7a7a7;
+  opacity: 1;
+}
+
+.pdp-account-block > small {
+  display: none;
+}
