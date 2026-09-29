@@ -2284,3 +2284,253 @@
     padding-top: 0;
   }
 }
+
+
+/* Review round 2 — Figma 3799:8 merchandise catalog */
+.physical-catalog {
+  width: 1150px;
+  min-height: 773px;
+  margin: 0 auto;
+  padding-top: 127px;
+}
+
+.physical-catalog-layout {
+  width: 1150px;
+  min-height: 773px;
+  display: grid;
+  grid-template-columns: 248px 892px;
+  gap: 10px;
+}
+
+.physical-catalog-sidebar {
+  width: 248px;
+  height: 593px;
+  margin-top: 90px;
+  padding: 24px 14px;
+  border-radius: 22px;
+  background: #f6f7fb;
+  overflow: hidden;
+}
+
+.physical-catalog-sidebar h2 {
+  margin: 0 0 12px;
+  color: #1e1e1e;
+  font-size: 16px;
+  line-height: 30px;
+  font-weight: 600;
+}
+
+.physical-catalog-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.physical-catalog-sidebar nav > a {
+  position: relative;
+  width: 220px;
+  min-height: 58px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #1e1e1e;
+  background: #f6f7fb;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.physical-catalog-sidebar nav > a.is-active {
+  border-color: #e3e5f0;
+  background: #fff;
+}
+
+.physical-catalog-sidebar nav > a > span {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e3e5f0;
+  border-radius: 10px;
+  background: #f2f4ff;
+  display: grid;
+  place-items: center;
+  flex: none;
+  overflow: hidden;
+}
+
+.physical-catalog-sidebar nav > a > span img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+}
+
+.physical-catalog-sidebar nav > a > strong {
+  flex: 1;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+}
+
+.physical-catalog-sidebar nav > a.is-active > strong {
+  font-weight: 600;
+}
+
+.physical-catalog-sidebar nav > a > i {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  width: 4px;
+  height: 34px;
+  border-radius: 2px;
+  background: #fed218;
+}
+
+.physical-catalog-help {
+  width: 220px;
+  min-height: 83px;
+  margin-top: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #010154;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.physical-catalog-help strong {
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.physical-catalog-help span {
+  color: #d1d6ff;
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.physical-catalog-content {
+  width: 892px;
+  min-height: 773px;
+  padding: 38px 52px 36px;
+  overflow: hidden;
+}
+
+.physical-catalog__heading {
+  width: 788px;
+  height: 72px;
+}
+
+.physical-catalog__toolbar {
+  width: 788px;
+  margin-top: 22px;
+}
+
+.physical-catalog__context {
+  width: 788px;
+  margin-top: 22px;
+}
+
+.physical-product-grid {
+  width: 788px;
+  min-height: 498px;
+  margin-top: 22px;
+  display: flex;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.physical-product-card {
+  width: 282px;
+  flex: 0 0 282px;
+}
+
+/* Review round 2 — expired state keeps the status treatment blue and shows timer at 00:00 */
+.physical-payment-countdown {
+  width: 100%;
+  min-height: 48px;
+  margin-top: -4px;
+  padding: 8px 12px;
+  border: 1px solid #c9dcf4;
+  border-radius: 10px;
+  background: #eef6ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.physical-payment-countdown span {
+  color: #3977c7;
+  font-size: 9px;
+  line-height: 14px;
+  font-weight: 500;
+}
+
+.physical-payment-countdown strong {
+  color: #3977c7;
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 700;
+}
+
+@media (max-width: 1190px) {
+  .physical-catalog {
+    width: calc(100% - 40px);
+  }
+
+  .physical-catalog-layout {
+    width: 100%;
+    grid-template-columns: 228px minmax(0, 1fr);
+  }
+
+  .physical-catalog-sidebar {
+    width: 228px;
+  }
+
+  .physical-catalog-sidebar nav > a,
+  .physical-catalog-help {
+    width: 200px;
+  }
+
+  .physical-catalog-content,
+  .physical-catalog__heading,
+  .physical-catalog__toolbar,
+  .physical-catalog__context,
+  .physical-product-grid {
+    width: 100%;
+  }
+}
+
+@media (max-width: 820px) {
+  .physical-catalog {
+    width: calc(100% - 24px);
+    padding-top: 127px;
+  }
+
+  .physical-catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .physical-catalog-sidebar {
+    width: 100%;
+    height: auto;
+    margin-top: 24px;
+  }
+
+  .physical-catalog-sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .physical-catalog-sidebar nav > a,
+  .physical-catalog-help {
+    width: 100%;
+  }
+
+  .physical-catalog-content {
+    padding: 24px 0 36px;
+  }
+
+  .physical-product-grid {
+    overflow-x: auto;
+  }
+}
