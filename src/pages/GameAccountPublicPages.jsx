@@ -108,7 +108,16 @@ export function GameAccountsPage() {
   const [loading, setLoading] = useState(true)
   useEffect(() => {
     let active = true
-    getCatalogGames().then((rows) => { if (active) setGames(rows?.length ? rows : DUMMY_GAMES) })
+    getCatalogGames().then((rows) => {
+      if (!active) return
+      const merged = [...DUMMY_GAMES]
+      ;(rows || []).forEach((game) => {
+        const index = merged.findIndex((item) => item.slug === game.slug)
+        if (index >= 0) merged[index] = { ...merged[index], ...game }
+        else merged.push(game)
+      })
+      setGames(merged)
+    })
       .catch(() => { if (active) { setGames(DUMMY_GAMES); setError('') } })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
@@ -152,7 +161,12 @@ export function GameAccountListingPage({ gameSlug }) {
     let active = true
     getCatalogGames().then((rows) => {
       if (!active) return
-      const source = rows?.length ? rows : DUMMY_GAMES
+      const source = [...DUMMY_GAMES]
+      ;(rows || []).forEach((game) => {
+        const index = source.findIndex((item) => item.slug === game.slug)
+        if (index >= 0) source[index] = { ...source[index], ...game }
+        else source.push(game)
+      })
       setGame(source.find((item) => item.slug === gameSlug) || DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
     }).catch(() => {
       if (active) {
