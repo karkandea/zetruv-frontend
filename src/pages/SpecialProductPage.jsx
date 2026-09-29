@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
+import { productDetailAssets } from '../data/productDetailAssets'
+import voucherSteam from '../assets/special/voucher-steam.png'
 import { addCartItem } from '../services/cartService'
 import '../styles/special-product.css'
 
@@ -14,7 +16,8 @@ const SPECIAL_PRODUCTS = {
       publisher: 'Steam',
       kind: 'GameVoucher',
       fulfillmentMethod: 'VOUCHER_CODE',
-      image: searchAssets.categoryItems,
+      image: voucherSteam,
+      hero: voucherSteam,
       badge: 'VOUCHER GAME',
       description: 'Kode voucher digital dikirim setelah pembayaran berhasil.',
       variants: [
@@ -31,6 +34,7 @@ const SPECIAL_PRODUCTS = {
       kind: 'GameVoucher',
       fulfillmentMethod: 'VOUCHER_CODE',
       image: searchAssets.categoryItems,
+      hero: searchAssets.categoryItems,
       badge: 'VOUCHER GAME',
       description: 'Gift code digital untuk akun Google Play region Indonesia.',
       variants: [
@@ -48,6 +52,7 @@ const SPECIAL_PRODUCTS = {
       kind: 'Joki',
       fulfillmentMethod: 'JOKI_MANUAL',
       image: searchAssets.mobileLegends,
+      hero: productDetailAssets.heroBackground,
       badge: 'JOKI GAME',
       description: 'Pilih target rank. Data akun diminta secara aman saat checkout.',
       variants: [
@@ -64,6 +69,7 @@ const SPECIAL_PRODUCTS = {
       kind: 'Joki',
       fulfillmentMethod: 'JOKI_MANUAL',
       image: searchAssets.valorant,
+      hero: searchAssets.valorant,
       badge: 'JOKI GAME',
       description: 'Rank boost dengan progress update melalui status pesanan.',
       variants: [
@@ -114,13 +120,17 @@ export default function SpecialProductPage({ type = 'voucher', slug }) {
     <div className="special-product-shell">
       <Navbar variant="catalog" />
       <main className="special-product-page">
-        <section className="special-product-hero">
-          <div className="special-product-hero__visual"><img src={product.image} alt="" /></div>
-          <div className="special-product-hero__copy">
-            <span>{product.badge}</span>
-            <h1>{product.name}</h1>
-            <p>{product.publisher} · 4.9 ★ · Proses aman melalui Zetruv</p>
-            <small>{product.description}</small>
+        <section className={`special-product-hero special-product-hero--${type}`}>
+          <img className="special-product-hero__background" src={product.hero || product.image} alt="" />
+          <div className="special-product-hero__scrim" />
+          <div className="special-product-hero__content">
+            <div className="special-product-hero__visual"><img src={product.image} alt="" /></div>
+            <div className="special-product-hero__copy">
+              <span>{product.badge}</span>
+              <h1>{product.name}</h1>
+              <p>{product.publisher} · 4.9 ★ · Proses aman melalui Zetruv</p>
+              <small>{product.description}</small>
+            </div>
           </div>
         </section>
 
