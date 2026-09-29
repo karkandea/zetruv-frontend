@@ -169,3 +169,95 @@
   .digital-qris-card{height:520px}
   .digital-qr{position:static;margin:14px auto 0;width:180px;height:180px}
 }
+
+
+/* Review round 2 — Checkout Digital product method + thumbnails + payment channel icons */
+.digital-checkout-item {
+  min-height: 86px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 54px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.digital-checkout-item__thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f6f8fc;
+  display: block;
+}
+
+.digital-checkout-item__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.digital-checkout-item__copy > strong {
+  width: 100%;
+  overflow: hidden;
+  color: #1f1f1f;
+  font-size: 11px;
+  line-height: 17px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.digital-checkout-item__copy > span:not(.digital-product-method) {
+  color: #707070;
+  font-size: 9px;
+  line-height: 14px;
+}
+
+.digital-product-method {
+  min-height: 20px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #1f33b8;
+  background: #f0f2ff;
+  font-size: 8px !important;
+  line-height: 14px !important;
+  font-weight: 600;
+}
+
+.digital-checkout-item > b {
+  min-width: 92px;
+  color: #010154;
+  font-size: 11px;
+  line-height: 17px;
+  text-align: right;
+}
+
+.digital-payment-methods i {
+  background: transparent;
+}
+
+.digital-payment-methods i img {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+}
+
+@media(max-width:560px){
+  .digital-checkout-item {
+    grid-template-columns: 48px minmax(0,1fr);
+  }
+
+  .digital-checkout-item__thumb {
+    width: 48px;
+    height: 48px;
+  }
+
+  .digital-checkout-item > b {
+    grid-column: 2;
+    min-width: 0;
+    text-align: left;
+  }
+}
