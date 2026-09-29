@@ -93,7 +93,7 @@
     width: 1152px;
     height: 581px;
     min-height: 581px;
-    margin-top: 18px;
+    margin-top: 14px;
     grid-template-columns: 248px 904px;
     border: 1px solid #e3e5f0;
     border-radius: 22px;
@@ -206,7 +206,7 @@
   .search-game-grid--browse-primary {
     width: 788px;
     height: 182px;
-    margin-top: 88px;
+    margin-top: 34px;
     grid-template-columns: repeat(3, 244px);
     grid-template-rows: repeat(2, 82px);
     gap: 18px 28px;
