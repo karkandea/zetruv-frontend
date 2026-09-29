@@ -13,9 +13,21 @@ const productLinks = [
   { label: 'Game Account', href: '/game-accounts' },
 ]
 
+function readPhysicalCartCount() {
+  if (typeof window === 'undefined') return 0
+  try {
+    const item = JSON.parse(window.sessionStorage.getItem('zetruv-physical-cart-v1') || 'null')
+    return item ? Number(item.qty || 1) : 0
+  } catch {
+    return 0
+  }
+}
+
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
+  const [physicalCartCount, setPhysicalCartCount] = useState(() => readPhysicalCartCount())
   const [authMode, setAuthMode] = useState(() => {
     if (typeof window === 'undefined') return null
     const verifyState = new URLSearchParams(window.location.search).get('verify-email')
@@ -25,6 +37,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     return null
   })
   const productMenuRef = useRef(null)
+  const cartMenuRef = useRef(null)
 
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
@@ -46,9 +59,6 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
-  const physicalFlow = typeof window !== 'undefined'
-    && (window.location.pathname.startsWith('/merchandise') || new URLSearchParams(window.location.search).get('flow') === 'physical')
-  const cartHref = physicalFlow ? '/cart?flow=physical' : '/cart'
   const searchAction = isLoginCatalog ? '/search/login' : '/search'
   const searchPlaceholder = isHomeLoggedIn
     ? 'Cari game atau voucher'
@@ -64,14 +74,31 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   useEffect(() => onCartChange(setCartItems), [])
 
   useEffect(() => {
+    const refreshPhysicalCart = () => setPhysicalCartCount(readPhysicalCartCount())
+    refreshPhysicalCart()
+    window.addEventListener('focus', refreshPhysicalCart)
+    window.addEventListener('pageshow', refreshPhysicalCart)
+    return () => {
+      window.removeEventListener('focus', refreshPhysicalCart)
+      window.removeEventListener('pageshow', refreshPhysicalCart)
+    }
+  }, [])
+
+  useEffect(() => {
     function handlePointerDown(event) {
       if (productMenuRef.current && !productMenuRef.current.contains(event.target)) {
         setIsProductOpen(false)
       }
+      if (cartMenuRef.current && !cartMenuRef.current.contains(event.target)) {
+        setIsCartOpen(false)
+      }
     }
 
     function handleKeyDown(event) {
-      if (event.key === 'Escape') setIsProductOpen(false)
+      if (event.key === 'Escape') {
+      setIsProductOpen(false)
+      setIsCartOpen(false)
+    }
     }
 
     document.addEventListener('pointerdown', handlePointerDown)
@@ -91,6 +118,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   function selectNav(name) {
     setActiveNav(name)
     if (name !== 'product') setIsProductOpen(false)
+    setIsCartOpen(false)
   }
 
   function handleAuthenticated() {
@@ -121,11 +149,34 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
             <span>{languageLabel}</span>
           </button>
-          <a className="nav-pill navbar-control" href={cartHref} aria-label={`${cartLabel} (${cartCount(cartItems)})`}>
-            <img src={assets.cart} alt="" />
-            <span>{cartLabel}</span>
-            {cartCount(cartItems) > 0 && <b className="nav-cart-count">{cartCount(cartItems)}</b>}
-          </a>
+          <div ref={cartMenuRef} className={`nav-cart-menu${isCartOpen ? ' is-open' : ''}`}>
+            <button
+              className="nav-pill navbar-control nav-cart-trigger"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={isCartOpen}
+              aria-label={`${cartLabel} (${cartCount(cartItems) + physicalCartCount})`}
+              onClick={() => {
+                setIsCartOpen((open) => !open)
+                setIsProductOpen(false)
+                setPhysicalCartCount(readPhysicalCartCount())
+              }}
+            >
+              <img src={assets.cart} alt="" />
+              <span>{cartLabel}</span>
+              {cartCount(cartItems) + physicalCartCount > 0 && <b className="nav-cart-count">{cartCount(cartItems) + physicalCartCount}</b>}
+            </button>
+            <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen}>
+              <a className="navbar-control" href="/cart" role="menuitem" onClick={() => setIsCartOpen(false)}>
+                <span><strong>Cart Digital</strong><small>Top Up, Voucher, Joki &amp; Akun Game</small></span>
+                <b>{cartCount(cartItems)}</b>
+              </a>
+              <a className="navbar-control" href="/cart?flow=physical" role="menuitem" onClick={() => setIsCartOpen(false)}>
+                <span><strong>Cart Fisik</strong><small>Merchandise</small></span>
+                <b>{physicalCartCount}</b>
+              </a>
+            </div>
+          </div>
           {isLoggedIn && <a className="nav-avatar" href="/account" aria-label="Signed in as M">M</a>}
         </div>
       </div>
