@@ -422,10 +422,12 @@ export default function SearchPage({ mode = 'player-id' }) {
                 </div>
               )}
 
-              <div className="search-section-heading">
-                <h2>{isLoginMode ? 'Kategori Populer' : categoryLabel}</h2>
-                <span>{categoryLabel}</span>
-              </div>
+              {isLoginMode && (
+                <div className="search-section-heading">
+                  <h2>Kategori Populer</h2>
+                  <span>{categoryLabel}</span>
+                </div>
+              )}
 
               {searchState === 'results' && (
                 <>
