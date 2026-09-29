@@ -2,24 +2,36 @@ import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
 import { readCart } from '../services/cartService'
+import { checkoutAssets } from '../data/checkoutAssets'
 import '../styles/digital-commerce.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 const SERVICE_FEE = 2000
 
 const paymentMethods = [
-  ['QRIS', 'Scan QR untuk bayar', '▦'],
-  ['Virtual Account', 'Transfer via bank', '▥'],
-  ['E-Wallet', 'Buka aplikasi wallet', '▰'],
+  ['QRIS', 'Scan QR untuk bayar', checkoutAssets.qris],
+  ['Virtual Account', 'Transfer via bank', checkoutAssets.virtualAccount],
+  ['E-Wallet', 'Buka aplikasi wallet', checkoutAssets.ewallet],
 ]
 
 const needsCredential = (item) => ['MANUAL_LOGIN', 'JOKI_MANUAL'].includes(item.fulfillmentMethod)
 
+function productMethodLabel(item) {
+  if (item.fulfillmentMethod === 'AUTO_ID') return 'Via ID'
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Via Login'
+  if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Voucher Game'
+  if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Joki Game'
+  if (item.productKind === 'GameAccount') return 'Akun Game'
+  return 'Digital Product'
+}
+
 function itemSubtitle(item) {
   if (item.fulfillmentMethod === 'AUTO_ID') return item.accountLabel || 'Tujuan akun sudah diverifikasi'
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Credential akun dilengkapi secara aman di checkout'
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode digital dikirim setelah pembayaran'
   if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Data akun joki dilengkapi di bawah'
-  return 'Credential dilengkapi di bawah'
+  if (item.productKind === 'GameAccount') return 'Akun unik diverifikasi kembali sebelum order dibuat'
+  return 'Digital product'
 }
 
 export default function CheckoutPage() {
@@ -116,7 +128,13 @@ export default function CheckoutPage() {
             <div className="digital-checkout-items">
               {items.length ? items.map((item) => (
                 <article className="digital-checkout-item" key={item.cartKey}>
-                  <div>
+                  <img
+                    className="digital-checkout-item__thumb"
+                    src={item.thumbnailUrl || '/assets/search/mobile-legends.webp'}
+                    alt=""
+                  />
+                  <div className="digital-checkout-item__copy">
+                    <span className="digital-product-method">{productMethodLabel(item)}</span>
                     <strong>{item.productName} · {item.variantName}</strong>
                     <span>{itemSubtitle(item)}</span>
                   </div>
@@ -168,7 +186,7 @@ export default function CheckoutPage() {
             <div className="digital-payment-methods">
               {paymentMethods.map(([name, description, icon]) => (
                 <button className={paymentMethod === name ? 'is-active' : ''} type="button" onClick={() => setPaymentMethod(name)} key={name}>
-                  <i>{icon}</i>
+                  <i><img src={icon} alt="" /></i>
                   <span><strong>{name}</strong><small>{description}</small></span>
                   <b />
                 </button>
