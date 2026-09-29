@@ -41,3 +41,153 @@
 .special-product-success { margin:0; color:#0d9454; font-size:10px; }
 @media(max-width:850px){.special-product-page{padding-top:145px}.special-product-layout{grid-template-columns:1fr}.special-product-summary{width:100%}.special-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.special-product-hero{align-items:flex-start;flex-direction:column}.special-product-grid{grid-template-columns:1fr}}
+
+
+/* Review round 2 — shared PDP visual language for Voucher/Joki */
+.special-product-page {
+  padding-top: 127px;
+}
+
+.special-product-hero {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  min-height: 282px;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #05055c;
+}
+
+.special-product-hero__background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.special-product-hero__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,rgba(2,3,30,.86) 0%,rgba(2,3,30,.55) 45%,rgba(2,3,30,.15) 100%);
+}
+
+.special-product-hero--voucher {
+  background: linear-gradient(135deg,#f4f5ff 0%,#e6e9ff 55%,#d8ddff 100%);
+}
+
+.special-product-hero--voucher .special-product-hero__background {
+  left: auto;
+  right: 70px;
+  width: 390px;
+  object-fit: contain;
+  opacity: .22;
+  filter: saturate(.9);
+}
+
+.special-product-hero--voucher .special-product-hero__scrim {
+  background: linear-gradient(90deg,#05055c 0%,#15156f 48%,rgba(21,21,111,.55) 72%,rgba(21,21,111,.08) 100%);
+}
+
+.special-product-hero__content {
+  position: relative;
+  z-index: 2;
+  width: min(1160px,calc(100% - 40px));
+  min-height: 282px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.special-product-hero__visual {
+  width: 130px;
+  height: 130px;
+  flex: 0 0 130px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0,0,0,.16);
+}
+
+.special-product-hero__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.special-product-hero--voucher .special-product-hero__visual img {
+  object-fit: contain;
+  padding: 8px;
+  background: #f6f8ff;
+}
+
+.special-product-hero__copy {
+  gap: 8px;
+}
+
+.special-product-hero__copy > span {
+  color: #010154;
+  background: #f0f2ff;
+}
+
+.special-product-hero__copy h1 {
+  font-size: 24px;
+  line-height: 36px;
+}
+
+.special-product-hero__copy p {
+  color: #fed218;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.special-product-hero__copy small {
+  color: #eef0ff;
+  font-size: 10.5px;
+  line-height: 17px;
+}
+
+.special-product-layout {
+  width: min(1160px,calc(100% - 40px));
+  margin-top: 20px;
+  grid-template-columns: 833px 312px;
+  gap: 16px;
+}
+
+.special-product-packages {
+  min-height: 383px;
+  padding: 18px;
+}
+
+.special-product-grid {
+  grid-template-columns: repeat(3,242px);
+  gap: 14px;
+}
+
+.special-product-grid button {
+  min-height: 86px;
+}
+
+.special-product-summary {
+  width: 312px;
+  min-height: 430px;
+}
+
+@media(max-width:1190px){
+  .special-product-layout{grid-template-columns:minmax(0,1fr) 312px}
+  .special-product-grid{grid-template-columns:repeat(2,minmax(0,242px))}
+}
+@media(max-width:850px){
+  .special-product-page{padding-top:116px}
+  .special-product-hero__content{min-height:330px;align-items:flex-start;padding:28px 0}
+  .special-product-layout{grid-template-columns:1fr}
+  .special-product-summary{width:100%}
+}
+@media(max-width:560px){
+  .special-product-hero__content{flex-direction:column}
+  .special-product-grid{grid-template-columns:1fr}
+}
