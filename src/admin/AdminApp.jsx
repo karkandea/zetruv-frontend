@@ -4,6 +4,7 @@ import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
+import GameVoucherInventory from './GameVoucherInventory'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 const storefrontHost = STOREFRONT_URL ? new URL(STOREFRONT_URL).host : 'Storefront DEV'
@@ -222,8 +223,8 @@ function GameForm({ item, onDone }) {
 }
 
 function VariantEditor({ productId, detail, onReload }) {
-  const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [error, setError] = useState('')
-  async function saveVariant(form, id) { const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
+  const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [voucherVariant, setVoucherVariant] = useState(null); const [error, setError] = useState('')
+  async function saveVariant(form, id) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveImage(form, id) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveInputField(form, id) {
     const scope = detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
@@ -236,9 +237,10 @@ function VariantEditor({ productId, detail, onReload }) {
   async function deleteImage(item) { if (!confirm('Delete this image?')) return; await cmsRequest(`/catalog/products/${productId}/images/${item.id}`, { method: 'DELETE' }); onReload() }
   async function deleteInputField(item) { if (!confirm(`Delete field ${item.label}?`)) return; try { await cmsRequest(`/catalog/products/${productId}/input-fields/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
   const supportsInputSchema = detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
-  return <div className="admin-product-subresources"><ErrorBox error={error} /><Panel title="Variants" subtitle="Price, stock, physical weight, and SKU" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Variant</Button>}><div className="admin-mini-list">{detail.variants?.map((item) => <div key={item.id}><div><strong>{item.name}</strong><code>{item.sku}</code>{item.groupName && <small>Package group: {item.groupName}</small>}</div><span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Unlimited' : `${item.stockQuantity} stock`}</span><Pill value={item.isActive ? 'Active' : 'Inactive'} /><div><Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disableVariant(item)}>Disable</Button></div></div>)}</div></Panel><Panel title="Images" subtitle="Product gallery URLs" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Image</Button>}><div className="admin-image-grid">{detail.images?.map((item) => <article key={item.id}>{item.url ? <img src={item.url} alt={item.altText || ''} /> : <span>Image</span>}<div><small>{item.altText || 'No alt text'}</small><div><Button tone="ghost" onClick={() => setImageEditing(item)}>Edit</Button><Button tone="danger" onClick={() => deleteImage(item)}>Delete</Button></div></div></article>)}</div></Panel>
+  return <div className="admin-product-subresources"><ErrorBox error={error} /><Panel title="Variants" subtitle="Price, stock, physical weight, and SKU" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Variant</Button>}><div className="admin-mini-list">{detail.variants?.map((item) => <div key={item.id}><div><strong>{item.name}</strong><code>{item.sku}</code>{item.groupName && <small>Package group: {item.groupName}</small>}</div><span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Unlimited' : `${item.stockQuantity} stock`}</span><Pill value={item.isActive ? 'Active' : 'Inactive'} /><div>{detail.kind === 'GameVoucher' && <Button tone="ghost" onClick={() => setVoucherVariant(item)}>Codes</Button>}<Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disableVariant(item)}>Disable</Button></div></div>)}</div></Panel><Panel title="Images" subtitle="Product gallery URLs" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Image</Button>}><div className="admin-image-grid">{detail.images?.map((item) => <article key={item.id}>{item.url ? <img src={item.url} alt={item.altText || ''} /> : <span>Image</span>}<div><small>{item.altText || 'No alt text'}</small><div><Button tone="ghost" onClick={() => setImageEditing(item)}>Edit</Button><Button tone="danger" onClick={() => deleteImage(item)}>Delete</Button></div></div></article>)}</div></Panel>
     {supportsInputSchema && <Panel title="Customer input fields" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Non-sensitive account fields collected before validation' : 'Credentials collected only at checkout and encrypted by backend'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Field</Button>}><div className="admin-mini-list">{detail.inputFields?.length ? detail.inputFields.map((item) => <div key={item.id}><div><strong>{item.label}</strong><code>{item.key}</code></div><span>{item.type}</span><span>{item.isRequired ? 'Required' : 'Optional'}</span><Pill value={item.isSensitive ? 'Sensitive' : item.scope} /><div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Edit</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Delete</Button></div></div>) : <Empty text="No input fields configured. Product will stay unavailable until required schema exists." />}</div></Panel>}
     {editing !== undefined && <Modal title={editing ? 'Edit variant' : 'Add variant'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form) => saveVariant(form, editing?.id)} onCancel={() => setEditing(undefined)} /></Modal>}
+    {voucherVariant && <Modal title={`${voucherVariant.name} · encrypted voucher codes`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
     {imageEditing !== undefined && <Modal title={imageEditing ? 'Edit image' : 'Add image'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form) => saveImage(form, imageEditing?.id)} onCancel={() => setImageEditing(undefined)} /></Modal>}
     {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Edit customer input field' : 'Add customer input field'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
   </div>
@@ -246,7 +248,7 @@ function VariantEditor({ productId, detail, onReload }) {
 
 function VariantForm({ item, kind, onSave, onCancel }) {
   const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: '', weightGrams: '', isActive: true, sortOrder: 0 }); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}><Field label="Name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="SKU"><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>{kind !== 'Merchandise' && <Field label="Package group" hint="CMS-defined PDP tab. Examples: Diamonds, Starlight, UC, VP. Existing SKUs may leave this blank."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} placeholder="Diamonds" /></Field>}<Field label="Price"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field><Field label="Compare-at price"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field><Field label="Stock"><TextInput type="number" min="0" value={form.stockQuantity ?? ''} onChange={(e) => set('stockQuantity', e.target.value)} placeholder="Blank = unlimited" /></Field><Field label="Weight (grams)"><TextInput type="number" min="0" value={form.weightGrams ?? ''} onChange={(e) => set('weightGrams', e.target.value)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save variant</button></div></form>
+  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}><Field label="Name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="SKU"><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>{kind !== 'Merchandise' && <Field label="Package group" hint="CMS-defined PDP tab. Examples: Diamonds, Starlight, UC, VP. Existing SKUs may leave this blank."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} placeholder="Diamonds" /></Field>}<Field label="Price"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field><Field label="Compare-at price"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>{kind === 'GameVoucher' ? <Field label="Stock" hint="Managed automatically by encrypted voucher-code inventory"><TextInput type="number" min="0" value={form.stockQuantity ?? 0} disabled /></Field> : <Field label="Stock"><TextInput type="number" min="0" value={form.stockQuantity ?? ''} onChange={(e) => set('stockQuantity', e.target.value)} placeholder="Blank = unlimited" /></Field>}<Field label="Weight (grams)"><TextInput type="number" min="0" value={form.weightGrams ?? ''} onChange={(e) => set('weightGrams', e.target.value)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save variant</button></div></form>
 }
 function ImageForm({ item, onSave, onCancel }) { const [form, setForm] = useState(item || { url: '', altText: '', sortOrder: 0 }); return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}><Field label="Image URL" wide><TextInput value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} required /></Field><Field label="Alt text"><TextInput value={form.altText || ''} onChange={(e) => setForm({ ...form, altText: e.target.value })} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: e.target.value })} /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save image</button></div></form> }
 
@@ -373,6 +375,9 @@ function OrdersPage() {
   function reconcile(transaction) {
     return apply(() => cmsRequest(`/payments/transactions/${transaction.id}/reconcile`, { method: 'POST' }))
   }
+  function retryGameVoucher(item) {
+    return apply(() => cmsRequest(`/orders/${detail.id}/items/${item.id}/game-voucher-assign`, { method: 'POST' }))
+  }
   function updateShipment(status, trackingNumber) {
     return apply(() => cmsRequest(`/orders/${detail.id}/shipment`, {
       method: 'PUT', body: JSON.stringify({ status, trackingNumber: trackingNumber || null }),
@@ -395,7 +400,7 @@ function OrdersPage() {
       </tr>)}</tbody>
     </table></div></Panel>
     {detail && <Modal title={detail.orderNumber} onClose={() => setDetail(null)} wide>
-      <OrderDetail detail={detail} busy={busy} onCancel={cancelOrder} onFulfillment={updateFulfillment} onReconcile={reconcile} onShipment={updateShipment} />
+      <OrderDetail detail={detail} busy={busy} onCancel={cancelOrder} onFulfillment={updateFulfillment} onVoucherRetry={retryGameVoucher} onReconcile={reconcile} onShipment={updateShipment} />
     </Modal>}
   </div>
 }
@@ -405,7 +410,7 @@ function FulfillmentItemActions({ item, paid, busy, onSave }) {
   const [status, setStatus] = useState(available[0] || '')
   const [reference, setReference] = useState(item.fulfillmentReference || '')
   const [message, setMessage] = useState(item.fulfillmentMessage || '')
-  if (!paid || available.length === 0) return null
+  if (!paid || available.length === 0 || item.productKind === 'GameVoucher') return null
   return <form className="admin-fulfillment-actions" onSubmit={(event) => {
     event.preventDefault()
     onSave({ status: available.includes(status) ? status : available[0], reference, message })
@@ -419,7 +424,7 @@ function FulfillmentItemActions({ item, paid, busy, onSave }) {
   </form>
 }
 
-function OrderDetail({ detail, busy, onCancel, onFulfillment, onReconcile, onShipment }) {
+function OrderDetail({ detail, busy, onCancel, onFulfillment, onVoucherRetry, onReconcile, onShipment }) {
   const [tracking, setTracking] = useState(detail.shipment?.trackingNumber || '')
   const paid = detail.paymentStatus === 'Paid'
   const canCancel = detail.status !== 'Cancelled' && detail.status !== 'Completed'
@@ -444,6 +449,8 @@ function OrderDetail({ detail, busy, onCancel, onFulfillment, onReconcile, onShi
         {item.fulfillmentReference && <small>Reference: {item.fulfillmentReference}</small>}
         {item.fulfillmentMessage && <small>Note: {item.fulfillmentMessage}</small>}
         {item.hasManualLoginCredentials && <small>Login credentials are encrypted. Never copy them into a note or reference.</small>}
+        {item.productKind === 'GameVoucher' && item.fulfillmentStatus === 'Completed' && <small>Redeem code(s) assigned securely. Raw codes are visible only to the owning customer.</small>}
+        {paid && item.productKind === 'GameVoucher' && ['Processing', 'Failed'].includes(item.fulfillmentStatus) && <Button tone="ghost" disabled={busy} onClick={() => onVoucherRetry(item)}>{item.fulfillmentStatus === 'Failed' ? 'Retry code allocation' : 'Allocate code(s)'}</Button>}
         <FulfillmentItemActions key={`${item.id}:${item.fulfillmentStatus}`} item={item} paid={paid} busy={busy} onSave={(form) => onFulfillment(item, form)} />
       </article>)}</div>
     </Panel>
