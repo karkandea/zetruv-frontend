@@ -5,6 +5,7 @@ import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccount
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
 import GameVoucherInventory from './GameVoucherInventory'
+import './order-destination.css'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 const storefrontHost = STOREFRONT_URL ? new URL(STOREFRONT_URL).host : 'Storefront DEV'
@@ -446,6 +447,19 @@ function OrderDetail({ detail, busy, onCancel, onFulfillment, onVoucherRetry, on
           <div><strong>{item.productName}</strong><small>{item.variantName || item.sku} · {item.productKind} · {item.fulfillmentMethod}</small></div>
           <Pill value={item.fulfillmentStatus} /><span>×{item.quantity}</span><b>{money(item.lineTotal)}</b>
         </div>
+        {item.accountTarget && <section className="admin-order-target" aria-label="Validated account destination">
+          <div className="admin-order-target__heading">
+            <strong>Account destination</strong>
+            <span>{item.accountTarget.accountDisplayName || 'Validated account'}</span>
+          </div>
+          <dl>{Object.entries(item.accountTarget.fields || {}).map(([key, value]) =>
+            <div key={key}>
+              <dt>{key.replace(/[_-]/g, ' ')}</dt>
+              <dd>{value}</dd>
+            </div>
+          )}</dl>
+          <small>Validated {date(item.accountTarget.validatedAt)} · linked to this order item</small>
+        </section>}
         {item.fulfillmentReference && <small>Reference: {item.fulfillmentReference}</small>}
         {item.fulfillmentMessage && <small>Note: {item.fulfillmentMessage}</small>}
         {item.hasManualLoginCredentials && <small>Login credentials are encrypted. Never copy them into a note or reference.</small>}
