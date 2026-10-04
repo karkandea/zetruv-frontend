@@ -34,7 +34,7 @@ export default function Merchandise({ items = [] }) {
           <h2 id="merchandise-title">Merchandise</h2>
           <p>Jersey, keychain, dan fan gear pilihan untuk dukung tim favoritmu.</p>
         </div>
-        <button className="merchandise__view-all" type="button">Lihat Semua</button>
+        <a className="merchandise__view-all" href="/merchandise">Lihat Semua</a>
       </div>
 
       <div className="merchandise__panel">
