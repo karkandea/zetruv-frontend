@@ -1275,3 +1275,8 @@
     width: 100%;
   }
 }
+
+
+/* Favorites show the real saved artwork rather than a hardcoded placeholder. */
+.favorite-card__image { overflow:hidden; }
+.favorite-card__image img { width:100%;height:100%;object-fit:cover;display:block; }
