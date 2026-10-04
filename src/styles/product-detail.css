@@ -193,3 +193,98 @@
 .pdp-account-block > small {
   display: none;
 }
+
+
+/* Figma 3870:10421 — fix dynamic game cover geometry in the shared Via ID PDP.
+ * Hero artwork is a full-bleed background; package images belong to a fixed
+ * 36px square, never to the layout dimensions of the original source image. */
+.product-detail-page .pdp-figma-hero {
+  position: relative;
+  height: 282px;
+  isolation: isolate;
+  overflow: hidden;
+  background: #081337;
+}
+.product-detail-page .pdp-figma-hero > .pdp-hero-image {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center 45%;
+  pointer-events: none;
+}
+.product-detail-page .pdp-figma-hero > .product-hero__shade { z-index: 1; }
+.product-detail-page .pdp-figma-hero > .product-hero__content {
+  z-index: 2;
+}
+.product-detail-page .pdp-figma-hero .product-game-cover {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  flex: 0 0 130px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.product-detail-page .pdp-figma-hero .product-game-cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.product-detail-page .sku-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.product-detail-page .sku-card {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 94px;
+  padding: 18px 16px;
+  overflow: visible;
+}
+.product-detail-page .sku-card .sku-art {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  flex: 0 0 36px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.product-detail-page .sku-card .sku-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+.product-detail-page .sku-card .sku-card__copy {
+  min-width: 0;
+  max-width: calc(100% - 48px);
+  overflow: hidden;
+}
+.product-detail-page .sku-card .sku-card__copy strong,
+.product-detail-page .sku-card .sku-card__copy small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 1000px) {
+  .product-detail-page .sku-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .product-detail-page .sku-grid { grid-template-columns: 1fr; }
+  .product-detail-page .pdp-figma-hero { height: auto; min-height: 330px; }
+  .product-detail-page .pdp-figma-hero .product-game-cover { width: 104px; height: 104px; flex-basis: 104px; }
+}
