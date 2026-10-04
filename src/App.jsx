@@ -53,7 +53,8 @@ export default function App() {
   if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <GameAccountOrderDetailPage />
 
   if (path === '/merchandise') return <PhysicalCatalogPage />
-  if (path === '/merchandise/zetruv-gaming-jersey') return <PhysicalProductPage />
+  const physicalProductMatch = path.match(/^\/merchandise\/([^/]+)$/)
+  if (physicalProductMatch) return <PhysicalProductPage slug={decodeURIComponent(physicalProductMatch[1])} />
   if (path === '/cart' && flow === 'physical') return <PhysicalCartPage />
   if (path === '/checkout' && flow === 'physical') return <PhysicalCheckoutPage />
   if (path === '/payment' && flow === 'physical') return <PhysicalPaymentPage state={params.get('state') || 'pending'} />
