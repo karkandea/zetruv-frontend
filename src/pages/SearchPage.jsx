@@ -137,7 +137,7 @@ function productHref(product) {
   if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
   if (product.kind === 'Joki') return `/product/joki/${product.slug}`
   if (product.kind === 'GameAccount') return product.slug === 'dota-2' ? '/game-accounts/dota-2' : '/game-accounts'
-  if (product.kind === 'Merchandise') return product.slug === 'zetruv-gaming-jersey' ? '/merchandise/zetruv-gaming-jersey' : '/merchandise'
+  if (product.kind === 'Merchandise') return `/merchandise/${encodeURIComponent(product.slug)}`
   return undefined
 }
 
