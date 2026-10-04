@@ -266,7 +266,7 @@
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
 }
 .product-detail-page .sku-card .sku-card__copy {
@@ -287,4 +287,24 @@
   .product-detail-page .sku-grid { grid-template-columns: 1fr; }
   .product-detail-page .pdp-figma-hero { height: auto; min-height: 330px; }
   .product-detail-page .pdp-figma-hero .product-game-cover { width: 104px; height: 104px; flex-basis: 104px; }
+}
+
+/* The icon inside a 36px Figma currency slot must never reuse a game cover. */
+.product-detail-page .sku-card .sku-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+.product-detail-page .sku-card .sku-art__placeholder {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f0f2ff;
+  color: #010154;
+  font-size: 17px;
+  line-height: 1;
 }
