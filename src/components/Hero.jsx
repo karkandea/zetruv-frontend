@@ -12,7 +12,7 @@ export default function Hero() {
           <p>Top up, akun game, item digital, dan merchandise dengan proses yang jelas dan aman.</p>
           <div className="homepage-hero-card__actions">
             <a className="homepage-hero-button homepage-hero-button--primary" href="/search">Jelajahi Produk</a>
-            <a className="homepage-hero-button homepage-hero-button--secondary" href="#transaction">Cek Pesanan</a>
+            <a className="homepage-hero-button homepage-hero-button--secondary" href="/order-status">Cek Pesanan</a>
           </div>
         </div>
       </div>
