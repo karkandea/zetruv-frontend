@@ -25,6 +25,7 @@ function readPhysicalCartCount() {
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [searchWarning, setSearchWarning] = useState('')
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
   const [physicalCartCount, setPhysicalCartCount] = useState(() => readPhysicalCartCount())
@@ -134,14 +135,29 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
           <img src={assets.logo} alt="Zetruv" />
         </a>
 
-        <form className="searchbox" action={searchAction} method="get">
+        <form className="searchbox" action={searchAction} method="get" role="search" onSubmit={(event) => {
+          const field = event.currentTarget.elements.namedItem('q')
+          const value = String(field?.value || '').trim()
+          if (value.length < 3) {
+            event.preventDefault()
+            setSearchWarning('Ketik minimal 3 karakter untuk mencari.')
+            field?.focus()
+          } else {
+            // Submit the trimmed query, never a 1–2 character/whitespace-only term.
+            if (field) field.value = value
+            setSearchWarning('')
+          }
+        }}>
           <img src={assets.search} alt="" />
           <input
             name="q"
             defaultValue={initialQuery}
+            onChange={(event) => setSearchWarning(event.target.value.trim().length >= 3 || event.target.value.length === 0 ? '' : 'Ketik minimal 3 karakter untuk mencari.')}
             placeholder={searchPlaceholder}
             aria-label="Search games, vouchers, or products"
+            aria-describedby={searchWarning ? 'navbar-search-warning' : undefined}
           />
+          {searchWarning && <span id="navbar-search-warning" className="navbar-search-warning" role="status">{searchWarning}</span>}
         </form>
 
         <div className="navbar__quick-actions">
