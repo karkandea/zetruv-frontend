@@ -523,7 +523,8 @@
   line-height: 19px;
 }
 
-.site-shell--homepage-final .merchandise__header button {
+.site-shell--homepage-final .merchandise__header .merchandise__view-all { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; cursor:pointer; }
+.site-shell--homepage-final .merchandise__header .merchandise__view-all {
   width: 141px;
   height: 42px;
   border: 0;
