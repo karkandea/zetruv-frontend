@@ -42,6 +42,22 @@ const SPECIAL_PRODUCTS = {
         { id: 'gp-100', name: 'Google Play IDR 100K', price: 103000 },
         { id: 'gp-150', name: 'Google Play IDR 150K', price: 154000 },
       ],
+    },,
+    'playstation-store': {
+      id: 'voucher-playstation-store',
+      name: 'PlayStation Store Gift Card',
+      publisher: 'PlayStation',
+      kind: 'GameVoucher',
+      fulfillmentMethod: 'VOUCHER_CODE',
+      image: searchAssets.categoryItems,
+      hero: searchAssets.categoryItems,
+      badge: 'VOUCHER GAME',
+      description: 'Kode voucher PlayStation Store. Periksa region PSN sebelum membeli.',
+      variants: [
+        { id: 'psn-100', name: 'PS Store IDR 100K', price: 103000 },
+        { id: 'psn-200', name: 'PS Store IDR 200K', price: 206000 },
+        { id: 'psn-400', name: 'PS Store IDR 400K', price: 411000 },
+      ],
     },
   },
   joki: {
@@ -77,25 +93,42 @@ const SPECIAL_PRODUCTS = {
         { id: 'val-2', name: '2 Divisions', price: 269000 },
         { id: 'val-3', name: '3 Divisions', price: 389000 },
       ],
+    },,
+    'genshin-daily-abyss': {
+      id: 'joki-genshin-daily-abyss',
+      name: 'Genshin Daily & Abyss',
+      publisher: 'Zetruv Joki',
+      kind: 'Joki',
+      fulfillmentMethod: 'JOKI_MANUAL',
+      image: searchAssets.genshinImpact,
+      hero: searchAssets.genshinImpact,
+      badge: 'JOKI GAME',
+      description: 'Layanan bantuan Daily Commission dan Spiral Abyss Genshin Impact; pilih layanan sesuai kebutuhan.',
+      variants: [
+        { id: 'genshin-daily-3', name: 'Daily Commission · 3 hari', price: 29000 },
+        { id: 'genshin-daily-7', name: 'Daily Commission · 7 hari', price: 59000 },
+        { id: 'genshin-abyss', name: 'Spiral Abyss · 1 clear', price: 99000 },
+      ],
     },
   },
 }
 
 function resolveProduct(type, slug) {
   const group = SPECIAL_PRODUCTS[type] || {}
-  return group[slug] || Object.values(group)[0]
+  return group[slug] || null
 }
 
 export default function SpecialProductPage({ type = 'voucher', slug }) {
   const product = resolveProduct(type, slug)
-  const [selectedId, setSelectedId] = useState(product.variants[0].id)
+  const [selectedId, setSelectedId] = useState(product?.variants[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
   const [notice, setNotice] = useState('')
-  const selected = useMemo(() => product.variants.find((item) => item.id === selectedId) || product.variants[0], [product, selectedId])
+  const selected = useMemo(() => product?.variants.find((item) => item.id === selectedId) || product?.variants[0], [product, selectedId])
   const serviceFee = 2000
-  const subtotal = selected.price * quantity
+  const subtotal = (selected?.price || 0) * quantity
 
   function add(goToCart) {
+    if (!product || !selected) return
     addCartItem({
       accountKey: 'checkout-required',
       productId: product.id,
@@ -115,6 +148,12 @@ export default function SpecialProductPage({ type = 'voucher', slug }) {
     if (goToCart) window.location.href = '/cart'
     else setNotice('Produk ditambahkan ke keranjang.')
   }
+
+  if (!product || !selected) return (
+    <div className="special-product-shell"><Navbar /><main className="special-product-page" style={{textAlign: 'center', minHeight: '65vh', paddingTop: 180}}>
+      <h1>Produk tidak ditemukan</h1><p>Katalog produk ini belum tersedia.</p><a href="/search">Kembali ke katalog</a>
+    </main></div>
+  )
 
   return (
     <div className="special-product-shell">
