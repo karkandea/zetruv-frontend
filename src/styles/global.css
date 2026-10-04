@@ -203,3 +203,8 @@ img { display: block; max-width: 100%; }
   .game-card__caption { padding-inline: 12px; }
   .support-form h2 { font-size: 30px; }
 }
+
+
+/* Navbar search only submits terms of three or more characters. */
+.navbar .searchbox { position:relative; }
+.navbar-search-warning { position:absolute; z-index:140; top:calc(100% + 7px); left:8px; min-width:220px; padding:8px 12px; border-radius:9px; border:1px solid #dfe3ec; background:#fff; box-shadow:0 4px 16px rgba(1,1,84,.13); color:#010154; font-size:10px; line-height:16px; white-space:nowrap; }
