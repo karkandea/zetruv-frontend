@@ -42,7 +42,7 @@ const SPECIAL_PRODUCTS = {
         { id: 'gp-100', name: 'Google Play IDR 100K', price: 103000 },
         { id: 'gp-150', name: 'Google Play IDR 150K', price: 154000 },
       ],
-    },,
+    },
     'playstation-store': {
       id: 'voucher-playstation-store',
       name: 'PlayStation Store Gift Card',
@@ -93,7 +93,7 @@ const SPECIAL_PRODUCTS = {
         { id: 'val-2', name: '2 Divisions', price: 269000 },
         { id: 'val-3', name: '3 Divisions', price: 389000 },
       ],
-    },,
+    },
     'genshin-daily-abyss': {
       id: 'joki-genshin-daily-abyss',
       name: 'Genshin Daily & Abyss',
