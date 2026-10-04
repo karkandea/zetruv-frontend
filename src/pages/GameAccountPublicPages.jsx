@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { searchAssets } from '../data/searchAssets'
 import { getCatalogGames, getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { accountPrice, accountProductHref, getAccountAttributes, summarizeAccountAttributes } from '../services/gameAccountPresentation'
 import '../styles/game-accounts.css'
@@ -91,6 +92,36 @@ function dummyAccountFor(gameSlug, accountSlug) {
   return (DUMMY_ACCOUNTS[gameSlug] || []).find((item) => item.slug === accountSlug) || null
 }
 
+const catalogSidebarLinks = [
+  { label: 'Top Up Games Via ID', href: '/search', icon: searchAssets.categoryPlayerId },
+  { label: 'Top Up Games Via Login', href: '/search?kind=TopUpLogin', icon: searchAssets.categoryLogin },
+  { label: 'Voucher Game', href: '/search?kind=GameVoucher', icon: searchAssets.categoryItems },
+  { label: 'Joki Game', href: '/search?kind=Joki', icon: searchAssets.categoryJoki || searchAssets.categoryItems },
+  { label: 'Game Accounts', href: '/game-accounts', icon: searchAssets.categoryAccounts },
+  { label: 'Merchandise', href: '/merchandise', icon: searchAssets.categoryMerchandise },
+]
+
+function GameAccountSidebar() {
+  return (
+    <aside className="ga-catalog-sidebar" aria-label="Kategori produk">
+      <h2>Categories</h2>
+      <nav>
+        {catalogSidebarLinks.map((link) => <a
+          className={link.href === '/game-accounts' ? 'is-active' : ''}
+          aria-current={link.href === '/game-accounts' ? 'page' : undefined}
+          href={link.href}
+          key={link.href}
+        >
+          <span className="ga-catalog-sidebar__icon"><img src={link.icon} alt="" /></span>
+          <span>{link.label}</span>
+          {link.href === '/game-accounts' && <i aria-hidden="true" />}
+        </a>)}
+      </nav>
+      <a className="ga-catalog-sidebar__help" href="/order-status"><strong>Need Help?</strong><span>Check your order or contact support.</span></a>
+    </aside>
+  )
+}
+
 function StateMessage({ children }) {
   return <div className="ga-live-state" role="status">{children}</div>
 }
@@ -127,6 +158,7 @@ export function GameAccountsPage() {
     [games, query],
   )
   return <div className="ga-shell"><Navbar /><main className="ga-picker ga-container">
+    <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
     <p className="ga-breadcrumb"><a href="/">Beranda</a><span>/</span><span>Akun Game</span></p>
     <h1>Akun Game</h1><p className="ga-lead">Pilih game untuk melihat listing akun yang ada.</p>
     <form className="ga-search-row" onSubmit={(event) => event.preventDefault()}>
@@ -142,7 +174,7 @@ export function GameAccountsPage() {
           <span><strong>{game.name}</strong><small>{game.publisher || 'Game Account'}</small></span>
           <ChevronRight size={20} />
         </a>)}</div>}
-  </main></div>
+  </div></div></main></div>
 }
 
 export function GameAccountListingPage({ gameSlug }) {
@@ -213,6 +245,7 @@ export function GameAccountListingPage({ gameSlug }) {
     event.preventDefault(); setPage(1); setSubmittedQuery(query.trim())
   }
   return <div className="ga-shell"><Navbar /><main className="ga-list-page ga-container">
+    <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
     <p className="ga-breadcrumb"><a href="/">Beranda</a><span>/</span><a href="/game-accounts">Akun Game</a><span>/</span><span>{game?.name || gameSlug}</span></p>
     <header className="ga-list-head">
       <GameArtwork image={game?.imageUrl} name={game?.name || gameSlug} />
@@ -256,7 +289,7 @@ export function GameAccountListingPage({ gameSlug }) {
       <button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Sebelumnya</button>
       <button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Berikutnya</button>
     </div>
-  </main></div>
+  </div></div></main></div>
 }
 
 export function GameAccountDetailPage({ gameSlug, accountSlug }) {
