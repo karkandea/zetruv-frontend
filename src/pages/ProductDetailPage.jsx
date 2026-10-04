@@ -2,23 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Flame, Globe2, Headphones, Minus, Plus, Star, UserRound, Zap } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { productDetailAssets as media } from '../data/productDetailAssets'
+import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { addCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
-
-const fallbackProduct = {
-  id: 'mlbb-preview', slug: 'mobile-legends', name: 'Mobile Legends: Bang Bang', kind: 'TopUpGame',
-  fulfillmentMethod: 'AUTO_ID', category: { name: 'Diamonds' }, game: { name: 'Mobile Legends', publisher: 'Moonton' },
-  variants: [
-    { id: '5', name: '5 Diamond', price: 1234, effectivePrice: 1234, isAvailable: true, isOnSale: true },
-    { id: '50', name: '50 Diamond', price: 12000, effectivePrice: 12000, isAvailable: true },
-    { id: '100', name: '100 Diamond', price: 24000, effectivePrice: 24000, isAvailable: true },
-    { id: '250', name: '250 Diamond', price: 59000, effectivePrice: 59000, isAvailable: true },
-    { id: '500', name: '500 Diamond', price: 115000, effectivePrice: 115000, isAvailable: true },
-  ],
-}
 
 function skuArt(name = '') {
   if (/\b5\b/.test(name)) return media.diamond5
@@ -33,8 +22,8 @@ function Stars({ small = false }) {
 }
 
 export default function ProductDetailPage({ slug = 'mobile-legends' }) {
-  const [product, setProduct] = useState(fallbackProduct)
-  const [selectedId, setSelectedId] = useState('5')
+  const [product, setProduct] = useState(() => getDemoTopUp(slug))
+  const [selectedId, setSelectedId] = useState(() => getDemoTopUp(slug)?.variants?.[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
   const [account, setAccount] = useState({ userId: '', zone: '' })
   const [tab, setTab] = useState('Diamonds')
@@ -43,21 +32,47 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
 
   useEffect(() => {
     let active = true
+    const demo = getDemoTopUp(slug)
+    setProduct(demo)
+    setSelectedId(demo?.variants?.[0]?.id || '')
+    setQuantity(1)
+    setAccount({ userId: '', zone: '' })
+    setNotice('')
+    setTab(demo?.category?.name || '')
+
     getCatalogProduct(slug).then((data) => {
       if (!active) return
-      if (data.kind === 'TopUpLogin') { window.location.replace(`/product/${data.slug}/login`); return }
-      setProduct({ ...fallbackProduct, ...data, variants: data.variants?.length ? data.variants : fallbackProduct.variants })
-      const first = data.variants?.find((item) => item.isAvailable) || data.variants?.[0]
-      if (first) setSelectedId(first.id)
-    }).catch(() => {})
+      // A different kind or slug must never populate this PDP.
+      if (data.kind === 'TopUpLogin' && !demo) {
+        window.location.replace(`/product/${encodeURIComponent(data.slug)}/login`)
+        return
+      }
+      if (data.kind !== 'TopUpGame' || data.slug !== slug) return
+      const merged = {
+        ...demo,
+        ...data,
+        accountLabels: data.accountLabels || demo?.accountLabels || { first: 'Player ID', second: '', needsSecond: false },
+        variants: data.variants?.length ? data.variants : (demo?.variants || []),
+        isDemo: false,
+      }
+      setProduct(merged)
+      const first = merged.variants.find((item) => item.isAvailable) || merged.variants[0]
+      setSelectedId(first?.id || '')
+    }).catch(() => {
+      // The demo entry is valid for its own slug only.
+      if (active) setProduct(demo)
+    })
     return () => { active = false }
   }, [slug])
 
-  const selected = useMemo(() => product.variants.find((item) => item.id === selectedId) || product.variants[0], [product, selectedId])
+  const selected = useMemo(() => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0], [product, selectedId])
   const unitPrice = selected?.effectivePrice ?? selected?.price ?? 0
   const serviceFee = 2000
   const subtotal = unitPrice * quantity
-  const verified = Boolean(account.userId.trim() && account.zone.trim())
+  const accountLabels = product?.accountLabels || { first: 'Player ID', second: '', needsSecond: false }
+  const verified = Boolean(account.userId.trim() && (!accountLabels.needsSecond || account.zone.trim()))
+  const gameArt = product?.thumbnailUrl || product?.game?.imageUrl || media.gameCover
+  const productName = product?.name || ''
 
   function add(goToCart) {
     if (!selected || !verified) return
@@ -68,8 +83,8 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       productName: product.name,
       productKind: product.kind,
       fulfillmentMethod: product.fulfillmentMethod || 'AUTO_ID',
-      thumbnailUrl: media.diamond5,
-      gameName: product.game?.name || 'Mobile Legends',
+      thumbnailUrl: gameArt,
+      gameName: product.game?.name || product.name,
       variantId: selected.id,
       variantName: selected.name,
       unitPrice,
@@ -77,10 +92,14 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       quantity,
       maxQuantity: 99,
       accountFields: { userId: account.userId, zone: account.zone },
-      accountLabel: `ZetruvPlayer · ${account.userId} / ${account.zone}`,
+      accountLabel: `${accountLabels.first}: ${account.userId}${accountLabels.needsSecond ? ` / ${account.zone}` : ''}`,
     })
     if (goToCart) window.location.href = '/cart'
     else setNotice('Produk ditambahkan ke keranjang.')
+  }
+
+  if (!product || !selected) {
+    return <div className="product-detail-shell"><Navbar /><main className="product-detail-page" style={{ paddingTop: 170, minHeight: '75vh', textAlign: 'center' }}><h1>Produk tidak ditemukan</h1><p>Produk ini belum tersedia di katalog.</p><a href="/search">Kembali ke katalog</a></main></div>
   }
 
   return (
@@ -88,13 +107,13 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       <Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} onAuthenticated={() => { window.sessionStorage.setItem('zetruv-auth-preview', '1'); setIsAuthenticated(true) }} />
       <main className="product-detail-page">
         <section className="product-hero pdp-figma-hero">
-          <img className="pdp-hero-image" src={media.heroBackground} alt="" />
+          <img className="pdp-hero-image" src={slug === 'mobile-legends' ? media.heroBackground : gameArt} alt="" />
           <div className="product-hero__shade" />
           <div className="product-detail-container product-hero__content">
-            <div className="product-game-cover"><img src={media.gameCover} alt="Mobile Legends" /></div>
+            <div className="product-game-cover"><img src={gameArt} alt={productName} /></div>
             <div className="product-hero__copy">
-              <h1>Mobile Legends: Bang Bang</h1>
-              <div className="product-rating-line"><strong>Moonton</strong><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></div>
+              <h1>{productName}</h1>
+              <div className="product-rating-line"><strong>{product.game?.publisher || 'Game'}</strong><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></div>
               <div className="product-benefits">
                 <span><Zap size={16} />Proses Cepat</span><span><Headphones size={16} />Dukungan Chat 24/7</span><span><Globe2 size={16} />Global Region</span>
               </div>
@@ -104,16 +123,17 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
 
         <div className="product-detail-container product-detail-layout">
           <section className="product-selection-panel">
-            <div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className={tab === 'Diamonds' ? 'active' : ''} onClick={() => setTab('Diamonds')}>Diamonds</button><button className={tab === 'Starlight' ? 'active' : ''} onClick={() => setTab('Starlight')}>Starlight</button></div></div>
-            <div className="sku-grid">{product.variants.slice(0, 5).map((item) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} onClick={() => { setSelectedId(item.id); setQuantity(1) }}><span className="sku-art"><img src={skuArt(item.name)} alt="" /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flashsale</span>}</button>)}</div>
+            <div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || 'Top Up'}</button></div></div>
+            <div className="sku-grid">{product.variants.slice(0, 5).map((item) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} onClick={() => { setSelectedId(item.id); setQuantity(1) }}><span className="sku-art"><img src={slug === 'mobile-legends' ? skuArt(item.name) : gameArt} alt="" /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flashsale</span>}</button>)}</div>
 
             <section className="product-reviews"><h2>Ulasan Produk</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>394 Ulasan</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>Ulasan Terakhir</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>2 hari lalu</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>
 
           <aside className="product-order-panel">
-            <div className="pdp-account-block"><label>User ID<div className="pdp-input"><UserRound size={16}/><input value={account.userId} onChange={(e)=>setAccount({...account,userId:e.target.value})} placeholder="User ID" /></div></label><label>Zona<input value={account.zone} onChange={(e)=>setAccount({...account,zone:e.target.value})} placeholder="(ID Zona)" /></label><small>Pastikan User ID dan Zona sudah sesuai dengan akun tujuan.</small></div>
-            <div className="selected-item-box"><div className="selected-item-row"><div><strong>{selected?.name}</strong><span>{rupiah(unitPrice)} / item</span></div><div className="quantity-stepper"><button onClick={()=>setQuantity(v=>Math.max(1,v-1))}><Minus size={14}/></button><strong>{quantity}</strong><button onClick={()=>setQuantity(v=>v+1)}><Plus size={14}/></button></div></div><small>{verified ? `ZetruvPlayer · ${account.userId} / ${account.zone}` : 'Isi data akun untuk melanjutkan transaksi.'}</small></div>
+            <div className="pdp-account-block"><label>{accountLabels.first}<div className="pdp-input"><UserRound size={16}/><input value={account.userId} onChange={(e)=>setAccount({...account,userId:e.target.value})} placeholder={accountLabels.first} /></div></label>{accountLabels.needsSecond && <label>{accountLabels.second}<input value={account.zone} onChange={(e)=>setAccount({...account,zone:e.target.value})} placeholder={accountLabels.second} /></label>}<small>Periksa identitas akun tujuan sebelum melanjutkan.</small></div>
+            <div className="selected-item-box"><div className="selected-item-row"><div><strong>{selected?.name}</strong><span>{rupiah(unitPrice)} / item</span></div><div className="quantity-stepper"><button onClick={()=>setQuantity(v=>Math.max(1,v-1))}><Minus size={14}/></button><strong>{quantity}</strong><button onClick={()=>setQuantity(v=>v+1)}><Plus size={14}/></button></div></div><small>{verified ? `${accountLabels.first}: ${account.userId}${accountLabels.needsSecond ? ` / ${account.zone}` : ''}` : 'Isi data akun untuk melanjutkan transaksi.'}</small></div>
             <div className="order-summary"><h2>Ringkasan</h2><div><span>Subtotal</span><strong>{rupiah(subtotal)}</strong></div><div><span>Biaya layanan</span><strong>{rupiah(serviceFee)}</strong></div><div><span>Diskon</span><strong>Rp0</strong></div></div><div className="order-separator"/><div className="order-total"><strong>Total</strong><b>{rupiah(subtotal + serviceFee)}</b></div>
+            {product.isDemo && <p className="pdp-action-message">Harga dan paket contoh untuk QA; belum merupakan harga transaksi final.</p>}
             {notice && <p className="pdp-action-message is-success">{notice}</p>}
             <div className="product-cta-stack"><button disabled={!verified} onClick={()=>add(false)}>Tambah ke Keranjang</button><button disabled={!verified} onClick={()=>add(true)}>Tambah &amp; Lihat Keranjang</button></div>
           </aside>
