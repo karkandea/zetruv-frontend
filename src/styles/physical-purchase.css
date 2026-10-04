@@ -2542,3 +2542,22 @@
 .physical-gallery__primary { isolation:isolate; }
 .physical-save { width:106px; }
 .physical-save.is-saved { border-color:#010154; color:#010154; background:#eef0ff; }
+
+
+/* QA: all merchandise variants, including the Keychain, must remain reachable. */
+.physical-catalog-content .physical-product-grid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.physical-catalog-content .physical-product-card {
+  scroll-snap-align: start;
+}
+.physical-accessory-description {
+  min-height: 75px;
+  margin: 22px 0 0;
+  color: #696d7a;
+  font-size: 12px;
+  line-height: 21px;
+}
