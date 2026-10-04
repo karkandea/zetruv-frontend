@@ -3,18 +3,20 @@ import { Flame, Globe2, Headphones, Minus, Plus, Star, UserRound, Zap } from 'lu
 import Navbar from '../components/Navbar'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getDemoTopUp } from '../data/topUpDemoCatalog'
+import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { addCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 
-function skuArt(name = '') {
-  if (/\b5\b/.test(name)) return media.diamond5
-  if (/\b50\b/.test(name)) return media.diamond50
-  if (/\b100\b/.test(name)) return media.diamond100
-  if (/\b250\b/.test(name)) return media.diamond250
-  return media.diamond500
+function TopUpCurrencyIcon({ slug, variant, index }) {
+  const currency = getTopUpCurrencyArt(slug, variant, index)
+  if (!currency) {
+    // Never show a game cover as a denomination's currency logo.
+    return <span className="sku-art__placeholder" aria-hidden="true">◆</span>
+  }
+  return <img src={currency.image} alt="" loading="lazy" decoding="async" />
 }
 
 function Stars({ small = false }) {
@@ -124,7 +126,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
         <div className="product-detail-container product-detail-layout">
           <section className="product-selection-panel">
             <div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || 'Top Up'}</button></div></div>
-            <div className="sku-grid">{product.variants.slice(0, 5).map((item) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} onClick={() => { setSelectedId(item.id); setQuantity(1) }}><span className="sku-art"><img src={slug === 'mobile-legends' ? skuArt(item.name) : gameArt} alt="" /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flashsale</span>}</button>)}</div>
+            <div className="sku-grid">{product.variants.slice(0, 5).map((item) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} onClick={() => { setSelectedId(item.id); setQuantity(1) }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={product.variants.indexOf(item)} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flashsale</span>}</button>)}</div>
 
             <section className="product-reviews"><h2>Ulasan Produk</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>394 Ulasan</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>Ulasan Terakhir</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>2 hari lalu</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>
