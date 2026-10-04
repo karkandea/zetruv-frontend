@@ -103,7 +103,7 @@ function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = 
 
 function ProductCard({ product }) {
   return (
-    <a className="physical-product-card" href={product.slug === 'zetruv-gaming-jersey' ? '/merchandise/zetruv-gaming-jersey' : '/merchandise'}>
+    <a className="physical-product-card" href={`/merchandise/${encodeURIComponent(product.slug)}`}>
       <div className="physical-product-card__image">
         <img src={product.image} alt="" />
       </div>
