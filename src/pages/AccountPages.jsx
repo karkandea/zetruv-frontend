@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
+import { readFavorites, setFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/account.css'
 
 const navItems = [
@@ -62,12 +63,6 @@ const orders = [
     total: 'Rp95.000',
     detailHref: '/account/orders/ZTR-260816-0764?state=completed',
   },
-]
-
-const favoriteSeed = [
-  { id: 1, code: '12D', name: 'Mobile Legends · 12 Diamond', type: 'Top Up Via ID', price: 'Rp10.234', href: '/search' },
-  { id: 2, code: 'GAME', name: 'Game Via Login · 500 Coins', type: 'Top Up Via Login', price: 'Rp75.000', href: '/search/login' },
-  { id: 3, code: 'JRSY', name: 'Zetruv Gaming Jersey', type: 'Merchandise', price: 'Rp249.000', href: '/#merch' },
 ]
 
 function AccountShell({ active, children, tall = false }) {
@@ -405,7 +400,9 @@ export function AccountAddressesPage() {
 }
 
 export function AccountFavoritesPage() {
-  const [favorites, setFavorites] = useState(favoriteSeed)
+  const [favorites, setFavorites] = useState(readFavorites)
+
+  useEffect(() => subscribeFavorites(setFavorites), [])
 
   return (
     <AccountShell active="favorites">
@@ -416,7 +413,7 @@ export function AccountFavoritesPage() {
       <div className="favorite-grid">
         {favorites.map((item) => (
           <article className="favorite-card" key={item.id}>
-            <div className="favorite-card__image">{item.code}</div>
+            <div className="favorite-card__image">{item.image ? <img src={item.image} alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : item.code}</div>
             <h2>{item.name}</h2>
             <p>{item.type}</p>
             <strong>{item.price}</strong>
@@ -424,7 +421,7 @@ export function AccountFavoritesPage() {
               <button
                 className="account-btn account-btn--outline"
                 type="button"
-                onClick={() => setFavorites((items) => items.filter((favorite) => favorite.id !== item.id))}
+                onClick={() => setFavorites(setFavorite(item, false))}
               >
                 Hapus Favorit
               </button>
