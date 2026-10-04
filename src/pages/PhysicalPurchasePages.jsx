@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
+import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import { searchAssets } from '../data/searchAssets'
 import jerseyCard from '../assets/physical/jersey-card.webp'
 import jerseyPro from '../assets/physical/jersey-pro.webp'
@@ -203,11 +204,22 @@ export function PhysicalCatalogPage() {
   )
 }
 
+const jerseyGallery = [
+  { src: jerseyMain, alt: 'Zetruv Gaming Jersey — product view', position: 'center center', scale: 1 },
+  { src: jerseyCard, alt: 'Zetruv Gaming Jersey — model preview', position: 'center center', scale: 1 },
+  { src: jerseyMain, alt: 'Zetruv Gaming Jersey — fabric detail', position: 'center 40%', scale: 1.65 },
+  { src: jerseyCard, alt: 'Zetruv Gaming Jersey — jersey detail', position: 'center 30%', scale: 1.55 },
+]
+
 export function PhysicalProductPage() {
   const [color, setColor] = useState('Black')
   const [size, setSize] = useState('')
   const [qty, setQty] = useState(1)
-  const [saved, setSaved] = useState(false)
+  const favoriteId = 'merchandise:zetruv-gaming-jersey'
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  const [activeImage, setActiveImage] = useState(0)
+
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [])
 
   const addToCart = () => {
     if (!size) return
@@ -231,9 +243,21 @@ export function PhysicalProductPage() {
         <div className="physical-pdp__main">
           <section className="physical-gallery">
             <div className="physical-gallery__thumbs">
-              {[0,1,2,3].map((item) => <button className={item === 0 ? 'is-active' : ''} type="button" key={item}><img src={jerseyCard} alt="" /></button>)}
+              {jerseyGallery.map((item, index) => <button
+                className={activeImage === index ? 'is-active' : ''}
+                type="button"
+                key={index}
+                aria-label={item.alt}
+                aria-pressed={activeImage === index}
+                onClick={() => setActiveImage(index)}
+              ><img src={item.src} alt="" style={{ objectPosition: item.position, transform: `scale(${item.scale})` }} /></button>)}
             </div>
-            <div className="physical-gallery__primary"><img src={jerseyMain} alt="Zetruv Gaming Jersey" /></div>
+            <div className="physical-gallery__primary"><img
+              key={activeImage}
+              src={jerseyGallery[activeImage].src}
+              alt={jerseyGallery[activeImage].alt}
+              style={{ objectPosition: jerseyGallery[activeImage].position, transform: `scale(${jerseyGallery[activeImage].scale})` }}
+            /></div>
           </section>
 
           <section className="physical-purchase-panel">
@@ -268,7 +292,21 @@ export function PhysicalProductPage() {
                 <span>{qty}</span>
                 <button type="button" onClick={() => setQty((value) => Math.min(9, value + 1))}>+</button>
               </div>
-              <button className={saved ? 'physical-save is-saved' : 'physical-save'} type="button" onClick={() => setSaved((value) => !value)}><span>{saved ? '♥' : '♡'}</span> Save</button>
+              <button
+                className={saved ? 'physical-save is-saved' : 'physical-save'}
+                type="button"
+                aria-pressed={saved}
+                aria-label={saved ? 'Hapus dari Favorit' : 'Tambahkan ke Favorit'}
+                onClick={() => setSaved(toggleFavorite({
+                  id: favoriteId,
+                  name: 'Zetruv Gaming Jersey',
+                  type: 'Merchandise',
+                  price: rupiah(249000),
+                  href: '/merchandise/zetruv-gaming-jersey',
+                  image: jerseyCard,
+                  code: 'JRSY',
+                }))}
+              ><span>{saved ? '♥' : '♡'}</span> {saved ? 'Tersimpan' : 'Favorit'}</button>
             </div>
 
             <div className="physical-shipping-estimate"><strong>Shipping from Rp18,000 · 2–4 days</strong><span>Final shipping cost is calculated from your address and selected service at checkout.</span></div>
