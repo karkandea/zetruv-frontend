@@ -579,7 +579,7 @@ export function PhysicalCheckoutPage() {
   const [voucherState, setVoucherState] = useState(params.get('voucher') || 'default')
   const [voucherCode, setVoucherCode] = useState(voucherState === 'discount' ? 'SAVE25' : voucherState === 'free-shipping' ? 'FREESHIP' : '')
   const [shippingService, setShippingService] = useState('jne')
-  const item = readPhysicalCart()
+  const item = readPhysicalCart() || defaultCart()
 
   const shippingPrice = voucherState === 'free-shipping' ? 0 : shippingService === 'jnt' ? 20000 : shippingService === 'sicepat' ? 29000 : 18000
   const discount = voucherState === 'discount' ? 25000 : 0
@@ -707,7 +707,7 @@ const PAYMENT_STATES = {
 
 export function PhysicalPaymentPage({ state = 'pending' }) {
   const config = PAYMENT_STATES[state] || PAYMENT_STATES.pending
-  const item = readPhysicalCart()
+  const item = readPhysicalCart() || defaultCart()
   const subtotal = item.price * item.qty
   return (
     <div className="physical-shell">
@@ -772,7 +772,7 @@ function TrackingHistory({ delivered }) {
 
 export function PhysicalOrderTrackingPage({ state = 'shipped' }) {
   const delivered = state === 'delivered'
-  const item = readPhysicalCart()
+  const item = readPhysicalCart() || defaultCart()
   const copyTracking = async () => {
     try { await navigator.clipboard.writeText('JNE240901982173') } catch {}
   }
