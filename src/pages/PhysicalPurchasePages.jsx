@@ -123,11 +123,11 @@ function ProductCard({ product }) {
 }
 
 export function PhysicalCatalogPage() {
-  const [category, setCategory] = useState('Jersey')
+  const [category, setCategory] = useState('All')
   const [sort, setSort] = useState('Sort: Newest')
 
   const visible = useMemo(() => {
-    const rows = category === 'All' || category === 'Jersey' ? PRODUCTS : PRODUCTS.filter((item) => item.category === category)
+    const rows = category === 'All' ? PRODUCTS : PRODUCTS.filter((item) => item.category === category)
     if (sort === 'Sort: Price Low') return [...rows].sort((a, b) => a.price - b.price)
     if (sort === 'Sort: Price High') return [...rows].sort((a, b) => b.price - a.price)
     return rows
@@ -170,7 +170,7 @@ export function PhysicalCatalogPage() {
                 <h1>Merchandise</h1>
                 <p>Jerseys and fan gear for every match day.</p>
               </div>
-              <span>24 products</span>
+              <span>{PRODUCTS.length} products</span>
             </header>
 
             <div className="physical-catalog__toolbar">
@@ -211,7 +211,7 @@ const jerseyGallery = [
   { src: jerseyCard, alt: 'Zetruv Gaming Jersey — jersey detail', position: 'center 30%', scale: 1.55 },
 ]
 
-export function PhysicalProductPage() {
+function JerseyProductPage() {
   const [color, setColor] = useState('Black')
   const [size, setSize] = useState('')
   const [qty, setQty] = useState(1)
@@ -324,6 +324,110 @@ export function PhysicalProductPage() {
   )
 }
 
+
+export function PhysicalProductPage({ slug = 'zetruv-gaming-jersey' }) {
+  if (slug === 'zetruv-gaming-jersey') return <JerseyProductPage />
+  return <PhysicalAccessoryProductPage slug={slug} />
+}
+
+function PhysicalAccessoryProductPage({ slug }) {
+  const product = PRODUCTS.find((item) => item.slug === slug)
+  const [qty, setQty] = useState(1)
+  const [size, setSize] = useState('')
+  const [selectedImage, setSelectedImage] = useState(0)
+  const favoriteId = `merchandise:${slug}`
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
+
+  if (!product) {
+    return <div className="physical-shell"><Navbar /><main className="physical-pdp"><h1>Produk tidak ditemukan</h1><a href="/merchandise">Kembali ke Merchandise</a></main></div>
+  }
+
+  const isJersey = product.category === 'Jersey'
+  const selectedSize = isJersey ? size : 'One Size'
+  const gallery = [
+    { src: product.image, zoom: 1, position: 'center center' },
+    { src: product.image, zoom: 1.6, position: 'center 45%' },
+  ]
+
+  function addToCart() {
+    if (isJersey && !size) return
+    writePhysicalCart({
+      slug: product.slug,
+      name: product.name,
+      category: product.category,
+      color: product.category === 'Keychain' ? 'Navy' : 'Black',
+      size: selectedSize,
+      qty,
+      price: product.price,
+      image: product.image,
+    })
+    window.location.href = '/cart?flow=physical'
+  }
+
+  return <div className="physical-shell">
+    <Navbar />
+    <main className="physical-pdp">
+      <div className="physical-breadcrumb"><a href="/merchandise">Merchandise</a> <span>/</span> {product.category} <span>/</span> {product.name}</div>
+      <div className="physical-pdp__main">
+        <section className="physical-gallery">
+          <div className="physical-gallery__thumbs">
+            {gallery.map((image, index) => <button
+              type="button"
+              key={index}
+              className={index === selectedImage ? 'is-active' : ''}
+              aria-label={`Lihat gambar ${index + 1}`}
+              aria-pressed={selectedImage === index}
+              onClick={() => setSelectedImage(index)}
+            ><img src={image.src} alt="" style={{ transform: `scale(${image.zoom})`, objectPosition: image.position }} /></button>)}
+          </div>
+          <div className="physical-gallery__primary">
+            <img key={selectedImage} src={gallery[selectedImage].src} alt={product.name} style={{ transform: `scale(${gallery[selectedImage].zoom})`, objectPosition: gallery[selectedImage].position }} />
+          </div>
+        </section>
+        <section className="physical-purchase-panel">
+          <div className="physical-purchase-panel__top">
+            <span className="physical-badge">{product.badge}</span>
+            <span className={`physical-stock physical-stock--${product.stockTone}`}>{product.stock}</span>
+          </div>
+          <h1>{product.name}</h1>
+          <div className="physical-rating-line"><strong>★ {product.rating}</strong><span>{product.sold} sold</span></div>
+          <strong className="physical-pdp__price">{rupiah(product.price)}</strong>
+          <hr />
+          <div className="physical-option-heading"><strong>Variant</strong><span>{product.meta}</span></div>
+          {isJersey ? <>
+            <div className="physical-option-heading physical-option-heading--size"><strong>Size · {size || 'Select a size'}</strong></div>
+            <div className="physical-size-options">{['S','M','L','XL','XXL'].map((value) =>
+              <button type="button" key={value} className={size === value ? 'is-active' : ''} onClick={() => setSize(value)}>{value}</button>)}
+            </div>
+          </> : <p className="physical-accessory-description">One size · {product.meta}. Produk fisik dikirim ke alamat yang dipilih pada checkout.</p>}
+          <div className="physical-qty-save">
+            <div className="physical-qty">
+              <button type="button" onClick={() => setQty((v) => Math.max(1, v - 1))}>−</button>
+              <span>{qty}</span>
+              <button type="button" onClick={() => setQty((v) => Math.min(9, v + 1))}>+</button>
+            </div>
+            <button type="button" className={saved ? 'physical-save is-saved' : 'physical-save'}
+              onClick={() => setSaved(toggleFavorite({
+                id: favoriteId, name: product.name, type: 'Merchandise', price: rupiah(product.price),
+                href: `/merchandise/${product.slug}`, image: product.image,
+              }))}>{saved ? '♥ Tersimpan' : '♡ Favorit'}</button>
+          </div>
+          <div className="physical-shipping-estimate"><strong>Shipping calculated at checkout</strong><span>Pilih alamat untuk menampilkan ongkir dan perkiraan pengiriman.</span></div>
+          <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={isJersey && !size}>
+            {isJersey && !size ? 'Select a size' : 'Add to Cart'}
+          </PhysicalButton>
+        </section>
+      </div>
+      <div className="physical-product-info">
+        <section><strong>Description</strong><p>{product.name} · {product.meta}</p></section>
+        <section><strong>Product Details</strong><p>{product.category} · Official Zetruv merchandise.</p></section>
+        <section><strong>Shipping</strong><p>Shipping rates appear at checkout.</p></section>
+      </div>
+    </main>
+  </div>
+}
+
 export function PhysicalCartPage() {
   const [item, setItem] = useState(() => readPhysicalCart() || defaultCart())
   const [authMode, setAuthMode] = useState(null)
@@ -359,11 +463,11 @@ export function PhysicalCartPage() {
               <article className="physical-cart-item">
                 <img src={item.image || jerseyCard} alt="" />
                 <div className="physical-cart-item__copy">
-                  <span className="physical-badge">JERSEY</span>
+                  <span className="physical-badge">{item.category?.toUpperCase() || 'MERCHANDISE'}</span>
                   <h2>{item.name}</h2>
-                  <p>{item.color} · Size {item.size}</p>
+                  <p>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`}</p>
                   <strong className="physical-stock physical-stock--ok">In stock</strong>
-                  <div><a href="/merchandise/zetruv-gaming-jersey">Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY) }}>Remove</button></div>
+                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY) }}>Remove</button></div>
                 </div>
                 <div className="physical-cart-item__price">
                   <strong>{rupiah(item.price)}</strong>
@@ -511,7 +615,7 @@ export function PhysicalCheckoutPage() {
 
           <aside className="physical-checkout-summary">
             <h2>Order Summary</h2>
-            <div className="physical-checkout-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · Size {item.size} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
+            <div className="physical-checkout-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
             <div className="physical-section-heading physical-section-heading--payment"><h3>Payment Method</h3><button type="button">Change</button></div>
             <div className="physical-payment-method"><strong>QRIS</strong><span>Processed by Xendit</span></div>
             <dl className="physical-checkout-prices">
@@ -618,7 +722,7 @@ export function PhysicalPaymentPage({ state = 'pending' }) {
           <section className="physical-payment-summary">
             <h2>Order Summary</h2>
             <div className="physical-payment-order"><span>Order</span><strong>#ZTR-PHY-240901</strong></div>
-            <div className="physical-payment-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · Size {item.size} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
+            <div className="physical-payment-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
             <div className="physical-payment-row"><span>Shipping</span><strong>Rp18.000</strong></div>
             <div className="physical-payment-total"><strong>Total</strong><b>{rupiah(subtotal + 18000)}</b></div>
           </section>
@@ -693,7 +797,7 @@ export function PhysicalOrderTrackingPage({ state = 'shipped' }) {
           <TrackingHistory delivered={delivered} />
           <aside className="physical-order-aside">
             <h2>Order</h2>
-            <div className="physical-order-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · Size {item.size} · Qty {item.qty}</span><b>{rupiah(item.price * item.qty)}</b></div></div>
+            <div className="physical-order-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(item.price * item.qty)}</b></div></div>
             <h3>Shipping Address</h3>
             <div className="physical-order-address"><strong>Home — Arkandea</strong><span>Jl. Contoh No. 12, Jakarta Selatan, DKI Jakarta 12345</span><span>+62 812 3456 7890</span></div>
             <h3>Summary</h3>
