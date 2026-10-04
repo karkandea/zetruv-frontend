@@ -53,7 +53,7 @@ export default function Footer() {
             <a href="/">Homepage</a>
             <a href="#login">Enter</a>
             <a href="#register">Registration</a>
-            <a href="#transaction">Check Transaction</a>
+            <a href="/order-status">Check Transaction</a>
           </div>
 
           <div className="footer__support-payment">
