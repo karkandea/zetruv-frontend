@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { saveGameAccountCart } from '../data/gameAccountCatalog'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogGames, getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { accountPrice, accountProductHref, getAccountAttributes, summarizeAccountAttributes } from '../services/gameAccountPresentation'
@@ -320,6 +321,30 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
   const variant = product?.variants?.find((item) => item.isAvailable) || product?.variants?.[0]
   const price = variant?.effectivePrice ?? variant?.price
   const available = Boolean(product?.isAvailable && variant?.isAvailable)
+  function addAccountToCart() {
+    if (!available || !product || price == null) return
+    const fields = product.accountDetails?.attributes || []
+    const attribute = (name, fallback) => fields.find((item) => item.key === name)?.value ?? fallback
+    saveGameAccountCart({
+      slug: product.slug,
+      title: product.name,
+      price: Number(price),
+      available: true,
+      rank: String(attribute('rank', product.name)),
+      heroes: Number(attribute('heroes', 0)),
+      level: Number(attribute('level', 1)),
+      region: String(attribute('region', 'SEA')),
+      email: String(attribute('email', 'Tersedia saat penyerahan')),
+      warranty: 'Sesuai ketentuan seller',
+      game: {
+        slug: product.game?.slug || gameSlug,
+        name: product.game?.name || product.gameName || gameSlug,
+        publisher: product.game?.publisher || 'Game Account',
+      },
+    })
+    window.location.href = '/cart?flow=account'
+  }
+
   return <div className="ga-shell"><Navbar />
     {loading || error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{loading ? 'Memuat detail akun…' : error || 'Listing tidak ditemukan.'}</StateMessage></main>
       : <main className="ga-detail-page">
@@ -358,7 +383,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
               <span>{accountPrice(price) || 'Harga belum tersedia'}</span>
               <small>{available ? 'Tersedia · 1 akun unik' : 'Tidak tersedia'}</small></div>
             <p className="ga-live-note">Detail dan harga ditampilkan dari katalog. Total akhir serta ketersediaan dikonfirmasi saat checkout.</p>
-            <button type="button" className="ga-primary-cta" disabled>Pembelian akun sedang disiapkan</button>
+            <button type="button" className="ga-primary-cta" disabled={!available} onClick={addAccountToCart}>{available ? "Beli Sekarang" : "Akun tidak tersedia"}</button>
             <a className="ga-live-back" href={product.game?.slug
               ? `/game-accounts/${encodeURIComponent(product.game.slug)}` : '/game-accounts'}>Kembali ke daftar akun</a>
           </aside>
