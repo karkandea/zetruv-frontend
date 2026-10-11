@@ -1,0 +1,275 @@
+/* Top Up via ID — checkout hierarchy, package clarity, and controls. */
+.product-detail-page .product-cta-stack {
+  gap: 10px;
+}
+.product-detail-page .product-cta-stack .pdp-cta {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: normal;
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.product-detail-page .product-cta-stack .pdp-cta svg {
+  flex: 0 0 auto;
+}
+.product-detail-page .product-cta-stack .pdp-cta--secondary:not(:disabled) {
+  border: 1.5px solid #010154;
+  color: #010154;
+  background: #fff;
+}
+.product-detail-page .product-cta-stack .pdp-cta--secondary:not(:disabled):hover {
+  background: #f3f5ff;
+  border-color: #4545a6;
+}
+.product-detail-page .product-cta-stack .pdp-cta--primary:not(:disabled) {
+  border: 1.5px solid #010154;
+  color: #fff;
+  background: #010154;
+}
+.product-detail-page .product-cta-stack .pdp-cta--primary:not(:disabled):hover {
+  background: #13136a;
+  box-shadow: 0 5px 16px rgba(1,1,84,.16);
+}
+.product-detail-page .product-cta-stack .pdp-cta:focus-visible,
+.product-detail-page .quantity-stepper button:focus-visible,
+.product-detail-page .selected-item-box__heading a:focus-visible {
+  outline: 2px solid #506ff4;
+  outline-offset: 3px;
+}
+.product-detail-page .product-cta-stack .pdp-cta:disabled {
+  cursor: not-allowed;
+  color: #9296a5;
+  border-color: #e2e4eb;
+  background: #f3f4f7;
+}
+.product-detail-page .selected-item-box {
+  padding: 14px;
+  border-color: #dfe3ef;
+  background: #f9fafd;
+}
+.product-detail-page .selected-item-box__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.product-detail-page .selected-item-box__heading > span {
+  color: #687084;
+  font-size: 11px;
+  font-weight: 600;
+}
+.product-detail-page .selected-item-box__heading a {
+  color: #303f9d;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.product-detail-page .selected-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.product-detail-page .selected-item-row .selected-item-row__details {
+  min-width: 0;
+  flex: 1 1 130px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+}
+.product-detail-page .selected-item-row__art {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #eef1fc;
+}
+.product-detail-page .selected-item-row__art > img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+.product-detail-page .selected-item-row__art > .sku-art__placeholder {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-detail-page .selected-item-row .selected-item-row__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.product-detail-page .selected-item-row__copy strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 650;
+}
+.product-detail-page .selected-item-row__copy > span {
+  color: #697083;
+  font-size: 11px;
+  line-height: 16px;
+}
+.product-detail-page .quantity-stepper {
+  flex: 0 0 auto;
+  display: grid;
+  width: 112px;
+  height: 38px;
+  grid-template-columns: 34px minmax(28px, 1fr) 34px;
+  align-items: center;
+  gap: 0;
+  padding: 0 2px;
+  border: 1px solid #cbd1e0;
+  border-radius: 11px;
+  background: #fff;
+}
+.product-detail-page .quantity-stepper button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 36px;
+  padding: 0;
+  border-radius: 9px;
+  color: #111335;
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.product-detail-page .quantity-stepper button svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+.product-detail-page .quantity-stepper button:not(:disabled):hover {
+  background: #ecf0ff;
+}
+.product-detail-page .quantity-stepper button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+.product-detail-page .quantity-stepper output {
+  display: block;
+  min-width: 0;
+  color: #010154;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 650;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.product-detail-page .selected-item-box__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 12px;
+  padding: 9px 0;
+  border-top: 1px solid #e7eaf1;
+  color: #4e5468;
+  font-size: 11px;
+  line-height: 17px;
+}
+.product-detail-page .selected-item-box__meta strong {
+  color: #010154;
+  font-weight: 650;
+}
+.product-detail-page .selected-item-box__meta small {
+  color: #697083;
+  font-size: 10px;
+}
+.product-detail-page .selected-item-box > .selected-item-box__account {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+.product-detail-page .sku-card:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.product-detail-page .sku-card:focus-visible {
+  outline: 2px solid #506ff4;
+  outline-offset: 3px;
+}
+
+/* Gentle icon motion is intentionally subtle and respects reduced-motion.
+   Use Lucide icons already installed in this project as a stable fallback
+   rather than relying on temporary Figma asset URLs. */
+.product-detail-page .product-benefits > span {
+  overflow: hidden;
+}
+.product-detail-page .pdp-benefit-icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  transform-origin: center;
+}
+.product-detail-page .pdp-benefit-icon--fast {
+  animation: pdp-benefit-pulse 2.6s ease-in-out infinite;
+}
+.product-detail-page .pdp-benefit-icon--support {
+  animation: pdp-benefit-tilt 3.2s ease-in-out infinite;
+}
+.product-detail-page .pdp-benefit-icon--globe {
+  animation: pdp-benefit-globe 5s ease-in-out infinite;
+}
+@keyframes pdp-benefit-pulse {
+  0%, 82%, 100% { transform: scale(1); opacity: 1; }
+  88% { transform: scale(1.2); opacity: .8; }
+  94% { transform: scale(.96); opacity: 1; }
+}
+@keyframes pdp-benefit-tilt {
+  0%, 78%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(-12deg); }
+  91% { transform: rotate(12deg); }
+}
+@keyframes pdp-benefit-globe {
+  0%, 75%, 100% { transform: rotate(0deg); }
+  88% { transform: rotate(24deg); }
+}
+
+@media (max-width: 700px) {
+  .product-detail-page .product-cta-stack {
+    gap: 9px;
+  }
+  .product-detail-page .product-cta-stack .pdp-cta {
+    min-height: 48px;
+    font-size: 12px;
+  }
+  .product-detail-page .selected-item-row .selected-item-row__details {
+    flex-basis: 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-detail-page .pdp-benefit-icon {
+    animation: none;
+  }
+  .product-detail-page .product-cta-stack .pdp-cta,
+  .product-detail-page .quantity-stepper button {
+    transition: none;
+  }
+}
