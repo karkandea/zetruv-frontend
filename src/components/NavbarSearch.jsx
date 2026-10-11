@@ -218,8 +218,17 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
       method="get"
       autoComplete="off"
       onSubmit={navigateToSearch}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          inputRef.current?.focus()
+          setIsOpen(true)
+        }
+      }}
     >
-      <img src={assets.search} alt="" onClick={() => inputRef.current?.focus()} />
+      <img src={assets.search} alt="" onClick={() => {
+        inputRef.current?.focus()
+        setIsOpen(true)
+      }} />
       <input
         ref={inputRef}
         type="search"
@@ -231,6 +240,7 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
           setIsOpen(true)
         }}
         onFocus={() => setIsOpen(true)}
+        onClick={() => setIsOpen(true)}
         onKeyDown={handleInputKey}
         placeholder={placeholder}
         aria-label="Search games, vouchers, or products"
