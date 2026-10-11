@@ -11,6 +11,7 @@ import './styles/game-account-public.css'
 import './styles/auth-modal.css'
 import './styles/commerce.css'
 import './styles/via-login-flow.css'
+import './styles/homepage-slider.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
