@@ -136,7 +136,7 @@ function productHref(product) {
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
   if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
   if (product.kind === 'Joki') return `/product/joki/${product.slug}`
-  if (product.kind === 'GameAccount') return product.slug === 'dota-2' ? '/game-accounts/dota-2' : '/game-accounts'
+  if (product.kind === 'GameAccount') return product.gameSlug ? `/game-accounts/${encodeURIComponent(product.gameSlug)}/${encodeURIComponent(product.slug)}` : '/game-accounts'
   if (product.kind === 'Merchandise') return `/merchandise/${encodeURIComponent(product.slug)}`
   return undefined
 }
@@ -213,6 +213,10 @@ export default function SearchPage({ mode = 'player-id' }) {
   const [query, setQuery] = useState(rawInitialQuery)
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery)
   const [activeKind, setActiveKind] = useState(() => initialKind(mode))
+  // /search?q=... is an all-category search, whereas ?kind=... is a category filter.
+  const [globalResults, setGlobalResults] = useState(() =>
+    !isLoginMode && initialQuery.length >= 3 &&
+    !new URLSearchParams(window.location.search).has('kind'))
   const [activeLetter, setActiveLetter] = useState('M')
   const [letterFiltering, setLetterFiltering] = useState(false)
   const [categories, setCategories] = useState([])
@@ -249,13 +253,13 @@ export default function SearchPage({ mode = 'player-id' }) {
       const url = new URL(window.location.href)
       if (next) url.searchParams.set('q', next)
       else url.searchParams.delete('q')
-      if (activeKind === 'TopUpGame') url.searchParams.delete('kind')
+      if (globalResults || (activeKind === 'TopUpGame' && !next)) url.searchParams.delete('kind')
       else url.searchParams.set('kind', activeKind)
       window.history.replaceState({}, '', `${url.pathname}${url.search}`)
     }, 350)
 
     return () => window.clearTimeout(timer)
-  }, [query, activeKind])
+  }, [query, activeKind, globalResults])
 
   useEffect(() => {
     let cancelled = false
@@ -265,7 +269,7 @@ export default function SearchPage({ mode = 'player-id' }) {
       setCatalogError('')
 
       try {
-        const result = await getCatalogProducts({ kind: activeKind, search: submittedQuery, pageSize: 50 })
+        const result = await getCatalogProducts({ kind: globalResults ? undefined : activeKind, search: submittedQuery, pageSize: 50 })
         if (!cancelled) setProducts(result.items || [])
       } catch (error) {
         if (!cancelled) {
@@ -279,7 +283,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
     loadProducts()
     return () => { cancelled = true }
-  }, [activeKind, submittedQuery])
+  }, [activeKind, submittedQuery, globalResults])
 
   const categoryDefinitions = useMemo(() => CATEGORY_ORDER.map((kind) => {
     const presentation = CATEGORY_PRESENTATION[kind]
@@ -295,8 +299,13 @@ export default function SearchPage({ mode = 'player-id' }) {
   }), [categories, isLoginMode])
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
-  const categoryLabel = activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
-  const fallbackRows = useMemo(() => filterFallbackProducts(activeKind, submittedQuery), [activeKind, submittedQuery])
+  const categoryLabel = globalResults ? 'All categories' : activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
+  // Never silently substitute preview products for an actual search request.
+  const fallbackRows = useMemo(
+    () => globalResults || submittedQuery.trim().length >= 3
+      ? [] : filterFallbackProducts(activeKind, submittedQuery),
+    [activeKind, submittedQuery, globalResults],
+  )
   const sourceProducts = products.length ? products : fallbackRows
   const effectiveLetter = letterFiltering ? activeLetter : ''
   const filteredProducts = useMemo(() => filterByLetter(sourceProducts, effectiveLetter), [sourceProducts, effectiveLetter])
@@ -339,11 +348,12 @@ export default function SearchPage({ mode = 'player-id' }) {
     }
 
     setActiveKind(category.kind)
+    setGlobalResults(false)
     setLetterFiltering(false)
     setCatalogError('')
     const url = new URL(window.location.href)
     url.pathname = '/search'
-    if (category.kind === 'TopUpGame') url.searchParams.delete('kind')
+    if (category.kind === 'TopUpGame' && query.trim().length < 3) url.searchParams.delete('kind')
     else url.searchParams.set('kind', category.kind)
     if (query.trim().length < 3) url.searchParams.delete('q')
     window.history.pushState({}, '', `${url.pathname}${url.search}`)
@@ -374,8 +384,10 @@ export default function SearchPage({ mode = 'player-id' }) {
           {!isLoginMode && (
             <>
               <p className="search-breadcrumb"><a href="/">Home</a> / Categories</p>
-              <h1>Browse Categories</h1>
-              <p className="search-page__intro">Find the game, top-up method, or product you’re looking for.</p>
+              <h1>{globalResults ? 'Search results' : 'Browse Categories'}</h1>
+              <p className="search-page__intro">{globalResults
+                ? `Results for “${submittedQuery}” across all categories.`
+                : 'Find the game, top-up method, or product you’re looking for.'}</p>
             </>
           )}
 
@@ -387,12 +399,12 @@ export default function SearchPage({ mode = 'player-id' }) {
                   <button
                     type="button"
                     key={category.kind}
-                    className={`search-category${activeKind === category.kind ? ' active' : ''}`}
+                    className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
                     onClick={() => handleCategory(category)}
                   >
                     <span className="search-category__icon"><img src={category.icon} alt="" /></span>
                     <span>{category.label}</span>
-                    {activeKind === category.kind && <i aria-hidden="true" />}
+                    {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
                   </button>
                 ))}
               </div>
