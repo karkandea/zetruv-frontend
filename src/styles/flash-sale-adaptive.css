@@ -1,0 +1,139 @@
+/* Responsive Flash Sale card distribution.
+   Import after homepage-final.css to override legacy breakpoint hiding rules. */
+.site-shell--homepage-final .flash-carousel--adaptive {
+  position: relative;
+  width: 100%;
+  height: 197px;
+}
+
+.site-shell--homepage-final .flash-carousel__viewport {
+  width: 100%;
+  height: 197px;
+  overflow: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+}
+
+.site-shell--homepage-final .flash-carousel__track {
+  width: 100%;
+  height: 197px;
+  display: flex;
+  transition: transform 460ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+}
+
+.site-shell--homepage-final .flash-carousel--adaptive .flash-grid--adaptive {
+  width: 100%;
+  min-width: 100%;
+  height: 197px;
+  flex: 0 0 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 16px;
+}
+
+.site-shell--homepage-final .flash-carousel--adaptive .flash-grid--adaptive .sale-item {
+  display: block;
+  min-width: 0;
+  width: calc((100% - 32px) / 3);
+  max-width: calc((100% - 32px) / 3);
+  flex: 0 0 calc((100% - 32px) / 3);
+}
+
+/* Preserve existing image, card, radius, background and countdown. */
+.site-shell--homepage-final .flash-carousel--adaptive .sale-item__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-shell--homepage-final .flash-carousel__dots {
+  gap: 9px;
+}
+
+.site-shell--homepage-final .flash-carousel__dots .flash-carousel__dot {
+  width: 8px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(6, 5, 82, .22);
+  cursor: pointer;
+  transition: width 200ms ease, background-color 200ms ease;
+}
+
+.site-shell--homepage-final .flash-carousel__dots .flash-carousel__dot.is-active {
+  width: 22px;
+  background: #060552;
+}
+
+.site-shell--homepage-final .flash-carousel--adaptive .carousel-arrow {
+  padding: 0;
+  border: 0;
+}
+
+.site-shell--homepage-final .flash-carousel--adaptive .carousel-arrow:focus-visible,
+.site-shell--homepage-final .flash-carousel__dots .flash-carousel__dot:focus-visible {
+  outline: 2px solid #060552;
+  outline-offset: 3px;
+}
+
+.flash-carousel__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 701px) and (max-width: 980px) {
+  .site-shell--homepage-final .flash-carousel--adaptive .flash-grid--adaptive .sale-item {
+    width: calc((100% - 16px) / 2);
+    max-width: calc((100% - 16px) / 2);
+    flex-basis: calc((100% - 16px) / 2);
+  }
+}
+
+@media (max-width: 700px) {
+  .site-shell--homepage-final .flash-carousel--adaptive .flash-grid--adaptive .sale-item {
+    width: 100%;
+    max-width: 100%;
+    flex-basis: 100%;
+  }
+
+  .site-shell--homepage-final .flash-carousel--adaptive .sale-item__body {
+    padding: 12px 14px;
+  }
+
+  .site-shell--homepage-final .flash-carousel--adaptive .sale-item__info h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-shell--homepage-final .flash-carousel--adaptive .carousel-arrow {
+    top: 75px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .site-shell--homepage-final .flash-carousel--adaptive .carousel-arrow--left {
+    left: -12px;
+  }
+
+  .site-shell--homepage-final .flash-carousel--adaptive .carousel-arrow--right {
+    right: -12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-shell--homepage-final .flash-carousel__track,
+  .site-shell--homepage-final .flash-carousel__dots .flash-carousel__dot {
+    transition: none;
+  }
+}
