@@ -14,6 +14,7 @@ export async function getCatalogProducts({
   search = '',
   page = 1,
   pageSize = 50,
+  signal,
 } = {}) {
   const params = new URLSearchParams()
 
@@ -23,7 +24,7 @@ export async function getCatalogProducts({
   params.set('page', String(page))
   params.set('pageSize', String(pageSize))
 
-  return apiRequest(`/catalog/products?${params.toString()}`)
+  return apiRequest(`/catalog/products?${params.toString()}`, { signal })
 }
 
 export async function getCatalogProduct(slug) {

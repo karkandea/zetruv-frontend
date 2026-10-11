@@ -13,6 +13,7 @@ import './styles/commerce.css'
 import './styles/via-login-flow.css'
 import './styles/homepage-slider.css'
 import './styles/flash-sale-adaptive.css'
+import './styles/navbar-search-dropdown.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
