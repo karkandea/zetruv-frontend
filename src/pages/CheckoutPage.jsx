@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
 import { readCart } from '../services/cartService'
+import { getDigitalPricing } from '../services/digitalCartPricing'
+import { accountRequirements, getCartItemProblem } from '../services/digitalCartValidation'
+import { getCatalogProduct } from '../services/catalogService'
 import { checkoutAssets } from '../data/checkoutAssets'
 import '../styles/digital-commerce.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
-const SERVICE_FEE = 2000
 
 const paymentMethods = [
   ['QRIS', 'Scan QR untuk bayar', checkoutAssets.qris],
@@ -45,10 +47,13 @@ export default function CheckoutPage() {
   const [credentials, setCredentials] = useState(() => Object.fromEntries(items.filter(needsCredential).map((item) => [item.cartKey, { username: '', password: '', sameAsPrevious: false }])))
   const [showPassword, setShowPassword] = useState({})
   const [error, setError] = useState('')
+  const [validatingCart, setValidatingCart] = useState(false)
 
-  const subtotal = items.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.quantity || 1), 0)
-  const discount = voucherApplied ? Math.min(25000, subtotal) : 0
-  const total = subtotal + (items.length ? SERVICE_FEE : 0) - discount
+  const basePricing = getDigitalPricing(items)
+  const subtotal = basePricing.subtotal
+  const voucherDiscount = voucherApplied ? Math.min(25000, basePricing.total) : 0
+  const discount = basePricing.discount + voucherDiscount
+  const total = Math.max(0, basePricing.total - voucherDiscount)
 
   const credentialItems = items.filter(needsCredential)
 
@@ -74,7 +79,7 @@ export default function CheckoutPage() {
     setVoucherApplied(voucher.trim().toUpperCase() === 'SAVE25')
   }
 
-  function pay() {
+  async function pay() {
     if (!authenticated) {
       setAuthMode('login')
       return
@@ -82,6 +87,27 @@ export default function CheckoutPage() {
     if (!items.length) {
       setError('Keranjang digital masih kosong.')
       return
+    }
+    setValidatingCart(true)
+    try {
+      // Checkout can be opened directly, so repeat the cart's server-schema
+      // validation before constructing the payment preview.
+      const slugs = [...new Set(items.filter(item => item.fulfillmentMethod === 'AUTO_ID').map(item => item.productSlug))]
+      const schemas = Object.fromEntries(await Promise.all(slugs.map(async (slug) => {
+        const product = await getCatalogProduct(slug)
+        if (product.kind !== 'TopUpGame' || product.slug !== slug) throw new Error('Produk akun tujuan tidak sesuai katalog.')
+        return [slug, accountRequirements(product)]
+      })))
+      const invalid = items.find(item => getCartItemProblem(item, schemas))
+      if (invalid) {
+        setError(`Periksa keranjang: ${getCartItemProblem(invalid, schemas)}`)
+        return
+      }
+    } catch {
+      setError('Data akun tujuan belum dapat diverifikasi. Coba lagi dari halaman Keranjang.')
+      return
+    } finally {
+      setValidatingCart(false)
     }
     const incomplete = credentialItems.find((item) => !credentials[item.cartKey]?.username.trim() || !credentials[item.cartKey]?.password.trim())
     if (incomplete) {
@@ -101,7 +127,7 @@ export default function CheckoutPage() {
       invoice,
       items: enrichedItems,
       subtotal,
-      serviceFee: SERVICE_FEE,
+      serviceFee: basePricing.serviceFee,
       discount,
       total,
       paymentMethod,
@@ -195,13 +221,14 @@ export default function CheckoutPage() {
 
             <div className="digital-checkout-prices">
               <div><span>Subtotal</span><strong>{rupiah(subtotal)}</strong></div>
-              <div><span>Biaya layanan</span><strong>{rupiah(items.length ? SERVICE_FEE : 0)}</strong></div>
-              {discount > 0 && <div className="is-discount"><span>Voucher</span><strong>-{rupiah(discount)}</strong></div>}
+              <div><span>Biaya layanan</span><strong>{rupiah(basePricing.serviceFee)}</strong></div>
+              {basePricing.discount > 0 && <div className="is-discount"><span>Diskon produk</span><strong>-{rupiah(basePricing.discount)}</strong></div>}
+              {voucherDiscount > 0 && <div className="is-discount"><span>Voucher</span><strong>-{rupiah(voucherDiscount)}</strong></div>}
             </div>
             <hr />
             <div className="digital-checkout-total"><span>Total</span><strong>{rupiah(total)}</strong></div>
             {error && <p className="digital-checkout-error">{error}</p>}
-            <button className="digital-pay-button" type="button" disabled={!items.length} onClick={pay}>{authenticated ? 'Bayar Sekarang' : 'Masuk untuk Bayar'}</button>
+            <button className="digital-pay-button" type="button" disabled={!items.length || validatingCart} onClick={pay}>{authenticated ? 'Bayar Sekarang' : 'Masuk untuk Bayar'}</button>
           </aside>
         </div>
       </main>
