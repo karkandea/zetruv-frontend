@@ -43,9 +43,10 @@ test('quantity cannot fall below one and Undo restores removed item', () => {
   const original=readCart()[0]
   updateCartQuantity(original.cartKey,0)
   assert.equal(readCart()[0].quantity,1)
+  const removedSnapshot = readCart()[0]
   removeCartItem(original.cartKey)
   assert.equal(readCart().length,1)
-  restoreCartItem(original,0)
+  restoreCartItem(removedSnapshot,0)
   assert.equal(readCart().length,2)
   assert.equal(readCart()[0].quantity,1)
 })
