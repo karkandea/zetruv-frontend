@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import ProductBenefits from '../components/ProductBenefits'
 import { productDetailLoginAssets as media } from '../data/productDetailLoginAssets'
 import { getCatalogProduct } from '../services/catalogService'
 import { addCartItem } from '../services/cartService'
@@ -74,7 +75,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
       <div className="login-product-hero__shade" />
       <div className="login-product-container login-product-hero__content">
         <div className="login-product-cover"><img src={media.gameCover} alt="Genshin Impact" /></div>
-        <div className="login-product-hero__copy"><div className="login-product-title-block"><h1>Genshin Impact</h1><div className="login-product-rating-line"><strong>HoYoverse</strong><span className="login-product-rating-group"><b>4,6</b><HeroStars/><em>(2rb)</em></span></div></div><div className="login-product-benefits"><span>⚡ Proses Cepat</span><span>▣ Dukungan Chat 24/7</span><span>◎ Global Region</span></div></div>
+        <div className="login-product-hero__copy"><div className="login-product-title-block"><h1>Genshin Impact</h1><div className="login-product-rating-line"><strong>HoYoverse</strong><span className="login-product-rating-group"><b>4,6</b><HeroStars/><em>(2rb)</em></span></div></div><ProductBenefits className="login-product-benefits" /></div>
       </div>
     </section>
     <div className="login-product-body"><div className="login-product-container login-product-layout">

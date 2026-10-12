@@ -1,0 +1,59 @@
+/* Exact Figma GIF icons, presented in the original benefit-chip slots. */
+.product-detail-page .product-benefits > span,
+.login-product-page .login-product-benefits > span {
+  overflow: hidden;
+  align-items: center;
+}
+
+.product-detail-page .product-benefits .pdp-benefit-gif-slot,
+.login-product-page .login-product-benefits .pdp-benefit-gif-slot {
+  display: inline-flex;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.product-detail-page .product-benefits .pdp-benefit-gif,
+.login-product-page .login-product-benefits .pdp-benefit-gif {
+  display: block;
+  width: 16px;
+  height: 16px;
+  max-width: none;
+  flex: 0 0 auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.product-detail-page .product-benefits .pdp-benefit-gif-slot--fast .pdp-benefit-gif,
+.login-product-page .login-product-benefits .pdp-benefit-gif-slot--fast .pdp-benefit-gif {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+}
+
+.product-detail-page .product-benefits .pdp-benefit-motion-fallback,
+.login-product-page .login-product-benefits .pdp-benefit-motion-fallback {
+  display: none;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* GIF frames cannot be paused reliably with CSS. Respect reduced-motion
+   by hiding the GIF and displaying a static existing system icon. */
+@media (prefers-reduced-motion: reduce) {
+  .product-detail-page .product-benefits .pdp-benefit-gif-slot,
+  .login-product-page .login-product-benefits .pdp-benefit-gif-slot {
+    display: none;
+  }
+
+  .product-detail-page .product-benefits .pdp-benefit-motion-fallback,
+  .login-product-page .login-product-benefits .pdp-benefit-motion-fallback {
+    display: inline-block;
+  }
+}

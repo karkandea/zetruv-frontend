@@ -215,42 +215,6 @@
   outline-offset: 3px;
 }
 
-/* Gentle icon motion is intentionally subtle and respects reduced-motion.
-   Use Lucide icons already installed in this project as a stable fallback
-   rather than relying on temporary Figma asset URLs. */
-.product-detail-page .product-benefits > span {
-  overflow: hidden;
-}
-.product-detail-page .pdp-benefit-icon {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-  transform-origin: center;
-}
-.product-detail-page .pdp-benefit-icon--fast {
-  animation: pdp-benefit-pulse 2.6s ease-in-out infinite;
-}
-.product-detail-page .pdp-benefit-icon--support {
-  animation: pdp-benefit-tilt 3.2s ease-in-out infinite;
-}
-.product-detail-page .pdp-benefit-icon--globe {
-  animation: pdp-benefit-globe 5s ease-in-out infinite;
-}
-@keyframes pdp-benefit-pulse {
-  0%, 82%, 100% { transform: scale(1); opacity: 1; }
-  88% { transform: scale(1.2); opacity: .8; }
-  94% { transform: scale(.96); opacity: 1; }
-}
-@keyframes pdp-benefit-tilt {
-  0%, 78%, 100% { transform: rotate(0deg); }
-  84% { transform: rotate(-12deg); }
-  91% { transform: rotate(12deg); }
-}
-@keyframes pdp-benefit-globe {
-  0%, 75%, 100% { transform: rotate(0deg); }
-  88% { transform: rotate(24deg); }
-}
-
 @media (max-width: 700px) {
   .product-detail-page .product-cta-stack {
     gap: 9px;
@@ -265,9 +229,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .product-detail-page .pdp-benefit-icon {
-    animation: none;
-  }
   .product-detail-page .product-cta-stack .pdp-cta,
   .product-detail-page .quantity-stepper button {
     transition: none;

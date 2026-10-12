@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Flame, Gem, Globe2, Headphones, Minus, Plus, ShoppingCart, Star, UserRound, Zap } from 'lucide-react'
+import { ArrowRight, Flame, Gem, Minus, Plus, ShoppingCart, Star, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import ProductBenefits from '../components/ProductBenefits'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
@@ -120,11 +121,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
             <div className="product-hero__copy">
               <h1>{productName}</h1>
               <div className="product-rating-line"><strong>{product.game?.publisher || 'Game'}</strong><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></div>
-              <div className="product-benefits" aria-label="Keunggulan layanan">
-                <span><Zap className="pdp-benefit-icon pdp-benefit-icon--fast" size={16} strokeWidth={2} aria-hidden="true" />Proses Cepat</span>
-                <span><Headphones className="pdp-benefit-icon pdp-benefit-icon--support" size={16} strokeWidth={2} aria-hidden="true" />Dukungan Chat 24/7</span>
-                <span><Globe2 className="pdp-benefit-icon pdp-benefit-icon--globe" size={16} strokeWidth={2} aria-hidden="true" />Global Region</span>
-              </div>
+              <ProductBenefits />
             </div>
           </div>
         </section>
