@@ -241,7 +241,6 @@ export default function CheckoutPage() {
   const [processing,setProcessing]=useState(false)
   const [pendingAttempt,setPendingAttempt]=useState(()=>readCheckoutAttempt())
   const [authPurpose,setAuthPurpose]=useState('pay')
-  const [recoveryNotFound,setRecoveryNotFound]=useState(false)
   const attempt=useRef(null)
   const processingRef=useRef(false)
 
@@ -516,7 +515,7 @@ export default function CheckoutPage() {
   const recoverInterruptedOrder=async(token)=>{
     const saved=readCheckoutAttempt()
     if(!saved){setPendingAttempt(null);return}
-    setProcessing(true);setError('');setRecoveryNotFound(false)
+    setProcessing(true);setError('')
     try{
       const existing=await recoverVerifiedCheckoutOrder(token,saved.key)
       storePaymentContext(existing,saved.methodCode)
@@ -524,8 +523,7 @@ export default function CheckoutPage() {
       window.location.assign('/payment')
     }catch(e){
       if(e.status===404){
-        setRecoveryNotFound(true)
-        setError('Order belum ditemukan. Pastikan akun Zetruv sama dan coba pulihkan lagi sebelum membuat pesanan baru.')
+        setError('Order belum ditemukan atau masih diproses. Pastikan akun Zetruv sama, lalu coba pulihkan lagi. Jangan mulai checkout baru; hubungi support jika status tetap tidak pasti.')
       }else setError('Belum bisa memastikan order lama. Jangan membuat pembayaran baru; coba pulihkan lagi.')
     }finally{setProcessing(false)}
   }
@@ -553,11 +551,7 @@ export default function CheckoutPage() {
             if(customer?.accessToken)recoverInterruptedOrder(customer.accessToken)
             else {setAuthPurpose('recover');setAuthDialog(true)}
           }}>{processing?'Memeriksa...':'Pulihkan order sebelumnya'}</button>
-          {recoveryNotFound && <button type="button" disabled={processing} onClick={()=>{
-            if(window.confirm('Pastikan tidak ada order lama yang berhasil dibuat. Lanjutkan membuat pesanan baru?')){
-              clearCheckoutAttempt();setPendingAttempt(null);setRecoveryNotFound(false);setError('')
-            }
-          }}>Batalkan percobaan lama</button>}
+          <a href="/order-status">Cek pesanan / hubungi support</a>
         </div></section>}
       <div className="digital-checkout-layout">
         <section className="digital-checkout-order">
