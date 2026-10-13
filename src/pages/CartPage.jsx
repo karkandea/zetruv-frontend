@@ -8,6 +8,7 @@ import {
 } from '../services/cartService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
 import { accountRequirements, checkCartDestination, getCartItemProblem } from '../services/digitalCartValidation'
 import '../styles/digital-commerce.css'
 import '../styles/digital-cart-improvements.css'
@@ -112,6 +113,7 @@ export default function CartPage() {
   const [requirements, setRequirements] = useState({})
   const [catalogErrors, setCatalogErrors] = useState({})
   const [catalogProducts, setCatalogProducts] = useState({})
+  const [serviceReadiness, setServiceReadiness] = useState({})
   const [editingKey, setEditingKey] = useState(null)
   const [removed, setRemoved] = useState(null)
   const [status, setStatus] = useState('')
@@ -131,6 +133,10 @@ export default function CartPage() {
       try {
         const product = await getCatalogProduct(slug)
         if (product.slug !== slug) throw new Error('Produk tidak sesuai.')
+        if (product.fulfillmentMethod === 'MANUAL_LOGIN') {
+          const readiness = await getManualLoginReadiness(product.id).catch(() => null)
+          if (active) setServiceReadiness(prev => ({...prev,[slug]:readiness}))
+        }
         if (active) {
           setCatalogProducts((prev) => ({...prev,[slug]:product}))
           setRequirements((prev) => ({ ...prev, [slug]: accountRequirements(product) }))
@@ -152,7 +158,7 @@ export default function CartPage() {
   const problems = items.map(item => ({
     key: item.cartKey,
     message: item.fulfillmentMethod === 'MANUAL_LOGIN' &&
-      !viaLoginServiceStatus(catalogProducts[item.productSlug],item).available
+      !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
         ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
@@ -224,7 +230,7 @@ export default function CartPage() {
                   const lineTotal = Number(item.unitPrice || 0) * qty
                   const allowsQuantity = supportsCartQuantity(item)
                   const loginUnavailable = item.fulfillmentMethod==='MANUAL_LOGIN' &&
-                    !viaLoginServiceStatus(catalogProducts[item.productSlug],item).available
+                    !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
                   const issue = loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
                     : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'

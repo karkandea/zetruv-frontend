@@ -14,12 +14,14 @@ import {
 } from '../services/checkoutGatewayService'
 import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
 import '../styles/digital-checkout-polish.css'
+import '../styles/digital-account-verification.css'
 
 const rupiah = (v = 0) => `Rp${new Intl.NumberFormat('id-ID').format(Number(v) || 0)}`
-const supportsCredentialCollection = import.meta.env.VITE_GAME_CREDENTIAL_COLLECTION_APPROVED === 'true'
+// Backend readiness is authoritative; no independent storefront permission flag.
 const paymentDisplay = [
   {code: 'QRIS', name:'QRIS', description:'Bayar dengan scan QR', icon:checkoutAssets.qris},
   {code: 'BCA_VA', name:'Virtual Account', description:'Transfer bank', icon:checkoutAssets.virtualAccount},
@@ -64,6 +66,7 @@ const renderLoginField = (field, value, onChange, visible, toggle, disabled, err
 function CheckoutProduct({
   item, product, values, onValue, sharingWith, onShare, options, onIdSave, priceProblem,
   productProblem, showErrors, credentialAllowed, serviceStatus, onRemove,
+  idValidation, onVerifyId, verifyingId,
 }) {
   const [edit, setEdit] = useState(false)
   const [idValues, setIdValues] = useState({userId:item.accountFields?.userId || '',zone:item.accountFields?.zone || ''})
@@ -114,9 +117,20 @@ function CheckoutProduct({
               <button type="button" className="checkout-product__save" disabled={Boolean(validation)}
                 onClick={()=>{onIdSave(item,idValues,fields);setEdit(false)}}>Simpan Data Akun</button>
             </div>
-          ) : (
+          ) : (<>
             <p>{fields.map(f=>`${f.label}: ${item.accountFields?.[f.slot] || '—'}`).join(' · ')}</p>
-          )}
+            {product?.requiresGameAccountValidation && (
+              <div className="checkout-product__verify">
+                {idValidation?.validationId && Date.parse(idValidation.expiresAt)>Date.now()
+                  ? <span className="checkout-product__verified"><CheckCircle2 size={15}/> Akun tujuan terverifikasi</span>
+                  : <button type="button" disabled={verifyingId || !product}
+                      onClick={()=>onVerifyId(item,fields)}>
+                      {verifyingId ? <LoaderCircle className="checkout-spinner" size={15}/> : <CheckCircle2 size={15}/>}
+                      {verifyingId ? 'Memeriksa akun...' : 'Verifikasi akun tujuan'}
+                    </button>}
+              </div>
+            )}
+          </>)}
         </div>
       )}
 
@@ -200,6 +214,9 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
 export default function CheckoutPage() {
   const [items,setItems]=useState(readCart)
   const [catalog,setCatalog]=useState({})
+  const [serviceReadiness,setServiceReadiness]=useState({})
+  const [idValidations,setIdValidations]=useState({})
+  const [verifyingId,setVerifyingId]=useState(null)
   const [catalogState,setCatalogState]=useState('loading')
   const [readiness,setReadiness]=useState(null)
   const [methodsState,setMethodsState]=useState('loading')
@@ -225,6 +242,7 @@ export default function CheckoutPage() {
 
   useEffect(()=>onCartChange(newItems=>{
     setItems(newItems)
+    setIdValidations({})
     attempt.current=null
     setVoucher(null)
     setVoucherState('idle')
@@ -239,6 +257,9 @@ export default function CheckoutPage() {
     try{
       const rows=await Promise.all(slugs.split('|').map(async slug=>[slug,await getCatalogProduct(slug)]))
       const obj=Object.fromEntries(rows)
+      const readyEntries=await Promise.all(rows.filter(([,product])=>product.fulfillmentMethod==='MANUAL_LOGIN')
+        .map(async ([slug,product])=>[slug,await getManualLoginReadiness(product.id).catch(()=>null)]))
+      setServiceReadiness(Object.fromEntries(readyEntries))
       setCatalog(obj);setCatalogState('ready');return obj
     }catch{setCatalogState('error');return null}
   },[slugs])
@@ -259,12 +280,14 @@ export default function CheckoutPage() {
   const {changes,problems}=useMemo(()=>currentCatalogDifferences(items,catalog),[items,catalog])
   const linePricing=useMemo(()=>getDigitalPricing(items),[items])
   const voucherDiscount=Number(voucher?.discountAmount || 0)
-  const total=Math.max(0,linePricing.total-voucherDiscount)
+  const selectedPaymentOption=readiness?.availableMethods?.find(option=>option.code===method)
+  const paymentFee=selectedPaymentOption?.paymentFee
+  const total=Math.max(0,linePricing.total-voucherDiscount+(paymentFee??0))
   const methodEnabled=paymentSelectionAllowed(readiness,method)
-  const allowedCredentials=supportsCredentialCollection && window.isSecureContext
+  const allowedCredentials=window.isSecureContext
   const blockedLoginItems=useMemo(()=>items.filter(item=>
     item.fulfillmentMethod==='MANUAL_LOGIN' &&
-    !viaLoginServiceStatus(catalog[item.productSlug],item).available
+    !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available
   ),[items,catalog])
 
   const checkoutIssues=useMemo(()=>{
@@ -280,12 +303,14 @@ export default function CheckoutPage() {
         const fields=checkoutFields(product,'AccountValidation')
         const message=validateCheckoutAccount(fields,item.accountFields)
         if(message)result.push(`${item.gameName||item.productName}: ${message}`)
-        // Existing checkout API only accepts GameAccountValidationId, not the
-        // destination User ID/Zone directly. Never silently lose that data.
-        result.push(`${item.gameName||item.productName}: pemrosesan akun tujuan belum tersedia.`)
+        if(!product?.requiresGameAccountValidation)
+          result.push(`${item.gameName||item.productName}: verifikasi tujuan belum disiapkan.`)
+        else if(!idValidations[item.cartKey]?.validationId ||
+          Date.parse(idValidations[item.cartKey]?.expiresAt||'')<=Date.now())
+          result.push(`${item.gameName||item.productName}: verifikasi akun tujuan sebelum membayar.`)
       }
       if(item.fulfillmentMethod==='MANUAL_LOGIN'){
-        if(!viaLoginServiceStatus(product,item).available){
+        if(!viaLoginServiceStatus(product,item,serviceReadiness[item.productSlug]).available){
           result.push(`${item.gameName||item.productName}: layanan sementara belum tersedia.`)
         }else{
           const fields=checkoutFields(product,'LoginCredential')
@@ -303,23 +328,27 @@ export default function CheckoutPage() {
     // Payment-options currently declares channel availability but contains
     // no authoritative channel fee. Never enable a payable method with an
     // undisclosed potential surcharge.
-    if(methodEnabled && readiness?.canAcceptLivePayments)
+    if(methodEnabled && readiness?.canAcceptLivePayments && paymentFee==null)
       result.push('Biaya pembayaran belum dapat dipastikan.')
     if(total<=0)result.push('Total pembayaran harus lebih dari Rp0.')
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
-      voucherState,methodsState,readiness,methodEnabled,total])
+      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
-    if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item).available) return null
+    if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
     if(!['MANUAL_LOGIN','AUTO_ID'].includes(item.fulfillmentMethod)) return null
     const kind=item.fulfillmentMethod==='AUTO_ID'?'AccountValidation':'LoginCredential'
     const fields=checkoutFields(catalog[item.productSlug],kind)
     const sharedKey=matchingAccountSource(items,item,sharing)
     const reason=validateCheckoutAccount(fields,
       kind==='AccountValidation'?item.accountFields:values[sharedKey])
-    return reason?{cartKey:item.cartKey,message:`${item.gameName||item.productName}: ${reason}`}:null
+    if(reason)return {cartKey:item.cartKey,message:`${item.gameName||item.productName}: ${reason}`}
+    if(kind==='AccountValidation' && catalog[item.productSlug]?.requiresGameAccountValidation &&
+      !idValidations[item.cartKey]?.validationId)
+      return {cartKey:item.cartKey,message:`Verifikasi akun tujuan ${item.gameName||item.productName} sebelum melanjutkan.`}
+    return null
   }).find(Boolean)
   const guidance=checkoutActionHint({
     items, blocked:blockedLoginItems, phoneValid:Boolean(phoneNormalized),
@@ -370,8 +399,23 @@ export default function CheckoutPage() {
       document.getElementById(`checkout-item-${guidance.cartKey}`)?.scrollIntoView({behavior:'smooth',block:'center'})
     }
   }
+  const verifyId=async(item)=>{
+    if(verifyingId)return
+    setVerifyingId(item.cartKey);setError('')
+    try{
+      const product=catalog[item.productSlug]
+      const fields=checkoutFields(product,'AccountValidation')
+      const validationError=validateCheckoutAccount(fields,item.accountFields)
+      if(validationError)throw new Error(validationError)
+      const payload=Object.fromEntries(fields.map(f=>[f.key,String(item.accountFields?.[f.slot]||'').trim()]))
+      const res=await verifyTopUpIdDestination(product.id,payload)
+      if(!res?.validationId || res.status!=='Verified')throw new Error('Akun belum berhasil diverifikasi.')
+      setIdValidations(prev=>({...prev,[item.cartKey]:{validationId:res.validationId,expiresAt:res.expiresAt}}))
+    }catch(e){setError(e.message||'Gagal memverifikasi akun tujuan.')}finally{setVerifyingId(null)}
+  }
   const saveId=(item,values,fields)=>{
     updateCartAccount(item.cartKey,values,{first:fields[0]?.label})
+    setIdValidations({})
     setError('')
   }
   const performPay=async(token,verifiedCustomer)=>{
@@ -402,6 +446,8 @@ export default function CheckoutPage() {
         voucherCode:voucher?.code || null,
         items:items.map(item=>{
           const data={productVariantId:item.variantId,quantity:Number(item.quantity||1),expectedUnitPrice:Number(item.unitPrice)}
+          if(item.fulfillmentMethod==='AUTO_ID')
+            data.gameAccountValidationId=idValidations[item.cartKey]?.validationId
           if(item.fulfillmentMethod==='MANUAL_LOGIN'){
             const key=matchingAccountSource(items,item,sharing)
             data.loginCredentials=Object.fromEntries(
@@ -470,7 +516,9 @@ export default function CheckoutPage() {
                 values={values[key]} onValue={(cartKey,field,value)=>setValues(old=>({...old,[cartKey]:{...old[cartKey],[field]:value}}))}
                 sharingWith={sharing[item.cartKey]} options={earlier} onShare={(cartKey,source)=>setSharing(old=>({...old,[cartKey]:source}))}
                 onIdSave={saveId} credentialAllowed={allowedCredentials} showErrors={formTouched}
-                serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item)} onRemove={removeBlockedItem}
+                onVerifyId={verifyId} verifyingId={verifyingId===item.cartKey}
+                idValidation={idValidations[item.cartKey]}
+                serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug])} onRemove={removeBlockedItem}
                 productProblem={issue} priceProblem={price?`Harga berubah: ${rupiah(price.oldPrice)} → ${rupiah(price.newPrice)}`:''}/>
             }) : <div className="digital-checkout-empty">Keranjang kosong. <a href="/search">Pilih produk</a></div>}
           </div>
@@ -526,6 +574,9 @@ export default function CheckoutPage() {
               </button>
             })}
           </div>
+          {readiness?.isSandbox && <p className="checkout-gateway-state" role="status">
+            <Info size={16}/>Mode pengujian: transaksi ini tidak menggunakan uang asli.
+          </p>}
           {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">Metode pembayaran belum bisa dimuat. <button type="button" onClick={refreshMethods}>Coba lagi</button></p>
             : methodsState==='ready' && !readiness?.canAcceptLivePayments?
               <p className="checkout-gateway-state" role="status"><Info size={16}/>Metode pembayaran sedang tidak tersedia. Silakan coba kembali nanti.</p>:null}
@@ -534,7 +585,8 @@ export default function CheckoutPage() {
             <div><span>Diskon produk</span><strong>−{rupiah(linePricing.discount)}</strong></div>
             {voucher && <div className="is-discount"><span>Voucher {voucher.code}</span><strong>−{rupiah(voucherDiscount)}</strong></div>}
             <div><span>Biaya layanan <Info size={13} title="Biaya layanan akan ditampilkan setelah tersedia."/></span><strong>—</strong></div>
-            <div><span>Biaya pembayaran <Info size={13} title="Biaya metode pembayaran belum tersedia."/></span><strong>—</strong></div>
+            <div><span>Biaya pembayaran <Info size={13} title="Besaran biaya mengikuti metode yang tersedia."/></span>
+              <strong>{paymentFee==null?'—':rupiah(paymentFee)}</strong></div>
           </div>
           <hr/>
           <div className="digital-checkout-total"><span>Estimasi Total</span><strong>{rupiah(total)}</strong></div>

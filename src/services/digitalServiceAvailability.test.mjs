@@ -4,13 +4,14 @@ import { viaLoginServiceStatus, checkoutActionHint } from './digitalServiceAvail
 
 const entry = {cartKey:'g1',productName:'Genshin Impact',gameName:'Genshin Impact',fulfillmentMethod:'MANUAL_LOGIN'}
 test('ACTIVE catalog listing does not imply authorization to collect game passwords', () => {
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',isAvailable:true},entry).available,false)
+  assert.equal(viaLoginServiceStatus({id:'gid',fulfillmentMethod:'MANUAL_LOGIN',isAvailable:true},entry).available,false)
 })
-test('requires explicit provider permission AND fulfillment readiness', () => {
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',credentialCollectionPermitted:true},entry).available,false)
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true},entry).available,false)
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true,credentialCollectionPermitted:true},entry).available,false)
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true,credentialCollectionPermitted:true},entry,true).available,true)
+test('only server readiness for the exact product permits manual login', () => {
+  const product={id:'gid',fulfillmentMethod:'MANUAL_LOGIN'}
+  assert.equal(viaLoginServiceStatus(product,entry).available,false)
+  assert.equal(viaLoginServiceStatus(product,entry,{productId:'other',available:true,fulfillmentMode:'CmsManualAfterPaid'}).available,false)
+  assert.equal(viaLoginServiceStatus(product,entry,{productId:'gid',available:true,fulfillmentMode:'Other'}).available,false)
+  assert.equal(viaLoginServiceStatus(product,entry,{productId:'gid',available:true,fulfillmentMode:'CmsManualAfterPaid'}).available,true)
 })
 test('Via ID remains unblocked by Via Login service status', () => {
   assert.equal(viaLoginServiceStatus({fulfillmentMethod:'AUTO_ID'},{fulfillmentMethod:'AUTO_ID'}).available,true)

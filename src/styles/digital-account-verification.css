@@ -1,0 +1,38 @@
+/* AUTO_ID destinations are verified by the backend before order creation. */
+.digital-shell .checkout-product__verify {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 9px;
+}
+.digital-shell .checkout-product__verify button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #bcc7e7;
+  border-radius: 9px;
+  color: #284a9d;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.digital-shell .checkout-product__verify button:hover:not(:disabled) { background: #f4f6ff; }
+.digital-shell .checkout-product__verify button:disabled { opacity: .45; cursor: wait; }
+.digital-shell .checkout-product__verify button:focus-visible {
+  outline: 2px solid #617ad6;
+  outline-offset: 2px;
+}
+.digital-shell .checkout-product__verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #247750;
+  font-size: 11px;
+  line-height: 20px;
+  font-weight: 600;
+}

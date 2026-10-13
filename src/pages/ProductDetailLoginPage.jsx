@@ -8,6 +8,7 @@ import { getCatalogProduct } from '../services/catalogService'
 import { addCartItem, supportsCartQuantity, cartItemLimit } from '../services/cartService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
 import '../styles/product-detail-login.css'
 import '../styles/product-detail-login-improvements.css'
 import '../styles/service-unavailable-polish.css'
@@ -69,6 +70,7 @@ function VariantImage({ src, fallback, alt = '' }) {
 
 export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
   const [product, setProduct] = useState(null)
+  const [serviceReadiness, setServiceReadiness] = useState(null)
   const [selectedId, setSelectedId] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [status, setStatus] = useState('loading')
@@ -83,11 +85,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
     setStatus('loading')
     setError('')
     setProduct(null)
+    setServiceReadiness(null)
     setSelectedId('')
     setNotice(false)
     setQuantity(1)
     getCatalogProduct(slug)
-      .then((data) => {
+      .then(async (data) => {
         if (!active) return
         if (data.kind !== 'TopUpLogin' || data.fulfillmentMethod !== 'MANUAL_LOGIN') {
           throw new Error('Produk ini bukan Top Up via Login.')
@@ -97,6 +100,14 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
         }
         setProduct(data)
         setSelectedId(firstAvailableVariant(data)?.id || '')
+        try {
+          const readiness = await getManualLoginReadiness(data.id)
+          if (!active) return
+          setServiceReadiness(readiness)
+        } catch {
+          if (!active) return
+          setServiceReadiness(null)
+        }
         setStatus('ready')
       })
       .catch((reason) => {
@@ -124,7 +135,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
     [selected, regularPrice, unitPrice, quantity],
   )
   const pricing = useMemo(() => getDigitalPricing(previewItem), [previewItem])
-  const serviceStatus = viaLoginServiceStatus(product)
+  const serviceStatus = viaLoginServiceStatus(product, {}, serviceReadiness)
   const canAdd = status === 'ready' && serviceStatus.available && available && Number.isFinite(unitPrice) && unitPrice > 0 && !isAdding
   const cover = product ? productMedia(product) : { hero: genericGameImage, cover: genericGameImage }
   const selectedIndex = product?.variants?.findIndex((variant) => variant.id === selectedId) ?? -1
