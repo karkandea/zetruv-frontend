@@ -47,7 +47,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
     getCatalogProduct(slug).then((data) => {
       if (!active) return
       // A different kind or slug must never populate this PDP.
-      if (data.kind === 'TopUpLogin' && !demo) {
+      if (data.kind === 'TopUpLogin') {
         window.location.replace(`/product/${encodeURIComponent(data.slug)}/login`)
         return
       }
