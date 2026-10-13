@@ -9,7 +9,8 @@ test('ACTIVE catalog listing does not imply authorization to collect game passwo
 test('requires explicit provider permission AND fulfillment readiness', () => {
   assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',credentialCollectionPermitted:true},entry).available,false)
   assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true},entry).available,false)
-  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true,credentialCollectionPermitted:true},entry).available,true)
+  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true,credentialCollectionPermitted:true},entry).available,false)
+  assert.equal(viaLoginServiceStatus({fulfillmentMethod:'MANUAL_LOGIN',loginFulfillmentReady:true,credentialCollectionPermitted:true},entry,true).available,true)
 })
 test('Via ID remains unblocked by Via Login service status', () => {
   assert.equal(viaLoginServiceStatus({fulfillmentMethod:'AUTO_ID'},{fulfillmentMethod:'AUTO_ID'}).available,true)

@@ -5,7 +5,10 @@
  */
 export const VIA_LOGIN_UNAVAILABLE_LABEL = 'Layanan sementara belum tersedia'
 
-export function viaLoginServiceStatus(product, item = {}) {
+export function viaLoginServiceStatus(
+  product, item = {},
+  featureEnabled = import.meta.env?.VITE_GAME_CREDENTIAL_COLLECTION_APPROVED === 'true',
+) {
   const method = product?.fulfillmentMethod ?? item?.fulfillmentMethod
   if (method !== 'MANUAL_LOGIN' && item?.fulfillmentMethod !== 'MANUAL_LOGIN') {
     return { available: true, reason: '' }
@@ -15,7 +18,7 @@ export function viaLoginServiceStatus(product, item = {}) {
   const approved = product?.credentialCollectionPermitted === true
   const ready = product?.loginFulfillmentReady === true
   const supported = product?.fulfillmentMethod === 'MANUAL_LOGIN'
-  if (approved && ready && supported) return { available: true, reason: '' }
+  if (approved && ready && supported && featureEnabled) return { available: true, reason: '' }
   return {
     available: false,
     reason: 'Top Up via Login untuk game ini belum dapat diproses. Silakan hapus paket ini atau pilih layanan lain.',

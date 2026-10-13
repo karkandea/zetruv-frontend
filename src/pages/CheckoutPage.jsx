@@ -185,7 +185,7 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
         try { const response=await authenticateCheckoutCustomer(email,password)
           if(!response?.accessToken)throw Error('Sesi login tidak diterima.')
           onSuccess(response)
-        } catch(e){setError(e.message||'Login gagal.')} finally{setBusy(false);setPassword('')}
+        } catch(e){setError(e.status===401?'Email atau password akun Zetruv tidak cocok.':'Belum berhasil masuk. Silakan coba lagi.')} finally{setBusy(false);setPassword('')}
       }}>
       <div className="checkout-auth-modal__head"><strong>Login akun Zetruv</strong><button type="button" aria-label="Tutup" onClick={onClose}><X size={18}/></button></div>
       <p>Gunakan akun Zetruv yang sudah diverifikasi. Ini berbeda dari akun game untuk top-up.</p>
@@ -504,7 +504,7 @@ export default function CheckoutPage() {
               <p className="checkout-voucher-applied" role="status"><CheckCircle2 size={15}/>{voucherMessage}
                 <button type="button" onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>Hapus</button></p>
               : <small className={['invalid','expired','not-applicable','error'].includes(voucherState)?'checkout-field-error':''} role="status">
-                {voucherMessage||'Kode diperiksa melalui aturan voucher backend; tidak langsung melakukan pembayaran.'}</small>}
+                {voucherMessage||'Periksa kode voucher terlebih dahulu. Ini belum memulai pembayaran.'}</small>}
           </div>
         </section>
         <aside className="digital-payment-panel">
