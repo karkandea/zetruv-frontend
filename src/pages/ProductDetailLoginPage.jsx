@@ -13,6 +13,18 @@ import '../styles/product-detail-login-improvements.css'
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 const genericGameImage = '/assets/search/category-topup.webp'
 
+// Matched to the actual top-up items on the official HoYoverse shop.
+// These are presentation assets only; names, SKU IDs, prices and stock
+// always come from the Zetruv catalog API.
+const genshinOfficialArt = Object.freeze({
+  60: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/d7c6eac266c930b0278f57064f390f0d_567527774238570827.png',
+  300: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/d758d2dbd743ffe863fc66077b989875_940758918252298425.png',
+  980: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/7d07a18c6ad66fe1f62beb95392cc681_8210466223401422245.png',
+  1980: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/aa76b07c34f1bd2768986ba5d112f2a0_3459666159508940942.png',
+  3280: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/af58a8ddf0f520563ed5a76f058f9019_1243809032247765010.png',
+  welkin: 'https://fastcdn.hoyoverse.com/static-resource-v2/2026/07/06/9823974586364a73552f1830a9977359_2540283372940691621.png',
+})
+
 function firstAvailableVariant(product) {
   return product?.variants?.find((variant) => variant.isAvailable && (variant.stockQuantity == null || Number(variant.stockQuantity) > 0)) || null
 }
@@ -31,11 +43,15 @@ function productMedia(product) {
 
 function variantMedia(product, variant, index) {
   const gameSlug = product?.game?.slug || product?.slug
-  const isWelkin = gameSlug === 'genshin-impact' && /welkin|moon/i.test(variant?.name || '')
   const gameArt = productMedia(product)
   const art = getTopUpCurrencyArt(gameSlug, variant, index)
-  return variant?.imageUrl || variant?.thumbnailUrl ||
-    (isWelkin ? gameArt.cover : art?.image || gameArt.cover)
+  const isGenshin = gameSlug === 'genshin-impact'
+  const name = String(variant?.name || '')
+  const amount = Number(name.match(/^\s*(\d+)/)?.[1] || 0)
+  const official = isGenshin
+    ? /welkin|moon/i.test(name) ? genshinOfficialArt.welkin : genshinOfficialArt[amount]
+    : null
+  return variant?.imageUrl || variant?.thumbnailUrl || official || art?.image || gameArt.cover
 }
 
 function VariantImage({ src, fallback, alt = '' }) {
