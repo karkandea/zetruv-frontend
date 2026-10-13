@@ -15,6 +15,7 @@ import {
 import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
+import { storePaymentContext } from '../services/paymentSession'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
 import '../styles/digital-checkout-polish.css'
@@ -324,6 +325,8 @@ export default function CheckoutPage() {
     }
     if(voucherState==='checking')result.push('Voucher sedang diverifikasi.')
     if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push('Metode pembayaran sedang tidak tersedia.')
+    if(import.meta.env.MODE==='dev' && readiness?.canAcceptLivePayments && !readiness?.isSandbox)
+      result.push('DEV hanya boleh memakai metode pembayaran sandbox.')
     if(!methodEnabled)result.push('Pilih metode pembayaran yang tersedia.')
     // Payment-options currently declares channel availability but contains
     // no authoritative channel fee. Never enable a payable method with an
@@ -427,6 +430,7 @@ export default function CheckoutPage() {
       const freshMethods=await refreshMethods()
       const freshCatalog=await refreshCatalog()
       if(!freshMethods || !paymentSelectionAllowed(freshMethods,method))throw Error('Metode pembayaran tidak tersedia lagi.')
+      if(import.meta.env.MODE==='dev' && !freshMethods.isSandbox)throw Error('DEV hanya boleh memakai payment gateway sandbox.')
       if(!freshCatalog)throw Error('Gagal memverifikasi katalog.')
       const fresh=currentCatalogDifferences(items,freshCatalog)
       if(fresh.changes.length || fresh.problems.length)throw Error('Harga atau ketersediaan berubah. Periksa perubahan sebelum membayar.')
@@ -464,10 +468,21 @@ export default function CheckoutPage() {
       }
       const created=order || await createVerifiedCheckoutOrder(attempt.current.body,token,attempt.current.key)
       setOrder(created)
+      // Preserve only backend-issued order metadata and its short-lived access token.
+      // No game credentials, login password, or checkout payload in browser storage.
+      // Persist BEFORE contacting the payment provider so an uncertain network
+      // response can be recovered using GET without issuing another payment.
+      storePaymentContext(created, method)
       setPaymentState('starting')
-      const session=await startOrderPayment(created,method)
-      setPayment(session)
-      setPaymentState('pending') // Only provider callback/status can confirm Paid.
+      try {
+        const session=await startOrderPayment(created,method)
+        setPayment(session)
+        setPaymentState('pending') // Only backend reconciliation can confirm Paid.
+      } catch {
+        // Payment may have been created before the network error. The Payment
+        // page performs a read-only status lookup and offers explicit retry.
+      }
+      window.location.assign('/payment')
     }catch(e){
       if(e.code==='PRICE_CHANGED' && Array.isArray(e.priceChanges)){
         const updates=e.priceChanges.map(change=>{

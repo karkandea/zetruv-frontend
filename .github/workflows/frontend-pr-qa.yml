@@ -1,0 +1,23 @@
+name: Frontend QA (no deploy)
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [feat/paymentpage-provider-session-20261013]
+
+permissions:
+  contents: read
+
+jobs:
+  storefront-qa:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Cart, checkout, service, payment regression
+        run: npm run test:cart && npm run test:checkout && npm run test:service && npm run test:payment
+      - name: Build DEV storefront (no deployment)
+        run: npm run build:storefront:dev
