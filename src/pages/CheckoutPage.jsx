@@ -276,6 +276,11 @@ export default function CheckoutPage() {
     if(voucherState==='checking')result.push('Voucher sedang diverifikasi.')
     if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push('Payment gateway DEV belum mendukung pembayaran live.')
     if(!methodEnabled)result.push('Pilih metode pembayaran yang tersedia.')
+    // Payment-options currently declares channel availability but contains
+    // no authoritative channel fee. Never enable a payable method with an
+    // undisclosed potential surcharge.
+    if(methodEnabled && readiness?.canAcceptLivePayments)
+      result.push('Backend belum mengirim kutipan biaya pembayaran untuk metode ini.')
     if(total<=0)result.push('Total pembayaran harus lebih dari Rp0.')
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
@@ -295,7 +300,12 @@ export default function CheckoutPage() {
       setVoucherState('applied')
       setVoucherMessage(`Voucher diterapkan: −${rupiah(preview.discountAmount)}.`)
     }catch(e){
-      setVoucherState('error');setVoucherMessage(e.message||'Voucher tidak berlaku atau sudah kedaluwarsa.')
+      const reason=String(e.message||'Voucher tidak berlaku atau sudah kedaluwarsa.')
+      const lower=reason.toLowerCase()
+      setVoucherState(lower.includes('expir')?'expired':
+        lower.includes('eligib')||lower.includes('minimum')?'not-applicable':
+        lower.includes('invalid')||lower.includes('inactive')?'invalid':'error')
+      setVoucherMessage(reason)
     }
   }
   const confirmPriceChange=()=>{
@@ -435,7 +445,7 @@ export default function CheckoutPage() {
             {voucherState==='applied' ?
               <p className="checkout-voucher-applied" role="status"><CheckCircle2 size={15}/>{voucherMessage}
                 <button type="button" onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>Hapus</button></p>
-              : <small className={voucherState==='error'?'checkout-field-error':''} role="status">
+              : <small className={['invalid','expired','not-applicable','error'].includes(voucherState)?'checkout-field-error':''} role="status">
                 {voucherMessage||'Kode diperiksa melalui aturan voucher backend; tidak langsung melakukan pembayaran.'}</small>}
           </div>
         </section>
