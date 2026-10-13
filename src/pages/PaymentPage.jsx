@@ -192,7 +192,7 @@ export default function PaymentPage() {
                   <QRCodeSVG value={qr} size={240} level="M" marginSize={2} title="QRIS dari penyedia pembayaran" />
                   <p>Scan QRIS dari penyedia pembayaran. Jangan bayar lagi jika transaksi sudah terdebit.</p>
                 </div>}
-                {url && <a className="payment-session-action-link" href={url} target="_blank" rel="noopener noreferrer">
+                {url && <a className="payment-session-action-link" href={url}>
                   {context.methodCode === 'GOPAY' ? 'Buka pembayaran GoPay' : 'Buka instruksi pembayaran'} <ExternalLink size={16} />
                 </a>}
                 {!qr && !url && <p className="payment-session-notice"><AlertCircle size={17} /> Provider belum memberikan instruksi pembayaran yang dapat ditampilkan. Periksa status atau hubungi support.</p>}
