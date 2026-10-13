@@ -45,3 +45,10 @@ export const getOrderPaymentStatus = (order) =>
     cache: 'no-store',
     headers: { 'X-Order-Access-Token': order.orderAccessToken },
   })
+
+/** Recover only an existing order owned by the authenticated customer. */
+export const recoverVerifiedCheckoutOrder = (accessToken, idempotencyKey) =>
+  apiRequest('/checkout/orders/recovery', {
+    method:'GET', cache:'no-store',
+    headers:{ Authorization:`Bearer ${accessToken}`, 'Idempotency-Key':idempotencyKey },
+  })

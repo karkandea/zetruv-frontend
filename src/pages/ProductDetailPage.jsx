@@ -6,6 +6,7 @@ import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { addCartItem } from '../services/cartService'
+import { getDigitalPricing } from '../services/digitalCartPricing'
 import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
 import '../styles/product-detail-improvements.css'
@@ -46,7 +47,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
     getCatalogProduct(slug).then((data) => {
       if (!active) return
       // A different kind or slug must never populate this PDP.
-      if (data.kind === 'TopUpLogin' && !demo) {
+      if (data.kind === 'TopUpLogin') {
         window.location.replace(`/product/${encodeURIComponent(data.slug)}/login`)
         return
       }
@@ -90,21 +91,19 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const verified = validUserId && validZone
   const regularPrice = Number(selected?.price ?? selected?.effectivePrice ?? 0)
   const unitPrice = Number(selected?.effectivePrice ?? selected?.price ?? 0)
-  const discount = Math.max(0, regularPrice - unitPrice)
-  const subtotal = regularPrice
-  // Keep parity with the existing digital cart's current fixed service fee.
-  const serviceFee = 2000
-  const total = Math.max(0, subtotal - discount) + serviceFee
+  const { subtotal, discount, serviceFee, total } = getDigitalPricing([{ unitPrice, regularPrice, quantity: 1 }])
   const maxQuantity = selected?.stockQuantity === null || selected?.stockQuantity === undefined
     ? 99 : Math.max(1, Math.min(99, Number(selected.stockQuantity)))
-  const canPurchase = Boolean(selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
+  const canPurchase = Boolean(product?.isDemo === false && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
   const gameArt = product?.thumbnailUrl || product?.game?.imageUrl || media.gameCover
   const productName = product?.name || ''
   const incompleteFields = [
     ...(!validUserId ? [firstLabel] : []),
     ...(showSecond && !validZone ? [secondLabel] : []),
   ]
-  const ctaHint = selected?.isAvailable === false
+  const ctaHint = product?.isDemo !== false
+    ? 'Harga dan paket belum berhasil diverifikasi di server. Transaksi tidak tersedia hingga katalog pulih.'
+    : selected?.isAvailable === false
     ? 'Paket ini sedang tidak tersedia. Pilih paket lain.'
     : !verified
       ? `Lengkapi ${incompleteFields.join(' dan ')} untuk menambahkan ke keranjang.`
@@ -226,7 +225,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
               </div>
             </section>
 
-            {product.isDemo && <p className="pdp-sidebar-preview">Paket dan harga contoh untuk QA, bukan harga transaksi final.</p>}
+            {product.isDemo && <p className="pdp-sidebar-preview" role="status">Katalog API belum tersedia. Paket yang ditampilkan hanya referensi visual dan tidak dapat dibeli.</p>}
             <div className="pdp-sidebar-action">
               <button className="pdp-sidebar-add" type="button" disabled={!canPurchase} onClick={add}>
                 <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />

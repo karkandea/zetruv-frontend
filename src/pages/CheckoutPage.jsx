@@ -10,12 +10,13 @@ import {
 } from '../services/digitalCheckoutRules'
 import {
   getCheckoutPaymentOptions, previewCheckoutVoucher, authenticateCheckoutCustomer,
-  createVerifiedCheckoutOrder, startOrderPayment, getOrderPaymentStatus,
+  createVerifiedCheckoutOrder, recoverVerifiedCheckoutOrder, startOrderPayment, getOrderPaymentStatus,
 } from '../services/checkoutGatewayService'
 import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import { storePaymentContext } from '../services/paymentSession'
+import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
 import '../styles/digital-checkout-polish.css'
@@ -238,6 +239,8 @@ export default function CheckoutPage() {
   const [authDialog,setAuthDialog]=useState(false)
   const [customer,setCustomer]=useState(null)
   const [processing,setProcessing]=useState(false)
+  const [pendingAttempt,setPendingAttempt]=useState(()=>readCheckoutAttempt())
+  const [authPurpose,setAuthPurpose]=useState('pay')
   const attempt=useRef(null)
   const processingRef=useRef(false)
 
@@ -466,6 +469,10 @@ export default function CheckoutPage() {
       if(!attempt.current || attempt.current.fingerprint!==fingerprint){
         attempt.current={fingerprint,key:window.crypto.randomUUID(),body:payload}
       }
+      if(pendingAttempt && pendingAttempt.key!==attempt.current.key)
+        throw Error('Selesaikan pemulihan order sebelumnya sebelum membuat order lain.')
+      // Persist only opaque UUID and selected method, never credentials or body.
+      setPendingAttempt(preserveCheckoutAttempt(attempt.current.key, method))
       const created=order || await createVerifiedCheckoutOrder(attempt.current.body,token,attempt.current.key)
       setOrder(created)
       // Preserve only backend-issued order metadata and its short-lived access token.
@@ -473,6 +480,7 @@ export default function CheckoutPage() {
       // Persist BEFORE contacting the payment provider so an uncertain network
       // response can be recovered using GET without issuing another payment.
       storePaymentContext(created, method)
+      clearCheckoutAttempt();setPendingAttempt(null)
       setPaymentState('starting')
       try {
         const session=await startOrderPayment(created,method)
@@ -491,14 +499,33 @@ export default function CheckoutPage() {
         }).filter(Boolean)
         if(updates.length)setError('Harga berubah di server. Muat ulang katalog dan konfirmasi sebelum mencoba lagi.')
       } else setError(e.message||'Pembayaran belum bisa dimulai. Silakan coba lagi.')
+      if([400,409,422].includes(e.status)&&!order){clearCheckoutAttempt();setPendingAttempt(null)}
       setPaymentState('error')
     }finally{processingRef.current=false;setProcessing(false)}
   }
   const handlePay=()=>{
+    if(pendingAttempt && (!attempt.current || pendingAttempt.key!==attempt.current.key)){
+      setError('Checkout lama belum pasti. Pulihkan order terlebih dahulu.');return
+    }
     setFormTouched(true)
     if(!valid||processingRef.current)return
-    if(!customer?.accessToken){setAuthDialog(true);return}
+    if(!customer?.accessToken){setAuthPurpose('pay');setAuthDialog(true);return}
     performPay(customer.accessToken,customer.customer)
+  }
+  const recoverInterruptedOrder=async(token)=>{
+    const saved=readCheckoutAttempt()
+    if(!saved){setPendingAttempt(null);return}
+    setProcessing(true);setError('')
+    try{
+      const existing=await recoverVerifiedCheckoutOrder(token,saved.key)
+      storePaymentContext(existing,saved.methodCode)
+      clearCheckoutAttempt();setPendingAttempt(null)
+      window.location.assign('/payment')
+    }catch(e){
+      if(e.status===404){
+        setError('Order belum ditemukan atau masih diproses. Pastikan akun Zetruv sama, lalu coba pulihkan lagi. Jangan mulai checkout baru; hubungi support jika status tetap tidak pasti.')
+      }else setError('Belum bisa memastikan order lama. Jangan membuat pembayaran baru; coba pulihkan lagi.')
+    }finally{setProcessing(false)}
   }
   const checkPayment=async()=>{
     if(!order)return
@@ -517,6 +544,15 @@ export default function CheckoutPage() {
       <header className="digital-checkout-heading">
         <h1>Checkout Digital</h1><p>Periksa detail akun tujuan, metode pembayaran, dan harga.</p>
       </header>
+      {pendingAttempt && <section role="alert" className="checkout-price-change" style={{marginBottom:20}}>
+        <AlertCircle size={20}/><div><strong>Checkout sebelumnya belum terkonfirmasi</strong>
+          <p>Browser mungkin ter-refresh sebelum respons order diterima. Jangan membuat order baru sampai diperiksa.</p>
+          <button type="button" disabled={processing} onClick={()=>{
+            if(customer?.accessToken)recoverInterruptedOrder(customer.accessToken)
+            else {setAuthPurpose('recover');setAuthDialog(true)}
+          }}>{processing?'Memeriksa...':'Pulihkan order sebelumnya'}</button>
+          <a href="/order-status">Cek pesanan / hubungi support</a>
+        </div></section>}
       <div className="digital-checkout-layout">
         <section className="digital-checkout-order">
           <h2>Ringkasan Pesanan</h2>
@@ -607,7 +643,7 @@ export default function CheckoutPage() {
           <div className="digital-checkout-total"><span>Estimasi Total</span><strong>{rupiah(total)}</strong></div>
           <p className="checkout-fee-note">Total akhir akan ditampilkan setelah metode pembayaran tersedia.</p>
           {error && <p role="alert" className="digital-checkout-error">{error}</p>}
-          <button className="digital-pay-button" type="button" disabled={!valid||processing}
+          <button className="digital-pay-button" type="button" disabled={!valid||processing||Boolean(pendingAttempt && (!attempt.current || pendingAttempt.key!==attempt.current.key))}
             onClick={handlePay}>{processing?<><LoaderCircle className="checkout-spinner" size={16}/>Memproses...</>:'Bayar Sekarang'}</button>
           {!valid && guidance && <div className="checkout-blockers" role="status" aria-live="polite">
             <strong>Belum bisa melanjutkan</strong>
@@ -643,7 +679,8 @@ export default function CheckoutPage() {
         setCustomer({accessToken:result.accessToken,customer:result.customer})
         setAuthDialog(false)
         // Preserve cart/form input in memory, proceed using verified bearer only.
-        performPay(result.accessToken,result.customer)
+        if(authPurpose==='recover')recoverInterruptedOrder(result.accessToken)
+        else performPay(result.accessToken,result.customer)
       }}/>}
   </div>
 }
