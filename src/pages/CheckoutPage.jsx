@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges } from '../services/cartService'
+import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, removeCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import {
@@ -13,8 +13,10 @@ import {
   createVerifiedCheckoutOrder, startOrderPayment, getOrderPaymentStatus,
 } from '../services/checkoutGatewayService'
 import { checkoutAssets } from '../data/checkoutAssets'
+import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
+import '../styles/digital-checkout-polish.css'
 
 const rupiah = (v = 0) => `Rp${new Intl.NumberFormat('id-ID').format(Number(v) || 0)}`
 const supportsCredentialCollection = import.meta.env.VITE_GAME_CREDENTIAL_COLLECTION_APPROVED === 'true'
@@ -55,13 +57,13 @@ const renderLoginField = (field, value, onChange, visible, toggle, disabled, err
       </div>
     )}
     {error ? <small className="checkout-field-error" role="alert">{error}</small>
-      : field.helpText && field.type !== 'Password' ? <small className="checkout-field-help">{field.helpText}</small> : null}
+      : field.helpText && field.type !== 'Password' ? <small className="checkout-field-help">Isi sesuai data akun game.</small> : null}
   </div>
 )
 
 function CheckoutProduct({
   item, product, values, onValue, sharingWith, onShare, options, onIdSave, priceProblem,
-  productProblem, showErrors, credentialAllowed,
+  productProblem, showErrors, credentialAllowed, serviceStatus, onRemove,
 }) {
   const [edit, setEdit] = useState(false)
   const [idValues, setIdValues] = useState({userId:item.accountFields?.userId || '',zone:item.accountFields?.zone || ''})
@@ -76,7 +78,7 @@ function CheckoutProduct({
   const lineTotal = quantity * Number(item.unitPrice || 0)
   const fallback = '/assets/search/category-topup.webp'
   return (
-    <article className="digital-checkout-item checkout-product" aria-label={`${item.productName} ${item.variantName}`}>
+    <article id={`checkout-item-${item.cartKey}`} className="digital-checkout-item checkout-product" aria-label={`${item.productName} ${item.variantName}`}>
       <div className="checkout-product__row">
         <img className="digital-checkout-item__thumb" src={item.thumbnailUrl || fallback} alt=""
           onError={e => { if(e.currentTarget.dataset.fail !== '1'){e.currentTarget.dataset.fail='1';e.currentTarget.src=fallback} }} />
@@ -84,9 +86,9 @@ function CheckoutProduct({
           <span className="digital-product-method">{methodLabel(item)}</span>
           <strong>{item.gameName || item.productName}</strong>
           <span>{item.variantName}</span>
-          <small>{rupiah(item.unitPrice)} / item {quantity > 1 ? `× ${quantity}` : ''}</small>
+          <small>Harga satuan {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
         </div>
-        <strong className="checkout-product__price">{rupiah(lineTotal)}<small>Subtotal</small></strong>
+        <strong className="checkout-product__price">{rupiah(lineTotal)}<small>Subtotal {quantity > 1 ? `(${quantity} item)` : ''}</small></strong>
       </div>
 
       {isId && (
@@ -94,7 +96,7 @@ function CheckoutProduct({
           <div className="checkout-product__destination-head">
             <strong>Akun tujuan top-up</strong>
             <button type="button" onClick={() => {setIdValues({userId:item.accountFields?.userId||'',zone:item.accountFields?.zone||''});setEdit(x=>!x)}}>
-              <Pencil size={13} aria-hidden="true"/> {edit ? 'Batal' : 'Edit'}
+              <Pencil size={15} aria-hidden="true"/> {edit ? 'Batal' : 'Edit akun'}
             </button>
           </div>
           {edit ? (
@@ -124,6 +126,19 @@ function CheckoutProduct({
             <strong>Akun game untuk paket ini</strong>
             <span>Berbeda dari login akun Zetruv</span>
           </div>
+          {!serviceStatus?.available ? (
+            <div className="checkout-service-unavailable" role="status">
+              <div className="checkout-service-unavailable__heading">
+                <AlertCircle size={18} aria-hidden="true" />
+                <strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>
+              </div>
+              <p>Top Up via Login untuk game ini belum bisa diproses. Hapus paket ini untuk melanjutkan dengan produk lainnya.</p>
+              <div className="checkout-service-unavailable__actions">
+                <button type="button" onClick={() => onRemove(item)}><X size={15} aria-hidden="true" /> Hapus produk ini</button>
+                <a href="/search">Cari produk lain <ArrowRight size={14} aria-hidden="true" /></a>
+              </div>
+            </div>
+          ) : <>
           {options?.length > 0 && (
             <label className="checkout-product__share">
               <input type="checkbox" checked={Boolean(sibling)}
@@ -148,6 +163,7 @@ function CheckoutProduct({
                   !credentialAllowed,error)
               }) : <p className="checkout-field-error">Aturan pengisian akun belum tersedia.</p>}
             </div>
+          </>}
           </>}
         </div>
       )}
@@ -246,6 +262,10 @@ export default function CheckoutPage() {
   const total=Math.max(0,linePricing.total-voucherDiscount)
   const methodEnabled=paymentSelectionAllowed(readiness,method)
   const allowedCredentials=supportsCredentialCollection && window.isSecureContext
+  const blockedLoginItems=useMemo(()=>items.filter(item=>
+    item.fulfillmentMethod==='MANUAL_LOGIN' &&
+    !viaLoginServiceStatus(catalog[item.productSlug],item).available
+  ),[items,catalog])
 
   const checkoutIssues=useMemo(()=>{
     const result=[]
@@ -262,31 +282,54 @@ export default function CheckoutPage() {
         if(message)result.push(`${item.gameName||item.productName}: ${message}`)
         // Existing checkout API only accepts GameAccountValidationId, not the
         // destination User ID/Zone directly. Never silently lose that data.
-        result.push(`${item.gameName||item.productName}: pengiriman User ID/Zona ke backend checkout belum tersedia.`)
+        result.push(`${item.gameName||item.productName}: pemrosesan akun tujuan belum tersedia.`)
       }
       if(item.fulfillmentMethod==='MANUAL_LOGIN'){
-        const fields=checkoutFields(product,'LoginCredential')
-        const key=matchingAccountSource(items,item,sharing)
-        const message=validateCheckoutAccount(fields,values[key])
-        if(message)result.push(`${item.gameName||item.productName}: ${message}`)
-        if(!allowedCredentials)result.push('Pengumpulan kredensial game belum disetujui/diaktifkan.')
+        if(!viaLoginServiceStatus(product,item).available){
+          result.push(`${item.gameName||item.productName}: layanan sementara belum tersedia.`)
+        }else{
+          const fields=checkoutFields(product,'LoginCredential')
+          const key=matchingAccountSource(items,item,sharing)
+          const message=validateCheckoutAccount(fields,values[key])
+          if(message)result.push(`${item.gameName||item.productName}: ${message}`)
+          if(!allowedCredentials)result.push('Informasi akun game belum dapat dimasukkan.')
+        }
       }
       if(item.requiresGameAccountValidation)result.push(`${item.productName}: verifikasi akun server diperlukan.`)
     }
     if(voucherState==='checking')result.push('Voucher sedang diverifikasi.')
-    if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push('Payment gateway DEV belum mendukung pembayaran live.')
+    if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push('Metode pembayaran sedang tidak tersedia.')
     if(!methodEnabled)result.push('Pilih metode pembayaran yang tersedia.')
     // Payment-options currently declares channel availability but contains
     // no authoritative channel fee. Never enable a payable method with an
     // undisclosed potential surcharge.
     if(methodEnabled && readiness?.canAcceptLivePayments)
-      result.push('Backend belum mengirim kutipan biaya pembayaran untuk metode ini.')
+      result.push('Biaya pembayaran belum dapat dipastikan.')
     if(total<=0)result.push('Total pembayaran harus lebih dari Rp0.')
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
       voucherState,methodsState,readiness,methodEnabled,total])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
+  const firstAccountIssue=items.map(item=>{
+    if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item).available) return null
+    if(!['MANUAL_LOGIN','AUTO_ID'].includes(item.fulfillmentMethod)) return null
+    const kind=item.fulfillmentMethod==='AUTO_ID'?'AccountValidation':'LoginCredential'
+    const fields=checkoutFields(catalog[item.productSlug],kind)
+    const sharedKey=matchingAccountSource(items,item,sharing)
+    const reason=validateCheckoutAccount(fields,
+      kind==='AccountValidation'?item.accountFields:values[sharedKey])
+    return reason?{cartKey:item.cartKey,message:`${item.gameName||item.productName}: ${reason}`}:null
+  }).find(Boolean)
+  const guidance=checkoutActionHint({
+    items, blocked:blockedLoginItems, phoneValid:Boolean(phoneNormalized),
+    phoneTouched,formTouched,accountProblem:firstAccountIssue,
+    catalogProblem:catalogState==='error'||problems.length>0,
+    methodLoading:methodsState==='loading',
+    methodsReady:Boolean(readiness?.canAcceptLivePayments),
+    selectedMethodValid:methodEnabled,
+    priceChanged:changes.length>0,
+  })
   const showLiveMethods=readiness?.availableMethods?.length>0
 
   const applyVoucher=async()=>{
@@ -300,18 +343,32 @@ export default function CheckoutPage() {
       setVoucherState('applied')
       setVoucherMessage(`Voucher diterapkan: −${rupiah(preview.discountAmount)}.`)
     }catch(e){
-      const reason=String(e.message||'Voucher tidak berlaku atau sudah kedaluwarsa.')
+      const reason=String(e.message||'Voucher belum dapat diperiksa.')
       const lower=reason.toLowerCase()
       setVoucherState(lower.includes('expir')?'expired':
         lower.includes('eligib')||lower.includes('minimum')?'not-applicable':
         lower.includes('invalid')||lower.includes('inactive')?'invalid':'error')
-      setVoucherMessage(reason)
+      setVoucherMessage(lower.includes('expir')?'Masa berlaku voucher sudah habis.':
+        lower.includes('eligib')||lower.includes('minimum')?'Voucher tidak berlaku untuk pesanan ini.':
+        lower.includes('invalid')||lower.includes('inactive')?'Kode voucher tidak valid atau tidak aktif.':
+        'Voucher belum dapat diperiksa. Silakan coba lagi.')
     }
   }
   const confirmPriceChange=()=>{
     acceptCartPriceChanges(changes)
     setError('')
     setVoucher(null);setVoucherState('idle')
+  }
+  const removeBlockedItem=(item)=>{
+    removeCartItem(item.cartKey)
+    setError('')
+  }
+  const jumpToIssue=()=>{
+    if(guidance?.type==='phone'){
+      document.getElementById('checkout-phone')?.focus()
+    }else if(guidance?.cartKey){
+      document.getElementById(`checkout-item-${guidance.cartKey}`)?.scrollIntoView({behavior:'smooth',block:'center'})
+    }
   }
   const saveId=(item,values,fields)=>{
     updateCartAccount(item.cartKey,values,{first:fields[0]?.label})
@@ -413,6 +470,7 @@ export default function CheckoutPage() {
                 values={values[key]} onValue={(cartKey,field,value)=>setValues(old=>({...old,[cartKey]:{...old[cartKey],[field]:value}}))}
                 sharingWith={sharing[item.cartKey]} options={earlier} onShare={(cartKey,source)=>setSharing(old=>({...old,[cartKey]:source}))}
                 onIdSave={saveId} credentialAllowed={allowedCredentials} showErrors={formTouched}
+                serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item)} onRemove={removeBlockedItem}
                 productProblem={issue} priceProblem={price?`Harga berubah: ${rupiah(price.oldPrice)} → ${rupiah(price.newPrice)}`:''}/>
             }) : <div className="digital-checkout-empty">Keranjang kosong. <a href="/search">Pilih produk</a></div>}
           </div>
@@ -463,30 +521,46 @@ export default function CheckoutPage() {
                 className={method===m.code?'is-active':''} aria-pressed={method===m.code}
                 onClick={()=>{setMethod(m.code);setError('')}}>
                 <i><img src={m.icon} alt=""/></i>
-                <span><strong>{m.name}</strong><small>{enabled?m.description||'Metode tersedia':'Belum tersedia dari gateway'}</small></span>
+                <span><strong>{m.name}</strong><small>{enabled?m.description||'Metode tersedia':'Sedang tidak tersedia'}</small></span>
                 <b aria-hidden="true"/>
               </button>
             })}
           </div>
-          {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">Gagal memeriksa gateway. <button type="button" onClick={refreshMethods}>Coba lagi</button></p>
+          {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">Metode pembayaran belum bisa dimuat. <button type="button" onClick={refreshMethods}>Coba lagi</button></p>
             : methodsState==='ready' && !readiness?.canAcceptLivePayments?
-              <p className="checkout-gateway-state" role="status"><Info size={16}/>Pembayaran live belum tersedia di DEV. Metode di atas hanya referensi tampilan, bukan pembayaran aktif.</p>:null}
+              <p className="checkout-gateway-state" role="status"><Info size={16}/>Metode pembayaran sedang tidak tersedia. Silakan coba kembali nanti.</p>:null}
           <div className="digital-checkout-prices">
             <div><span>Subtotal produk</span><strong>{rupiah(linePricing.subtotal)}</strong></div>
             <div><span>Diskon produk</span><strong>−{rupiah(linePricing.discount)}</strong></div>
             {voucher && <div className="is-discount"><span>Voucher {voucher.code}</span><strong>−{rupiah(voucherDiscount)}</strong></div>}
-            <div><span>Biaya layanan <Info size={13} title="API checkout saat ini belum menyediakan service fee digital."/></span><strong>—</strong></div>
-            <div><span>Biaya pembayaran <Info size={13} title="Biaya channel belum dikirim oleh payment gateway."/></span><strong>—</strong></div>
+            <div><span>Biaya layanan <Info size={13} title="Biaya layanan akan ditampilkan setelah tersedia."/></span><strong>—</strong></div>
+            <div><span>Biaya pembayaran <Info size={13} title="Biaya metode pembayaran belum tersedia."/></span><strong>—</strong></div>
           </div>
           <hr/>
-          <div className="digital-checkout-total"><span>Estimasi total produk</span><strong>{rupiah(total)}</strong></div>
-          <p className="checkout-fee-note">Total final dan biaya metode pembayaran harus dikonfirmasi oleh backend sebelum bayar.</p>
+          <div className="digital-checkout-total"><span>Estimasi Total</span><strong>{rupiah(total)}</strong></div>
+          <p className="checkout-fee-note">Total akhir akan ditampilkan setelah metode pembayaran tersedia.</p>
           {error && <p role="alert" className="digital-checkout-error">{error}</p>}
           <button className="digital-pay-button" type="button" disabled={!valid||processing}
             onClick={handlePay}>{processing?<><LoaderCircle className="checkout-spinner" size={16}/>Memproses...</>:'Bayar Sekarang'}</button>
-          {!valid && <div className="checkout-blockers" role="status">
-            <strong>Belum bisa melanjutkan:</strong><span>{checkoutIssues[0]}</span>
-            {checkoutIssues.length>1 && <small>{checkoutIssues.length-1} hal lain perlu diperiksa.</small>}
+          {!valid && guidance && <div className="checkout-blockers" role="status" aria-live="polite">
+            <strong>Belum bisa melanjutkan</strong>
+            <span>{guidance.message}</span>
+            {guidance.type==='service' && <div className="checkout-blockers__actions">
+              <button type="button" onClick={()=>{
+                const blocked=blockedLoginItems.find(item=>item.cartKey===guidance.cartKey)
+                if(blocked)removeBlockedItem(blocked)
+              }}>Hapus paket tidak tersedia</button>
+              <a href="/search">Cari produk lain</a>
+            </div>}
+            {['account','phone'].includes(guidance.type) &&
+              <button type="button" className="checkout-blockers__jump" onClick={jumpToIssue}>
+                Perbaiki data <ArrowRight size={13} aria-hidden="true" />
+              </button>}
+            {guidance.type==='price' &&
+              <button type="button" className="checkout-blockers__jump"
+                onClick={()=>document.querySelector('.checkout-price-change')?.scrollIntoView({behavior:'smooth',block:'center'})}>
+                Lihat perubahan harga <ArrowRight size={13} aria-hidden="true" />
+              </button>}
           </div>}
           {order && paymentState!=='idle' && <div className="checkout-payment-status" role="status">
             <strong>Status: {paymentState==='paid'?'Pembayaran terkonfirmasi':paymentState==='pending'?'Menunggu pembayaran':paymentState==='starting'?'Menghubungi provider':paymentState}</strong>

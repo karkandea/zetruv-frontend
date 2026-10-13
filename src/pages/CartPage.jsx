@@ -7,9 +7,11 @@ import {
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
 } from '../services/cartService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
+import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { accountRequirements, checkCartDestination, getCartItemProblem } from '../services/digitalCartValidation'
 import '../styles/digital-commerce.css'
 import '../styles/digital-cart-improvements.css'
+import '../styles/service-unavailable-polish.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 const methodLabel = {
@@ -28,9 +30,9 @@ const fallbackImages = {
 const clean = (value) => String(value ?? '').trim()
 
 function itemContext(item) {
-  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Data login dilengkapi saat checkout, bukan di keranjang.'
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Informasi akun game diisi saat checkout jika layanan tersedia.'
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode voucher dikirim setelah pembayaran berhasil.'
-  if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Detail layanan dan credential dilengkapi saat checkout.'
+  if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Detail layanan akan dilengkapi saat checkout.'
   if (item.productKind === 'GameAccount') return 'Akun game akan diverifikasi sebelum pemrosesan.'
   return 'Produk digital'
 }
@@ -109,12 +111,13 @@ export default function CartPage() {
   const [items, setItems] = useState(readCart)
   const [requirements, setRequirements] = useState({})
   const [catalogErrors, setCatalogErrors] = useState({})
+  const [catalogProducts, setCatalogProducts] = useState({})
   const [editingKey, setEditingKey] = useState(null)
   const [removed, setRemoved] = useState(null)
   const [status, setStatus] = useState('')
   const undoTimer = useRef(null)
   const accountSlugs = useMemo(() => [...new Set(items
-    .filter((item) => item.fulfillmentMethod === 'AUTO_ID')
+    .filter((item) => ['AUTO_ID','MANUAL_LOGIN'].includes(item.fulfillmentMethod))
     .map((item) => item.productSlug).filter(Boolean))].sort().join('|'), [items])
 
   useEffect(() => onCartChange(setItems), [])
@@ -127,13 +130,15 @@ export default function CartPage() {
     Promise.all(slugs.map(async (slug) => {
       try {
         const product = await getCatalogProduct(slug)
-        if (product.kind !== 'TopUpGame' || product.slug !== slug) throw new Error('Produk tidak sesuai.')
+        if (product.slug !== slug) throw new Error('Produk tidak sesuai.')
         if (active) {
+          setCatalogProducts((prev) => ({...prev,[slug]:product}))
           setRequirements((prev) => ({ ...prev, [slug]: accountRequirements(product) }))
           setCatalogErrors((prev) => ({ ...prev, [slug]: '' }))
         }
       } catch {
         if (active) {
+          setCatalogProducts((prev) => ({...prev,[slug]:null}))
           setRequirements((prev) => ({ ...prev, [slug]: [] }))
           setCatalogErrors((prev) => ({ ...prev, [slug]: 'Gagal memuat aturan data akun. Coba muat ulang halaman.' }))
         }
@@ -146,7 +151,10 @@ export default function CartPage() {
   const itemCount = cartCount(items)
   const problems = items.map(item => ({
     key: item.cartKey,
-    message: catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
+    message: item.fulfillmentMethod === 'MANUAL_LOGIN' &&
+      !viaLoginServiceStatus(catalogProducts[item.productSlug],item).available
+        ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
+        : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
   const canCheckout = items.length > 0 && problems.length === 0
   const editing = items.find((item) => item.cartKey === editingKey) || null
@@ -215,7 +223,10 @@ export default function CartPage() {
                   const qty = Math.max(1, Number(item.quantity) || 1)
                   const lineTotal = Number(item.unitPrice || 0) * qty
                   const allowsQuantity = supportsCartQuantity(item)
-                  const issue = catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
+                  const loginUnavailable = item.fulfillmentMethod==='MANUAL_LOGIN' &&
+                    !viaLoginServiceStatus(catalogProducts[item.productSlug],item).available
+                  const issue = loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
+                    : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
                   const target = item.accountFields || {}
                   return (
@@ -240,6 +251,10 @@ export default function CartPage() {
                           </div>
                         ) : <p>{itemContext(item)}</p>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
+                        {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
+                          <button type="button" onClick={() => remove(item)}>Hapus paket ini</button>
+                          <a href="/search">Cari produk lain</a>
+                        </div>}
                       </div>
                       <div className="digital-cart-item__side">
                         <div className="digital-cart-item__subtotal">
@@ -270,7 +285,7 @@ export default function CartPage() {
             {items.some(item => item.fulfillmentMethod === 'MANUAL_LOGIN') && (
               <div className="digital-login-cart-rule">
                 <strong>Top Up Via Login</strong>
-                <p>Data tujuan untuk top-up ID disimpan di cart. Email/password layanan Via Login tidak disimpan di cart dan baru dilengkapi pada checkout.</p>
+                <p>Paket Via Login yang belum tersedia perlu dihapus sebelum melanjutkan. Informasi akun game tidak disimpan di keranjang.</p>
               </div>
             )}
           </section>

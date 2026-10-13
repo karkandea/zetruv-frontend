@@ -1,0 +1,200 @@
+/* Checkout polish: maintain existing Zetruv two-column layout. */
+
+/* Never trap the first payment option/heading in an independently scrolled
+   sticky panel. The document scrolls normally on short laptop viewports. */
+@media (min-width: 851px) {
+  .digital-shell .digital-payment-panel {
+    position: sticky;
+    top: 142px;
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+}
+@media (min-width: 851px) and (max-height: 920px) {
+  .digital-shell .digital-payment-panel {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+.digital-shell .digital-payment-panel {
+  scroll-margin-top: 152px;
+}
+.digital-shell .checkout-product { scroll-margin-top: 152px; }
+.digital-shell .checkout-product__identity strong {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 650;
+}
+.digital-shell .checkout-product__identity > span:not(.digital-product-method) {
+  font-size: 12px;
+  line-height: 19px;
+}
+.digital-shell .checkout-product__identity small {
+  font-size: 11px;
+  line-height: 18px;
+}
+.digital-shell .checkout-product__price {
+  font-size: 14px;
+  line-height: 21px;
+}
+.digital-shell .checkout-product__price small {
+  font-size: 11px;
+  line-height: 17px;
+}
+.digital-shell .checkout-product__destination-head > strong,
+.digital-shell .checkout-product__account-title > strong {
+  font-size: 12px;
+  line-height: 19px;
+}
+.digital-shell .checkout-product__destination > p,
+.digital-shell .checkout-product__account-title > span {
+  font-size: 11px;
+  line-height: 19px;
+}
+.digital-shell .checkout-product__destination-head > button {
+  min-width: 75px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 11px;
+}
+.digital-shell .digital-checkout-item.checkout-product {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.digital-shell .digital-checkout-order > h2,
+.digital-shell .digital-payment-panel > h2 {
+  color: #202439;
+}
+.digital-shell .digital-payment-panel { padding: 20px 22px; }
+.digital-shell .digital-checkout-prices { margin-top: 17px; gap: 9px; }
+.digital-shell .digital-payment-methods { gap: 8px; }
+.digital-shell .digital-payment-methods button { min-height: 60px; }
+.digital-shell .digital-checkout-total strong { font-size: 20px; }
+.digital-shell .digital-pay-button { margin-top: 15px; }
+.digital-shell .checkout-fee-note { margin-top: 7px; }
+.digital-shell .digital-checkout-prices strong {
+  font-variant-numeric: tabular-nums;
+}
+.digital-shell .checkout-blockers {
+  border: 1px solid #e5e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8f9fd;
+}
+.digital-shell .checkout-blockers > strong { color: #303b5b; }
+.digital-shell .checkout-blockers > span {
+  color: #5f6980;
+  font-size: 11px;
+  line-height: 18px;
+}
+.digital-shell .checkout-blockers__actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.digital-shell .checkout-blockers__actions button,
+.digital-shell .checkout-blockers__jump {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d9deec;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #253980;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 17px;
+  font-weight: 600;
+}
+.digital-shell .checkout-blockers__actions a {
+  color: #3451ac;
+  font-size: 11px;
+  text-decoration: none;
+}
+.digital-shell .checkout-blockers__actions a:hover { text-decoration: underline; }
+.digital-shell .checkout-blockers__jump { align-self: flex-start; margin-top: 4px; }
+.digital-shell .checkout-service-unavailable {
+  margin-top: 12px;
+  padding: 10px 0 0;
+  border-top: 1px solid #f0edf0;
+  color: #616a7d;
+}
+.digital-shell .checkout-service-unavailable__heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #a05438;
+  font-size: 12px;
+  line-height: 20px;
+}
+.digital-shell .checkout-service-unavailable__heading svg { flex: 0 0 auto; }
+.digital-shell .checkout-service-unavailable > p {
+  margin: 5px 0 0;
+  color: #717a8c;
+  font-size: 11px;
+  line-height: 19px;
+}
+.digital-shell .checkout-service-unavailable__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-top: 10px;
+}
+.digital-shell .checkout-service-unavailable__actions button,
+.digital-shell .checkout-service-unavailable__actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid #dce1ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #3851a9;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.digital-shell .checkout-service-unavailable__actions button:hover,
+.digital-shell .checkout-service-unavailable__actions a:hover {
+  border-color: #b8c3df;
+  background: #f8f9ff;
+}
+.digital-shell .checkout-blockers button:focus-visible,
+.digital-shell .checkout-service-unavailable__actions button:focus-visible,
+.digital-shell .checkout-service-unavailable__actions a:focus-visible {
+  outline: 2px solid #5c75e2;
+  outline-offset: 3px;
+}
+.digital-shell .checkout-service-unavailable__actions a:focus-visible { text-decoration: underline; }
+@media (max-width: 850px) {
+  .digital-shell .digital-payment-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+@media (max-width: 560px) {
+  .digital-shell .checkout-product__identity strong { font-size: 13px; }
+  .digital-shell .checkout-product__price { font-size: 13px; }
+  .digital-shell .checkout-product__destination-head > button {
+    min-height: 40px;
+  }
+  .digital-shell .checkout-service-unavailable__actions {
+    gap: 8px;
+  }
+}

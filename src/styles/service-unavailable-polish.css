@@ -1,0 +1,88 @@
+/* Via Login: unavailable fulfillment must be discoverable before cart. */
+.login-product-shell .login-product-info-banner--unavailable {
+  align-items: flex-start;
+  border-color: #eee3d2;
+  background: #fffaf2;
+  color: #895c30;
+}
+.login-product-shell .login-product-info-banner--unavailable > svg {
+  margin-top: 1px;
+  flex: none;
+}
+.login-product-shell .login-product-info-banner--unavailable > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.login-product-shell .login-product-info-banner--unavailable strong {
+  font-size: 12px;
+  line-height: 18px;
+  color: #865329;
+  font-weight: 650;
+}
+.login-product-shell .login-product-info-banner--unavailable p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 19px;
+  color: #765b42;
+}
+.login-product-shell .login-product-info-banner--unavailable a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  min-height: 28px;
+  color: #273e9d;
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.login-product-shell .login-product-info-banner--unavailable a:hover { text-decoration: underline; }
+.login-product-shell .login-product-summary__unavailable {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 11px 0 0;
+  color: #775d41;
+  font-size: 11px;
+  line-height: 18px;
+}
+.login-product-shell .login-product-summary__unavailable svg {
+  flex: none;
+  margin-top: 2px;
+}
+.login-product-shell .login-product-summary__unavailable span { min-width: 0; }
+.login-product-shell .login-product-summary__unavailable strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #895a33;
+}
+.login-product-shell .login-product-summary__unavailable a {
+  color: #314ba9;
+  font-weight: 600;
+}
+.digital-shell .digital-cart-item__unavailable-actions {
+  display: flex;
+  gap: 11px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 6px;
+}
+.digital-shell .digital-cart-item__unavailable-actions button,
+.digital-shell .digital-cart-item__unavailable-actions a {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 7px;
+  border: 1px solid #dae0eb;
+  background: #fff;
+  color: #3452aa;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.digital-shell .digital-cart-item__unavailable-actions button:hover,
+.digital-shell .digital-cart-item__unavailable-actions a:hover { background: #f6f8ff; }

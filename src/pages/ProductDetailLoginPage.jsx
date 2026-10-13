@@ -7,8 +7,10 @@ import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
 import { addCartItem, supportsCartQuantity, cartItemLimit } from '../services/cartService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
+import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import '../styles/product-detail-login.css'
 import '../styles/product-detail-login-improvements.css'
+import '../styles/service-unavailable-polish.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 const genericGameImage = '/assets/search/category-topup.webp'
@@ -122,7 +124,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
     [selected, regularPrice, unitPrice, quantity],
   )
   const pricing = useMemo(() => getDigitalPricing(previewItem), [previewItem])
-  const canAdd = status === 'ready' && available && Number.isFinite(unitPrice) && unitPrice > 0 && !isAdding
+  const serviceStatus = viaLoginServiceStatus(product)
+  const canAdd = status === 'ready' && serviceStatus.available && available && Number.isFinite(unitPrice) && unitPrice > 0 && !isAdding
   const cover = product ? productMedia(product) : { hero: genericGameImage, cover: genericGameImage }
   const selectedIndex = product?.variants?.findIndex((variant) => variant.id === selectedId) ?? -1
   const thumbnail = product && selected
@@ -254,9 +257,15 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
                       )
                     })}
                   </div>
-                  <div className="login-product-info-banner">
-                    <Info size={17} aria-hidden="true" />
-                    <p>Data akun game akan diminta saat checkout untuk memproses pesanan.</p>
+                  <div className={`login-product-info-banner${!serviceStatus.available ? ' login-product-info-banner--unavailable' : ''}`} role={!serviceStatus.available ? 'status' : undefined}>
+                    {!serviceStatus.available ? <CircleAlert size={17} aria-hidden="true" /> : <Info size={17} aria-hidden="true" />}
+                    <div>
+                      {!serviceStatus.available && <strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>}
+                      <p>{serviceStatus.available
+                        ? 'Data akun game akan diminta saat checkout untuk memproses pesanan.'
+                        : serviceStatus.reason}</p>
+                      {!serviceStatus.available && <a href="/search">Cari layanan lain <ArrowRight size={13} aria-hidden="true" /></a>}
+                    </div>
                   </div>
                 </section>
 
@@ -302,7 +311,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
                         : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
                       <span>{isAdding ? 'Menambahkan...' : 'Tambah ke Keranjang'}</span>
                     </button>
-                    {!selected && <p className="login-product-summary__hint">Pilih paket yang tersedia terlebih dahulu.</p>}
+                    {!serviceStatus.available && <p className="login-product-summary__unavailable" role="status">
+                      <CircleAlert size={17} aria-hidden="true" />
+                      <span><strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>
+                        Pembelian paket ini belum dibuka. <a href="/search">Lihat produk lain</a>.</span>
+                    </p>}
+                    {!selected && serviceStatus.available && <p className="login-product-summary__hint">Pilih paket yang tersedia terlebih dahulu.</p>}
                     {selected && !available && <p className="login-product-summary__hint">Paket sedang tidak tersedia.</p>}
                   </div>
 
