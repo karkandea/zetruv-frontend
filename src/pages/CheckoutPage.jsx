@@ -29,7 +29,7 @@ function productMethodLabel(item) {
 
 function itemSubtitle(item) {
   if (item.fulfillmentMethod === 'AUTO_ID') return item.accountLabel || 'Tujuan akun sudah diverifikasi'
-  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Credential akun dilengkapi secara aman di checkout'
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Data login game dilengkapi pada tahap checkout'
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode digital dikirim setelah pembayaran'
   if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Data akun joki dilengkapi di bawah'
   if (item.productKind === 'GameAccount') return 'Akun unik diverifikasi kembali sebelum order dibuat'
@@ -115,17 +115,14 @@ export default function CheckoutPage() {
       return
     }
 
-    const enrichedItems = items.map((item) => ({
-      ...item,
-      accountLabel: needsCredential(item)
-        ? `${credentials[item.cartKey]?.username || 'Credential'} · data aman`
-        : item.accountLabel,
-    }))
+    // Passwords and usernames remain in transient React state only. Never
+    // serialize them to the payment-preview session storage or cart payload.
+    const previewItems = items.map((item) => ({ ...item }))
 
     const invoice = `DIGI${Date.now().toString().slice(-12)}INV`
     window.sessionStorage.setItem('zetruv-order-preview-v1', JSON.stringify({
       invoice,
-      items: enrichedItems,
+      items: previewItems,
       subtotal,
       serviceFee: basePricing.serviceFee,
       discount,
@@ -180,7 +177,7 @@ export default function CheckoutPage() {
             {credentialItems.length > 0 && (
               <div className="digital-credential-list">
                 <h3>Data Akun Game</h3>
-                <p>Credential hanya diminta di checkout dan tidak pernah ditampilkan kembali setelah order dibuat.</p>
+                <p>Data login game hanya diisi pada tahap checkout. Jangan berikan OTP atau kode verifikasi.</p>
                 {credentialItems.map((item, index) => {
                   const value = credentials[item.cartKey] || { username: '', password: '' }
                   return (
