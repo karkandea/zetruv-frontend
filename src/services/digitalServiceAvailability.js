@@ -21,7 +21,7 @@ export function viaLoginServiceStatus(
   if (approved && ready && supported && featureEnabled) return { available: true, reason: '' }
   return {
     available: false,
-    reason: 'Top Up via Login untuk game ini belum dapat diproses. Silakan hapus paket ini atau pilih layanan lain.',
+    reason: 'Top Up via Login untuk game ini belum dapat diproses. Silakan pilih layanan lain.',
   }
 }
 
