@@ -100,6 +100,15 @@ export function updateCartAccount(cartKey, { userId, zone }, labels = {}) {
   return writeCart(items.map((item) => item.cartKey === cartKey ? updated : item))
 }
 
+/** Apply a user-approved catalog reprice to matching cart items only. */
+export function acceptCartPriceChanges(changes) {
+  const byKey = new Map(changes.map(change => [change.key, change]))
+  return writeCart(readCart().map(item => {
+    const change = byKey.get(item.cartKey)
+    return change ? { ...item, unitPrice: change.newPrice, regularPrice: change.regularPrice } : item
+  }))
+}
+
 export function removeCartItem(cartKey) {
   return writeCart(readCart().filter((item) => item.cartKey !== cartKey))
 }
