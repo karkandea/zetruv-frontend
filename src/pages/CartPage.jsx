@@ -165,7 +165,9 @@ export default function CartPage() {
   const itemCount = cartCount(items)
   const problems = items.map(item => ({
     key: item.cartKey,
-    message: item.fulfillmentMethod === 'MANUAL_LOGIN' &&
+    message: item.serverLineId && item.isAvailable===false
+      ? 'Produk, stok, atau validasi akun tujuan sudah kedaluwarsa. Periksa dan verifikasi ulang sebelum checkout.'
+      : item.fulfillmentMethod === 'MANUAL_LOGIN' &&
       !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
         ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
@@ -249,7 +251,9 @@ export default function CartPage() {
                   const allowsQuantity = supportsCartQuantity(item)
                   const loginUnavailable = item.fulfillmentMethod==='MANUAL_LOGIN' &&
                     !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
-                  const issue = loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
+                  const issue = item.serverLineId && item.isAvailable===false
+                    ? 'Produk, stok, atau target akun ini tidak tersedia. Verifikasi ulang sebelum checkout.'
+                    : loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
                     : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
                   const target = item.accountFields || {}
