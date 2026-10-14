@@ -13,6 +13,7 @@ export const CART_SYNC_EVENT='zetruv-cart-sync-status'
 let boot=null
 let writeQueue=Promise.resolve()
 let writing=0
+let currentRevision=null
 let status={state:'guest',message:''}
 
 function notify(state,message=''){
@@ -37,6 +38,7 @@ export function setCustomerSession(response){
   const value={version:1,accessToken:response.accessToken,customer:response.customer||null}
   window.sessionStorage.setItem(SESSION_KEY,JSON.stringify(value))
   boot=null
+  currentRevision=null
   window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:true}}))
   return value
 }
@@ -44,6 +46,7 @@ export function logoutCustomer(){
   if(typeof window==='undefined')return
   window.sessionStorage.removeItem(SESSION_KEY)
   boot=null
+  currentRevision=null
   leaveAuthenticatedCart()
   notify('guest')
   window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:false}}))
@@ -53,8 +56,8 @@ const auth=token=>({Authorization:'Bearer '+token})
 export const getServerCart=token=>apiRequest('/me/cart',{
   method:'GET',cache:'no-store',headers:auth(token)
 })
-const putServerCart=(token,items)=>apiRequest('/me/cart',{
-  method:'PUT',headers:auth(token),body:JSON.stringify({items})
+const putServerCart=(token,items,revision)=>apiRequest('/me/cart',{
+  method:'PUT',headers:auth(token),body:JSON.stringify({items,revision})
 })
 const mergeServerCart=(token,items)=>apiRequest('/me/cart/merge',{
   method:'POST',headers:auth(token),body:JSON.stringify({items})
@@ -111,6 +114,7 @@ async function toServerItems(rows){
 
 function adopt(reply,token){
   if(token!==activeToken())return
+  currentRevision=reply.revision
   setAuthenticatedCart(reply.items.map(serverLineToCart),rows=>persist(rows,token))
   notify('synced')
 }
@@ -121,7 +125,8 @@ function persist(snapshot,token){
   writeQueue=writeQueue.catch(()=>{}).then(async()=>{
     if(token!==activeToken())return
     try{
-      await putServerCart(token,await toServerItems(snapshot))
+      const result=await putServerCart(token,await toServerItems(snapshot),currentRevision)
+      if(token===activeToken()) currentRevision=result.revision
       if(token===activeToken()&&version===writing)
         adopt(await getServerCart(token),token)
     }catch(e){
