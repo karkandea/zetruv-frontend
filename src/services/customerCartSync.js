@@ -234,7 +234,7 @@ export async function activateCustomerCart(){
   // Never silently discard a pending local draft during a refresh.
   if(conflict?.token===token){notify('conflict',conflictMessage());return}
   if(boot)return boot
-  boot=(async()=>{
+  const operation=(async()=>{
     notify('loading')
     const guest=readGuestCart()
     if(guest.length){
@@ -250,7 +250,10 @@ export async function activateCustomerCart(){
       notify('error',(e.message||'Sinkronisasi gagal')+'. Draft guest belum dihapus.')
     }
     throw e
-  }).finally(()=>{boot=null})
+  })
+  let settled
+  settled=operation.finally(()=>{if(boot===settled)boot=null})
+  boot=settled
   return boot
 }
 export async function refreshCustomerCart(){
