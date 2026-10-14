@@ -34,9 +34,13 @@ export function cartItemLimit(item) {
 export function cartIdentity(item) {
   const sku = clean(item?.variantId || item?.variantSku || item?.productSlug || item?.productId)
   const product = clean(item?.productId || item?.productSlug)
-  const target = item?.fulfillmentMethod === 'AUTO_ID'
-    ? `${clean(item?.accountFields?.userId)}:${clean(item?.accountFields?.zone)}`
-    : clean(item?.accountKey || 'checkout-required')
+  // Server cart lines are already validated, distinct entities: two same
+  // SKU account targets MUST NOT collapse if a product has a third field.
+  const target = item?.serverLineId
+    ? `server-line:${clean(item.serverLineId)}`
+    : item?.fulfillmentMethod === 'AUTO_ID'
+      ? `${clean(item?.accountFields?.userId)}:${clean(item?.accountFields?.zone)}`
+      : clean(item?.accountKey || 'checkout-required')
   return `${product}:${sku}:${target}`
 }
 

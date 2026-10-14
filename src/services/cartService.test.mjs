@@ -80,3 +80,14 @@ test('authenticated remote cart never leaks to anonymous localStorage on logout'
   clearGuestCart()
   assert.equal(readCart().length,0)
 })
+
+test('server validated same-SKU lines never coalesce even when account labels match',()=>{
+  storage.clear()
+  setAuthenticatedCart([
+    {...item('123','42'),serverLineId:'server-one',gameAccountValidationId:'validation-one'},
+    {...item('123','42'),serverLineId:'server-two',gameAccountValidationId:'validation-two'},
+  ],()=>Promise.resolve())
+  assert.equal(readCart().length,2)
+  assert.notEqual(readCart()[0].cartKey,readCart()[1].cartKey)
+  leaveAuthenticatedCart()
+})
