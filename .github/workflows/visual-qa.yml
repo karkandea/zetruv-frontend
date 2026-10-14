@@ -32,7 +32,15 @@ jobs:
           exit 1
       - name: Capture desktop and mobile before/after
         run: node scripts/visual-qa.mjs
-      - name: Preserve screenshot evidence
+      - name: QA evidence summary
+        if: always()
+        run: |
+          if [ -f visual-qa/results.json ]; then
+            echo 'Captured before/after screenshots for 6 pages at desktop and mobile.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Results and viewport overflow checks are printed in the test log.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve screenshot evidence (quota-dependent)
+        continue-on-error: true
         if: always()
         uses: actions/upload-artifact@v4
         with:
