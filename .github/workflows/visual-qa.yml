@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   visual-qa:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
       - name: Install isolated browser test runner
         run: |
           npm install --no-save --no-audit --no-fund playwright
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Serve PR build locally
         run: |
           npm run preview -- --host 127.0.0.1 --port 4178 > /tmp/zetruv-visual-preview.log 2>&1 &
