@@ -14,6 +14,7 @@ let boot=null
 let writeQueue=Promise.resolve()
 let writing=0
 let currentRevision=null
+let conflict=null // RAM only: never persist a private account cart to browser storage.
 let status={state:'guest',message:''}
 
 function notify(state,message=''){
@@ -39,6 +40,10 @@ export function setCustomerSession(response){
   window.sessionStorage.setItem(SESSION_KEY,JSON.stringify(value))
   boot=null
   currentRevision=null
+  conflict=null
+  writing++ // Invalidate outstanding responses from the previous account.
+  leaveAuthenticatedCart() // Never render another customer's lines while authenticating.
+  notify('loading')
   window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:true}}))
   return value
 }
@@ -47,6 +52,8 @@ export function logoutCustomer(){
   window.sessionStorage.removeItem(SESSION_KEY)
   boot=null
   currentRevision=null
+  conflict=null
+  writing++
   leaveAuthenticatedCart()
   notify('guest')
   window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:false}}))
@@ -119,25 +126,83 @@ function adopt(reply,token){
   notify('synced')
 }
 
+function conflictMessage(){
+  return 'Keranjang berubah di perangkat lain. Draft lokal tetap tersedia. '+
+    'Server: '+(conflict?.serverItems?.length??'?')+' produk, '+
+    'draft lokal: '+(conflict?.localSnapshot?.length??'?')+
+    ' produk. Pilih versi yang ingin dipakai sebelum checkout.'
+}
 function persist(snapshot,token){
   const version=++writing
+  if(conflict?.token===token){
+    conflict.localSnapshot=snapshot // Preserve the newest unsaved user edits in memory.
+    notify('conflict',conflictMessage())
+    return Promise.resolve()
+  }
   notify('saving')
   writeQueue=writeQueue.catch(()=>{}).then(async()=>{
     if(token!==activeToken())return
     try{
       const result=await putServerCart(token,await toServerItems(snapshot),currentRevision)
-      if(token===activeToken()) currentRevision=result.revision
+      if(token===activeToken())currentRevision=result.revision
       if(token===activeToken()&&version===writing)
         adopt(await getServerCart(token),token)
     }catch(e){
-      if(token!==activeToken())return
-      if(version===writing){
-        try{adopt(await getServerCart(token),token)}catch{/* retain sync error */}
-        notify('error',(e.message||'Perubahan cart gagal')+'. Periksa cart sebelum checkout.')
+      if(token!==activeToken() || version!==writing)return
+      // A failed PUT never discards the user's optimistic edit. A 409 means
+      // another browser changed the server revision; explicit choice required.
+      try{
+        const latest=await getServerCart(token)
+        if(token!==activeToken())return
+        conflict={token,localSnapshot:snapshot,serverRevision:latest.revision,serverItems:latest.items}
+        notify('conflict',conflictMessage())
+      }catch{
+        conflict={token,localSnapshot:snapshot,serverRevision:null,serverItems:null}
+        notify('error',(e.message||'Gagal menyimpan keranjang')+
+          '. Draft lokal belum dihapus. Coba lagi setelah koneksi pulih.')
       }
     }
   })
   return writeQueue
+}
+
+// Explicit, user-initiated conflict resolution. 'server' discards the local
+// draft only after the user chooses it; 'local' requires a fresh CAS revision.
+// A second concurrent change rejects the overwrite and demands another review.
+export async function resolveCartConflict(choice){
+  const pending=conflict
+  const token=activeToken()
+  if(!pending || !token || pending.token!==token)
+    throw Error('Tidak ada konflik keranjang untuk sesi ini.')
+  if(choice!=='server' && choice!=='local')
+    throw Error('Pilih versi keranjang yang ingin dipertahankan.')
+  await writeQueue.catch(()=>{})
+  const latest=await getServerCart(token)
+  if(token!==activeToken())return
+  if(choice==='server'){
+    conflict=null
+    adopt(latest,token)
+    return
+  }
+  if(pending.serverRevision!==latest.revision){
+    conflict={...pending,serverRevision:latest.revision,serverItems:latest.items}
+    notify('conflict',conflictMessage())
+    throw Error('Server berubah lagi. Periksa ulang sebelum mengganti versi server.')
+  }
+  notify('saving')
+  try{
+    const items=await toServerItems(pending.localSnapshot)
+    await putServerCart(token,items,latest.revision)
+    if(token!==activeToken())return
+    conflict=null
+    adopt(await getServerCart(token),token)
+  }catch(e){
+    if(token!==activeToken())return
+    const fresh=await getServerCart(token).catch(()=>null)
+    if(fresh)conflict={...pending,serverRevision:fresh.revision,serverItems:fresh.items}
+    notify(fresh?'conflict':'error',fresh?conflictMessage():(e.message||'Gagal menyimpan draft lokal.'))
+    throw e
+  }
 }
 export async function activateCustomerCart(){
   const token=activeToken()
@@ -148,7 +213,8 @@ export async function activateCustomerCart(){
     const guest=readGuestCart()
     if(guest.length){
       await mergeServerCart(token,await toServerItems(guest))
-      // Data guest only cleared after successful atomic merge response.
+      // Only this verified session may clear its own guest draft.
+      if(token!==activeToken())return
       clearGuestCart()
     }
     adopt(await getServerCart(token),token)
@@ -164,7 +230,7 @@ export async function activateCustomerCart(){
 export async function refreshCustomerCart(){
   const token=activeToken()
   if(!token)return
-  if(status.state==='saving')return
+  if(['saving','conflict','error'].includes(status.state))return
   if(!isAuthenticatedCart())return activateCustomerCart()
   try{adopt(await getServerCart(token),token)}
   catch(e){notify('error',e.message||'Gagal memuat cart server.')}
