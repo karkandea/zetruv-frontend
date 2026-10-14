@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { getCatalogProduct } from '../services/catalogService'
+import { activateCustomerCart, refreshCustomerCart, readCustomerSession, getCartSyncStatus, resolveCartConflict, CART_SYNC_EVENT } from '../services/customerCartSync'
 import {
   cartCount, cartItemLimit, onCartChange, readCart, removeCartItem,
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
@@ -117,12 +118,19 @@ export default function CartPage() {
   const [editingKey, setEditingKey] = useState(null)
   const [removed, setRemoved] = useState(null)
   const [status, setStatus] = useState('')
+  const [cartSync,setCartSync] = useState(getCartSyncStatus)
   const undoTimer = useRef(null)
   const accountSlugs = useMemo(() => [...new Set(items
     .filter((item) => ['AUTO_ID','MANUAL_LOGIN'].includes(item.fulfillmentMethod))
     .map((item) => item.productSlug).filter(Boolean))].sort().join('|'), [items])
 
   useEffect(() => onCartChange(setItems), [])
+  useEffect(()=>{
+    const handler=event=>setCartSync(event.detail||getCartSyncStatus())
+    window.addEventListener(CART_SYNC_EVENT,handler)
+    if(readCustomerSession())activateCustomerCart().catch(()=>{})
+    return ()=>window.removeEventListener(CART_SYNC_EVENT,handler)
+  },[])
   useEffect(() => () => { if (undoTimer.current) window.clearTimeout(undoTimer.current) }, [])
 
   useEffect(() => {
@@ -157,12 +165,15 @@ export default function CartPage() {
   const itemCount = cartCount(items)
   const problems = items.map(item => ({
     key: item.cartKey,
-    message: item.fulfillmentMethod === 'MANUAL_LOGIN' &&
+    message: item.serverLineId && item.isAvailable===false
+      ? 'Produk, stok, atau validasi akun tujuan sudah kedaluwarsa. Periksa dan verifikasi ulang sebelum checkout.'
+      : item.fulfillmentMethod === 'MANUAL_LOGIN' &&
       !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
         ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
-  const canCheckout = items.length > 0 && problems.length === 0
+  const canCheckout = items.length > 0 && problems.length === 0 &&
+    (!readCustomerSession() || cartSync.state==='synced')
   const editing = items.find((item) => item.cartKey === editingKey) || null
 
   function changeQty(item, nextQty) {
@@ -204,6 +215,29 @@ export default function CartPage() {
           <a href="/search">Lanjut Belanja</a>
         </header>
 
+        {readCustomerSession() && <section className="digital-info-strip" role="status" aria-live="polite">
+          <Info size={18}/>
+          <span>{cartSync.state==='synced'?'Keranjang tersimpan di akun Zetruv dan dapat diakses di perangkat lain.':
+            cartSync.state==='saving'?'Menyimpan perubahan keranjang ke server...':
+            cartSync.state==='loading'?'Memuat dan menggabungkan keranjang akun...':
+            ['conflict','error'].includes(cartSync.state)?(cartSync.message||'Gagal menyinkronkan keranjang.'): 'Memuat keranjang akun...'}</span>
+          <button type="button" disabled={['saving','loading','conflict','error'].includes(cartSync.state)}
+            onClick={()=>activateCustomerCart().catch(()=>{})}>Sinkronkan ulang</button>
+        </section>}
+        {readCustomerSession() && ['conflict','error'].includes(cartSync.state) && (
+          <section className="digital-info-strip" role="alert" aria-live="assertive">
+            <CircleAlert size={18} aria-hidden="true"/>
+            <span>Perubahan belum tersimpan. Bandingkan jumlah produk pada pesan di atas sebelum memilih. Checkout ditahan.</span>
+            <button type="button" onClick={async()=>{
+              if(!window.confirm('Gunakan keranjang terbaru dari server? Perubahan lokal yang belum tersimpan akan dibuang.'))return
+              try{await resolveCartConflict('server')}catch(e){setStatus(e.message)}
+            }}>Gunakan versi server</button>
+            <button type="button" onClick={async()=>{
+              if(!window.confirm('Terapkan draft lokal ke server? Item dari perangkat lain yang tidak ada di draft lokal akan diganti.'))return
+              try{await resolveCartConflict('local')}catch(e){setStatus(e.message)}
+            }}>Terapkan draft lokal</button>
+          </section>
+        )}
         <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
           <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login/Joki baru dilengkapi saat checkout.</span>
@@ -231,7 +265,9 @@ export default function CartPage() {
                   const allowsQuantity = supportsCartQuantity(item)
                   const loginUnavailable = item.fulfillmentMethod==='MANUAL_LOGIN' &&
                     !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
-                  const issue = loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
+                  const issue = item.serverLineId && item.isAvailable===false
+                    ? 'Produk, stok, atau target akun ini tidak tersedia. Verifikasi ulang sebelum checkout.'
+                    : loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
                     : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
                   const target = item.accountFields || {}

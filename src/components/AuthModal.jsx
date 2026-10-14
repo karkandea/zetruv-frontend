@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
+import { authenticateCheckoutCustomer } from '../services/checkoutGatewayService'
+import { apiRequest } from '../api/httpClient'
 
 function maskEmail(email) {
   const value = String(email || '').trim()
@@ -12,6 +14,8 @@ function maskEmail(email) {
 
 export default function AuthModal({ mode = 'login', onModeChange, onClose, onAuthenticated }) {
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const [authBusy,setAuthBusy] = useState(false)
+  const [authError,setAuthError] = useState('')
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [registerEmail, setRegisterEmail] = useState('')
@@ -72,17 +76,30 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     if (event.target === event.currentTarget) onClose?.()
   }
 
-  function handleAuthSubmit(event) {
+  async function handleAuthSubmit(event) {
     event.preventDefault()
-
-    if (isRegister) {
-      setResendSeconds(45)
-      onModeChange?.('register-verify')
-      return
-    }
-
-    onAuthenticated?.()
-    onClose?.()
+    if(authBusy)return
+    setAuthBusy(true);setAuthError('')
+    try {
+      const form=new FormData(event.currentTarget)
+      const email=String(form.get('email')||'').trim()
+      const password=String(form.get('password')||'')
+      if(isRegister){
+        await apiRequest('/auth/register',{method:'POST',body:JSON.stringify({
+          name:String(form.get('name')||'').trim(),email,password,
+        })})
+        setRegisterEmail(email)
+        setResendSeconds(45)
+        onModeChange?.('register-verify')
+      }else{
+        const response=await authenticateCheckoutCustomer(email,password)
+        if(!response?.accessToken)throw Error('Autentikasi server tidak berhasil.')
+        onAuthenticated?.(response)
+        onClose?.()
+      }
+    }catch(e){setAuthError(e.status===401?'Email atau password Zetruv salah.':
+      e.message||'Belum dapat terhubung ke server.')}
+    finally{setAuthBusy(false)}
   }
 
   function handleResetRequest(event) {
@@ -377,6 +394,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               </div>
 
               <form className="auth-form" onSubmit={handleAuthSubmit}>
+                {authError && <p role="alert" className="auth-error">{authError}</p>}
                 {isRegister && (
                   <input className="auth-input" type="text" name="name" placeholder="Name" autoComplete="name" />
                 )}
@@ -428,7 +446,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   )}
                 </div>
 
-                <button className="auth-submit" type="submit">{isRegister ? 'Register' : 'Login'}</button>
+                <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy?'Memproses...':isRegister?'Register':'Login'}</button>
               </form>
             </div>
           </div>

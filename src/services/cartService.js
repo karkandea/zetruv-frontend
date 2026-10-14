@@ -1,5 +1,8 @@
 const CART_KEY = 'zetruv-cart-v1'
 const CART_EVENT = 'zetruv-cart-change'
+let remoteItems = null
+let remoteWriter = null
+let lastRemoteWrite = Promise.resolve()
 const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount'])
 const CREDENTIAL_METHODS = new Set(['MANUAL_LOGIN', 'JOKI_MANUAL'])
 
@@ -31,18 +34,39 @@ export function cartItemLimit(item) {
 export function cartIdentity(item) {
   const sku = clean(item?.variantId || item?.variantSku || item?.productSlug || item?.productId)
   const product = clean(item?.productId || item?.productSlug)
-  const target = item?.fulfillmentMethod === 'AUTO_ID'
-    ? `${clean(item?.accountFields?.userId)}:${clean(item?.accountFields?.zone)}`
-    : clean(item?.accountKey || 'checkout-required')
+  // Server cart lines are already validated, distinct entities: two same
+  // SKU account targets MUST NOT collapse if a product has a third field.
+  const target = item?.serverLineId
+    ? `server-line:${clean(item.serverLineId)}`
+    : item?.fulfillmentMethod === 'AUTO_ID'
+      ? `${clean(item?.accountFields?.userId)}:${clean(item?.accountFields?.zone)}`
+      : clean(item?.accountKey || 'checkout-required')
   return `${product}:${sku}:${target}`
 }
 
 function normalizeEntry(item) {
-  const quantity = Math.max(1, Math.min(cartItemLimit(item), Math.floor(Number(item.quantity) || 1)))
-  return { ...item, cartKey: cartIdentity(item), quantity,
-    accountKey: item.fulfillmentMethod === 'AUTO_ID'
-      ? `${clean(item.accountFields?.userId)}:${clean(item.accountFields?.zone)}`
-      : item.accountKey }
+  // Cart is NOT a credentials store: remove historical/accidental payloads,
+  // including from old anonymous localStorage records.
+  const {
+    loginCredentials, credentials, password, otp, twoFactorCode,
+    recoveryCode, securityCode, accessToken, ...safe
+  } = item
+  if (CREDENTIAL_METHODS.has(safe.fulfillmentMethod)) {
+    delete safe.accountFields
+    delete safe.serverTargetFields
+    safe.accountKey = 'checkout-required'
+  } else if (safe.fulfillmentMethod === 'AUTO_ID') {
+    safe.accountFields = {
+      userId: clean(safe.accountFields?.userId),
+      zone: clean(safe.accountFields?.zone),
+    }
+    delete safe.serverTargetFields
+  }
+  const quantity = Math.max(1, Math.min(cartItemLimit(safe), Math.floor(Number(safe.quantity) || 1)))
+  return { ...safe, cartKey: cartIdentity(safe), quantity,
+    accountKey: safe.fulfillmentMethod === 'AUTO_ID'
+      ? `${clean(safe.accountFields?.userId)}:${clean(safe.accountFields?.zone)}`
+      : safe.accountKey }
 }
 
 function mergeEntries(items) {
@@ -62,15 +86,61 @@ function mergeEntries(items) {
   return merged
 }
 
-export function readCart() {
+export function readGuestCart() {
   if (typeof window === 'undefined') return []
-  return mergeEntries(safeParse(window.localStorage.getItem(CART_KEY)))
+  const raw = window.localStorage.getItem(CART_KEY)
+  const sanitized = mergeEntries(safeParse(raw))
+  // Scrub legacy stored secrets immediately, without waiting for a cart edit.
+  if (raw && raw !== JSON.stringify(sanitized))
+    window.localStorage.setItem(CART_KEY, JSON.stringify(sanitized))
+  return sanitized
+}
+
+export function clearGuestCart() {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(CART_KEY)
+}
+
+export function readCart() {
+  return remoteItems === null ? readGuestCart() : mergeEntries(remoteItems)
+}
+
+function emitCart(items) {
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: items }))
+}
+
+export function setAuthenticatedCart(items, persist) {
+  remoteItems = mergeEntries(items)
+  remoteWriter = persist
+  emitCart(remoteItems)
+}
+
+export function leaveAuthenticatedCart() {
+  remoteItems = null
+  remoteWriter = null
+  emitCart(readGuestCart())
+}
+
+export function awaitCartPersistence() {
+  return lastRemoteWrite
+}
+
+export function isAuthenticatedCart() {
+  return remoteItems !== null
 }
 
 function writeCart(items) {
   const normalized = mergeEntries(items)
+  if (remoteItems !== null) {
+    remoteItems = normalized
+    emitCart(normalized)
+    if (typeof remoteWriter === 'function')
+      lastRemoteWrite = Promise.resolve(remoteWriter(normalized))
+    return normalized
+  }
   window.localStorage.setItem(CART_KEY, JSON.stringify(normalized))
-  window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: normalized }))
+  emitCart(normalized)
   return normalized
 }
 
@@ -94,6 +164,7 @@ export function updateCartAccount(cartKey, { userId, zone }, labels = {}) {
   const updated = {
     ...current,
     accountFields: fields,
+    gameAccountValidationId: null, // New destination MUST be revalidated by backend.
     accountKey: `${fields.userId}:${fields.zone}`,
     accountLabel: `${labels.first || 'User ID'}: ${fields.userId}${fields.zone ? ` / ${fields.zone}` : ''}`,
   }
@@ -130,7 +201,7 @@ export function cartCount(items = readCart()) {
 export function onCartChange(callback) {
   const handler = (event) => callback(event.detail || readCart())
   const storageHandler = (event) => {
-    if (event.key === CART_KEY) callback(readCart())
+    if (event.key === CART_KEY && remoteItems === null) callback(readCart())
   }
   window.addEventListener(CART_EVENT, handler)
   window.addEventListener('storage', storageHandler)

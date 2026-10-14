@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
+import { readCustomerSession, setCustomerSession } from '../services/customerCartSync'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import { searchAssets } from '../data/searchAssets'
 import jerseyCard from '../assets/physical/jersey-card.webp'
@@ -439,7 +440,7 @@ export function PhysicalCartPage() {
   }
 
   const continueCheckout = () => {
-    const authed = typeof window !== 'undefined' && window.sessionStorage.getItem('zetruv-auth-preview') === '1'
+    const authed = Boolean(readCustomerSession())
     if (authed) {
       window.location.href = '/checkout?flow=physical'
       return
@@ -496,7 +497,7 @@ export function PhysicalCartPage() {
           </aside>
         </div>
       </main>
-      {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={() => { window.sessionStorage.setItem('zetruv-auth-preview','1'); window.location.href = '/checkout?flow=physical' }} />}
+      {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={(response) => { setCustomerSession(response); window.location.href = '/checkout?flow=physical' }} />}
     </div>
   )
 }

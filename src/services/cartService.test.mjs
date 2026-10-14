@@ -2,12 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { getDigitalPricing } from './digitalCartPricing.js'
 import { accountRequirements, checkCartDestination } from './digitalCartValidation.js'
-import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount } from './cartService.js'
+import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount, setAuthenticatedCart, leaveAuthenticatedCart, readGuestCart, clearGuestCart, awaitCartPersistence } from './cartService.js'
 
 const storage = new Map()
 const listeners = new Map()
 globalThis.window = {
-  localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
+  localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) },
   addEventListener: (name, fn) => { listeners.set(name, [...(listeners.get(name) || []), fn]) },
   removeEventListener: () => {},
   dispatchEvent: (event) => { (listeners.get(event.type) || []).forEach(fn => fn(event)) },
@@ -63,4 +63,51 @@ test('backend input definitions drive destination validation', () => {
   assert.equal(checkCartDestination(item('123',''),fields).valid,false)
   assert.equal(checkCartDestination(item('123','42'),fields).valid,true)
   assert.equal(checkCartDestination(item('123','42'),undefined).valid,false)
+})
+
+test('authenticated remote cart never leaks to anonymous localStorage on logout', async()=>{
+  storage.clear()
+  addCartItem(item('guest','10'))
+  let persisted=null
+  setAuthenticatedCart([item('account','20')],async rows=>{persisted=rows})
+  assert.equal(readCart()[0].accountFields.userId,'account')
+  updateCartQuantity(readCart()[0].cartKey,2)
+  await awaitCartPersistence()
+  assert.equal(persisted[0].quantity,2)
+  assert.equal(readGuestCart()[0].accountFields.userId,'guest')
+  leaveAuthenticatedCart()
+  assert.equal(readCart()[0].accountFields.userId,'guest')
+  clearGuestCart()
+  assert.equal(readCart().length,0)
+})
+
+test('server validated same-SKU lines never coalesce even when account labels match',()=>{
+  storage.clear()
+  setAuthenticatedCart([
+    {...item('123','42'),serverLineId:'server-one',gameAccountValidationId:'validation-one'},
+    {...item('123','42'),serverLineId:'server-two',gameAccountValidationId:'validation-two'},
+  ],()=>Promise.resolve())
+  assert.equal(readCart().length,2)
+  assert.notEqual(readCart()[0].cartKey,readCart()[1].cartKey)
+  leaveAuthenticatedCart()
+})
+
+test('existing guest cart credential payload is scrubbed from localStorage immediately',()=>{
+  leaveAuthenticatedCart()
+  storage.clear()
+  const contaminated={...item('123','42','secret-voucher'),productKind:'TopUpLogin',
+    fulfillmentMethod:'MANUAL_LOGIN',password:'never-store-game-password',
+    otp:'654321',credentials:{password:'other-secret'},
+    loginCredentials:{password:'legacy'},accountFields:{email:'game@example.test',password:'legacy-secret'}}
+  storage.set('zetruv-cart-v1',JSON.stringify([contaminated]))
+  const rows=readGuestCart()
+  assert.equal(rows.length,1)
+  assert.equal(rows[0].password,undefined)
+  assert.equal(rows[0].credentials,undefined)
+  assert.equal(rows[0].accountFields,undefined)
+  const persisted=storage.get('zetruv-cart-v1')
+  assert.ok(!persisted.includes('never-store-game-password'))
+  assert.ok(!persisted.includes('654321'))
+  assert.ok(!persisted.includes('legacy-secret'))
+  clearGuestCart()
 })
