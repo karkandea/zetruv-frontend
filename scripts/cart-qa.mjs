@@ -27,7 +27,10 @@ try{
     const ctx=await browser.newContext({viewport,deviceScaleFactor:1})
     await ctx.addInitScript(item=>{
       // Only anonymous draft. No secrets, real account ID or real transaction.
-      localStorage.setItem('zetruv-cart-v1',JSON.stringify([item]))
+      if(!sessionStorage.getItem('qa-draft-seeded')){
+        localStorage.setItem('zetruv-cart-v1',JSON.stringify([item]))
+        sessionStorage.setItem('qa-draft-seeded','1')
+      }
     },guest)
     await ctx.route('**/api/v1/auth/login',async route=>route.fulfill({
       status:200,contentType:'application/json',
