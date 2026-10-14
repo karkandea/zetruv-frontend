@@ -173,7 +173,7 @@ export default function CartPage() {
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
   const canCheckout = items.length > 0 && problems.length === 0 &&
-    !['loading','saving','error'].includes(cartSync.state)
+    (!readCustomerSession() || cartSync.state==='synced')
   const editing = items.find((item) => item.cartKey === editingKey) || null
 
   function changeQty(item, nextQty) {

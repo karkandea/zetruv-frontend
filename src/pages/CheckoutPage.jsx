@@ -16,7 +16,7 @@ import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import { storePaymentContext } from '../services/paymentSession'
-import { readCustomerSession, setCustomerSession, activateCustomerCart, CUSTOMER_EVENT } from '../services/customerCartSync'
+import { readCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
 import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
@@ -242,6 +242,7 @@ export default function CheckoutPage() {
     const session=readCustomerSession()
     return session?{accessToken:session.accessToken,customer:session.customer}:null
   })
+  const [cartSync,setCartSync]=useState(getCartSyncStatus)
   const [processing,setProcessing]=useState(false)
   const [pendingAttempt,setPendingAttempt]=useState(()=>readCheckoutAttempt())
   const [authPurpose,setAuthPurpose]=useState('pay')
@@ -266,6 +267,11 @@ export default function CheckoutPage() {
     }
     window.addEventListener(CUSTOMER_EVENT,handler)
     return ()=>window.removeEventListener(CUSTOMER_EVENT,handler)
+  },[])
+  useEffect(()=>{
+    const handler=e=>setCartSync(e.detail||getCartSyncStatus())
+    window.addEventListener(CART_SYNC_EVENT,handler)
+    return ()=>window.removeEventListener(CART_SYNC_EVENT,handler)
   },[])
 
   const slugs=useMemo(()=>[...new Set(items.map(i=>i.productSlug).filter(Boolean))].sort().join('|'),[items])
@@ -311,6 +317,8 @@ export default function CheckoutPage() {
   const checkoutIssues=useMemo(()=>{
     const result=[]
     if(!items.length)result.push('Keranjang masih kosong.')
+    if(customer && cartSync.state!=='synced')
+      result.push('Keranjang akun belum tersinkron. Periksa keranjang sebelum membayar.')
     if(!phoneNormalized)result.push('Masukkan nomor WhatsApp Indonesia yang valid.')
     if(catalogState!=='ready')result.push('Katalog produk belum berhasil diverifikasi.')
     if(problems.length)result.push(problems[0].message)
@@ -353,7 +361,7 @@ export default function CheckoutPage() {
     if(total<=0)result.push('Total pembayaran harus lebih dari Rp0.')
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
-      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness])
+      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
