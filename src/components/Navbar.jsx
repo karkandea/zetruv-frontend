@@ -48,7 +48,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const isLeaderboard = variant === 'leaderboard'
   const isArticle = variant === 'article'
   const isAccount = variant === 'account'
-  const isLoggedIn = Boolean(verifiedSession) || isCatalog || isLoginCatalog || isHomeLoggedIn || isAccount
+  const isLoggedIn = Boolean(verifiedSession) // Page variant is never authentication.
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn || isAccount
 
   const [activeNav, setActiveNav] = useState(() => {
