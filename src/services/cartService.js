@@ -45,11 +45,28 @@ export function cartIdentity(item) {
 }
 
 function normalizeEntry(item) {
-  const quantity = Math.max(1, Math.min(cartItemLimit(item), Math.floor(Number(item.quantity) || 1)))
-  return { ...item, cartKey: cartIdentity(item), quantity,
-    accountKey: item.fulfillmentMethod === 'AUTO_ID'
-      ? `${clean(item.accountFields?.userId)}:${clean(item.accountFields?.zone)}`
-      : item.accountKey }
+  // Cart is NOT a credentials store: remove historical/accidental payloads,
+  // including from old anonymous localStorage records.
+  const {
+    loginCredentials, credentials, password, otp, twoFactorCode,
+    recoveryCode, securityCode, accessToken, ...safe
+  } = item
+  if (CREDENTIAL_METHODS.has(safe.fulfillmentMethod)) {
+    delete safe.accountFields
+    delete safe.serverTargetFields
+    safe.accountKey = 'checkout-required'
+  } else if (safe.fulfillmentMethod === 'AUTO_ID') {
+    safe.accountFields = {
+      userId: clean(safe.accountFields?.userId),
+      zone: clean(safe.accountFields?.zone),
+    }
+    delete safe.serverTargetFields
+  }
+  const quantity = Math.max(1, Math.min(cartItemLimit(safe), Math.floor(Number(safe.quantity) || 1)))
+  return { ...safe, cartKey: cartIdentity(safe), quantity,
+    accountKey: safe.fulfillmentMethod === 'AUTO_ID'
+      ? `${clean(safe.accountFields?.userId)}:${clean(safe.accountFields?.zone)}`
+      : safe.accountKey }
 }
 
 function mergeEntries(items) {
@@ -71,7 +88,12 @@ function mergeEntries(items) {
 
 export function readGuestCart() {
   if (typeof window === 'undefined') return []
-  return mergeEntries(safeParse(window.localStorage.getItem(CART_KEY)))
+  const raw = window.localStorage.getItem(CART_KEY)
+  const sanitized = mergeEntries(safeParse(raw))
+  // Scrub legacy stored secrets immediately, without waiting for a cart edit.
+  if (raw && raw !== JSON.stringify(sanitized))
+    window.localStorage.setItem(CART_KEY, JSON.stringify(sanitized))
+  return sanitized
 }
 
 export function clearGuestCart() {
