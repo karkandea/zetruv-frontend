@@ -3,6 +3,7 @@ import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
+import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
 
 const productLinks = [
   { label: 'Browse All Categories', href: '/search', arrow: true },
@@ -27,6 +28,7 @@ function readPhysicalCartCount() {
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [verifiedSession,setVerifiedSession]=useState(readCustomerSession)
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
   const [physicalCartCount, setPhysicalCartCount] = useState(() => readPhysicalCartCount())
   const [authMode, setAuthMode] = useState(() => {
@@ -46,7 +48,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const isLeaderboard = variant === 'leaderboard'
   const isArticle = variant === 'article'
   const isAccount = variant === 'account'
-  const isLoggedIn = isCatalog || isLoginCatalog || isHomeLoggedIn || isAccount
+  const isLoggedIn = Boolean(verifiedSession) || isCatalog || isLoginCatalog || isHomeLoggedIn || isAccount
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn || isAccount
 
   const [activeNav, setActiveNav] = useState(() => {
@@ -72,6 +74,16 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const transactionLabel = isHomeLoggedIn ? 'Cek Transaksi' : isCatalog ? 'Track Order' : 'Check Transaction'
 
   useEffect(() => onCartChange(setCartItems), [])
+  useEffect(()=>{
+    // Every browser/device reads the server cart after a verified login.
+    if(readCustomerSession())activateCustomerCart().catch(()=>{})
+    const refreshSession=()=>setVerifiedSession(readCustomerSession())
+    const onFocus=()=>{if(readCustomerSession())refreshCustomerCart().catch(()=>{})}
+    window.addEventListener(CUSTOMER_EVENT,refreshSession)
+    window.addEventListener('focus',onFocus)
+    return ()=>{window.removeEventListener(CUSTOMER_EVENT,refreshSession)
+      window.removeEventListener('focus',onFocus)}
+  },[])
 
   useEffect(() => {
     const refreshPhysicalCart = () => setPhysicalCartCount(readPhysicalCartCount())
@@ -121,9 +133,11 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     setIsCartOpen(false)
   }
 
-  function handleAuthenticated() {
-    if (typeof window !== 'undefined') window.sessionStorage.setItem('zetruv-auth-preview', '1')
-    onAuthenticated?.()
+  function handleAuthenticated(response) {
+    setCustomerSession(response)
+    setVerifiedSession(readCustomerSession())
+    activateCustomerCart().catch(()=>{}) // error is displayed on cart; guest draft retained.
+    onAuthenticated?.(response)
   }
 
   return (
@@ -169,7 +183,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               </a>
             </div>
           </div>
-          {isLoggedIn && <a className="nav-avatar" href="/account" aria-label="Signed in as M">M</a>}
+          {verifiedSession && <a className="nav-avatar" href="/account" aria-label="Akun Zetruv">{String(verifiedSession.customer?.name||'A').slice(0,1).toUpperCase()}</a>}
         </div>
       </div>
 
@@ -221,7 +235,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             </a>
           </nav>
 
-          {!isLoggedIn && (
+          {!verifiedSession && (
             <div className="auth-actions">
               <button className="btn btn--outline navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>
                 <img src={assets.login} alt="" />Login
@@ -231,6 +245,8 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               </button>
             </div>
           )}
+          {verifiedSession && <div className="auth-actions"><button type="button" className="btn btn--outline navbar-control"
+            onClick={()=>{logoutCustomer();setVerifiedSession(null)}}>Keluar</button></div>}
         </div>
       </div>
       </header>
