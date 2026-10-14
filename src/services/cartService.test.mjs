@@ -91,3 +91,23 @@ test('server validated same-SKU lines never coalesce even when account labels ma
   assert.notEqual(readCart()[0].cartKey,readCart()[1].cartKey)
   leaveAuthenticatedCart()
 })
+
+test('existing guest cart credential payload is scrubbed from localStorage immediately',()=>{
+  leaveAuthenticatedCart()
+  storage.clear()
+  const contaminated={...item('123','42','secret-voucher'),productKind:'TopUpLogin',
+    fulfillmentMethod:'MANUAL_LOGIN',password:'never-store-game-password',
+    otp:'654321',credentials:{password:'other-secret'},
+    loginCredentials:{password:'legacy'},accountFields:{email:'game@example.test',password:'legacy-secret'}}
+  storage.set('zetruv-cart-v1',JSON.stringify([contaminated]))
+  const rows=readGuestCart()
+  assert.equal(rows.length,1)
+  assert.equal(rows[0].password,undefined)
+  assert.equal(rows[0].credentials,undefined)
+  assert.equal(rows[0].accountFields,undefined)
+  const persisted=storage.get('zetruv-cart-v1')
+  assert.ok(!persisted.includes('never-store-game-password'))
+  assert.ok(!persisted.includes('654321'))
+  assert.ok(!persisted.includes('legacy-secret'))
+  clearGuestCart()
+})
