@@ -32,6 +32,8 @@ jobs:
           exit 1
       - name: Capture desktop and mobile before/after
         run: node scripts/visual-qa.mjs
+      - name: Synthetic cart auth/merge/refresh/logout UI test
+        run: node scripts/cart-qa.mjs
       - name: QA evidence summary
         if: always()
         run: |
