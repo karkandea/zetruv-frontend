@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { getCatalogProduct } from '../services/catalogService'
+import { activateCustomerCart, refreshCustomerCart, readCustomerSession, getCartSyncStatus, CART_SYNC_EVENT } from '../services/customerCartSync'
 import {
   cartCount, cartItemLimit, onCartChange, readCart, removeCartItem,
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
@@ -117,12 +118,19 @@ export default function CartPage() {
   const [editingKey, setEditingKey] = useState(null)
   const [removed, setRemoved] = useState(null)
   const [status, setStatus] = useState('')
+  const [cartSync,setCartSync] = useState(getCartSyncStatus)
   const undoTimer = useRef(null)
   const accountSlugs = useMemo(() => [...new Set(items
     .filter((item) => ['AUTO_ID','MANUAL_LOGIN'].includes(item.fulfillmentMethod))
     .map((item) => item.productSlug).filter(Boolean))].sort().join('|'), [items])
 
   useEffect(() => onCartChange(setItems), [])
+  useEffect(()=>{
+    const handler=event=>setCartSync(event.detail||getCartSyncStatus())
+    window.addEventListener(CART_SYNC_EVENT,handler)
+    if(readCustomerSession())activateCustomerCart().catch(()=>{})
+    return ()=>window.removeEventListener(CART_SYNC_EVENT,handler)
+  },[])
   useEffect(() => () => { if (undoTimer.current) window.clearTimeout(undoTimer.current) }, [])
 
   useEffect(() => {
@@ -162,7 +170,8 @@ export default function CartPage() {
         ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
-  const canCheckout = items.length > 0 && problems.length === 0
+  const canCheckout = items.length > 0 && problems.length === 0 &&
+    !['loading','saving','error'].includes(cartSync.state)
   const editing = items.find((item) => item.cartKey === editingKey) || null
 
   function changeQty(item, nextQty) {
@@ -204,6 +213,15 @@ export default function CartPage() {
           <a href="/search">Lanjut Belanja</a>
         </header>
 
+        {readCustomerSession() && <section className="digital-info-strip" role="status" aria-live="polite">
+          <Info size={18}/>
+          <span>{cartSync.state==='synced'?'Keranjang tersimpan di akun Zetruv dan dapat diakses di perangkat lain.':
+            cartSync.state==='saving'?'Menyimpan perubahan keranjang ke server...':
+            cartSync.state==='loading'?'Memuat dan menggabungkan keranjang akun...':
+            cartSync.state==='error'?(cartSync.message||'Gagal menyinkronkan keranjang.'): 'Memuat keranjang akun...'}</span>
+          <button type="button" disabled={cartSync.state==='saving'||cartSync.state==='loading'}
+            onClick={()=>activateCustomerCart().catch(()=>{})}>Sinkronkan ulang</button>
+        </section>}
         <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
           <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login/Joki baru dilengkapi saat checkout.</span>
