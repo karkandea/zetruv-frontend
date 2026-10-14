@@ -1,5 +1,7 @@
 const CART_KEY = 'zetruv-cart-v1'
 const CART_EVENT = 'zetruv-cart-change'
+let remoteItems = null
+let remoteWriter = null
 const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount'])
 const CREDENTIAL_METHODS = new Set(['MANUAL_LOGIN', 'JOKI_MANUAL'])
 
@@ -62,15 +64,51 @@ function mergeEntries(items) {
   return merged
 }
 
-export function readCart() {
+export function readGuestCart() {
   if (typeof window === 'undefined') return []
   return mergeEntries(safeParse(window.localStorage.getItem(CART_KEY)))
 }
 
+export function clearGuestCart() {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(CART_KEY)
+}
+
+export function readCart() {
+  return remoteItems === null ? readGuestCart() : mergeEntries(remoteItems)
+}
+
+function emitCart(items) {
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: items }))
+}
+
+export function setAuthenticatedCart(items, persist) {
+  remoteItems = mergeEntries(items)
+  remoteWriter = persist
+  emitCart(remoteItems)
+}
+
+export function leaveAuthenticatedCart() {
+  remoteItems = null
+  remoteWriter = null
+  emitCart(readGuestCart())
+}
+
+export function isAuthenticatedCart() {
+  return remoteItems !== null
+}
+
 function writeCart(items) {
   const normalized = mergeEntries(items)
+  if (remoteItems !== null) {
+    remoteItems = normalized
+    emitCart(normalized)
+    if (typeof remoteWriter === 'function') remoteWriter(normalized)
+    return normalized
+  }
   window.localStorage.setItem(CART_KEY, JSON.stringify(normalized))
-  window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: normalized }))
+  emitCart(normalized)
   return normalized
 }
 
@@ -94,6 +132,7 @@ export function updateCartAccount(cartKey, { userId, zone }, labels = {}) {
   const updated = {
     ...current,
     accountFields: fields,
+    gameAccountValidationId: null, // New destination MUST be revalidated by backend.
     accountKey: `${fields.userId}:${fields.zone}`,
     accountLabel: `${labels.first || 'User ID'}: ${fields.userId}${fields.zone ? ` / ${fields.zone}` : ''}`,
   }
@@ -130,7 +169,7 @@ export function cartCount(items = readCart()) {
 export function onCartChange(callback) {
   const handler = (event) => callback(event.detail || readCart())
   const storageHandler = (event) => {
-    if (event.key === CART_KEY) callback(readCart())
+    if (event.key === CART_KEY && remoteItems === null) callback(readCart())
   }
   window.addEventListener(CART_EVENT, handler)
   window.addEventListener('storage', storageHandler)
