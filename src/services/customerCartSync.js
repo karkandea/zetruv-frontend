@@ -169,6 +169,7 @@ function persist(snapshot,token){
 // Explicit, user-initiated conflict resolution. 'server' discards the local
 // draft only after the user chooses it; 'local' requires a fresh CAS revision.
 // A second concurrent change rejects the overwrite and demands another review.
+let resolving=false
 export async function resolveCartConflict(choice){
   const pending=conflict
   const token=activeToken()
@@ -176,33 +177,56 @@ export async function resolveCartConflict(choice){
     throw Error('Tidak ada konflik keranjang untuk sesi ini.')
   if(choice!=='server' && choice!=='local')
     throw Error('Pilih versi keranjang yang ingin dipertahankan.')
-  await writeQueue.catch(()=>{})
-  const latest=await getServerCart(token)
-  if(token!==activeToken())return
-  if(choice==='server'){
-    conflict=null
-    adopt(latest,token)
-    return
-  }
-  if(pending.serverRevision!==latest.revision){
-    conflict={...pending,serverRevision:latest.revision,serverItems:latest.items}
-    notify('conflict',conflictMessage())
-    throw Error('Server berubah lagi. Periksa ulang sebelum mengganti versi server.')
-  }
-  notify('saving')
+  if(resolving)throw Error('Perubahan keranjang sedang diperiksa.')
+  resolving=true
+  const chosenVersion=writing
   try{
+    await writeQueue.catch(()=>{})
+    const latest=await getServerCart(token)
+    if(token!==activeToken())return
+    if(chosenVersion!==writing)
+      throw Error('Draft lokal berubah saat diperiksa. Silakan pilih ulang.')
+    if(choice==='server'){
+      conflict=null
+      adopt(latest,token)
+      return
+    }
+    if(pending.serverRevision!==latest.revision){
+      conflict={...pending,serverRevision:latest.revision,serverItems:latest.items}
+      notify('conflict',conflictMessage())
+      throw Error('Server berubah lagi. Periksa ulang sebelum mengganti versi server.')
+    }
+    notify('saving')
     const items=await toServerItems(pending.localSnapshot)
+    if(chosenVersion!==writing)
+      throw Error('Draft lokal berubah. Ulangi pilihan sebelum menyimpan.')
     await putServerCart(token,items,latest.revision)
     if(token!==activeToken())return
+    // If an edit occurred while the PUT was in flight, preserve the newer
+    // draft for another explicit review; never replace it with a stale GET.
+    if(chosenVersion!==writing){
+      const newer=await getServerCart(token)
+      conflict={...pending,serverRevision:newer.revision,serverItems:newer.items}
+      notify('conflict',conflictMessage())
+      return
+    }
+    const saved=await getServerCart(token)
+    if(token!==activeToken())return
+    if(chosenVersion!==writing){
+      conflict={...pending,serverRevision:saved.revision,serverItems:saved.items}
+      notify('conflict',conflictMessage())
+      return
+    }
     conflict=null
-    adopt(await getServerCart(token),token)
+    adopt(saved,token)
   }catch(e){
     if(token!==activeToken())return
-    const fresh=await getServerCart(token).catch(()=>null)
-    if(fresh)conflict={...pending,serverRevision:fresh.revision,serverItems:fresh.items}
-    notify(fresh?'conflict':'error',fresh?conflictMessage():(e.message||'Gagal menyimpan draft lokal.'))
+    // Keep the latest local draft after any network or CAS failure.
+    const latest=await getServerCart(token).catch(()=>null)
+    if(latest)conflict={...pending,serverRevision:latest.revision,serverItems:latest.items}
+    notify(latest?'conflict':'error',latest?conflictMessage():(e.message||'Gagal memuat cart server.'))
     throw e
-  }
+  }finally{resolving=false}
 }
 export async function activateCustomerCart(){
   const token=activeToken()
