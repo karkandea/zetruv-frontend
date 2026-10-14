@@ -5,7 +5,8 @@ import ProductBenefits from '../components/ProductBenefits'
 import genshinHero from '../assets/game-account-flow/genshin-impact.png'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
-import { addCartItem, supportsCartQuantity, cartItemLimit } from '../services/cartService'
+import { addCartItem, awaitCartPersistence, supportsCartQuantity, cartItemLimit } from '../services/cartService' 
+import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
@@ -157,8 +158,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
     setNotice(false)
     setError('')
     try {
-      // The current cart is local-first. Yield one paint for a visible busy
-      // state, then write atomically; there is no add-to-cart network request.
+      // Guest cart is local; authenticated cart is persisted to server before success.
       await new Promise((resolve) => window.requestAnimationFrame(resolve))
       addCartItem({
         accountKey: 'checkout-required',
@@ -178,6 +178,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
         quantity: quantityCapable ? quantity : 1,
         maxQuantity: limit,
       })
+      await awaitCartPersistence()
+      if(getCartSyncStatus().state==='error')throw Error('Cart server belum tersimpan.')
       setNotice(true)
     } catch {
       setError('Gagal menambahkan paket. Silakan coba lagi.')

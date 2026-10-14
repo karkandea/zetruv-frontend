@@ -132,6 +132,7 @@ function persist(snapshot,token){
       }
     }
   })
+  return writeQueue
 }
 export async function activateCustomerCart(){
   const token=activeToken()

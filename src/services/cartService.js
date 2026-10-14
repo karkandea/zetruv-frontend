@@ -2,6 +2,7 @@ const CART_KEY = 'zetruv-cart-v1'
 const CART_EVENT = 'zetruv-cart-change'
 let remoteItems = null
 let remoteWriter = null
+let lastRemoteWrite = Promise.resolve()
 const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount'])
 const CREDENTIAL_METHODS = new Set(['MANUAL_LOGIN', 'JOKI_MANUAL'])
 
@@ -95,6 +96,10 @@ export function leaveAuthenticatedCart() {
   emitCart(readGuestCart())
 }
 
+export function awaitCartPersistence() {
+  return lastRemoteWrite
+}
+
 export function isAuthenticatedCart() {
   return remoteItems !== null
 }
@@ -104,7 +109,8 @@ function writeCart(items) {
   if (remoteItems !== null) {
     remoteItems = normalized
     emitCart(normalized)
-    if (typeof remoteWriter === 'function') remoteWriter(normalized)
+    if (typeof remoteWriter === 'function')
+      lastRemoteWrite = Promise.resolve(remoteWriter(normalized))
     return normalized
   }
   window.localStorage.setItem(CART_KEY, JSON.stringify(normalized))

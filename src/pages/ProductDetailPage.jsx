@@ -5,7 +5,8 @@ import ProductBenefits from '../components/ProductBenefits'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
-import { addCartItem } from '../services/cartService'
+import { addCartItem, awaitCartPersistence } from '../services/cartService'
+import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
@@ -33,6 +34,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const [account, setAccount] = useState({ userId: '', zone: '' })
   const [tab, setTab] = useState('Diamonds')
   const [notice, setNotice] = useState('')
+  const [saving,setSaving] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(() => window.sessionStorage.getItem('zetruv-auth-preview') === '1')
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const { subtotal, discount, serviceFee, total } = getDigitalPricing([{ unitPrice, regularPrice, quantity: 1 }])
   const maxQuantity = selected?.stockQuantity === null || selected?.stockQuantity === undefined
     ? 99 : Math.max(1, Math.min(99, Number(selected.stockQuantity)))
-  const canPurchase = Boolean(product?.isDemo === false && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
+  const canPurchase = !saving && Boolean(product?.isDemo === false && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
   const gameArt = product?.thumbnailUrl || product?.game?.imageUrl || media.gameCover
   const productName = product?.name || ''
   const incompleteFields = [
@@ -109,9 +111,11 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       ? `Lengkapi ${incompleteFields.join(' dan ')} untuk menambahkan ke keranjang.`
       : ''
 
-  function add() {
+  async function add() {
     if (!selected || !canPurchase) return
-    addCartItem({
+    setSaving(true)
+    try {
+      addCartItem({
       accountKey: `${account.userId.trim()}:${account.zone.trim()}`,
       productId: product.id,
       productSlug: product.slug,
@@ -129,7 +133,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       accountFields: { userId: account.userId.trim(), zone: account.zone.trim() },
       accountLabel: `${firstLabel}: ${account.userId.trim()}${showSecond && account.zone.trim() ? ` / ${account.zone.trim()}` : ''}`,
     })
-    setNotice('added')
+      await awaitCartPersistence()
+      if(getCartSyncStatus().state==='error')
+        throw Error(getCartSyncStatus().message || 'Keranjang gagal disimpan di server.')
+      setNotice('added')
+    } catch (e) {setNotice('');window.alert(e.message||'Keranjang belum tersimpan. Coba lagi.')}
+    finally {setSaving(false)}
   }
 
   if (!product || !selected) {
