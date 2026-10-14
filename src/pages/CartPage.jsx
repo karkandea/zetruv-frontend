@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { getCatalogProduct } from '../services/catalogService'
-import { activateCustomerCart, refreshCustomerCart, readCustomerSession, getCartSyncStatus, CART_SYNC_EVENT } from '../services/customerCartSync'
+import { activateCustomerCart, refreshCustomerCart, readCustomerSession, getCartSyncStatus, resolveCartConflict, CART_SYNC_EVENT } from '../services/customerCartSync'
 import {
   cartCount, cartItemLimit, onCartChange, readCart, removeCartItem,
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
@@ -220,10 +220,24 @@ export default function CartPage() {
           <span>{cartSync.state==='synced'?'Keranjang tersimpan di akun Zetruv dan dapat diakses di perangkat lain.':
             cartSync.state==='saving'?'Menyimpan perubahan keranjang ke server...':
             cartSync.state==='loading'?'Memuat dan menggabungkan keranjang akun...':
-            cartSync.state==='error'?(cartSync.message||'Gagal menyinkronkan keranjang.'): 'Memuat keranjang akun...'}</span>
-          <button type="button" disabled={cartSync.state==='saving'||cartSync.state==='loading'}
+            ['conflict','error'].includes(cartSync.state)?(cartSync.message||'Gagal menyinkronkan keranjang.'): 'Memuat keranjang akun...'}</span>
+          <button type="button" disabled={['saving','loading','conflict','error'].includes(cartSync.state)}
             onClick={()=>activateCustomerCart().catch(()=>{})}>Sinkronkan ulang</button>
         </section>}
+        {readCustomerSession() && ['conflict','error'].includes(cartSync.state) && (
+          <section className="digital-info-strip" role="alert" aria-live="assertive">
+            <CircleAlert size={18} aria-hidden="true"/>
+            <span>Perubahan belum tersimpan. Bandingkan jumlah produk pada pesan di atas sebelum memilih. Checkout ditahan.</span>
+            <button type="button" onClick={async()=>{
+              if(!window.confirm('Gunakan keranjang terbaru dari server? Perubahan lokal yang belum tersimpan akan dibuang.'))return
+              try{await resolveCartConflict('server')}catch(e){setStatus(e.message)}
+            }}>Gunakan versi server</button>
+            <button type="button" onClick={async()=>{
+              if(!window.confirm('Terapkan draft lokal ke server? Item dari perangkat lain yang tidak ada di draft lokal akan diganti.'))return
+              try{await resolveCartConflict('local')}catch(e){setStatus(e.message)}
+            }}>Terapkan draft lokal</button>
+          </section>
+        )}
         <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
           <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login/Joki baru dilengkapi saat checkout.</span>
