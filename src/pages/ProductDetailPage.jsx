@@ -6,7 +6,7 @@ import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { addCartItem, awaitCartPersistence } from '../services/cartService'
-import { getCartSyncStatus } from '../services/customerCartSync'
+import { getCartSyncStatus, readCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { getCatalogProduct } from '../services/catalogService'
 import '../styles/product-detail.css'
@@ -35,7 +35,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const [tab, setTab] = useState('Diamonds')
   const [notice, setNotice] = useState('')
   const [saving,setSaving] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => window.sessionStorage.getItem('zetruv-auth-preview') === '1')
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(readCustomerSession()))
+  useEffect(() => {
+    const sync = () => setIsAuthenticated(Boolean(readCustomerSession()))
+    window.addEventListener(CUSTOMER_EVENT, sync)
+    return () => window.removeEventListener(CUSTOMER_EVENT, sync)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -147,7 +152,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
 
   return (
     <div className="product-detail-shell">
-      <Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} onAuthenticated={() => { window.sessionStorage.setItem('zetruv-auth-preview', '1'); setIsAuthenticated(true) }} />
+      <Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} onAuthenticated={() => setIsAuthenticated(Boolean(readCustomerSession()))} />
       <main className="product-detail-page">
         <section className="product-hero pdp-figma-hero">
           <img className="pdp-hero-image" src={slug === 'mobile-legends' ? media.heroBackground : gameArt} alt="" />
