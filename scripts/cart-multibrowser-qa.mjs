@@ -31,7 +31,7 @@ function backendFor(request){
   const h=request.headers().authorization||''
   return Object.values(users).find(x=>h==='Bearer '+x.token)
 }
-async function context(){
+async function context(device){
   const ctx=await browser.newContext({viewport:{width:1440,height:900}})
   await ctx.route('**/api/v1/**',async route=>{
     const req=route.request()
@@ -50,7 +50,7 @@ async function context(){
     if(path.endsWith('/me/cart')&&req.method()==='GET'){
       const user=backendFor(req)
       if(!user)return json(route,401,{message:'unauthorized'})
-      const stale=holdStaleAliceB && req.headers()['x-test-device']!=='a'
+      const stale=holdStaleAliceB && device==='b'
         && user===users.alice && staleSnapshot
       const state=stale?staleSnapshot:user
       return json(route,200,{items:copy(state.items),revision:'rev-'+state.revision})
@@ -91,7 +91,7 @@ async function login(page,email){
 }
 const qa=[]
 try{
-  const ctxA=await context(),ctxB=await context()
+  const ctxA=await context('a'),ctxB=await context('b')
   const a=await ctxA.newPage(),b=await ctxB.newPage()
   // Different contexts = distinct browser sessions, same account on both.
   await a.goto(origin+'/cart')
