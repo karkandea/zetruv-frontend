@@ -207,6 +207,8 @@ export async function resolveCartConflict(choice){
 export async function activateCustomerCart(){
   const token=activeToken()
   if(!token){leaveAuthenticatedCart();notify('guest');return}
+  // Never silently discard a pending local draft during a refresh.
+  if(conflict?.token===token){notify('conflict',conflictMessage());return}
   if(boot)return boot
   boot=(async()=>{
     notify('loading')
