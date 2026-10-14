@@ -16,6 +16,7 @@ import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import { storePaymentContext } from '../services/paymentSession'
+import { readCustomerSession, setCustomerSession, activateCustomerCart, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
@@ -237,7 +238,10 @@ export default function CheckoutPage() {
   const [payment,setPayment]=useState(null)
   const [paymentState,setPaymentState]=useState('idle')
   const [authDialog,setAuthDialog]=useState(false)
-  const [customer,setCustomer]=useState(null)
+  const [customer,setCustomer]=useState(()=>{
+    const session=readCustomerSession()
+    return session?{accessToken:session.accessToken,customer:session.customer}:null
+  })
   const [processing,setProcessing]=useState(false)
   const [pendingAttempt,setPendingAttempt]=useState(()=>readCheckoutAttempt())
   const [authPurpose,setAuthPurpose]=useState('pay')
@@ -246,13 +250,23 @@ export default function CheckoutPage() {
 
   useEffect(()=>onCartChange(newItems=>{
     setItems(newItems)
-    setIdValidations({})
+    setIdValidations(Object.fromEntries(newItems.filter(x=>x.gameAccountValidationId)
+      .map(x=>[x.cartKey,{validationId:x.gameAccountValidationId,expiresAt:x.validationExpiresAt}])))
     attempt.current=null
     setVoucher(null)
     setVoucherState('idle')
     setOrder(null)
     setPayment(null)
   }),[])
+
+  useEffect(()=>{
+    const handler=()=>{
+      const session=readCustomerSession()
+      setCustomer(session?{accessToken:session.accessToken,customer:session.customer}:null)
+    }
+    window.addEventListener(CUSTOMER_EVENT,handler)
+    return ()=>window.removeEventListener(CUSTOMER_EVENT,handler)
+  },[])
 
   const slugs=useMemo(()=>[...new Set(items.map(i=>i.productSlug).filter(Boolean))].sort().join('|'),[items])
   const refreshCatalog=useCallback(async()=>{
@@ -676,11 +690,16 @@ export default function CheckoutPage() {
     </main>
     {authDialog && <CustomerLoginDialog onClose={()=>setAuthDialog(false)}
       onSuccess={result=>{
+        setCustomerSession(result)
         setCustomer({accessToken:result.accessToken,customer:result.customer})
         setAuthDialog(false)
-        // Preserve cart/form input in memory, proceed using verified bearer only.
+        // Server cart must be refreshed before a new checkout mutation.
+        // No automatic payment on login; the user reconfirms pricing/targets.
         if(authPurpose==='recover')recoverInterruptedOrder(result.accessToken)
-        else performPay(result.accessToken,result.customer)
+        else {
+          setError('Login berhasil. Keranjang akun sedang disinkronkan; periksa item dan harga, kemudian klik Bayar lagi.')
+          activateCustomerCart().catch(()=>{})
+        }
       }}/>}
   </div>
 }
