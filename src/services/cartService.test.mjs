@@ -2,12 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { getDigitalPricing } from './digitalCartPricing.js'
 import { accountRequirements, checkCartDestination } from './digitalCartValidation.js'
-import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount } from './cartService.js'
+import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount, setAuthenticatedCart, leaveAuthenticatedCart, readGuestCart, clearGuestCart, awaitCartPersistence } from './cartService.js'
 
 const storage = new Map()
 const listeners = new Map()
 globalThis.window = {
-  localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
+  localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) },
   addEventListener: (name, fn) => { listeners.set(name, [...(listeners.get(name) || []), fn]) },
   removeEventListener: () => {},
   dispatchEvent: (event) => { (listeners.get(event.type) || []).forEach(fn => fn(event)) },
@@ -63,4 +63,20 @@ test('backend input definitions drive destination validation', () => {
   assert.equal(checkCartDestination(item('123',''),fields).valid,false)
   assert.equal(checkCartDestination(item('123','42'),fields).valid,true)
   assert.equal(checkCartDestination(item('123','42'),undefined).valid,false)
+})
+
+test('authenticated remote cart never leaks to anonymous localStorage on logout', async()=>{
+  storage.clear()
+  addCartItem(item('guest','10'))
+  let persisted=null
+  setAuthenticatedCart([item('account','20')],async rows=>{persisted=rows})
+  assert.equal(readCart()[0].accountFields.userId,'account')
+  updateCartQuantity(readCart()[0].cartKey,2)
+  await awaitCartPersistence()
+  assert.equal(persisted[0].quantity,2)
+  assert.equal(readGuestCart()[0].accountFields.userId,'guest')
+  leaveAuthenticatedCart()
+  assert.equal(readCart()[0].accountFields.userId,'guest')
+  clearGuestCart()
+  assert.equal(readCart().length,0)
 })
