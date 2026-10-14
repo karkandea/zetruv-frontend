@@ -25,7 +25,7 @@ try{
     ['desktop',{width:1440,height:900}],['mobile',{width:390,height:844}]
   ]){
     const ctx=await browser.newContext({viewport,deviceScaleFactor:1})
-    await ctx.addInitScript(item=>{
+    if(device==='desktop') await ctx.addInitScript(item=>{
       // Only anonymous draft. No secrets, real account ID or real transaction.
       if(!sessionStorage.getItem('qa-draft-seeded')){
         localStorage.setItem('zetruv-cart-v1',JSON.stringify([item]))
@@ -61,9 +61,19 @@ try{
         headers:{'Access-Control-Allow-Origin':'*'},
         body:JSON.stringify({items:serverRows,revision:'rev-1'})})
     })
+    await ctx.route('**/api/v1/**',async route=>{
+      if(route.request().method()==='OPTIONS')
+        return route.fulfill({status:204,headers:{
+          'Access-Control-Allow-Origin':'*',
+          'Access-Control-Allow-Headers':'authorization, content-type',
+          'Access-Control-Allow-Methods':'GET, POST, PUT, DELETE, OPTIONS',
+        }})
+      return route.fallback()
+    })
     const page=await ctx.newPage()
     await page.goto(urls+'/cart',{waitUntil:'domcontentloaded'})
-    await page.getByText('QA Test Voucher').first().waitFor({timeout:12000})
+    if(device==='desktop') await page.getByText('QA Test Voucher').first().waitFor({timeout:12000})
+    else await page.getByText('Keranjang digital masih kosong').waitFor({timeout:12000})
     await page.screenshot({path:output+'/guest-'+device+'-cart.png',fullPage:true})
     // Navbar AuthModal must authenticate against backend, not preview flag.
     await page.getByRole('button',{name:'Login',exact:true}).first().click()
