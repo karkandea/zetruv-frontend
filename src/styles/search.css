@@ -330,3 +330,9 @@
 .search-game-card__favorite.is-saved { color: #c32346; border-color: #f2c5cd; }
 .search-game-card__favorite:hover, .search-game-card__favorite:focus-visible { outline: 2px solid #a0b2ff; outline-offset: 1px; }
 .search-game-card.is-unavailable { opacity: .58; }
+
+
+.alphabet-filter-collapsible { margin-top: 12px; }
+.alphabet-filter-collapsible summary { display: inline-flex; align-items: center; cursor: pointer; border: 1px solid #dfe3ee; border-radius: 9px; padding: 10px 14px; color: #010154; background: #fff; font-size: 12px; min-height: 42px; }
+.alphabet-filter-collapsible summary:focus-visible { outline: 2px solid #010154; outline-offset: 2px; }
+.alphabet-filter-collapsible .alphabet-filter { margin-top: 9px; }
