@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import AuthModal from '../components/AuthModal'
 import { getCatalogProduct } from '../services/catalogService'
-import { activateCustomerCart, refreshCustomerCart, readCustomerSession, getCartSyncStatus, resolveCartConflict, CART_SYNC_EVENT } from '../services/customerCartSync'
+import { activateCustomerCart, refreshCustomerCart, readCustomerSession, setCustomerSession, getCartSyncStatus, resolveCartConflict, CART_SYNC_EVENT } from '../services/customerCartSync'
 import {
   cartCount, cartItemLimit, onCartChange, readCart, removeCartItem,
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
@@ -118,6 +119,7 @@ export default function CartPage() {
   const [editingKey, setEditingKey] = useState(null)
   const [removed, setRemoved] = useState(null)
   const [status, setStatus] = useState('')
+  const [authMode, setAuthMode] = useState(null)
   const [cartSync,setCartSync] = useState(getCartSyncStatus)
   const undoTimer = useRef(null)
   const accountSlugs = useMemo(() => [...new Set(items
@@ -351,8 +353,8 @@ export default function CartPage() {
             <div className="digital-cart-summary__total"><span>Total pembayaran</span><strong>{rupiah(pricing.total)}</strong></div>
             <button type="button" className="digital-cart-checkout"
               disabled={!canCheckout}
-              onClick={() => { if (canCheckout) window.location.href = '/checkout' }}>
-              Lanjut ke Checkout
+              onClick={() => { if (canCheckout) { if (readCustomerSession()) window.location.href = '/checkout'; else setAuthMode('login') } }}>
+              {readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}
             </button>
             {problems.length > 0 ? (
               <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />Periksa data pesanan: {problems[0].message}</p>
@@ -362,6 +364,17 @@ export default function CartPage() {
         </div>
       </main>
 
+      {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)}
+        onAuthenticated={async response => {
+          try {
+            setCustomerSession(response)
+            await activateCustomerCart()
+            if (getCartSyncStatus().state !== 'synced') throw new Error('Keranjang belum selesai tersinkron.')
+            window.location.href = '/checkout'
+          } catch (error) {
+            setStatus(error?.message || 'Keranjang belum siap. Periksa ulang sebelum checkout.')
+          }
+        }} />}
       {editing && (
         <AccountEditModal key={editing.cartKey} item={editing}
           requirements={requirements[editing.productSlug]}
