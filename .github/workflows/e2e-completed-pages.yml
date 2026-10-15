@@ -2,10 +2,6 @@ name: Zetruv DEV completed pages E2E (VPS)
 on:
   push:
     branches: [qa/e2e-completed-pages-20261015]
-    paths:
-      - 'scripts/completed-pages-e2e.mjs'
-      - '.github/workflows/e2e-completed-pages.yml'
-      - 'docs/e2e-completed-pages.md'
   pull_request:
     branches: [dev]
   workflow_dispatch:
@@ -15,8 +11,6 @@ permissions:
 
 jobs:
   completed-pages-e2e:
-    # Same VPS self-hosted runner used by the existing DEV QA/deployment.
-    # Read-only browser probes target the already deployed DEV storefront.
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     steps:
@@ -24,28 +18,52 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install isolated browser driver
+      - name: Install browser and build exact PR commit
         run: |
           npm install --no-audit --no-fund
           npm install --no-save --no-audit --no-fund playwright
           npx playwright install chromium
-      - name: Browser E2E against VPS DEV
+          npm run build:storefront:dev
+      - name: Serve current commit on VPS loopback
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run preview -- --host 127.0.0.1 --port 4179 --strictPort > /tmp/zetruv-e2e-preview.log 2>&1 &
+          for n in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4179/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/zetruv-e2e-preview.log
+          exit 1
+      - name: PR E2E — gating (fixed code, VPS loopback)
+        env:
+          ZETRUV_E2E_BASE_URL: http://127.0.0.1:4179
+          ZETRUV_E2E_REPORT_DIR: e2e-results/pr-preview
+        run: node scripts/completed-pages-e2e.mjs
+      - name: Deployed DEV baseline — diagnostic only
+        if: always()
+        continue-on-error: true
         env:
           ZETRUV_E2E_BASE_URL: https://dev.zetruv.com
+          ZETRUV_E2E_REPORT_DIR: e2e-results/deployed-dev
         run: node scripts/completed-pages-e2e.mjs
-      - name: Publish run summary
+      - name: Publish result summary
         if: always()
         shell: bash
         run: |
-          if [ -f e2e-results/summary.json ]; then
-            node --input-type=module -e "import fs from 'node:fs';const s=JSON.parse(fs.readFileSync('e2e-results/summary.json'));console.log('Passed: '+s.passed+'; Failed: '+s.failed+'; Target: '+s.base)" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f e2e-results/pr-preview/summary.json ]; then
+            node --input-type=module -e "import fs from 'node:fs';const s=JSON.parse(fs.readFileSync('e2e-results/pr-preview/summary.json'));console.log('PR preview: passed '+s.passed+', failed '+s.failed+', target '+s.base)" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo 'This is render/safe-navigation smoke; customer-order and payment backend acceptance remain BLOCKED until wired.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Save E2E evidence
+          if [ -f e2e-results/deployed-dev/summary.json ]; then
+            node --input-type=module -e "import fs from 'node:fs';const s=JSON.parse(fs.readFileSync('e2e-results/deployed-dev/summary.json'));console.log('DEPLOYED DEV baseline (diagnostic only): passed '+s.passed+', failed '+s.failed+', target '+s.base)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo 'Only smoke/read-only UI acceptance; authentic payments/orders/addresses still need backend integration.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Save E2E screenshots and JSON (quota dependent)
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: zetruv-dev-completed-pages-e2e
           path: e2e-results/
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: warn
