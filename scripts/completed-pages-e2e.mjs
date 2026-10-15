@@ -6,10 +6,11 @@ import assert from 'node:assert/strict'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 const base = (process.env.ZETRUV_E2E_BASE_URL || 'https://dev.zetruv.com').replace(/\/$/, '')
-if (base !== 'https://dev.zetruv.com') {
-  throw Error('Safety gate: this acceptance suite runs against https://dev.zetruv.com only.')
+// VPS DEV public URL OR isolated preview on the VPS loopback interface only.
+if (!['https://dev.zetruv.com', 'http://127.0.0.1:4179'].includes(base)) {
+  throw Error('Safety gate: only Zetruv DEV and VPS-local preview are permitted.')
 }
-const out = 'e2e-results'
+const out = process.env.ZETRUV_E2E_REPORT_DIR || 'e2e-results'
 mkdirSync(out, { recursive: true })
 const cases = [
   { id: 'homepage', path: '/', selector: 'header.navbar', label: 'Homepage' },
