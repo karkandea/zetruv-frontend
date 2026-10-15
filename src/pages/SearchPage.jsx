@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
+import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
+import { Heart } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
@@ -144,28 +146,35 @@ function productHref(product) {
 function CatalogCard({ product, categoryLabel }) {
   const href = productHref(product)
   const available = product.isAvailable !== false
+  const favoriteId = product.kind === 'Merchandise'
+    ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
+  const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
   return (
-    <button
-      className="search-game-card"
-      type="button"
-      aria-label={available ? `Open ${product.name}` : `${product.name} unavailable`}
-      onClick={() => href && (window.location.href = href)}
-      disabled={!available}
-    >
-      <img
-        src={product.thumbnailUrl || fallbackProductImage(product)}
-        alt=""
-        onError={(event) => {
-          const fallback = fallbackProductImage(product)
-          if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
-        }}
-      />
+    <article className={`search-game-card${!available ? ' is-unavailable' : ''}`}>
+      {available ? <a className="search-game-card__link" href={href} aria-label={`Lihat ${product.name}`} /> : null}
+      <img src={thumbnail} alt="" onError={(event) => {
+        const fallback = fallbackProductImage(product)
+        if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
+      }} />
       <span className="search-game-card__copy">
         <strong>{product.name}</strong>
         <small>{publisherForProduct(product, product.gameName || categoryLabel)}</small>
+        {!available && <small>Tidak tersedia</small>}
       </span>
-    </button>
+      <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
+        aria-label={saved ? `Hapus ${product.name} dari favorit` : `Simpan ${product.name} ke favorit`}
+        aria-pressed={saved}
+        onClick={() => setSaved(toggleFavorite({
+          id: favoriteId, name: product.name, type: categoryLabel || product.kind,
+          href: href || '/search', image: thumbnail,
+          price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
+        }))}>
+        <Heart size={17} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+      </button>
+    </article>
   )
 }
 
