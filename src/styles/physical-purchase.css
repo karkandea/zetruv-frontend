@@ -2596,3 +2596,16 @@
   .physical-flow-unavailable { padding: 18px; }
   .physical-flow-unavailable .physical-btn { width: 100%; max-width: none; }
 }
+
+
+/* Clear in-place confirmation after adding a merchandise variant. */
+.physical-add-confirmation {
+  display: flex; align-items: center; width: 100%; margin: 14px 0 8px;
+  padding: 11px 13px; border: 1px solid #b7e0c2; border-radius: 10px;
+  color: #1b7041; background: #f0fbf2;
+  font: 500 12px/1.6 Poppins, Arial, sans-serif;
+}
+.physical-cart-stock-note { display: inline-block; font-size: 11px; line-height: 1.5; color: #6d7180; }
+@media (max-width: 700px) {
+  .physical-add-confirmation { font-size: 11px; padding: 10px; }
+}
