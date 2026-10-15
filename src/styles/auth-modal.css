@@ -1171,3 +1171,17 @@
     text-align: center;
   }
 }
+
+
+/* Functional password recovery and aligned back affordance. */
+.auth-back-login { width: auto; min-width: 0; justify-content: flex-start; }
+.auth-back-login svg { display: block; flex: 0 0 18px; color: currentColor; }
+.auth-reset-form, .auth-forgot-heading { overflow: visible; }
+.auth-reset-form { height: auto; min-height: 107px; flex-basis: auto; }
+.auth-reset-error { width: 100%; margin: 0; color: #ac2434; font-size: 12px; line-height: 18px; }
+.auth-reset-submit:disabled, .auth-reset-password:disabled { opacity: .6; cursor: not-allowed; }
+.auth-check-open { text-decoration: none; display: inline-flex; justify-content: center; align-items: center; }
+@media (max-width: 680px) {
+  .auth-back-login { min-height: 28px; }
+  .auth-back-login svg { width: 18px; height: 18px; }
+}
