@@ -389,7 +389,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               {!resetToken && <p className="auth-reset-error" role="alert">Tautan reset tidak ditemukan. Minta tautan baru lewat Lupa Password.</p>}
               {resetError && <p className="auth-reset-error" role="alert">{resetError}</p>}
               <button className="auth-submit auth-reset-password" type="submit" disabled={resetBusy || !resetToken}>{resetBusy ? 'Menyimpan...' : 'Reset password'}</button>
-              {!resetToken && <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>Minta tautan reset</button>
+              {!resetToken && <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>Minta tautan reset</button>}
             </form>
           </div>
         )}
