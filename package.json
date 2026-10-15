@@ -18,12 +18,13 @@
     "build:admin:staging": "vite build --config vite.admin.config.js --mode staging",
     "build:all:staging": "npm run build:storefront:staging && npm run build:admin:staging",
     "test:cart": "node --test src/services/cartService.test.mjs",
-    "prebuild:storefront:dev": "npm run test:cart && npm run test:checkout && npm run test:service && npm run test:payment && npm run test:recovery && npm run test:server-cart",
+    "prebuild:storefront:dev": "npm run test:navbar-language && npm run test:cart && npm run test:checkout && npm run test:service && npm run test:payment && npm run test:recovery && npm run test:server-cart",
     "test:checkout": "node --test src/services/digitalCheckoutRules.test.mjs",
     "test:service": "node --test src/services/digitalServiceAvailability.test.mjs",
     "test:payment": "node --test src/services/paymentSession.test.mjs",
     "test:recovery": "node --test src/services/checkoutAttempt.test.mjs",
-    "test:server-cart": "node --test src/services/serverCartMapper.test.mjs"
+    "test:server-cart": "node --test src/services/serverCartMapper.test.mjs",
+    "test:navbar-language": "node --test src/services/navbarLanguage.test.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
