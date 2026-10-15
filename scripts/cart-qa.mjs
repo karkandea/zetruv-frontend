@@ -88,7 +88,7 @@ try{
     await page.reload()
     await page.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:20000})
     assert.ok(await page.getByText('Synthetic 10 Credits').count()>0)
-    await page.getByRole('button',{name:'Keluar',exact:true}).click()
+    await page.getByRole('button',{name:'Logout',exact:true}).click()
     await page.getByText('Keranjang digital masih kosong').waitFor({timeout:12000})
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('zetruv-customer-session-v1')),null)
     await page.screenshot({path:output+'/logout-'+device+'-cart.png',fullPage:true})

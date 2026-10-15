@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
+import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
 
@@ -27,6 +28,8 @@ function readPhysicalCartCount() {
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false)
+  const [language, setLanguage] = useState(readNavbarLanguage)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [verifiedSession,setVerifiedSession]=useState(readCustomerSession)
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
@@ -41,6 +44,8 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   })
   const productMenuRef = useRef(null)
   const cartMenuRef = useRef(null)
+  const languageMenuRef = useRef(null)
+  const languageButtonRef = useRef(null)
 
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
@@ -62,18 +67,25 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const initialQuery = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('q') || ''
     : ''
-  const searchPlaceholder = isHomeLoggedIn
-    ? 'Cari game atau voucher'
-    : isCatalog
-      ? 'Search games, vouchers, or products'
-      : 'Search game or voucher'
-  const languageLabel = isHomeLoggedIn ? 'ID' : 'EN'
-  const cartLabel = isHomeLoggedIn ? 'Keranjang' : 'Cart'
-  const productLabel = isHomeLoggedIn ? 'Produk' : isCatalog ? 'Shop' : 'Product'
-  const articleLabel = isHomeLoggedIn ? 'Artikel' : isCatalog ? 'Articles' : 'Article'
-  const transactionLabel = isHomeLoggedIn ? 'Cek Transaksi' : isCatalog ? 'Track Order' : 'Check Transaction'
+  const t = NAVBAR_COPY[language]
+  const selectedLanguage = NAVBAR_LANGUAGES.find((option) => option.code === language) || NAVBAR_LANGUAGES[0]
+  const searchPlaceholder = isCatalog ? t.searchCatalog : t.search
+  const cartLabel = t.cart
+  const productLabel = isCatalog ? t.shop : t.product
+  const articleLabel = isCatalog ? t.articles : t.article
+  const transactionLabel = isCatalog ? t.trackOrder : t.transaction
 
   useEffect(() => onCartChange(setCartItems), [])
+  useEffect(() => {
+    // Keep the selected navbar language in sync across open tabs.
+    const onStorage = (event) => {
+      if (event.key === NAVBAR_LANGUAGE_STORAGE_KEY) {
+        setLanguage(normalizeNavbarLanguage(event.newValue))
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
   useEffect(()=>{
     // Every browser/device reads the server cart after a verified login.
     if(readCustomerSession())activateCustomerCart().catch(()=>{})
@@ -104,13 +116,17 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
       if (cartMenuRef.current && !cartMenuRef.current.contains(event.target)) {
         setIsCartOpen(false)
       }
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+        setIsLanguageOpen(false)
+      }
     }
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
-      setIsProductOpen(false)
-      setIsCartOpen(false)
-    }
+        setIsProductOpen(false)
+        setIsCartOpen(false)
+        setIsLanguageOpen(false)
+      }
     }
 
     document.addEventListener('pointerdown', handlePointerDown)
@@ -131,6 +147,19 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     setActiveNav(name)
     if (name !== 'product') setIsProductOpen(false)
     setIsCartOpen(false)
+    setIsLanguageOpen(false)
+  }
+
+  function selectLanguage(code) {
+    const selected = normalizeNavbarLanguage(code)
+    setLanguage(selected)
+    setIsLanguageOpen(false)
+    try {
+      window.localStorage.setItem(NAVBAR_LANGUAGE_STORAGE_KEY, selected)
+    } catch {
+      // Keep the choice active for this page if browser storage is unavailable.
+    }
+    languageButtonRef.current?.focus()
   }
 
   function handleAuthenticated(response) {
@@ -151,10 +180,56 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
         <NavbarSearch placeholder={searchPlaceholder} initialQuery={initialQuery} />
 
         <div className="navbar__quick-actions">
-          <button className="nav-pill navbar-control" type="button" aria-label="Change language">
-            <span className="nav-pill__icon"><img src={assets.flagEn} alt="" /></span>
-            <span>{languageLabel}</span>
-          </button>
+          <div ref={languageMenuRef} className={`nav-language-menu${isLanguageOpen ? ' is-open' : ''}`}>
+            <button
+              ref={languageButtonRef}
+              className="nav-pill navbar-control nav-language-trigger"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={isLanguageOpen}
+              aria-controls="navbar-language-dropdown"
+              aria-label={`${t.language}: ${selectedLanguage.name}`}
+              onClick={() => {
+                setIsLanguageOpen((open) => !open)
+                setIsProductOpen(false)
+                setIsCartOpen(false)
+              }}
+            >
+              <span className="nav-pill__icon nav-language-flag"><img src={assets[selectedLanguage.flag]} alt="" /></span>
+              <span className="nav-language-trigger__badge">{selectedLanguage.badge}</span>
+            </button>
+            <div
+              id="navbar-language-dropdown"
+              className="cart-dropdown nav-language-dropdown"
+              role="menu"
+              aria-label={t.language}
+              aria-hidden={!isLanguageOpen}
+              onKeyDown={(event) => {
+                if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+                event.preventDefault()
+                const items = Array.from(event.currentTarget.querySelectorAll('[role="menuitemradio"]'))
+                const current = items.indexOf(document.activeElement)
+                const delta = event.key === 'ArrowDown' ? 1 : -1
+                items[(current + delta + items.length) % items.length]?.focus()
+              }}
+            >
+              {NAVBAR_LANGUAGES.map((option) => (
+                <button
+                  className="nav-language-option navbar-control"
+                  key={option.code}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={language === option.code}
+                  tabIndex={isLanguageOpen ? 0 : -1}
+                  onClick={() => selectLanguage(option.code)}
+                >
+                  <img src={assets[option.flag]} alt="" />
+                  <span><strong>{option.name}</strong><small>{option.badge}</small></span>
+                  {language === option.code && <span className="nav-language-option__check" aria-hidden="true">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
           <div ref={cartMenuRef} className={`nav-cart-menu${isCartOpen ? ' is-open' : ''}`}>
             <button
               className="nav-pill navbar-control nav-cart-trigger"
@@ -165,6 +240,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               onClick={() => {
                 setIsCartOpen((open) => !open)
                 setIsProductOpen(false)
+                setIsLanguageOpen(false)
                 setPhysicalCartCount(readPhysicalCartCount())
               }}
             >
@@ -174,11 +250,11 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             </button>
             <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen}>
               <a className="navbar-control" href="/cart" role="menuitem" onClick={() => setIsCartOpen(false)}>
-                <span><strong>Cart Digital</strong><small>Top Up, Voucher, Joki &amp; Akun Game</small></span>
+                <span><strong>{t.digitalCart}</strong><small>Top Up, Voucher, Joki &amp; Akun Game</small></span>
                 <b>{cartCount(cartItems)}</b>
               </a>
               <a className="navbar-control" href="/cart?flow=physical" role="menuitem" onClick={() => setIsCartOpen(false)}>
-                <span><strong>Cart Fisik</strong><small>Merchandise</small></span>
+                <span><strong>{t.physicalCart}</strong><small>Merchandise</small></span>
                 <b>{physicalCartCount}</b>
               </a>
             </div>
@@ -196,7 +272,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               aria-current={activeNav === 'home' ? 'page' : undefined}
               onClick={() => selectNav('home')}
             >
-              <img src={assets.home} alt="" />Home
+              <img src={assets.home} alt="" />{t.home}
             </a>
 
             <div ref={productMenuRef} className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
@@ -210,6 +286,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
                   event.preventDefault()
                   setActiveNav('product')
                   setIsProductOpen((open) => !open)
+                  setIsLanguageOpen(false)
                 }}
               >
                 {productLabel} <img src={assets.navDown} alt="" />
@@ -217,7 +294,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               <div className="product-dropdown" aria-label="Product categories" aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a className="navbar-control" href={link.href} key={link.label}>
-                    <span>{link.label}</span>
+                    <span>{t.products[link.label] || link.label}</span>
                     {link.arrow && <img src={assets.productDropdownArrow} alt="" />}
                   </a>
                 ))}
@@ -231,22 +308,22 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
               <img src={assets.transaction} alt="" />{transactionLabel}
             </a>
             <a className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`} href="/leaderboard" aria-current={activeNav === 'leaderboard' ? 'page' : undefined} onClick={() => selectNav('leaderboard')}>
-              <img src={assets.leaderboard} alt="" />Leaderboard
+              <img src={assets.leaderboard} alt="" />{t.leaderboard}
             </a>
           </nav>
 
           {!verifiedSession && (
             <div className="auth-actions">
               <button className="btn btn--outline navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>
-                <img src={assets.login} alt="" />Login
+                <img src={assets.login} alt="" />{t.login}
               </button>
               <button className="btn btn--ghost navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('register')}>
-                <img src={assets.register} alt="" />Register
+                <img src={assets.register} alt="" />{t.register}
               </button>
             </div>
           )}
           {verifiedSession && <div className="auth-actions"><button type="button" className="btn btn--outline navbar-control"
-            onClick={()=>{logoutCustomer();setVerifiedSession(null)}}>Keluar</button></div>}
+            onClick={()=>{logoutCustomer();setVerifiedSession(null)}}>{t.logout}</button></div>}
         </div>
       </div>
       </header>

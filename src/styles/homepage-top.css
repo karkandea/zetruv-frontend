@@ -571,3 +571,116 @@
     width: 226px;
   }
 }
+
+
+/* Language chooser — inherits the existing cart dropdown's panel/animation. */
+.nav-language-menu {
+  position: relative;
+  flex: none;
+}
+
+.nav-language-menu .nav-language-flag {
+  width: 20px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.nav-language-flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-language-dropdown {
+  top: 42px;
+  right: 0;
+  width: 222px;
+  padding: 8px;
+}
+
+.nav-language-menu.is-open .nav-language-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.nav-language-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 9px 11px;
+  gap: 11px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-language-option + .nav-language-option {
+  margin-top: 3px;
+}
+
+.nav-language-option:hover,
+.nav-language-option:focus-visible,
+.nav-language-option[aria-checked="true"] {
+  outline: none;
+  background: rgba(255,255,255,.10);
+}
+
+.nav-language-option:focus-visible {
+  box-shadow: inset 0 0 0 2px #a0b2ff;
+}
+
+.nav-language-option > img {
+  width: 20px;
+  height: 14px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.nav-language-option > span:not(.nav-language-option__check) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-language-option strong {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.nav-language-option small {
+  color: #cfd3ef;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.nav-language-option__check {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fed218;
+}
+
+@media (max-width: 600px) {
+  /* The old mobile layout hid the language pill entirely. Keep the selector reachable. */
+  .navbar__quick-actions .nav-language-menu .nav-language-trigger {
+    display: inline-flex;
+  }
+  .nav-language-dropdown {
+    right: 0;
+    width: min(222px, calc(100vw - 24px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-language-dropdown {
+    transition: none;
+  }
+}
