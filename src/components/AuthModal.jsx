@@ -316,9 +316,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-check-actions">
-              <a className="auth-submit auth-check-open" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer">
-                Open email
-              </a>
+              <p className="auth-email-hint">Buka kotak masuk email kamu, lalu klik tautan reset. Zetruv tidak akan meminta password melalui email.</p>
               <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>
                 Use another email
               </button>
