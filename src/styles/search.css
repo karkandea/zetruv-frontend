@@ -315,3 +315,18 @@
 .search-empty--state {
   min-height: 180px;
 }
+
+
+/* Accessible listing favorites: link and save action are independent targets. */
+.search-game-card { position: relative; cursor: default; padding-right: 38px; }
+.search-game-card__link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.search-game-card__link:focus-visible { outline: 2px solid #010154; outline-offset: -2px; }
+.search-game-card__favorite {
+  position: absolute; z-index: 2; right: 7px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid #dce1ee; border-radius: 10px;
+  color: #595f70; cursor: pointer;
+}
+.search-game-card__favorite.is-saved { color: #c32346; border-color: #f2c5cd; }
+.search-game-card__favorite:hover, .search-game-card__favorite:focus-visible { outline: 2px solid #a0b2ff; outline-offset: 1px; }
+.search-game-card.is-unavailable { opacity: .58; }
