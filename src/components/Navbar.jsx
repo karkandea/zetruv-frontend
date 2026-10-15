@@ -106,9 +106,11 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     refreshPhysicalCart()
     window.addEventListener('focus', refreshPhysicalCart)
     window.addEventListener('pageshow', refreshPhysicalCart)
+    window.addEventListener('zetruv:physical-cart-changed', refreshPhysicalCart)
     return () => {
       window.removeEventListener('focus', refreshPhysicalCart)
       window.removeEventListener('pageshow', refreshPhysicalCart)
+      window.removeEventListener('zetruv:physical-cart-changed', refreshPhysicalCart)
     }
   }, [])
 

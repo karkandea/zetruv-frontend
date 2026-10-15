@@ -62,7 +62,7 @@ export default function App() {
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
   if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
   if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />
-  if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <GameAccountOrderDetailPage />
+  if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <SharedOrderStatusPage />
 
   if (path === '/merchandise') return <PhysicalCatalogPage />
   const physicalProductMatch = path.match(/^\/merchandise\/([^/]+)$/)

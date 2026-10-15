@@ -36,6 +36,8 @@ jobs:
         run: node scripts/cart-qa.mjs
       - name: Multi-browser concurrency 409 and account-isolation UI test
         run: node scripts/cart-multibrowser-qa.mjs
+      - name: Verified order lookup and merchandise guest-cart flow (desktop/mobile)
+        run: node scripts/order-lookup-merch-qa.mjs
       - name: QA evidence summary
         if: always()
         run: |
