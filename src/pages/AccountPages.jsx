@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
+import { readCustomerSession } from '../services/customerCartSync'
 import { readFavorites, setFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/account.css'
 
@@ -9,60 +10,6 @@ const navItems = [
   { key: 'orders', label: 'Pesanan Saya', href: '/account/orders', icon: accountIcons.orders },
   { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: accountIcons.address },
   { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: accountIcons.favorite },
-]
-
-const orders = [
-  {
-    id: '#ZTR-260818-1042',
-    date: '18 Agu 2026 · 14:32',
-    status: 'BELUM DIBAYAR',
-    tone: 'warning',
-    thumb: '12D',
-    product: 'Mobile Legends · 12 Diamond',
-    detail: 'User ID 12345678 · Zona 1234',
-    total: 'Rp12.234',
-    detailHref: '/account/orders/ZTR-260818-1042',
-    action: 'Bayar Sekarang',
-    actionHref: '/account/orders/ZTR-260818-1042/payment',
-  },
-  {
-    id: '#ZTR-260818-0988',
-    date: '18 Agu 2026 · 11:05',
-    status: 'DIPROSES',
-    tone: 'process',
-    thumb: 'GAME',
-    product: 'Game Via Login · 500 Coins',
-    detail: 'nama@email.com · Diproses admin',
-    total: 'Rp76.000',
-    thumbTone: 'dark',
-    detailHref: '/account/orders/ZTR-260818-0988?state=processing',
-  },
-  {
-    id: '#ZTR-260817-0871',
-    date: '17 Agu 2026 · 16:48',
-    status: 'DIKIRIM',
-    tone: 'success',
-    thumb: 'JRSY',
-    product: 'Zetruv Gaming Jersey',
-    detail: 'Black · Size L · Pengiriman sedang berjalan',
-    total: 'Rp267.000',
-    action: 'Lacak Pesanan',
-    actionHref: '/account/orders/ZTR-260817-0871/tracking',
-    detailHref: '/account/orders/ZTR-260817-0871/tracking',
-    thumbTone: 'neutral',
-  },
-  {
-    id: '#ZTR-260816-0764',
-    date: '16 Agu 2026 · 20:14',
-    status: 'SELESAI',
-    tone: 'process',
-    thumb: 'GAME',
-    thumbTone: 'dark',
-    product: 'Mobile Legends · 172 Diamonds',
-    detail: 'User ID 12345678 · Zona 1234',
-    total: 'Rp95.000',
-    detailHref: '/account/orders/ZTR-260816-0764?state=completed',
-  },
 ]
 
 function AccountShell({ active, children, tall = false }) {
@@ -78,14 +25,17 @@ function AccountShell({ active, children, tall = false }) {
 }
 
 function AccountSidebar({ active, tall }) {
+  const customer = readCustomerSession()?.customer
+  const name = customer?.name || 'Pengunjung'
+  const email = customer?.email || 'Belum masuk'
   return (
     <aside className={`account-sidebar${tall ? ' account-sidebar--tall' : ''}`}>
       <div className="account-sidebar__profile">
         <div className="account-sidebar__profile-top">
-          <span className="account-avatar account-avatar--small">M</span>
+          <span className="account-avatar account-avatar--small">{name.slice(0, 1).toUpperCase()}</span>
           <div>
             <strong>Akun Saya</strong>
-            <span>m***@email.com</span>
+            <span>{email}</span>
           </div>
         </div>
         <p>Kelola data akun dan transaksi</p>
@@ -125,278 +75,73 @@ function InfoRow({ label, value }) {
 }
 
 export function AccountOverviewPage() {
+  const customer = readCustomerSession()?.customer
   return (
     <AccountShell active="account">
-      <PageHeader title="Akun Saya" description="Kelola informasi akun yang digunakan untuk transaksi Zetruv." />
-      <section className="profile-overview">
-        <div className="profile-overview__identity">
-          <span className="account-avatar account-avatar--large">M</span>
-          <div>
-            <h2>Muhammad</h2>
-            <p>muhammad@email.com · 0812 3456 7878</p>
-            <small>Informasi akun untuk identitas dan notifikasi transaksi.</small>
-          </div>
-        </div>
-        <a className="account-btn account-btn--outline" href="/account/edit">Ubah Profil</a>
-      </section>
-      <section className="account-info-card">
-        <h2>Informasi Akun</h2>
-        <InfoRow label="Nama" value="Muhammad" />
-        <InfoRow label="Email" value="muhammad@email.com" />
-        <InfoRow label="Nomor HP" value="0812 3456 7878" />
-      </section>
-      <div className="account-note">
-        <img src={accountIcons.info} alt="" />
-        <span>Credential game Via Login tidak ditampilkan kembali di area akun.</span>
-      </div>
+      <PageHeader title="Akun Saya" description="Informasi akun yang digunakan untuk transaksi Zetruv." />
+      {!customer ? (
+        <div className="orders-figma-empty"><strong>Silakan masuk ke akun</strong><p>Login untuk melihat profilmu.</p><a className="account-btn account-btn--primary" href="/">Ke Beranda</a></div>
+      ) : (
+        <>
+          <section className="profile-overview">
+            <div className="profile-overview__identity">
+              <span className="account-avatar account-avatar--large">{String(customer.name || 'A').slice(0,1).toUpperCase()}</span>
+              <div><h2>{customer.name || 'Pengguna Zetruv'}</h2><p>{customer.email}</p><small>Informasi berasal dari sesi akun yang terverifikasi.</small></div>
+            </div>
+          </section>
+          <section className="account-info-card">
+            <h2>Informasi Akun</h2>
+            <InfoRow label="Nama" value={customer.name || '—'} />
+            <InfoRow label="Email" value={customer.email || '—'} />
+            <InfoRow label="Nomor HP" value="Belum tersedia" />
+          </section>
+          <div className="account-note"><img src={accountIcons.info} alt="" /><span>Pengubahan profil serta penyimpanan nomor HP belum tersedia. Detail akun tidak dapat diubah dari halaman ini.</span></div>
+        </>
+      )}
     </AccountShell>
   )
 }
 
 export function AccountEditProfilePage() {
-  const [name, setName] = useState('Muhammad')
-
-  return (
-    <AccountShell active="account">
-      <PageHeader title="Ubah Profil" description="Perbarui informasi dasar akun Zetruv." />
-      <form
-        className="account-form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          window.location.href = '/account'
-        }}
-      >
-        <label>
-          <span>Nama</span>
-          <input value={name} onChange={(event) => setName(event.target.value)} />
-        </label>
-        <label>
-          <span>Email</span>
-          <div className="account-form__locked">
-            <span>muhammad@email.com</span>
-            <button className="account-btn account-btn--outline account-btn--change" type="button">Ubah</button>
-          </div>
-        </label>
-        <label>
-          <span>Nomor HP</span>
-          <div className="account-form__locked">
-            <span>0812 3456 7878</span>
-            <button className="account-btn account-btn--outline account-btn--change" type="button">Ubah</button>
-          </div>
-        </label>
-        <div className="account-note account-note--form">
-          <img src={accountIcons.info} alt="" />
-          <span>Perubahan email atau nomor HP memerlukan verifikasi keamanan.</span>
-        </div>
-        <div className="account-form__actions">
-          <a className="account-btn account-btn--outline account-btn--cancel" href="/account">Batal</a>
-          <button className="account-btn account-btn--primary account-btn--save" type="submit">Simpan Nama</button>
-        </div>
-      </form>
-    </AccountShell>
-  )
-}
-
-function FilterButton({ item, current, setFilter }) {
-  return (
-    <button className={current === item ? 'is-active' : ''} onClick={() => setFilter(item)} type="button">
-      {item}
-    </button>
-  )
-}
-
-function OrderCard({ order }) {
-  return (
-    <article className="order-card">
-      <header>
-        <div className="order-card__meta">
-          <strong>{order.id}</strong>
-          <img src={accountIcons.dot} alt="" />
-          <span>{order.date}</span>
-        </div>
-        <span className={`order-status order-status--${order.tone}`}>{order.status}</span>
-      </header>
-      <div className="order-card__body">
-        <div className={`order-card__thumb${order.thumbTone ? ` order-card__thumb--${order.thumbTone}` : ''}`}>{order.thumb}</div>
-        <div className="order-card__product">
-          <strong>{order.product}</strong>
-          <span>{order.detail}</span>
-        </div>
-        <div className="order-card__price">
-          <span>Total</span>
-          <strong>{order.total}</strong>
-        </div>
-        <div className="order-card__actions">
-          <a className="account-btn account-btn--outline account-btn--detail" href={order.detailHref}>Lihat Detail</a>
-          {order.action && <a className="account-btn account-btn--primary account-btn--order-action" href={order.actionHref}>{order.action}</a>}
-        </div>
-      </div>
-    </article>
-  )
+  return <AccountShell active="account">
+    <PageHeader title="Ubah Profil" description="Pengaturan profil belum dapat disimpan saat ini." />
+    <div className="orders-figma-empty"><strong>Pengubahan profil belum tersedia</strong><p>Data profil tetap mengikuti akun terverifikasi, tanpa perubahan semu.</p><a className="account-btn account-btn--outline" href="/account">Kembali ke Akun Saya</a></div>
+  </AccountShell>
 }
 
 export function AccountOrdersPage() {
-  const params = new URLSearchParams(window.location.search)
-  const emptyView = params.get('view') === 'empty'
-  const [query, setQuery] = useState(params.get('query') || '')
-  const [filter, setFilter] = useState('Semua')
-  const primaryFilters = ['Semua', 'Belum Dibayar', 'Diproses', 'Dikirim', 'Selesai']
-  const attentionFilters = ['Perlu Tindakan', 'Bermasalah']
-
-  const visibleOrders = useMemo(() => orders.filter((order) => {
-    const normalizedFilter = filter.toUpperCase()
-    const statusMatch = filter === 'Semua'
-      || (filter === 'Belum Dibayar' && order.status === 'BELUM DIBAYAR')
-      || order.status === normalizedFilter
-    const queryMatch = !query || `${order.id} ${order.product}`.toLowerCase().includes(query.toLowerCase())
-    return statusMatch && queryMatch
-  }), [query, filter])
-
-  const searchNoResult = !emptyView && query.trim() && visibleOrders.length === 0
-
-  if (emptyView) {
-    return (
-      <AccountShell active="orders">
-        <PageHeader title="Pesanan Saya" description="Pantau pesanan aktif dan lihat riwayat transaksi kamu." />
-        <div className="orders-figma-empty">
-          <strong>Belum ada pesanan</strong>
-          <p>Pesanan yang kamu buat akan muncul di halaman ini.</p>
-          <a className="account-btn account-btn--primary" href="/search">Mulai Belanja</a>
-        </div>
-      </AccountShell>
-    )
-  }
-
-  if (searchNoResult) {
-    return (
-      <AccountShell active="orders">
-        <PageHeader title="Pesanan Saya" description="Pantau pesanan aktif dan lihat riwayat transaksi kamu." />
-        <label className="orders-no-result-search">
-          <input value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
-        <div className="orders-figma-empty orders-figma-empty--search">
-          <strong>Pesanan tidak ditemukan</strong>
-          <p>Coba cek ID pesanan, nama produk, atau ubah filter status.</p>
-          <button className="account-btn account-btn--outline" type="button" onClick={() => setQuery('')}>Reset Pencarian</button>
-        </div>
-      </AccountShell>
-    )
-  }
-
-  return (
-    <AccountShell active="orders" tall>
-      <PageHeader title="Pesanan Saya" description="Pantau pesanan aktif dan riwayat selesai dalam satu tempat." />
-      <div className="active-order-callout">
-        <span className="active-order-callout__icon"><img src={accountIcons.info} alt="" /></span>
-        <div>
-          <strong>2 pesanan masih aktif</strong>
-          <span>1 menunggu pembayaran · 1 sedang diproses</span>
-        </div>
-      </div>
-      <div className="order-tools">
-        <label className="order-search">
-          <img src={accountIcons.search} alt="" />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari ID pesanan atau produk" />
-        </label>
-        <div className="order-filters">
-          <span className="order-filters__label">Status</span>
-          {primaryFilters.map((item) => <FilterButton item={item} current={filter} setFilter={setFilter} key={item} />)}
-          <i aria-hidden="true" />
-          <span className="order-filters__label">Butuh perhatian</span>
-          {attentionFilters.map((item) => <FilterButton item={item} current={filter} setFilter={setFilter} key={item} />)}
-        </div>
-      </div>
-      <div className="order-list">
-        {visibleOrders.map((order) => <OrderCard order={order} key={order.id} />)}
-        {visibleOrders.length === 0 && (
-          <div className="orders-figma-empty orders-figma-empty--inline">
-            <strong>Pesanan tidak ditemukan</strong>
-            <p>Coba ubah filter status.</p>
-          </div>
-        )}
-      </div>
-    </AccountShell>
-  )
+  const customer = readCustomerSession()?.customer
+  return <AccountShell active="orders">
+    <PageHeader title="Pesanan Saya" description="Pantau pesanan yang tercatat di akun Zetruv." />
+    <div className="orders-figma-empty" role="status">
+      <strong>{customer ? 'Riwayat pesanan akun belum dapat ditampilkan' : 'Masuk untuk melihat pesanan'}</strong>
+      <p>{customer
+        ? 'Daftar pesanan akun belum didukung oleh layanan saat ini. Tidak ada data contoh yang ditampilkan. Kamu masih bisa memeriksa pesanan menggunakan kode pesanan.'
+        : 'Login dulu untuk mengakses informasi pesanan pribadi.'}</p>
+      <a className="account-btn account-btn--primary" href="/order-status">Cek Pesanan</a>
+    </div>
+  </AccountShell>
 }
 
-function AddressRow({ label, value }) {
-  return <div className="address-row"><span>{label}</span><strong>{value}</strong></div>
-}
-
-function AddressField({ label, defaultValue }) {
-  return (
-    <label className="address-form__field">
-      <span>{label}</span>
-      <input defaultValue={defaultValue} />
-    </label>
-  )
-}
-
-export function AccountAddressFormPage({ mode = 'add' }) {
-  const isEdit = mode === 'edit'
-
-  return (
-    <AccountShell active="addresses">
-      <PageHeader
-        title={isEdit ? 'Ubah Alamat' : 'Tambah Alamat'}
-        description="Isi data alamat terstruktur untuk kalkulasi ongkir dan pengiriman."
-      />
-      <form
-        className="address-form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          window.location.href = '/account/addresses'
-        }}
-      >
-        <div className="address-form__row">
-          <AddressField label="Label alamat" defaultValue="Rumah" />
-          <AddressField label="Nama penerima" defaultValue="Muhammad" />
-        </div>
-        <div className="address-form__row">
-          <AddressField label="Nomor HP" defaultValue="0812 3456 7878" />
-          <AddressField label="Provinsi" defaultValue="Kalimantan Barat" />
-        </div>
-        <div className="address-form__row">
-          <AddressField label="Kota / Kabupaten" defaultValue="Kota Pontianak" />
-          <AddressField label="Kecamatan" defaultValue="Pontianak Barat" />
-        </div>
-        <div className="address-form__row">
-          <AddressField label="Kode Pos" defaultValue="78113" />
-          <AddressField label="Alamat Lengkap" defaultValue="Jl. Tabrani Ahmad Gg Setara" />
-        </div>
-        <div className="address-form__actions">
-          <a className="account-btn account-btn--outline account-btn--cancel" href="/account/addresses">Batal</a>
-          <button className="account-btn account-btn--primary account-btn--address-save" type="submit">Simpan Alamat</button>
-        </div>
-      </form>
-    </AccountShell>
-  )
+export function AccountAddressFormPage() {
+  return <AccountShell active="addresses">
+    <PageHeader title="Alamat Pengiriman" description="Alamat untuk pengiriman merchandise." />
+    <div className="orders-figma-empty"><strong>Penyimpanan alamat belum tersedia</strong><p>Belum ada layanan alamat akun yang terhubung. Formulir tidak ditampilkan agar tidak memberi kesan alamat berhasil tersimpan.</p><a className="account-btn account-btn--outline" href="/account/addresses">Kembali ke Alamat</a></div>
+  </AccountShell>
 }
 
 export function AccountAddressesPage() {
-  return (
-    <AccountShell active="addresses">
-      <PageHeader
-        title="Alamat"
-        description="Kelola alamat yang dipakai untuk pengiriman merchandise."
-        action={<a className="account-btn account-btn--primary account-btn--add" href="/account/addresses/add">+ Tambah Alamat</a>}
-      />
-      <section className="address-card">
-        <header>
-          <div>
-            <h2>Rumah · Alamat Utama</h2>
-            <p>Muhammad · 0812 3456 7878</p>
-          </div>
-          <a className="account-btn account-btn--outline account-btn--small" href="/account/addresses/edit">Ubah</a>
-        </header>
-        <AddressRow label="Provinsi" value="Kalimantan Barat" />
-        <AddressRow label="Kota / Kabupaten" value="Kota Pontianak" />
-        <AddressRow label="Kecamatan" value="Pontianak Barat" />
-        <AddressRow label="Kode Pos" value="78113" />
-        <AddressRow label="Alamat Lengkap" value="Jl. Tabrani Ahmad Gg Setara" />
-      </section>
-    </AccountShell>
-  )
+  const customer = readCustomerSession()?.customer
+  return <AccountShell active="addresses">
+    <PageHeader title="Alamat" description="Kelola alamat pengiriman merchandise." />
+    <div className="orders-figma-empty" role="status">
+      <strong>{customer ? 'Alamat tersimpan belum tersedia' : 'Masuk untuk melihat alamat'}</strong>
+      <p>{customer
+        ? 'Belum ada layanan penyimpanan alamat akun. Kami tidak menampilkan contoh alamat sebagai data pribadimu.'
+        : 'Login terlebih dahulu untuk melihat alamat pengiriman.'}</p>
+      <a className="account-btn account-btn--outline" href="/merchandise">Lihat Merchandise</a>
+    </div>
+  </AccountShell>
 }
 
 export function AccountFavoritesPage() {
