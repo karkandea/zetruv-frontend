@@ -82,6 +82,7 @@ function readPhysicalCart() {
 function writePhysicalCart(value) {
   if (typeof window === 'undefined') return
   window.sessionStorage.setItem(PHYSICAL_CART_KEY, JSON.stringify(value))
+  window.dispatchEvent(new Event('zetruv:physical-cart-changed'))
 }
 
 function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = false, className = '' }) {
@@ -215,6 +216,7 @@ function JerseyProductPage() {
   const favoriteId = 'merchandise:zetruv-gaming-jersey'
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
   const [activeImage, setActiveImage] = useState(0)
+  const [added, setAdded] = useState(false)
 
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [])
 
@@ -229,7 +231,7 @@ function JerseyProductPage() {
       price: 249000,
       image: jerseyCard,
     })
-    window.location.href = '/cart?flow=physical'
+    setAdded(true)
   }
 
   return (
@@ -270,7 +272,7 @@ function JerseyProductPage() {
             <div className="physical-option-heading"><strong>Color · {color}</strong><span>Choose color</span></div>
             <div className="physical-color-options">
               {['Black','Navy'].map((item) => (
-                <button className={color === item ? 'is-active' : ''} type="button" onClick={() => setColor(item)} key={item}>
+                <button className={color === item ? 'is-active' : ''} type="button" onClick={() => { setColor(item); setAdded(false) }} key={item}>
                   <i className={`is-${item.toLowerCase()}`} />{item}
                 </button>
               ))}
@@ -279,15 +281,15 @@ function JerseyProductPage() {
             <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">
               {['S','M','L','XL','XXL'].map((item) => (
-                <button className={size === item ? 'is-active' : ''} type="button" aria-pressed={size === item} disabled={item === 'XXL'} title={item === 'XXL' ? 'Ukuran ini tidak tersedia' : `Pilih ukuran ${item}`} onClick={() => setSize(item)} key={item}>{item}</button>
+                <button className={size === item ? 'is-active' : ''} type="button" aria-pressed={size === item} disabled={item === 'XXL'} title={item === 'XXL' ? 'Ukuran ini tidak tersedia' : `Pilih ukuran ${item}`} onClick={() => { setSize(item); setAdded(false) }} key={item}>{item}</button>
               ))}
             </div>
 
             <div className="physical-qty-save">
               <div className="physical-qty">
-                <button type="button" onClick={() => setQty((value) => Math.max(1, value - 1))}>−</button>
+                <button type="button" onClick={() => { setQty((value) => Math.max(1, value - 1)); setAdded(false) }}>−</button>
                 <span>{qty}</span>
-                <button type="button" onClick={() => setQty((value) => Math.min(9, value + 1))}>+</button>
+                <button type="button" onClick={() => { setQty((value) => Math.min(9, value + 1)); setAdded(false) }}>+</button>
               </div>
               <button
                 className={saved ? 'physical-save is-saved' : 'physical-save'}
@@ -307,7 +309,8 @@ function JerseyProductPage() {
             </div>
 
             <div className="physical-shipping-estimate" role="note"><strong>Ongkir & estimasi belum tersedia</strong><span>Biaya dan waktu kirim harus dihitung berdasarkan alamat dan layanan logistik yang terverifikasi. Belum ada estimasi resmi untuk ditampilkan.</span></div>
-            <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={!size}>{size ? 'Tambah ke Keranjang' : 'Pilih Ukuran Dulu'}</PhysicalButton>
+            {added && <p className="physical-add-confirmation" role="status">✓ Zetruv Gaming Jersey · ukuran {size} · {qty} item berhasil dimasukkan ke keranjang.</p>}
+            <PhysicalButton className="physical-add-cart" onClick={added ? () => { window.location.href = '/cart?flow=physical' } : addToCart} disabled={!size}>{added ? 'Lihat Keranjang' : size ? 'Tambah ke Keranjang' : 'Pilih Ukuran Dulu'}</PhysicalButton>
           </section>
         </div>
 
@@ -332,6 +335,7 @@ function PhysicalAccessoryProductPage({ slug }) {
   const [qty, setQty] = useState(1)
   const [size, setSize] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
+  const [added, setAdded] = useState(false)
   const favoriteId = `merchandise:${slug}`
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
@@ -359,7 +363,7 @@ function PhysicalAccessoryProductPage({ slug }) {
       price: product.price,
       image: product.image,
     })
-    window.location.href = '/cart?flow=physical'
+    setAdded(true)
   }
 
   return <div className="physical-shell">
@@ -395,14 +399,14 @@ function PhysicalAccessoryProductPage({ slug }) {
           {isJersey ? <>
             <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">{['S','M','L','XL','XXL'].map((value) =>
-              <button type="button" key={value} className={size === value ? 'is-active' : ''} aria-pressed={size === value} onClick={() => setSize(value)}>{value}</button>)}
+              <button type="button" key={value} className={size === value ? 'is-active' : ''} aria-pressed={size === value} onClick={() => { setSize(value); setAdded(false) }}>{value}</button>)}
             </div>
           </> : <p className="physical-accessory-description">One size · {product.meta}. Produk fisik dikirim ke alamat yang dipilih pada checkout.</p>}
           <div className="physical-qty-save">
             <div className="physical-qty">
-              <button type="button" onClick={() => setQty((v) => Math.max(1, v - 1))}>−</button>
+              <button type="button" onClick={() => { setQty((v) => Math.max(1, v - 1)); setAdded(false) }}>−</button>
               <span>{qty}</span>
-              <button type="button" onClick={() => setQty((v) => Math.min(9, v + 1))}>+</button>
+              <button type="button" onClick={() => { setQty((v) => Math.min(9, v + 1)); setAdded(false) }}>+</button>
             </div>
             <button type="button" className={saved ? 'physical-save is-saved' : 'physical-save'}
               onClick={() => setSaved(toggleFavorite({
@@ -411,8 +415,9 @@ function PhysicalAccessoryProductPage({ slug }) {
               }))}>{saved ? '♥ Tersimpan' : '♡ Favorit'}</button>
           </div>
           <div className="physical-shipping-estimate" role="note"><strong>Ongkir belum dihitung</strong><span>Biaya dan estimasi kirim hanya dapat ditentukan dari layanan logistik yang aktif dan alamat pengiriman.</span></div>
-          <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={isJersey && !size}>
-            {isJersey && !size ? 'Pilih Ukuran Dulu' : 'Tambah ke Keranjang'}
+          {added && <p className="physical-add-confirmation" role="status">✓ {product.name} · {selectedSize} · {qty} item berhasil dimasukkan ke keranjang.</p>}
+          <PhysicalButton className="physical-add-cart" onClick={added ? () => { window.location.href = '/cart?flow=physical' } : addToCart} disabled={isJersey && !size}>
+            {added ? 'Lihat Keranjang' : isJersey && !size ? 'Pilih Ukuran Dulu' : 'Tambah ke Keranjang'}
           </PhysicalButton>
         </section>
       </div>
@@ -463,8 +468,8 @@ export function PhysicalCartPage() {
                   <span className="physical-badge">{item.category?.toUpperCase() || 'MERCHANDISE'}</span>
                   <h2>{item.name}</h2>
                   <p>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`}</p>
-                  <strong className="physical-stock physical-stock--ok">In stock</strong>
-                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY) }}>Remove</button></div>
+                  <span className="physical-cart-stock-note">Ketersediaan final belum diverifikasi</span>
+                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>Remove</button></div>
                 </div>
                 <div className="physical-cart-item__price">
                   <strong>{rupiah(item.price)}</strong>
@@ -477,7 +482,7 @@ export function PhysicalCartPage() {
 
             <div className="physical-cart-assurance">
               <strong>Shipping is calculated at checkout</strong>
-              <p>Choose your address at checkout to see available services, ETA, and final cost.</p>
+              <p>Ongkir, estimasi pengiriman, dan checkout merchandise belum terhubung ke API transaksi. Barang yang tersimpan saat ini hanya keranjang lokal.</p>
               <p>You can still update quantity or variant before checkout.</p>
             </div>
           </div>
@@ -489,7 +494,7 @@ export function PhysicalCartPage() {
             <hr />
             <div className="physical-cart-summary__total"><strong>Estimated total</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
             <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}</PhysicalButton>
-            <div className="physical-login-note"><strong>{readCustomerSession() ? 'Periksa pesananmu' : 'Login diperlukan untuk checkout'}</strong><span>{readCustomerSession() ? 'Ongkir belum termasuk subtotal.' : 'Login dahulu; keranjangmu tetap tersimpan selama sesi browser ini.'}</span></div>
+            <div className="physical-login-note"><strong>Checkout merchandise belum aktif</strong><span>{readCustomerSession() ? 'Kamu sudah login. Biaya kirim dan pembayaran belum bisa diproses.' : 'Login menggunakan akun Zetruv bisa dilakukan, tetapi checkout dan pembayaran merchandise belum tersedia.'}</span></div>
           </aside>
         </div>
       </main>
