@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
 import { readCustomerSession, setCustomerSession } from '../services/customerCartSync'
