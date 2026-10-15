@@ -84,18 +84,6 @@ function writePhysicalCart(value) {
   window.sessionStorage.setItem(PHYSICAL_CART_KEY, JSON.stringify(value))
 }
 
-function defaultCart() {
-  return {
-    slug: 'zetruv-gaming-jersey',
-    name: 'Zetruv Gaming Jersey',
-    color: 'Black',
-    size: 'L',
-    qty: 1,
-    price: 249000,
-    image: jerseyCard,
-  }
-}
-
 function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = false, className = '' }) {
   const cn = `physical-btn physical-btn--${tone} ${className}`.trim()
   if (href && !disabled) return <a className={cn} href={href}>{children}</a>
@@ -103,23 +91,31 @@ function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = 
 }
 
 function ProductCard({ product }) {
+  const favoriteId = `merchandise:${product.slug}`
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
   return (
-    <a className="physical-product-card" href={`/merchandise/${encodeURIComponent(product.slug)}`}>
-      <div className="physical-product-card__image">
-        <img src={product.image} alt="" />
-      </div>
-      <div className="physical-product-card__meta">
-        <span className="physical-badge">{product.badge}</span>
-        <span className={`physical-stock physical-stock--${product.stockTone}`}>{product.stock}</span>
-      </div>
-      <strong className="physical-product-card__name">{product.name}</strong>
-      <span className="physical-product-card__variant">{product.meta}</span>
-      <strong className="physical-product-card__price">{rupiah(product.price)}</strong>
-      <div className="physical-product-card__foot">
-        <span>{product.sold} sold</span>
-        <span>{product.rating} <b>★</b></span>
-      </div>
-    </a>
+    <article className="physical-product-card">
+      <a className="physical-product-card__link" href={`/merchandise/${encodeURIComponent(product.slug)}`} aria-label={`Lihat ${product.name}`}>
+        <div className="physical-product-card__image"><img src={product.image} alt="" /></div>
+        <div className="physical-product-card__meta">
+          <span className="physical-badge">{product.badge}</span>
+          <span className={`physical-stock physical-stock--${product.stockTone}`}>{product.stock}</span>
+        </div>
+        <strong className="physical-product-card__name">{product.name}</strong>
+        <span className="physical-product-card__variant">{product.meta}</span>
+        <strong className="physical-product-card__price">{rupiah(product.price)}</strong>
+      </a>
+      <button type="button" className={`physical-product-card__favorite${saved ? ' is-saved' : ''}`}
+        aria-label={saved ? `Hapus ${product.name} dari favorit` : `Simpan ${product.name} ke favorit`}
+        aria-pressed={saved}
+        onClick={() => setSaved(toggleFavorite({
+          id: favoriteId, name: product.name, type: 'Merchandise',
+          price: rupiah(product.price), href: `/merchandise/${product.slug}`, image: product.image,
+        }))}>
+        {saved ? '♥' : '♡'}
+      </button>
+    </article>
   )
 }
 
@@ -280,10 +276,10 @@ function JerseyProductPage() {
               ))}
             </div>
 
-            <div className="physical-option-heading physical-option-heading--size"><strong>Size · {size || 'Select a size'}</strong><a href="#size-guide">Size guide</a></div>
+            <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">
               {['S','M','L','XL','XXL'].map((item) => (
-                <button className={size === item ? 'is-active' : ''} type="button" disabled={item === 'XXL'} onClick={() => setSize(item)} key={item}>{item}</button>
+                <button className={size === item ? 'is-active' : ''} type="button" aria-pressed={size === item} disabled={item === 'XXL'} title={item === 'XXL' ? 'Ukuran ini tidak tersedia' : `Pilih ukuran ${item}`} onClick={() => setSize(item)} key={item}>{item}</button>
               ))}
             </div>
 
@@ -310,14 +306,14 @@ function JerseyProductPage() {
               ><span>{saved ? '♥' : '♡'}</span> {saved ? 'Tersimpan' : 'Favorit'}</button>
             </div>
 
-            <div className="physical-shipping-estimate"><strong>Shipping from Rp18,000 · 2–4 days</strong><span>Final shipping cost is calculated from your address and selected service at checkout.</span></div>
-            <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={!size}>{size ? 'Add to Cart' : 'Select a size'}</PhysicalButton>
+            <div className="physical-shipping-estimate" role="note"><strong>Ongkir & estimasi belum tersedia</strong><span>Biaya dan waktu kirim harus dihitung berdasarkan alamat dan layanan logistik yang terverifikasi. Belum ada estimasi resmi untuk ditampilkan.</span></div>
+            <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={!size}>{size ? 'Tambah ke Keranjang' : 'Pilih Ukuran Dulu'}</PhysicalButton>
           </section>
         </div>
 
         <div className="physical-product-info">
           <section><strong>Description</strong><p>Lightweight dry-fit fabric designed for everyday wear.</p></section>
-          <section><strong>Details & Care</strong><p>Gentle wash. Size and color follow the selected variant.</p></section>
+          <section id="size-guide"><strong>Panduan ukuran</strong><p>Pilih ukuran S, M, L, atau XL di atas. Tabel ukuran resmi (lingkar dada dan panjang baju) belum tersedia, jadi jangan mengandalkan perkiraan. Konfirmasi ukuran dengan admin sebelum membeli.</p></section>
           <section><strong>Shipping</strong><p>Ships from Zetruv’s origin address via supported RajaOngkir services.</p></section>
         </div>
       </main>
@@ -397,9 +393,9 @@ function PhysicalAccessoryProductPage({ slug }) {
           <hr />
           <div className="physical-option-heading"><strong>Variant</strong><span>{product.meta}</span></div>
           {isJersey ? <>
-            <div className="physical-option-heading physical-option-heading--size"><strong>Size · {size || 'Select a size'}</strong></div>
+            <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">{['S','M','L','XL','XXL'].map((value) =>
-              <button type="button" key={value} className={size === value ? 'is-active' : ''} onClick={() => setSize(value)}>{value}</button>)}
+              <button type="button" key={value} className={size === value ? 'is-active' : ''} aria-pressed={size === value} onClick={() => setSize(value)}>{value}</button>)}
             </div>
           </> : <p className="physical-accessory-description">One size · {product.meta}. Produk fisik dikirim ke alamat yang dipilih pada checkout.</p>}
           <div className="physical-qty-save">
@@ -414,15 +410,15 @@ function PhysicalAccessoryProductPage({ slug }) {
                 href: `/merchandise/${product.slug}`, image: product.image,
               }))}>{saved ? '♥ Tersimpan' : '♡ Favorit'}</button>
           </div>
-          <div className="physical-shipping-estimate"><strong>Shipping calculated at checkout</strong><span>Pilih alamat untuk menampilkan ongkir dan perkiraan pengiriman.</span></div>
+          <div className="physical-shipping-estimate" role="note"><strong>Ongkir belum dihitung</strong><span>Biaya dan estimasi kirim hanya dapat ditentukan dari layanan logistik yang aktif dan alamat pengiriman.</span></div>
           <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={isJersey && !size}>
-            {isJersey && !size ? 'Select a size' : 'Add to Cart'}
+            {isJersey && !size ? 'Pilih Ukuran Dulu' : 'Tambah ke Keranjang'}
           </PhysicalButton>
         </section>
       </div>
       <div className="physical-product-info">
         <section><strong>Description</strong><p>{product.name} · {product.meta}</p></section>
-        <section><strong>Product Details</strong><p>{product.category} · Official Zetruv merchandise.</p></section>
+        <section id="size-guide"><strong>{isJersey ? 'Panduan ukuran' : 'Detail produk'}</strong><p>{isJersey ? 'Tabel ukuran resmi belum tersedia. Konfirmasikan lingkar dada dan panjang baju dengan admin sebelum membeli.' : `${product.category} · ${product.meta}.`}</p></section>
         <section><strong>Shipping</strong><p>Shipping rates appear at checkout.</p></section>
       </div>
     </main>
@@ -492,8 +488,8 @@ export function PhysicalCartPage() {
             <div><span>Shipping</span><span>Calculated at checkout</span></div>
             <hr />
             <div className="physical-cart-summary__total"><strong>Estimated total</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
-            <PhysicalButton onClick={continueCheckout} disabled={!item}>Continue to Checkout</PhysicalButton>
-            <div className="physical-login-note"><strong>Sign in required before checkout</strong><span>After sign-in, you’ll return to merchandise checkout with your cart saved.</span></div>
+            <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}</PhysicalButton>
+            <div className="physical-login-note"><strong>{readCustomerSession() ? 'Periksa pesananmu' : 'Login diperlukan untuk checkout'}</strong><span>{readCustomerSession() ? 'Ongkir belum termasuk subtotal.' : 'Login dahulu; keranjangmu tetap tersimpan selama sesi browser ini.'}</span></div>
           </aside>
         </div>
       </main>
@@ -502,312 +498,34 @@ export function PhysicalCartPage() {
   )
 }
 
-function CheckoutStateCard({ tone = 'neutral', title, description, action, onAction }) {
-  return (
-    <div className={`physical-checkout-state physical-checkout-state--${tone}`}>
-      <strong>{title}</strong>
-      <span>{description}</span>
-      {action && <button type="button" onClick={onAction}>{action}</button>}
-    </div>
-  )
-}
-
-function ShippingServices({ state, onStateChange, selected, onSelect }) {
-  if (state === 'address-required') {
-    return <CheckoutStateCard title="Address required" description="Do not request rates until a shipping address exists." action="Add shipping address" onAction={() => onStateChange('loading')} />
-  }
-  if (state === 'loading') {
-    return (
-      <div className="physical-checkout-state physical-checkout-state--loading">
-        <strong>Loading rates</strong>
-        <span>Disable service selection while rates are loading.</span>
-        <div className="physical-rate-skeleton"><i /><i /><i /></div>
-        <button type="button" onClick={() => onStateChange('rates')}>Show available rates</button>
-      </div>
-    )
-  }
-  if (state === 'no-service') {
-    return <CheckoutStateCard tone="warning" title="No service available" description="No supported service for the selected address/cart." action="Change address" onAction={() => onStateChange('rates')} />
-  }
-  if (state === 'unavailable') {
-    return <CheckoutStateCard tone="error" title="Shipping unavailable" description="Temporary RajaOngkir/API failure. Your checkout data is preserved." action="Retry rates" onAction={() => onStateChange('loading')} />
-  }
-
-  const services = [
-    { id: 'jne', name: 'JNE Regular', eta: '2–4 days', price: 18000 },
-    { id: 'jnt', name: 'J&T EZ', eta: '2–3 days', price: 20000 },
-    { id: 'sicepat', name: 'SiCepat BEST', eta: '1–2 days', price: 29000 },
-  ]
-
-  return (
-    <div className="physical-shipping-services">
-      {services.map((service) => (
-        <button className={selected === service.id ? 'is-active' : ''} type="button" onClick={() => onSelect(service.id)} key={service.id}>
-          <strong>{service.name}</strong><span>{service.eta}</span><b>{rupiah(service.price)}</b>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function VoucherArea({ state, setState, value, setValue }) {
-  const apply = () => {
-    const normalized = value.trim().toUpperCase()
-    if (normalized === 'SAVE25') setState('discount')
-    else if (normalized === 'FREESHIP') setState('free-shipping')
-    else if (normalized === 'EXPIRED') setState('invalid')
-    else if (normalized) setState('ineligible')
-  }
-
-  if (state === 'discount') return <CheckoutStateCard tone="success" title="Applied · Rp25,000 off" description="SAVE25 is applied to this order." action="Remove" onAction={() => { setState('default'); setValue('') }} />
-  if (state === 'free-shipping') return <CheckoutStateCard tone="success" title="Applied · Free shipping" description="Free shipping applied" action="Remove" onAction={() => { setState('default'); setValue('') }} />
-
-  return (
-    <>
-      <div className="physical-voucher-input">
-        <input value={value} onChange={(event) => setValue(event.target.value)} placeholder="Enter voucher code" />
-        <button type="button" onClick={apply}>Apply</button>
-      </div>
-      {state === 'invalid' && <p className="physical-voucher-message is-error">Voucher is invalid or expired</p>}
-      {state === 'ineligible' && <p className="physical-voucher-message is-warning">Voucher is not eligible</p>}
-    </>
-  )
+function PhysicalFlowUnavailable({ title, description }) {
+  const item = readPhysicalCart()
+  return <div className="physical-shell">
+    <Navbar variant="account" />
+    <main className="physical-checkout">
+      <header><h1>{title}</h1><p>{description}</p></header>
+      <section className="physical-flow-unavailable" role="status">
+        <strong>Belum bisa diproses</strong>
+        <p>Pengiriman, voucher, dan pembayaran merchandise belum terhubung ke layanan transaksi yang memvalidasi alamat, ongkir, stok, dan pembayaran. Tidak ada pesanan atau tagihan yang dibuat.</p>
+        {item && <div className="physical-flow-unavailable__item">
+          <img src={item.image || jerseyCard} alt="" />
+          <div><strong>{item.name}</strong><span>{item.color} · {item.size} · {item.qty} item</span><span>Subtotal keranjang: {rupiah(item.price * item.qty)} (belum termasuk ongkir)</span></div>
+        </div>}
+        <a className="physical-btn" href={item ? '/cart?flow=physical' : '/merchandise'}>{item ? 'Kembali ke Keranjang' : 'Lihat Merchandise'}</a>
+        <a className="physical-btn physical-btn--outline" href="/order-status">Cek Pesanan Digital</a>
+      </section>
+    </main>
+  </div>
 }
 
 export function PhysicalCheckoutPage() {
-  const params = new URLSearchParams(window.location.search)
-  const [shippingState, setShippingState] = useState(params.get('shipping') || 'rates')
-  const [voucherState, setVoucherState] = useState(params.get('voucher') || 'default')
-  const [voucherCode, setVoucherCode] = useState(voucherState === 'discount' ? 'SAVE25' : voucherState === 'free-shipping' ? 'FREESHIP' : '')
-  const [shippingService, setShippingService] = useState('jne')
-  const item = readPhysicalCart() || defaultCart()
-
-  const shippingPrice = voucherState === 'free-shipping' ? 0 : shippingService === 'jnt' ? 20000 : shippingService === 'sicepat' ? 29000 : 18000
-  const discount = voucherState === 'discount' ? 25000 : 0
-  const subtotal = item.price * item.qty
-  const total = subtotal + shippingPrice - discount
-  const ratesReady = shippingState === 'rates'
-
-  return (
-    <div className="physical-shell">
-      <Navbar variant="account" />
-      <main className="physical-checkout">
-        <header><h1>Checkout Merchandise</h1><p>Review your contact, address, shipping, voucher, and payment details before continuing.</p></header>
-        <div className="physical-checkout-layout">
-          <section className="physical-checkout-form">
-            <div className="physical-section-heading"><h2>Contact Information</h2><button type="button">Prefilled from profile · Edit</button></div>
-            <div className="physical-contact-grid">
-              <div><small>WhatsApp*</small><strong>+62 812 3456 7890</strong></div>
-              <div><small>Account email</small><strong>user@example.com</strong></div>
-            </div>
-
-            <div className="physical-section-heading physical-section-heading--address"><h2>Shipping Address</h2><button type="button" onClick={() => setShippingState('address-required')}>Change</button></div>
-            {shippingState !== 'address-required' && (
-              <div className="physical-address-card"><strong>Home — Arkandea</strong><span>Jl. Contoh No. 12, Jakarta Selatan, DKI Jakarta 12345</span><span>+62 812 3456 7890</span></div>
-            )}
-
-            <div className="physical-section-heading physical-section-heading--shipping"><h2>Shipping Service</h2><span>RajaOngkir</span></div>
-            <ShippingServices state={shippingState} onStateChange={setShippingState} selected={shippingService} onSelect={setShippingService} />
-
-            <div className="physical-section-heading physical-section-heading--voucher"><h2>Voucher</h2><span>fixed discount / free shipping</span></div>
-            <VoucherArea state={voucherState} setState={setVoucherState} value={voucherCode} setValue={setVoucherCode} />
-            <p className="physical-whatsapp-note">Order updates will be sent to this WhatsApp number.</p>
-          </section>
-
-          <aside className="physical-checkout-summary">
-            <h2>Order Summary</h2>
-            <div className="physical-checkout-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
-            <div className="physical-section-heading physical-section-heading--payment"><h3>Payment Method</h3><button type="button">Change</button></div>
-            <div className="physical-payment-method"><strong>QRIS</strong><span>Processed by Xendit</span></div>
-            <dl className="physical-checkout-prices">
-              <div><dt>Subtotal</dt><dd>{rupiah(subtotal)}</dd></div>
-              <div><dt>Shipping</dt><dd>{ratesReady ? rupiah(shippingPrice) : '—'}</dd></div>
-              <div><dt>Voucher</dt><dd>{discount ? `- ${rupiah(discount)}` : voucherState === 'free-shipping' ? 'Free shipping' : 'Rp0'}</dd></div>
-            </dl>
-            <hr />
-            <div className="physical-checkout-total"><strong>Total</strong><b>{ratesReady ? rupiah(total) : '—'}</b></div>
-            <PhysicalButton href="/payment?flow=physical&state=pending" disabled={!ratesReady}>Continue to QRIS Payment</PhysicalButton>
-            <p className="physical-xendit-note">You’ll continue to Xendit to complete your QRIS payment, then return here to see the latest status.</p>
-          </aside>
-        </div>
-      </main>
-    </div>
-  )
+  return <PhysicalFlowUnavailable title="Checkout Merchandise" description="Checkout akan tersedia setelah alamat dan tarif pengiriman resmi terintegrasi." />
 }
 
-const PAYMENT_STATES = {
-  pending: {
-    title: 'Payment Pending',
-    subtitle: 'Complete your QRIS payment before the payment window expires.',
-    badge: 'PENDING',
-    tone: 'pending',
-    panelTitle: 'QRIS via Xendit',
-    panelDesc: 'Your payment session is ready.',
-    label: 'Payment expires in',
-    status: '14:32',
-    statusTone: 'pending',
-    helper: 'If the payment window expires, create a new payment session from this order.',
-    primary: 'Open QRIS Payment',
-    primaryHref: '/payment?flow=physical&state=success',
-    secondary: 'Change payment method',
-    secondaryHref: '/checkout?flow=physical',
-    foot: 'After payment, return to this page or refresh to see the latest payment status.',
-  },
-  success: {
-    title: 'Payment Successful',
-    subtitle: 'Your payment has been confirmed. Your order is ready to move forward.',
-    badge: 'SUCCESS',
-    tone: 'success',
-    panelTitle: 'Payment received',
-    panelDesc: 'QRIS payment confirmed by Xendit.',
-    label: 'Payment status',
-    status: 'Successful',
-    statusTone: 'success',
-    helper: 'No further payment action is required. Continue to your order details.',
-    primary: 'View Order',
-    primaryHref: '/order-status?flow=physical&state=shipped',
-    secondary: 'Back to Home',
-    secondaryHref: '/',
-    foot: 'Your order can now continue to fulfillment.',
-  },
-  failed: {
-    title: 'Payment Failed',
-    subtitle: 'We couldn’t complete your payment. Your order has not entered fulfillment.',
-    badge: 'FAILED',
-    tone: 'failed',
-    panelTitle: 'Payment unsuccessful',
-    panelDesc: 'No successful payment was recorded.',
-    label: 'Payment status',
-    status: 'Failed',
-    statusTone: 'failed',
-    helper: 'Try the payment again or choose another available payment method.',
-    primary: 'Retry Payment',
-    primaryHref: '/payment?flow=physical&state=pending',
-    secondary: 'Change payment method',
-    secondaryHref: '/checkout?flow=physical',
-    foot: 'Your cart and order details remain available while you retry.',
-  },
-  expired: {
-    title: 'Payment Expired',
-    subtitle: 'This payment session is no longer active. Create a new payment to continue.',
-    badge: 'EXPIRED',
-    tone: 'expired',
-    panelTitle: 'QRIS session expired',
-    panelDesc: 'The previous payment window can no longer be used.',
-    label: 'Payment status',
-    status: 'Expired',
-    statusTone: 'expired',
-    helper: 'Create a new payment session from this order, or choose another payment method.',
-    primary: 'Create New Payment',
-    primaryHref: '/payment?flow=physical&state=pending',
-    secondary: 'Change payment method',
-    secondaryHref: '/checkout?flow=physical',
-    foot: 'Your order details are preserved; only the payment session needs renewal.',
-  },
+export function PhysicalPaymentPage() {
+  return <PhysicalFlowUnavailable title="Pembayaran Merchandise" description="Status pembayaran hanya dapat dikonfirmasi dari transaksi backend yang valid." />
 }
 
-export function PhysicalPaymentPage({ state = 'pending' }) {
-  const config = PAYMENT_STATES[state] || PAYMENT_STATES.pending
-  const item = readPhysicalCart() || defaultCart()
-  const subtotal = item.price * item.qty
-  return (
-    <div className="physical-shell">
-      <Navbar variant="account" />
-      <main className="physical-payment-page">
-        <header className="physical-payment-heading">
-          <div><h1>{config.title}</h1><p>{config.subtitle}</p></div>
-          <span className={`physical-payment-badge physical-payment-badge--${config.tone}`}>{config.badge}</span>
-        </header>
-
-        <div className="physical-payment-layout">
-          <section className="physical-payment-summary">
-            <h2>Order Summary</h2>
-            <div className="physical-payment-order"><span>Order</span><strong>#ZTR-PHY-240901</strong></div>
-            <div className="physical-payment-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(subtotal)}</b></div></div>
-            <div className="physical-payment-row"><span>Shipping</span><strong>Rp18.000</strong></div>
-            <div className="physical-payment-total"><strong>Total</strong><b>{rupiah(subtotal + 18000)}</b></div>
-          </section>
-
-          <section className="physical-payment-action">
-            <div className="physical-payment-provider"><strong>{config.panelTitle}</strong><span>{config.panelDesc}</span></div>
-            <span className="physical-payment-label">{config.label}</span>
-            <strong className={`physical-payment-status physical-payment-status--${config.statusTone}`}>{config.status}</strong>
-            {state === 'expired' && <div className="physical-payment-countdown"><span>Countdown</span><strong>00:00</strong></div>}
-            <p>{config.helper}</p>
-            <PhysicalButton href={config.primaryHref}>{config.primary}</PhysicalButton>
-            <PhysicalButton tone="outline" href={config.secondaryHref}>{config.secondary}</PhysicalButton>
-            <small>{config.foot}</small>
-          </section>
-        </div>
-      </main>
-    </div>
-  )
-}
-
-const TRACKING_BASE = [
-  ['Picked up by courier','1 Sep 2026 · 19:16','Pickup completed and tracking is active.'],
-  ['Ready to ship','1 Sep 2026 · 18:02','Shipping label created; package is waiting for pickup.'],
-  ['Order processing','1 Sep 2026 · 14:12','Payment confirmed. Your order is being prepared.'],
-  ['Order created','1 Sep 2026 · 14:08','Merchandise checkout was created successfully.'],
-]
-
-function TrackingHistory({ delivered }) {
-  const items = delivered
-    ? [['Delivered','Sep 4, 2026 · 15:42','Package delivered to the shipping address.'], ...TRACKING_BASE]
-    : [['In transit to destination city','2 Sep 2026 · 08:42','Package has left the Jakarta hub.'], ...TRACKING_BASE]
-  return (
-    <section className="physical-tracking-history">
-      <header><h2>Tracking history</h2><span>via RajaOngkir</span></header>
-      <div className="physical-tracking-timeline">
-        {items.map((item, index) => (
-          <article className={index === 0 && !delivered ? 'is-current' : ''} key={item[0]}>
-            <i />
-            <div><strong>{item[0]}</strong><p>{item[2]}</p></div>
-            <span>{item[1]}</span>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-export function PhysicalOrderTrackingPage({ state = 'shipped' }) {
-  const delivered = state === 'delivered'
-  const item = readPhysicalCart() || defaultCart()
-  const copyTracking = async () => {
-    try { await navigator.clipboard.writeText('JNE240901982173') } catch {}
-  }
-
-  return (
-    <div className="physical-shell">
-      <Navbar variant="account" />
-      <main className="physical-order-page">
-        <header className="physical-order-heading">
-          <div><h1>Order Details</h1><p>#ZTR-PHY-240901 · created 1 Sep 2026, 14:08</p></div>
-          <div><span className="physical-order-badge is-paid">PAYMENT SUCCESSFUL</span><span className="physical-order-badge is-shipped">{delivered ? 'DELIVERED' : 'SHIPPED'}</span></div>
-        </header>
-
-        <section className="physical-tracking-summary">
-          <div><small>Courier</small><strong>JNE Regular</strong></div>
-          <div><small>Tracking / AWB</small><strong>JNE240901982173</strong></div>
-          <div><small>{delivered ? 'Delivered' : 'Estimated delivery'}</small><strong>{delivered ? 'Sep 4, 2026 · 15:42' : '4 Sep 2026'}</strong></div>
-          <div className="physical-tracking-summary__actions"><PhysicalButton tone="outline" onClick={copyTracking}>Copy tracking no.</PhysicalButton><PhysicalButton>{delivered ? 'Delivery details' : 'Track package'}</PhysicalButton></div>
-        </section>
-
-        <div className="physical-order-layout">
-          <TrackingHistory delivered={delivered} />
-          <aside className="physical-order-aside">
-            <h2>Order</h2>
-            <div className="physical-order-product"><img src={item.image || jerseyCard} alt="" /><div><strong>{item.name}</strong><span>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`} · Qty {item.qty}</span><b>{rupiah(item.price * item.qty)}</b></div></div>
-            <h3>Shipping Address</h3>
-            <div className="physical-order-address"><strong>Home — Arkandea</strong><span>Jl. Contoh No. 12, Jakarta Selatan, DKI Jakarta 12345</span><span>+62 812 3456 7890</span></div>
-            <h3>Summary</h3>
-            <dl><div><dt>Subtotal</dt><dd>{rupiah(item.price * item.qty)}</dd></div><div><dt>Shipping</dt><dd>Rp18.000</dd></div><div><dt>Total</dt><dd>{rupiah(item.price * item.qty + 18000)}</dd></div></dl>
-            {delivered ? <PhysicalButton href="/order-status?view=merch-review">Write a Review</PhysicalButton> : <PhysicalButton tone="outline" href="#support">Need help? Contact Support</PhysicalButton>}
-            {delivered && <p className="physical-review-note">Available after delivery when the transaction is eligible for review.</p>}
-          </aside>
-        </div>
-      </main>
-    </div>
-  )
+export function PhysicalOrderTrackingPage() {
+  return <PhysicalFlowUnavailable title="Lacak Merchandise" description="Nomor resi dan status pengiriman akan berasal dari pesanan yang benar-benar diproses." />
 }

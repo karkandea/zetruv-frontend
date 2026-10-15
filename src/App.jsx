@@ -11,7 +11,7 @@ import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
 import { PhysicalCatalogPage, PhysicalProductPage, PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
-import { AccountOrderDetailPage, AccountOrderPaymentPage, AccountOrderTrackingPage, AccountOrderUpdateLoginPage } from './pages/OrderJourneyPages'
+import Navbar from './components/Navbar'
 import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
 import {
   GameAccountCartPage,
@@ -19,6 +19,18 @@ import {
   GameAccountPaymentPage,
   GameAccountOrderDetailPage,
 } from './pages/GameAccountPages'
+
+function AccountOrderUnavailablePage() {
+  return <div className="account-page"><Navbar variant="account" />
+    <main className="account-layout" style={{ display: 'block' }}>
+      <section className="account-main" style={{ marginInline: 'auto', maxWidth: 720, padding: '40px 24px', textAlign: 'center' }}>
+        <h1>Detail pesanan belum tersedia</h1>
+        <p>Detail pesanan tidak boleh berasal dari data contoh. Untuk informasi pesanan yang valid, gunakan kode pesanan pada halaman Cek Pesanan.</p>
+        <a href="/order-status" className="account-btn account-btn--primary">Cek Pesanan</a>
+      </section>
+    </main>
+  </div>
+}
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -30,13 +42,13 @@ export default function App() {
   if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
 
   const accountOrderPaymentMatch = path.match(/^\/account\/orders\/([^/]+)\/payment$/)
-  if (accountOrderPaymentMatch) return <AccountOrderPaymentPage orderId={decodeURIComponent(accountOrderPaymentMatch[1])} state={params.get('state') || 'pending'} />
+  if (accountOrderPaymentMatch) return <AccountOrderUnavailablePage />
   const accountOrderTrackingMatch = path.match(/^\/account\/orders\/([^/]+)\/tracking$/)
-  if (accountOrderTrackingMatch) return <AccountOrderTrackingPage orderId={decodeURIComponent(accountOrderTrackingMatch[1])} state={params.get('state') || 'transit'} />
+  if (accountOrderTrackingMatch) return <AccountOrderUnavailablePage />
   const accountOrderUpdateMatch = path.match(/^\/account\/orders\/([^/]+)\/update-login$/)
-  if (accountOrderUpdateMatch) return <AccountOrderUpdateLoginPage orderId={decodeURIComponent(accountOrderUpdateMatch[1])} />
+  if (accountOrderUpdateMatch) return <AccountOrderUnavailablePage />
   const accountOrderDetailMatch = path.match(/^\/account\/orders\/([^/]+)$/)
-  if (accountOrderDetailMatch) return <AccountOrderDetailPage orderId={decodeURIComponent(accountOrderDetailMatch[1])} state={params.get('state') || 'unpaid'} />
+  if (accountOrderDetailMatch) return <AccountOrderUnavailablePage />
 
   if (path === '/account/orders') return <AccountOrdersPage />
   if (path === '/account/addresses/add') return <AccountAddressFormPage mode="add" />

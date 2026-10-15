@@ -2561,3 +2561,38 @@
   font-size: 12px;
   line-height: 21px;
 }
+
+
+/* Wishlist on listing, size-guide anchor and touch accessibility. */
+.physical-product-card { position: relative; }
+.physical-product-card__link { display: block; color: inherit; }
+.physical-product-card__link:focus-visible { outline: 2px solid #010154; outline-offset: 3px; border-radius: 8px; }
+.physical-product-card__favorite {
+  position: absolute; z-index: 2; top: 24px; right: 24px;
+  width: 38px; height: 38px; border: 1px solid #e2e6ef; border-radius: 50%;
+  color: #222b45; background: rgba(255,255,255,.96);
+  font-size: 25px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.physical-product-card__favorite.is-saved { color: #c32346; }
+.physical-product-card__favorite:focus-visible { outline: 2px solid #010154; outline-offset: 2px; }
+.physical-size-options button { min-width: 44px; min-height: 44px; }
+.physical-size-options button:focus-visible, .physical-option-heading--size a:focus-visible { outline: 2px solid #010154; outline-offset: 2px; }
+#size-guide { scroll-margin-top: 145px; }
+.physical-shipping-estimate { height: auto; min-height: 56px; }
+@media (max-width: 700px) {
+  .physical-option-heading--size a { min-height: 42px; display: inline-flex; align-items: center; }
+}
+
+
+.physical-flow-unavailable { max-width: 620px; display: flex; flex-direction: column; gap: 14px; padding: 26px; border: 1px solid #dfe4ef; border-radius: 18px; background: #fff; }
+.physical-flow-unavailable > strong { font-size: 20px; color: #010154; }
+.physical-flow-unavailable p { margin: 0; color: #52596b; line-height: 1.65; font-size: 14px; }
+.physical-flow-unavailable__item { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 12px; background: #f6f7fb; }
+.physical-flow-unavailable__item img { width: 64px; height: 64px; border-radius: 9px; object-fit: cover; flex: none; }
+.physical-flow-unavailable__item > div { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.physical-flow-unavailable__item span { color: #616675; }
+.physical-flow-unavailable .physical-btn { max-width: 260px; }
+@media (max-width: 700px) {
+  .physical-flow-unavailable { padding: 18px; }
+  .physical-flow-unavailable .physical-btn { width: 100%; max-width: none; }
+}

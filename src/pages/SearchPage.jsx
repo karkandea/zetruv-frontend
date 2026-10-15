@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
+import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
+import { Heart } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
@@ -144,28 +146,35 @@ function productHref(product) {
 function CatalogCard({ product, categoryLabel }) {
   const href = productHref(product)
   const available = product.isAvailable !== false
+  const favoriteId = product.kind === 'Merchandise'
+    ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
+  const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
   return (
-    <button
-      className="search-game-card"
-      type="button"
-      aria-label={available ? `Open ${product.name}` : `${product.name} unavailable`}
-      onClick={() => href && (window.location.href = href)}
-      disabled={!available}
-    >
-      <img
-        src={product.thumbnailUrl || fallbackProductImage(product)}
-        alt=""
-        onError={(event) => {
-          const fallback = fallbackProductImage(product)
-          if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
-        }}
-      />
+    <article className={`search-game-card${!available ? ' is-unavailable' : ''}`}>
+      {available ? <a className="search-game-card__link" href={href} aria-label={`Lihat ${product.name}`} /> : null}
+      <img src={thumbnail} alt="" onError={(event) => {
+        const fallback = fallbackProductImage(product)
+        if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
+      }} />
       <span className="search-game-card__copy">
         <strong>{product.name}</strong>
         <small>{publisherForProduct(product, product.gameName || categoryLabel)}</small>
+        {!available && <small>Tidak tersedia</small>}
       </span>
-    </button>
+      <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
+        aria-label={saved ? `Hapus ${product.name} dari favorit` : `Simpan ${product.name} ke favorit`}
+        aria-pressed={saved}
+        onClick={() => setSaved(toggleFavorite({
+          id: favoriteId, name: product.name, type: categoryLabel || product.kind,
+          href: href || '/search', image: thumbnail,
+          price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
+        }))}>
+        <Heart size={17} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+      </button>
+    </article>
   )
 }
 
@@ -300,13 +309,8 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
   const categoryLabel = globalResults ? 'All categories' : activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
-  // Never silently substitute preview products for an actual search request.
-  const fallbackRows = useMemo(
-    () => globalResults || submittedQuery.trim().length >= 3
-      ? [] : filterFallbackProducts(activeKind, submittedQuery),
-    [activeKind, submittedQuery, globalResults],
-  )
-  const sourceProducts = products.length ? products : fallbackRows
+  // The API is the only source of listed products. Never show preview items as stock.
+  const sourceProducts = products
   const effectiveLetter = letterFiltering ? activeLetter : ''
   const filteredProducts = useMemo(() => filterByLetter(sourceProducts, effectiveLetter), [sourceProducts, effectiveLetter])
 
@@ -360,7 +364,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   }
 
   const loading = loadingCatalog || loadingProducts
-  const hasVisibleFallback = fallbackRows.length > 0
+  const hasVisibleFallback = false
   const showLoading = loading && !hasVisibleFallback && !queryTooShort
   const showError = Boolean(catalogError) && !hasVisibleFallback && !queryTooShort
   const noResults = !loading && !queryTooShort && filteredProducts.length === 0
@@ -435,12 +439,16 @@ export default function SearchPage({ mode = 'player-id' }) {
               </div>
 
               {isLoginMode && (
-                <div className="alphabet-filter" aria-label="Filter games alphabetically">
-                  <strong>A–Z</strong>
-                  {alphabet.map((letter) => (
-                    <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
-                  ))}
-                </div>
+                <details className="alphabet-filter-collapsible">
+                  <summary>Filter menurut abjad {letterFiltering ? `· ${activeLetter}` : 'A–Z'}</summary>
+                  <div className="alphabet-filter" aria-label="Filter game berdasarkan abjad">
+                    <strong>A–Z</strong>
+                    {alphabet.map((letter) => (
+                      <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
+                    ))}
+                    {letterFiltering && <button type="button" onClick={() => setLetterFiltering(false)}>Hapus filter</button>}
+                  </div>
+                </details>
               )}
 
               {isLoginMode && (

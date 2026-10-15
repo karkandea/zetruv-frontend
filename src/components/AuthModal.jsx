@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
+import { ArrowLeft } from 'lucide-react'
 import { authenticateCheckoutCustomer } from '../services/checkoutGatewayService'
 import { apiRequest } from '../api/httpClient'
 
 function maskEmail(email) {
   const value = String(email || '').trim()
-  if (!value.includes('@')) return 'arka***@gmail.com'
+  if (!value.includes('@')) return 'alamat email yang kamu masukkan'
 
   const [local, domain] = value.split('@')
-  const shown = (local || 'arka').slice(0, 4)
+  const shown = (local || '').slice(0, 4)
   return `${shown}***@${domain || 'gmail.com'}`
 }
 
-export default function AuthModal({ mode = 'login', onModeChange, onClose, onAuthenticated }) {
+export default function AuthModal({ mode = 'login', onModeChange, onClose, onAuthenticated, resetToken = '' }) {
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [authBusy,setAuthBusy] = useState(false)
   const [authError,setAuthError] = useState('')
+  const [resetBusy, setResetBusy] = useState(false)
+  const [resetError, setResetError] = useState('')
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [registerEmail, setRegisterEmail] = useState('')
@@ -102,19 +105,63 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     finally{setAuthBusy(false)}
   }
 
-  function handleResetRequest(event) {
-    event.preventDefault()
-    setResendSeconds(45)
-    onModeChange?.('forgot-check')
+  async function requestResetLink() {
+    if (resetBusy) return
+    setResetBusy(true)
+    setResetError('')
+    try {
+      const result = await apiRequest('/auth/forgot-password', {
+        method: 'POST', body: JSON.stringify({ email: resetEmail.trim() }),
+      })
+      setResendSeconds(Number(result?.resendAfterSeconds) || 45)
+      onModeChange?.('forgot-check')
+    } catch (error) {
+      setResetError(error?.message || 'Permintaan reset belum terkirim. Coba lagi.')
+    } finally {
+      setResetBusy(false)
+    }
   }
 
-  function handleResetPassword(event) {
+  async function handleResetRequest(event) {
     event.preventDefault()
-    onModeChange?.('forgot-success')
+    await requestResetLink()
+  }
+
+  async function handleResetPassword(event) {
+    event.preventDefault()
+    if (resetBusy) return
+    if (!resetToken) {
+      setResetError('Buka tautan reset dari email untuk mengubah password.')
+      return
+    }
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setResetError('Password minimal 8 karakter, berisi huruf besar dan angka.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setResetError('Konfirmasi password belum sama.')
+      return
+    }
+    setResetBusy(true)
+    setResetError('')
+    try {
+      await apiRequest('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token: resetToken, newPassword, confirmPassword }),
+      })
+      window.history.replaceState({}, '', '/')
+      setNewPassword('')
+      setConfirmPassword('')
+      onModeChange?.('forgot-success')
+    } catch (error) {
+      setResetError(error?.message || 'Password belum berubah. Coba minta tautan baru.')
+    } finally {
+      setResetBusy(false)
+    }
   }
 
   function handleResend() {
-    if (resendSeconds === 0) setResendSeconds(45)
+    if (resendSeconds === 0) void requestResetLink()
   }
 
   return (
@@ -226,7 +273,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         {isForgotRequest && (
           <div className="auth-modal__content auth-modal__content--forgot">
             <button className="auth-back-login" type="button" onClick={() => onModeChange?.('login')}>
-              <img src={assets.authBackArrow} alt="" />
+              <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
               <span>Back to login</span>
             </button>
 
@@ -245,7 +292,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                 value={resetEmail}
                 onChange={(event) => setResetEmail(event.target.value)}
               />
-              <button className="auth-submit auth-reset-submit" type="submit">Send reset link</button>
+              {resetError && <p className="auth-reset-error" role="alert">{resetError}</p>}
+              <button className="auth-submit auth-reset-submit" type="submit" disabled={resetBusy}>{resetBusy ? 'Mengirim...' : 'Send reset link'}</button>
             </form>
 
             <p className="auth-security-note">
@@ -268,9 +316,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-check-actions">
-              <button className="auth-submit auth-check-open" type="button" onClick={() => onModeChange?.('forgot-new')}>
-                Open email
-              </button>
+              <p className="auth-email-hint">Buka kotak masuk email kamu, lalu klik tautan reset. Zetruv tidak akan meminta password melalui email.</p>
               <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>
                 Use another email
               </button>
@@ -335,12 +381,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
               <div className="auth-requirements">
                 <p>Password must include:</p>
-                <div className="auth-requirement is-complete"><span>✓</span><strong>At least 8 characters</strong></div>
-                <div className="auth-requirement is-complete"><span>✓</span><strong>1 uppercase letter</strong></div>
-                <div className="auth-requirement"><span>•</span><strong>1 number</strong></div>
+                <div className={`auth-requirement${newPassword.length >= 8 ? ' is-complete' : ''}`}><span>{newPassword.length >= 8 ? '✓' : '•'}</span><strong>At least 8 characters</strong></div>
+                <div className={`auth-requirement${/[A-Z]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[A-Z]/.test(newPassword) ? '✓' : '•'}</span><strong>1 uppercase letter</strong></div>
+                <div className={`auth-requirement${/[0-9]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[0-9]/.test(newPassword) ? '✓' : '•'}</span><strong>1 number</strong></div>
               </div>
 
-              <button className="auth-submit auth-reset-password" type="submit">Reset password</button>
+              {!resetToken && <p className="auth-reset-error" role="alert">Tautan reset tidak ditemukan. Minta tautan baru lewat Lupa Password.</p>}
+              {resetError && <p className="auth-reset-error" role="alert">{resetError}</p>}
+              <button className="auth-submit auth-reset-password" type="submit" disabled={resetBusy || !resetToken}>{resetBusy ? 'Menyimpan...' : 'Reset password'}</button>
+              {!resetToken && <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>Minta tautan reset</button>}
             </form>
           </div>
         )}
