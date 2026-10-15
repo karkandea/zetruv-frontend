@@ -2337,3 +2337,70 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* Verified order lookup — no seeded payment, shipping or order content. */
+.sos-shell .sos-lookup-page {
+  width: min(720px, calc(100% - 36px)); margin: 0 auto;
+  padding: 170px 0 84px; min-height: 100vh;
+}
+.sos-lookup-intro { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.sos-lookup-intro__icon { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 17px; color: #010154; background: #f0f2ff; margin-bottom: 15px; }
+.sos-lookup-intro h1 { margin: 0; color: #1b1b1e; font-size: 30px; font-weight: 700; line-height: 1.4; }
+.sos-lookup-intro p { max-width: 540px; margin: 9px 0 0; font-size: 14px; line-height: 1.65; color: #626877; }
+.sos-lookup-form { max-width: 600px; margin: 28px auto 0; padding: 28px; display: flex; flex-direction: column; gap: 11px; border: 1px solid #e1e5ee; border-radius: 18px; box-shadow: 0 8px 30px rgba(1,1,84,.04); background: #fff; }
+.sos-lookup-form > label { font-size: 13px; font-weight: 600; color: #20233a; }
+.sos-lookup-form > input { display: block; width: 100%; height: 48px; min-width: 0; border: 1px solid #dce0ec; border-radius: 11px; padding: 0 15px; font: 400 14px/20px Poppins, Arial, sans-serif; color: #20233a; background: #fff; }
+.sos-lookup-form > input:focus { outline: 2px solid #a7b5f0; outline-offset: 1px; border-color: #010154; }
+.sos-lookup-form > input::placeholder { color: #878c99; }
+.sos-lookup-contact-method { border: 0; padding: 0; margin: 7px 0 0; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.sos-lookup-contact-method legend { font-weight: 600; font-size: 13px; margin-bottom: 9px; }
+.sos-lookup-contact-method label { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; cursor: pointer; font-size: 13px; color: #384156; }
+.sos-lookup-contact-method input { accent-color: #010154; width: 16px; height: 16px; }
+.sos-lookup-submit { min-height: 48px; border: 0; border-radius: 11px; margin-top: 7px; display: inline-flex; justify-content: center; align-items: center; gap: 8px; font: 600 14px Poppins, Arial, sans-serif; color: #fff; background: #010154; cursor: pointer; }
+.sos-lookup-submit:disabled { opacity: .65; cursor: progress; }
+.sos-lookup-submit:focus-visible, .sos-lookup-secondary:focus-visible { outline: 3px solid #b6c5ff; outline-offset: 3px; }
+.sos-lookup-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 11px; line-height: 1.7; color: #747987; }
+.sos-lookup-note svg { flex: none; margin-top: 2px; }
+.sos-lookup-error, .sos-lookup-warning { display: flex; gap: 9px; align-items: flex-start; padding: 11px 13px; margin: 0; border-radius: 10px; background: #fff5f1; color: #9b3131; font-size: 12px; line-height: 1.65; }
+.sos-lookup-error svg, .sos-lookup-warning svg { flex: none; }
+.sos-lookup-help { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 25px; color: #626877; font-size: 13px; text-align: center; }
+.sos-lookup-help strong { color: #1e2433; font-weight: 600; }
+.sos-lookup-help a { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; font-weight: 600; color: #010154; text-decoration: none; }
+.sos-lookup-result { width: 100%; margin-top: 30px; padding: 26px; border: 1px solid #dce2ef; border-radius: 16px; background: #fff; overflow-wrap: anywhere; }
+.sos-lookup-result__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sos-lookup-eyebrow { color: #24804b; text-transform: uppercase; font-size: 10px; letter-spacing: .06em; font-weight: 700; }
+.sos-lookup-result h2 { margin: 4px 0; font-size: 20px; color: #181a2a; }
+.sos-lookup-result p { font-size: 12px; line-height: 1.6; color: #626877; }
+.sos-lookup-secondary { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; min-height: 40px; background: #fff; color: #010154; border: 1px solid #dce2ef; border-radius: 10px; padding: 8px 10px; font-weight: 600; font-size: 11px; cursor: pointer; }
+.sos-lookup-statuses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; margin: 18px 0 24px; }
+.sos-lookup-statuses > div { display: flex; flex-direction: column; gap: 7px; border-radius: 11px; background: #f5f6fb; padding: 14px; min-width: 0; }
+.sos-lookup-statuses span { font-size: 11px; color: #6b7180; }
+.sos-lookup-statuses strong { font-size: 14px; color: #242a3c; }
+.sos-lookup-statuses .is-success { color: #16854c; }
+.sos-lookup-items { margin-top: 20px; }
+.sos-lookup-items h3, .sos-lookup-shipment h3 { font-size: 15px; margin: 0 0 12px; }
+.sos-lookup-item { display: flex; align-items: center; gap: 13px; border-bottom: 1px solid #edf0f6; padding: 13px 0; }
+.sos-lookup-item > img, .sos-lookup-item__fallback { width: 54px; height: 54px; flex: none; border-radius: 10px; object-fit: cover; background: #f2f3f9; }
+.sos-lookup-item__fallback { display: grid; place-items: center; color: #566077; }
+.sos-lookup-item__copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 5px; }
+.sos-lookup-item__copy strong, .sos-lookup-item > strong { font-size: 12px; }
+.sos-lookup-item__copy span, .sos-lookup-item__copy small { color: #6b7180; font-size: 11px; }
+.sos-lookup-summary { margin: 18px 0 0 auto; width: min(330px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.sos-lookup-summary > div { display: flex; justify-content: space-between; gap: 15px; font-size: 12px; }
+.sos-lookup-summary__total { font-size: 15px!important; border-top: 1px solid #dfe2ec; padding-top: 13px; }
+.sos-lookup-shipment { background: #f5f6fb; margin-top: 20px; padding: 16px; border-radius: 10px; }
+.sos-lookup-result .sos-lookup-security { margin-top: 20px; font-size: 11px; display: flex; align-items: center; gap: 8px; color: #667186; }
+@media (max-width: 700px) {
+  .sos-shell .navbar__top, .sos-shell .navbar__bottom-inner { width: calc(100% - 24px); }
+  .sos-shell .sos-lookup-page { width: calc(100% - 28px); padding-top: 138px; padding-bottom: 38px; }
+  .sos-lookup-intro h1 { font-size: 25px; }
+  .sos-lookup-intro p { font-size: 12px; }
+  .sos-lookup-form { margin-top: 22px; padding: 18px; border-radius: 14px; }
+  .sos-lookup-result { padding: 17px; }
+  .sos-lookup-result__header { flex-direction: column; align-items: flex-start; }
+  .sos-lookup-statuses { grid-template-columns: 1fr; gap: 7px; }
+  .sos-lookup-statuses > div { flex-direction: row; justify-content: space-between; align-items: center; }
+  .sos-lookup-item { flex-wrap: wrap; }
+  .sos-lookup-item > strong { margin-left: 67px; }
+}
