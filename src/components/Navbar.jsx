@@ -28,6 +28,7 @@ function readPhysicalCartCount() {
 
 export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [language, setLanguage] = useState(readNavbarLanguage)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -36,6 +37,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const [physicalCartCount, setPhysicalCartCount] = useState(() => readPhysicalCartCount())
   const [authMode, setAuthMode] = useState(() => {
     if (typeof window === 'undefined') return null
+    if (window.location.pathname === '/auth/reset-password') return 'forgot-new'
     const verifyState = new URLSearchParams(window.location.search).get('verify-email')
     if (verifyState === 'pending') return 'register-verify'
     if (verifyState === 'success') return 'register-verified'
@@ -44,6 +46,8 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   })
   const productMenuRef = useRef(null)
   const cartMenuRef = useRef(null)
+  const mobileMenuRef = useRef(null)
+  const resetToken = useRef(typeof window === 'undefined' ? '' : (window.location.pathname === '/auth/reset-password' ? new URLSearchParams(window.location.search).get('token') || '' : ''))
   const languageMenuRef = useRef(null)
   const languageButtonRef = useRef(null)
 
@@ -116,6 +120,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
       if (cartMenuRef.current && !cartMenuRef.current.contains(event.target)) {
         setIsCartOpen(false)
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false)
       if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
         setIsLanguageOpen(false)
       }
@@ -126,6 +131,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
         setIsProductOpen(false)
         setIsCartOpen(false)
         setIsLanguageOpen(false)
+        setIsMobileMenuOpen(false)
       }
     }
 
@@ -148,6 +154,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     if (name !== 'product') setIsProductOpen(false)
     setIsCartOpen(false)
     setIsLanguageOpen(false)
+    setIsMobileMenuOpen(false)
   }
 
   function selectLanguage(code) {
@@ -193,6 +200,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
                 setIsLanguageOpen((open) => !open)
                 setIsProductOpen(false)
                 setIsCartOpen(false)
+                setIsMobileMenuOpen(false)
               }}
             >
               <span className="nav-pill__icon nav-language-flag"><img src={assets[selectedLanguage.flag]} alt="" /></span>
@@ -225,7 +233,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
                 >
                   <img src={assets[option.flag]} alt="" />
                   <span><strong>{option.name}</strong><small>{option.badge}</small></span>
-                  {language === option.code && <span className="nav-language-option__check" aria-hidden="true">✓</span>}
+
                 </button>
               ))}
             </div>
@@ -241,6 +249,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
                 setIsCartOpen((open) => !open)
                 setIsProductOpen(false)
                 setIsLanguageOpen(false)
+                setIsMobileMenuOpen(false)
                 setPhysicalCartCount(readPhysicalCartCount())
               }}
             >
@@ -287,6 +296,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
                   setActiveNav('product')
                   setIsProductOpen((open) => !open)
                   setIsLanguageOpen(false)
+                  setIsMobileMenuOpen(false)
                 }}
               >
                 {productLabel} <img src={assets.navDown} alt="" />
@@ -310,6 +320,19 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
             <a className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`} href="/leaderboard" aria-current={activeNav === 'leaderboard' ? 'page' : undefined} onClick={() => selectNav('leaderboard')}>
               <img src={assets.leaderboard} alt="" />{t.leaderboard}
             </a>
+            <div className={`nav-mobile-more${isMobileMenuOpen ? ' is-open' : ''}`} ref={mobileMenuRef}>
+              <button type="button" className="nav-mobile-more__trigger navbar-control" aria-haspopup="menu" aria-expanded={isMobileMenuOpen} aria-label="Menu lainnya"
+                onClick={() => { setIsMobileMenuOpen(v => !v); setIsProductOpen(false); setIsCartOpen(false); setIsLanguageOpen(false) }}>
+                Menu <img src={assets.navDown} alt="" />
+              </button>
+              <div className="cart-dropdown nav-mobile-more__dropdown" role="menu" aria-hidden={!isMobileMenuOpen}>
+                <a href="/search" role="menuitem">{t.product}</a>
+                <a href="/merchandise" role="menuitem">Merchandise</a>
+                <a href="/articles" role="menuitem">{t.article}</a>
+                <a href="/order-status" role="menuitem">{t.transaction}</a>
+                <a href="/leaderboard" role="menuitem">{t.leaderboard}</a>
+              </div>
+            </div>
           </nav>
 
           {!verifiedSession && (
@@ -329,7 +352,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
       </header>
 
       {authMode && (
-        <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
+        <AuthModal mode={authMode} resetToken={resetToken.current} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
       )}
     </>
   )
