@@ -309,13 +309,8 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
   const categoryLabel = globalResults ? 'All categories' : activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
-  // Never silently substitute preview products for an actual search request.
-  const fallbackRows = useMemo(
-    () => globalResults || submittedQuery.trim().length >= 3
-      ? [] : filterFallbackProducts(activeKind, submittedQuery),
-    [activeKind, submittedQuery, globalResults],
-  )
-  const sourceProducts = products.length ? products : fallbackRows
+  // The API is the only source of listed products. Never show preview items as stock.
+  const sourceProducts = products
   const effectiveLetter = letterFiltering ? activeLetter : ''
   const filteredProducts = useMemo(() => filterByLetter(sourceProducts, effectiveLetter), [sourceProducts, effectiveLetter])
 
@@ -369,7 +364,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   }
 
   const loading = loadingCatalog || loadingProducts
-  const hasVisibleFallback = fallbackRows.length > 0
+  const hasVisibleFallback = false
   const showLoading = loading && !hasVisibleFallback && !queryTooShort
   const showError = Boolean(catalogError) && !hasVisibleFallback && !queryTooShort
   const noResults = !loading && !queryTooShort && filteredProducts.length === 0
@@ -444,12 +439,16 @@ export default function SearchPage({ mode = 'player-id' }) {
               </div>
 
               {isLoginMode && (
-                <div className="alphabet-filter" aria-label="Filter games alphabetically">
-                  <strong>A–Z</strong>
-                  {alphabet.map((letter) => (
-                    <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
-                  ))}
-                </div>
+                <details className="alphabet-filter-collapsible">
+                  <summary>Filter menurut abjad {letterFiltering ? `· ${activeLetter}` : 'A–Z'}</summary>
+                  <div className="alphabet-filter" aria-label="Filter game berdasarkan abjad">
+                    <strong>A–Z</strong>
+                    {alphabet.map((letter) => (
+                      <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
+                    ))}
+                    {letterFiltering && <button type="button" onClick={() => setLetterFiltering(false)}>Hapus filter</button>}
+                  </div>
+                </details>
               )}
 
               {isLoginMode && (
