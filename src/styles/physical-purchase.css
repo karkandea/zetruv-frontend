@@ -2609,3 +2609,18 @@
 @media (max-width: 700px) {
   .physical-add-confirmation { font-size: 11px; padding: 10px; }
 }
+
+
+/* Content-driven merchandise PDP: avoid overlap when notifications or helper
+   text increase the purchase panel height. This resolves blocked cart CTA. */
+.physical-pdp__main { height: auto; min-height: 560px; align-items: start; }
+.physical-purchase-panel { height: auto; min-height: 560px; }
+.physical-product-info { height: auto; min-height: 94px; }
+.physical-product-info section { height: auto; min-height: 94px; }
+.physical-shipping-estimate span { width: auto; max-width: 100%; }
+.physical-size-options { height: auto; min-height: 44px; align-items: center; }
+.physical-add-cart { min-height: 46px; position: relative; z-index: 1; }
+@media (max-width: 700px) {
+  .physical-purchase-panel { min-height: 0; }
+  .physical-pdp__main { min-height: 0; }
+}
