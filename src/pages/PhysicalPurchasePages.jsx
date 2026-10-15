@@ -103,23 +103,31 @@ function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = 
 }
 
 function ProductCard({ product }) {
+  const favoriteId = `merchandise:${product.slug}`
+  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
+  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
   return (
-    <a className="physical-product-card" href={`/merchandise/${encodeURIComponent(product.slug)}`}>
-      <div className="physical-product-card__image">
-        <img src={product.image} alt="" />
-      </div>
-      <div className="physical-product-card__meta">
-        <span className="physical-badge">{product.badge}</span>
-        <span className={`physical-stock physical-stock--${product.stockTone}`}>{product.stock}</span>
-      </div>
-      <strong className="physical-product-card__name">{product.name}</strong>
-      <span className="physical-product-card__variant">{product.meta}</span>
-      <strong className="physical-product-card__price">{rupiah(product.price)}</strong>
-      <div className="physical-product-card__foot">
-        <span>{product.sold} sold</span>
-        <span>{product.rating} <b>★</b></span>
-      </div>
-    </a>
+    <article className="physical-product-card">
+      <a className="physical-product-card__link" href={`/merchandise/${encodeURIComponent(product.slug)}`} aria-label={`Lihat ${product.name}`}>
+        <div className="physical-product-card__image"><img src={product.image} alt="" /></div>
+        <div className="physical-product-card__meta">
+          <span className="physical-badge">{product.badge}</span>
+          <span className={`physical-stock physical-stock--${product.stockTone}`}>{product.stock}</span>
+        </div>
+        <strong className="physical-product-card__name">{product.name}</strong>
+        <span className="physical-product-card__variant">{product.meta}</span>
+        <strong className="physical-product-card__price">{rupiah(product.price)}</strong>
+      </a>
+      <button type="button" className={`physical-product-card__favorite${saved ? ' is-saved' : ''}`}
+        aria-label={saved ? `Hapus ${product.name} dari favorit` : `Simpan ${product.name} ke favorit`}
+        aria-pressed={saved}
+        onClick={() => setSaved(toggleFavorite({
+          id: favoriteId, name: product.name, type: 'Merchandise',
+          price: rupiah(product.price), href: `/merchandise/${product.slug}`, image: product.image,
+        }))}>
+        {saved ? '♥' : '♡'}
+      </button>
+    </article>
   )
 }
 
@@ -280,10 +288,10 @@ function JerseyProductPage() {
               ))}
             </div>
 
-            <div className="physical-option-heading physical-option-heading--size"><strong>Size · {size || 'Select a size'}</strong><a href="#size-guide">Size guide</a></div>
+            <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">
               {['S','M','L','XL','XXL'].map((item) => (
-                <button className={size === item ? 'is-active' : ''} type="button" disabled={item === 'XXL'} onClick={() => setSize(item)} key={item}>{item}</button>
+                <button className={size === item ? 'is-active' : ''} type="button" aria-pressed={size === item} disabled={item === 'XXL'} title={item === 'XXL' ? 'Ukuran ini tidak tersedia' : `Pilih ukuran ${item}`} onClick={() => setSize(item)} key={item}>{item}</button>
               ))}
             </div>
 
@@ -310,14 +318,14 @@ function JerseyProductPage() {
               ><span>{saved ? '♥' : '♡'}</span> {saved ? 'Tersimpan' : 'Favorit'}</button>
             </div>
 
-            <div className="physical-shipping-estimate"><strong>Shipping from Rp18,000 · 2–4 days</strong><span>Final shipping cost is calculated from your address and selected service at checkout.</span></div>
-            <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={!size}>{size ? 'Add to Cart' : 'Select a size'}</PhysicalButton>
+            <div className="physical-shipping-estimate" role="note"><strong>Ongkir & estimasi belum tersedia</strong><span>Biaya dan waktu kirim harus dihitung berdasarkan alamat dan layanan logistik yang terverifikasi. Belum ada estimasi resmi untuk ditampilkan.</span></div>
+            <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={!size}>{size ? 'Tambah ke Keranjang' : 'Pilih Ukuran Dulu'}</PhysicalButton>
           </section>
         </div>
 
         <div className="physical-product-info">
           <section><strong>Description</strong><p>Lightweight dry-fit fabric designed for everyday wear.</p></section>
-          <section><strong>Details & Care</strong><p>Gentle wash. Size and color follow the selected variant.</p></section>
+          <section id="size-guide"><strong>Panduan ukuran</strong><p>Pilih ukuran S, M, L, atau XL di atas. Tabel ukuran resmi (lingkar dada dan panjang baju) belum tersedia, jadi jangan mengandalkan perkiraan. Konfirmasi ukuran dengan admin sebelum membeli.</p></section>
           <section><strong>Shipping</strong><p>Ships from Zetruv’s origin address via supported RajaOngkir services.</p></section>
         </div>
       </main>
@@ -397,9 +405,9 @@ function PhysicalAccessoryProductPage({ slug }) {
           <hr />
           <div className="physical-option-heading"><strong>Variant</strong><span>{product.meta}</span></div>
           {isJersey ? <>
-            <div className="physical-option-heading physical-option-heading--size"><strong>Size · {size || 'Select a size'}</strong></div>
+            <div className="physical-option-heading physical-option-heading--size"><strong>Ukuran · {size || 'Belum dipilih'}</strong><a href="#size-guide">Panduan ukuran</a></div>
             <div className="physical-size-options">{['S','M','L','XL','XXL'].map((value) =>
-              <button type="button" key={value} className={size === value ? 'is-active' : ''} onClick={() => setSize(value)}>{value}</button>)}
+              <button type="button" key={value} className={size === value ? 'is-active' : ''} aria-pressed={size === value} onClick={() => setSize(value)}>{value}</button>)}
             </div>
           </> : <p className="physical-accessory-description">One size · {product.meta}. Produk fisik dikirim ke alamat yang dipilih pada checkout.</p>}
           <div className="physical-qty-save">
@@ -414,15 +422,15 @@ function PhysicalAccessoryProductPage({ slug }) {
                 href: `/merchandise/${product.slug}`, image: product.image,
               }))}>{saved ? '♥ Tersimpan' : '♡ Favorit'}</button>
           </div>
-          <div className="physical-shipping-estimate"><strong>Shipping calculated at checkout</strong><span>Pilih alamat untuk menampilkan ongkir dan perkiraan pengiriman.</span></div>
+          <div className="physical-shipping-estimate" role="note"><strong>Ongkir belum dihitung</strong><span>Biaya dan estimasi kirim hanya dapat ditentukan dari layanan logistik yang aktif dan alamat pengiriman.</span></div>
           <PhysicalButton className="physical-add-cart" onClick={addToCart} disabled={isJersey && !size}>
-            {isJersey && !size ? 'Select a size' : 'Add to Cart'}
+            {isJersey && !size ? 'Pilih Ukuran Dulu' : 'Tambah ke Keranjang'}
           </PhysicalButton>
         </section>
       </div>
       <div className="physical-product-info">
         <section><strong>Description</strong><p>{product.name} · {product.meta}</p></section>
-        <section><strong>Product Details</strong><p>{product.category} · Official Zetruv merchandise.</p></section>
+        <section id="size-guide"><strong>{isJersey ? 'Panduan ukuran' : 'Detail produk'}</strong><p>{isJersey ? 'Tabel ukuran resmi belum tersedia. Konfirmasikan lingkar dada dan panjang baju dengan admin sebelum membeli.' : `${product.category} · ${product.meta}.`}</p></section>
         <section><strong>Shipping</strong><p>Shipping rates appear at checkout.</p></section>
       </div>
     </main>
@@ -492,8 +500,8 @@ export function PhysicalCartPage() {
             <div><span>Shipping</span><span>Calculated at checkout</span></div>
             <hr />
             <div className="physical-cart-summary__total"><strong>Estimated total</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
-            <PhysicalButton onClick={continueCheckout} disabled={!item}>Continue to Checkout</PhysicalButton>
-            <div className="physical-login-note"><strong>Sign in required before checkout</strong><span>After sign-in, you’ll return to merchandise checkout with your cart saved.</span></div>
+            <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}</PhysicalButton>
+            <div className="physical-login-note"><strong>{readCustomerSession() ? 'Periksa pesananmu' : 'Login diperlukan untuk checkout'}</strong><span>{readCustomerSession() ? 'Ongkir belum termasuk subtotal.' : 'Login dahulu; keranjangmu tetap tersimpan selama sesi browser ini.'}</span></div>
           </aside>
         </div>
       </main>
