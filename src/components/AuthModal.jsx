@@ -107,11 +107,16 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
   async function requestResetLink() {
     if (resetBusy) return
+    const email = resetEmail.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
+      setResetError('Masukkan alamat email yang valid untuk menerima tautan reset.')
+      return
+    }
     setResetBusy(true)
     setResetError('')
     try {
       const result = await apiRequest('/auth/forgot-password', {
-        method: 'POST', body: JSON.stringify({ email: resetEmail.trim() }),
+        method: 'POST', body: JSON.stringify({ email }),
       })
       setResendSeconds(Number(result?.resendAfterSeconds) || 45)
       onModeChange?.('forgot-check')
@@ -289,6 +294,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                 name="reset-email"
                 placeholder="Email"
                 autoComplete="email"
+                required
+                maxLength={320}
                 value={resetEmail}
                 onChange={(event) => setResetEmail(event.target.value)}
               />
@@ -484,11 +491,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                     <button
                       className="auth-forgot"
                       type="button"
-                      onPointerDown={(event) => {
-                        event.preventDefault()
-                        event.stopPropagation()
-                        onModeChange?.('forgot')
-                      }}
+                      onClick={() => onModeChange?.('forgot')}
                     >
                       Forget password?
                     </button>
