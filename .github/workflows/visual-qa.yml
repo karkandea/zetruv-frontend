@@ -38,6 +38,10 @@ jobs:
         run: node scripts/cart-multibrowser-qa.mjs
       - name: Verified order lookup and merchandise guest-cart flow (desktop/mobile)
         run: node scripts/order-lookup-merch-qa.mjs
+      - name: Real auth API contract on mock browser - email and reset-token flows
+        run: node scripts/auth-reset-browser-qa.mjs
+      - name: Digital checkout and payment state E2E (synthetic server only)
+        run: node scripts/checkout-payment-browser-qa.mjs
       - name: QA evidence summary
         if: always()
         run: |
