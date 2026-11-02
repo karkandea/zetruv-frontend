@@ -3,19 +3,9 @@ import { assets } from '../data/assets'
 
 const rupiah = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 
-const fallbackItems = Array.from({ length: 8 }, (_, index) => ({
-  id: `jersey-${index + 1}`,
-  name: 'Zetruv Gaming Jersey',
-  variant: 'Black · Size S–XL',
-  price: 249000,
-  sold: 128,
-  rating: 4.9,
-  image: assets.jersey,
-}))
-
 export default function Merchandise({ items = [] }) {
   const viewportRef = useRef(null)
-  const displayItems = fallbackItems.map((fallback, index) => ({ ...fallback, ...(items[index] || {}), image: fallback.image }))
+  const displayItems = items.filter((item) => item?.slug && item?.id)
 
   function slide(direction) {
     viewportRef.current?.scrollBy({
@@ -50,24 +40,25 @@ export default function Merchandise({ items = [] }) {
         <div className="merchandise__viewport" ref={viewportRef}>
           <div className="merchandise__track">
             {displayItems.map((item) => (
-              <article className="merch-card" key={item.id}>
+              <a className="merch-card" key={item.id} href={`/merchandise/${encodeURIComponent(item.slug)}`}>
                 <div className="merch-card__image">
-                  <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = assets.jersey }} />
-                  <span className="merch-card__chip">JERSEY</span>
+                  <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.jersey }} />
+                  <span className="merch-card__chip">MERCHANDISE</span>
                 </div>
                 <div className="merch-card__body">
                   <div className="merch-card__copy">
                     <h3>{item.name}</h3>
-                    <p>{item.variant || 'Black · Size S–XL'}</p>
-                    <strong>{rupiah(item.price ?? 249000)}</strong>
+                    <p>{item.variant}</p>
+                    <strong>{item.price != null ? rupiah(item.price) : 'Harga belum tersedia'}</strong>
                   </div>
                   <div className="merch-card__meta">
-                    <span>{item.sold ?? 128} terjual</span>
-                    <span className="merch-rating">{item.rating ?? 4.9}<img src={assets.star} alt="" /></span>
+                    <span>{item.sold ?? 0} terjual</span>
+                    {item.rating != null && <span className="merch-rating">{item.rating}<img src={assets.star} alt="" /></span>}
                   </div>
                 </div>
-              </article>
+              </a>
             ))}
+            {displayItems.length === 0 && <p role="status">Belum ada merchandise yang tersedia di katalog.</p>}
           </div>
         </div>
 

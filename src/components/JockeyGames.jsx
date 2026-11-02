@@ -1,34 +1,20 @@
-import { assets } from '../data/assets'
-
-const fallbackGames = [
-  { id: 'ml', name: 'Mobile Legend', publisher: 'Moonton', image: assets.mobileLegends },
-  { id: 'pubg', name: 'PUBG Mobile', publisher: 'Tencent', image: assets.pubg },
-  { id: 'valorant', name: 'Valorant', publisher: 'RIOT', image: assets.valorant },
-  { id: 'codm', name: 'Call of Duty Mobile', publisher: 'Treyarch', image: assets.codm },
-  { id: 'codm-2', name: 'Call of Duty Mobile', publisher: 'Treyarch', image: assets.codm },
-  { id: 'ff', name: 'Free Fire', publisher: 'Moonton', image: assets.freeFire },
-  { id: 'genshin', name: 'Genshin Impact', publisher: 'Tencent', image: assets.genshin },
-  { id: 'fc', name: 'FC Mobile', publisher: 'RIOT', image: assets.fcMobile },
-  { id: 'hsr', name: 'Star Rail', publisher: 'Treyarch', image: assets.starRail },
-  { id: 'undawn', name: 'Undawn', publisher: 'Treyarch', image: assets.undawn },
-]
-
 export default function JockeyGames({ items = [] }) {
-  const displayItems = items.length ? items : fallbackGames
+  const displayItems = items.filter((item) => item?.id && item?.slug)
 
   return (
     <section className="jockey-section" id="jockey" aria-labelledby="jockey-title">
       <h2 id="jockey-title">Joki Game</h2>
       <div className="jockey-grid">
-        {displayItems.slice(0, 10).map((game, index) => (
-          <article className="jockey-card" key={game.id}>
-            <div className="jockey-card__image"><img src={fallbackGames[index]?.image || assets.mobileLegends} alt={game.name} loading="lazy" decoding="async" /></div>
+        {displayItems.slice(0, 10).map((game) => (
+          <a className="jockey-card" href={`/product/joki/${encodeURIComponent(game.slug)}`} key={game.id}>
+            <div className="jockey-card__image">{game.image && <img src={game.image} alt={game.name} loading="lazy" decoding="async" />}</div>
             <div className="jockey-card__caption">
               <strong>{game.name}</strong>
               <span>{game.publisher}</span>
             </div>
-          </article>
+          </a>
         ))}
+        {displayItems.length === 0 && <p role="status">Layanan joki belum tersedia saat ini.</p>}
       </div>
       <a className="yellow-button jockey-section__button" href="/search?kind=Joki">Lihat Semua</a>
     </section>

@@ -467,7 +467,7 @@ export function PhysicalCartPage() {
                 <div className="physical-cart-item__copy">
                   <span className="physical-badge">{item.category?.toUpperCase() || 'MERCHANDISE'}</span>
                   <h2>{item.name}</h2>
-                  <p>{item.color} · {item.size === 'One Size' ? 'One Size' : `Size ${item.size}`}</p>
+                  <p>{item.color ? `${item.color} · ` : ''}{item.size === 'One Size' ? 'One Size' : `Varian ${item.size}`}</p>
                   <span className="physical-cart-stock-note">Ketersediaan final belum diverifikasi</span>
                   <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>Remove</button></div>
                 </div>

@@ -3,52 +3,27 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { assets } from '../data/assets'
 import TrustStrip from './TrustStrip'
 
-// Frontend-only promotional slides. Keep the existing Figma banner as slide one.
-const banners = [
-  {
-    id: 'welcome',
-    theme: 'welcome',
-    title: 'Semua kebutuhan game kamu, satu tempat.',
-    description: 'Top up, akun game, item digital, dan merchandise dengan proses yang jelas dan aman.',
-    artwork: assets.homepageHeroArtwork,
-    actions: [
-      { label: 'Jelajahi Produk', href: '/search' },
-      { label: 'Cek Pesanan', href: '/order-status', secondary: true },
-    ],
-  },
-  {
-    id: 'topup',
-    theme: 'topup',
-    eyebrow: 'TOP UP GAME',
-    title: 'Top up game favoritmu, lebih praktis.',
-    description: 'Cari diamond, UC, dan item in-game untuk game yang kamu mainkan.',
-    images: [assets.mobileLegends, assets.pubg, assets.valorant],
-    actions: [
-      { label: 'Top Up Via ID', href: '/search' },
-      { label: 'Top Up Via Login', href: '/search/login', secondary: true },
-    ],
-  },
-  {
-    id: 'jockey',
-    theme: 'jockey',
-    eyebrow: 'JOKI GAME',
-    title: 'Mau push rank? Cek pilihan joki game.',
-    description: 'Temukan layanan joki untuk game favoritmu langsung di Zetruv.',
-    images: [assets.genshin, assets.mobileLegends, assets.starRail],
-    actions: [{ label: 'Lihat Joki Game', href: '#jockey' }],
-  },
-  {
-    id: 'merchandise',
-    theme: 'merchandise',
-    eyebrow: 'MERCHANDISE',
-    title: 'Gaming nggak berhenti di layar.',
-    description: 'Jersey dan merchandise pilihan untuk lengkapi gaya gaming kamu.',
-    images: [assets.jersey],
-    actions: [{ label: 'Lihat Merchandise', href: '#merch' }],
-  },
-]
+const emptyBanner = {
+  id: 'no-active-banner', theme: 'welcome', title: 'Jelajahi produk Zetruv',
+  description: 'Belum ada banner promosi aktif. Lihat katalog untuk menemukan produk yang tersedia.',
+  artwork: assets.homepageHeroArtwork,
+  actions: [{ label: 'Jelajahi Produk', href: '/search' }],
+}
 
-export default function Hero() {
+export function mapCmsHeroes(items = []) {
+  return items.filter((item) => item?.id && item?.title).map((item) => ({
+    id: item.id, theme: 'welcome', title: item.title, description: item.subtitle,
+    artwork: item.imageUrl || null,
+    actions: [
+      item.primaryCtaLabel && item.primaryCtaUrl && { label: item.primaryCtaLabel, href: item.primaryCtaUrl },
+      item.secondaryCtaLabel && item.secondaryCtaUrl && { label: item.secondaryCtaLabel, href: item.secondaryCtaUrl, secondary: true },
+    ].filter(Boolean),
+  }))
+}
+
+export default function Hero({ items = [] }) {
+  const cmsBanners = mapCmsHeroes(items)
+  const banners = cmsBanners.length ? cmsBanners : [emptyBanner]
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const [hasFocus, setHasFocus] = useState(false)
@@ -68,12 +43,13 @@ export default function Hero() {
     }
 
     const timer = window.setInterval(() => {
-      setActiveIndex((index) => (index + 1) % banners.length)
+      if (banners.length > 1) setActiveIndex((index) => (index + 1) % banners.length)
     }, 6000)
     return () => window.clearInterval(timer)
-  }, [activeIndex, isHovered, hasFocus, isVisible])
+  }, [activeIndex, isHovered, hasFocus, isVisible, banners.length])
 
   const move = (direction) => setActiveIndex((index) => (index + direction + banners.length) % banners.length)
+  const visibleIndex = Math.min(activeIndex, banners.length - 1)
 
   function onTouchStart(event) {
     touchStartX.current = event.touches[0]?.clientX ?? null
@@ -114,7 +90,7 @@ export default function Hero() {
       >
         <div
           className="homepage-hero-card__track"
-          style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+          style={{ transform: `translateX(-${visibleIndex * 100}%)` }}
           aria-live="off"
         >
           {banners.map((banner, index) => (
@@ -124,7 +100,7 @@ export default function Hero() {
               role="group"
               aria-roledescription="slide"
               aria-label={`${index + 1} dari ${banners.length}`}
-              aria-hidden={index !== activeIndex}
+              aria-hidden={index !== visibleIndex}
             >
               {banner.artwork && (
                 <img
@@ -153,7 +129,7 @@ export default function Hero() {
                       key={action.label}
                       className={`homepage-hero-button homepage-hero-button--${action.secondary ? 'secondary' : 'primary'}`}
                       href={action.href}
-                      tabIndex={index === activeIndex ? 0 : -1}
+                      tabIndex={index === visibleIndex ? 0 : -1}
                     >
                       {action.label}
                     </a>
@@ -164,18 +140,18 @@ export default function Hero() {
           ))}
         </div>
 
-        <div className="homepage-hero-card__controls" aria-label="Navigasi banner">
+        {banners.length > 1 && <div className="homepage-hero-card__controls" aria-label="Navigasi banner">
           <button className="homepage-hero-card__arrow" type="button" onClick={() => move(-1)} aria-label="Banner sebelumnya">
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <div className="homepage-hero-card__dots">
             {banners.map((banner, index) => (
               <button
-                className={`homepage-hero-card__dot${index === activeIndex ? ' is-active' : ''}`}
+                className={`homepage-hero-card__dot${index === visibleIndex ? ' is-active' : ''}`}
                 key={banner.id}
                 type="button"
                 aria-label={`Tampilkan banner ${index + 1}: ${banner.eyebrow || 'Beranda'}`}
-                aria-pressed={index === activeIndex}
+                aria-pressed={index === visibleIndex}
                 onClick={() => setActiveIndex(index)}
               />
             ))}
@@ -183,7 +159,7 @@ export default function Hero() {
           <button className="homepage-hero-card__arrow" type="button" onClick={() => move(1)} aria-label="Banner berikutnya">
             <ChevronRight size={18} aria-hidden="true" />
           </button>
-        </div>
+        </div>}
       </div>
       <TrustStrip />
     </section>

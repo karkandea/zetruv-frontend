@@ -31,11 +31,21 @@ function FlashSaleItem({ item }) {
   )
 }
 
-export default function FlashSale({ items = [], countdown = '01:04:35' }) {
+export default function FlashSale({ items = [], countdown }) {
   const [columns, setColumns] = useState(getColumns)
   const [currentPage, setCurrentPage] = useState(0)
+  const [now, setNow] = useState(Date.now)
   const touchStart = useRef(null)
   const products = Array.isArray(items) ? items : []
+  const remaining = countdown ? Math.max(0, Math.floor((new Date(countdown).getTime() - now) / 1000)) : null
+  const timeLabel = remaining == null ? null : [Math.floor(remaining / 3600), Math.floor((remaining % 3600) / 60), remaining % 60]
+    .map((number) => String(number).padStart(2, '0')).join(':')
+
+  useEffect(() => {
+    if (!countdown) return undefined
+    const interval = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
+  }, [countdown])
 
   useEffect(() => {
     const onResize = () => setColumns((current) => {
@@ -90,7 +100,7 @@ export default function FlashSale({ items = [], countdown = '01:04:35' }) {
             <img src={assets.fire} alt="" loading="lazy" decoding="async" />
             <h2 id="flash-title">Flash Sale</h2>
           </div>
-          <div className="countdown-line"><strong>{countdown || '01:04:35'}</strong></div>
+          {timeLabel && <div className="countdown-line"><strong>{timeLabel}</strong></div>}
         </div>
 
         <div className={`flash-carousel flash-carousel--adaptive${hasCarousel ? '' : ' flash-carousel--static'}`} style={{ '--flash-columns': columns }}>

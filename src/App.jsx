@@ -8,7 +8,8 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
-import { PhysicalCatalogPage, PhysicalProductPage, PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
+import { PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
+import { LivePhysicalCatalogPage, LivePhysicalProductPage } from './pages/LivePhysicalPages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import Navbar from './components/Navbar'
@@ -64,9 +65,9 @@ export default function App() {
   if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />
   if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <SharedOrderStatusPage />
 
-  if (path === '/merchandise') return <PhysicalCatalogPage />
+  if (path === '/merchandise') return <LivePhysicalCatalogPage />
   const physicalProductMatch = path.match(/^\/merchandise\/([^/]+)$/)
-  if (physicalProductMatch) return <PhysicalProductPage slug={decodeURIComponent(physicalProductMatch[1])} />
+  if (physicalProductMatch) return <LivePhysicalProductPage slug={decodeURIComponent(physicalProductMatch[1])} />
   if (path === '/cart' && flow === 'physical') return <PhysicalCartPage />
   if (path === '/checkout' && flow === 'physical') return <PhysicalCheckoutPage />
   if (path === '/payment' && flow === 'physical') return <PhysicalPaymentPage state={params.get('state') || 'pending'} />

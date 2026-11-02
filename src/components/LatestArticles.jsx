@@ -1,48 +1,7 @@
 import { assets } from '../data/assets'
 
-const fallbackArticles = [
-  {
-    id: 'buyer-guide',
-    category: 'BUYER GUIDE',
-    title: '5 Things to Check Before Buying a Game Account',
-    description: 'A quick checklist for access, recovery, ownership, and seller credibility before you pay.',
-    meta: 'Buyer Guide  ·  5 min read',
-    image: assets.articleOne,
-  },
-  {
-    id: 'security',
-    category: 'SECURITY',
-    title: 'How to Secure Your Account After Purchase',
-    description: 'Simple steps to lock down access as soon as the transfer is complete.',
-    meta: 'Account Safety  ·  4 min read',
-    image: assets.articleTwo,
-  },
-  {
-    id: 'dota-2',
-    category: 'DOTA 2',
-    title: 'Dota 2 Rank Guide: What Each Tier Means',
-    description: 'Understand the ladder so you can compare listings with the right context.',
-    meta: 'Dota 2  ·  6 min read',
-    image: assets.articleThree,
-  },
-]
-
-function normalizeArticle(item, index) {
-  const fallback = fallbackArticles[index]
-  if (!item) return fallback
-  return {
-    ...fallback,
-    id: item.id ?? fallback.id,
-    category: item.categoryName || item.category || fallback.category,
-    title: item.title || fallback.title,
-    description: item.excerpt || item.description || fallback.description,
-    meta: item.meta || fallback.meta,
-    image: fallback.image,
-  }
-}
-
 export default function LatestArticles({ items = [] }) {
-  const articles = fallbackArticles.map((_, index) => normalizeArticle(items[index], index))
+  const articles = items.filter((item) => item?.slug && item?.title).slice(0, 3)
 
   return (
     <section className="homepage-articles" id="article" aria-labelledby="latest-articles-title">
@@ -57,16 +16,17 @@ export default function LatestArticles({ items = [] }) {
 
       <div className="homepage-articles__grid">
         {articles.map((article, index) => (
-          <a className={`homepage-article-card homepage-article-card--${index + 1}`} href={index === 0 ? '/articles/5-things-to-check-before-buying-a-game-account' : '/articles'} key={article.id}>
-            <img src={article.image} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.src = [assets.articleOne, assets.articleTwo, assets.articleThree][index] || assets.articleOne }} />
+          <a className={`homepage-article-card homepage-article-card--${index + 1}`} href={`/articles/${encodeURIComponent(article.slug)}`} key={article.id}>
+            <img src={article.thumbnailUrl || assets.articleOne} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.articleOne }} />
             <div className="homepage-article-card__body">
-              <span>{article.category}</span>
+              <span>{article.category?.name || 'Artikel'}</span>
               <h3>{article.title}</h3>
-              <p>{article.description}</p>
-              <small>{article.meta}</small>
+              <p>{article.excerpt}</p>
+              <small>{article.authorName || 'Zetruv'} · {article.readTimeMinutes} min read</small>
             </div>
           </a>
         ))}
+        {articles.length === 0 && <p role="status">Belum ada artikel yang dipublikasikan.</p>}
       </div>
     </section>
   )

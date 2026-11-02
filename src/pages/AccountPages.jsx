@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
 import { readCustomerSession } from '../services/customerCartSync'
+import { apiRequest } from '../api/httpClient'
 import { readFavorites, setFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/account.css'
 
@@ -75,24 +76,46 @@ function InfoRow({ label, value }) {
 }
 
 export function AccountOverviewPage() {
-  const customer = readCustomerSession()?.customer
+  const [customer, setCustomer] = useState(null)
+  const [state, setState] = useState('loading')
+
+  useEffect(() => {
+    const session = readCustomerSession()
+    if (!session?.accessToken) { setState('guest'); return }
+    const controller = new AbortController()
+    apiRequest('/auth/me', {
+      cache: 'no-store', signal: controller.signal,
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    }).then((result) => {
+      if (!controller.signal.aborted) { setCustomer(result); setState('ready') }
+    }).catch((error) => {
+      if (!controller.signal.aborted) setState(error.status === 401 || error.status === 403 ? 'expired' : 'error')
+    })
+    return () => controller.abort()
+  }, [])
+
   return (
     <AccountShell active="account">
       <PageHeader title="Akun Saya" description="Informasi akun yang digunakan untuk transaksi Zetruv." />
-      {!customer ? (
-        <div className="orders-figma-empty"><strong>Silakan masuk ke akun</strong><p>Login untuk melihat profilmu.</p><a className="account-btn account-btn--primary" href="/">Ke Beranda</a></div>
+      {state !== 'ready' ? (
+        <div className="orders-figma-empty" role="status">
+          <strong>{state === 'loading' ? 'Memuat profil…' : state === 'guest' ? 'Silakan masuk ke akun' : state === 'expired' ? 'Sesi login sudah berakhir' : 'Profil belum bisa dimuat'}</strong>
+          <p>{state === 'error' ? 'Periksa koneksi dan coba muat ulang halaman.' : 'Informasi profil hanya ditampilkan setelah diverifikasi oleh backend.'}</p>
+          <a className="account-btn account-btn--primary" href={state === 'error' ? '/account' : '/'}>{state === 'error' ? 'Coba Lagi' : 'Ke Beranda'}</a>
+        </div>
       ) : (
         <>
           <section className="profile-overview">
             <div className="profile-overview__identity">
               <span className="account-avatar account-avatar--large">{String(customer.name || 'A').slice(0,1).toUpperCase()}</span>
-              <div><h2>{customer.name || 'Pengguna Zetruv'}</h2><p>{customer.email}</p><small>Informasi berasal dari sesi akun yang terverifikasi.</small></div>
+              <div><h2>{customer.name || 'Pengguna Zetruv'}</h2><p>{customer.email}</p><small>Informasi langsung dari backend akun Zetruv.</small></div>
             </div>
           </section>
           <section className="account-info-card">
             <h2>Informasi Akun</h2>
             <InfoRow label="Nama" value={customer.name || '—'} />
             <InfoRow label="Email" value={customer.email || '—'} />
+            <InfoRow label="Verifikasi Email" value={customer.emailVerified ? 'Terverifikasi' : 'Belum terverifikasi'} />
             <InfoRow label="Nomor HP" value="Belum tersedia" />
           </section>
           <div className="account-note"><img src={accountIcons.info} alt="" /><span>Pengubahan profil serta penyimpanan nomor HP belum tersedia. Detail akun tidak dapat diubah dari halaman ini.</span></div>

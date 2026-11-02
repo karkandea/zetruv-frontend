@@ -1,31 +1,15 @@
 import { assets } from '../data/assets'
 
-const fallbackPopular = [
-  { id: 'popular-ml', name: 'Mobile Legend', image: assets.popularMl },
-  { id: 'popular-ff', name: 'Garena Free Fire', image: assets.popularFreeFire },
-  { id: 'popular-val', name: 'Valorant', image: assets.popularValorant },
-  { id: 'popular-pubg-1', name: 'PUBG Mobile', image: assets.popularPubg },
-  ...Array.from({ length: 6 }, (_, index) => ({ id: `popular-pubg-${index + 2}`, name: 'PUBG Mobile', image: assets.popularPubgAlt })),
-]
-
-const fallbackRecent = [
-  { id: 'recent-ml', name: '86 Diamonds MLBB', image: assets.recentMl },
-  { id: 'recent-pubg', name: '300+ UC PUBLG Mobile', image: assets.recentPubg },
-  { id: 'recent-val', name: '100+ VP Valorant', image: assets.recentValorant },
-]
-
-function MiniItem({ item, image }) {
+function MiniItem({ item }) {
   return (
     <article className="mini-game">
-      <span className="mini-game__image"><img src={image} alt={item.name} loading="lazy" decoding="async" /></span>
+      <span className="mini-game__image">{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true">🎮</span>}</span>
       <span>{item.name}</span>
     </article>
   )
 }
 
-export default function PopularAndRecent({ popular = [], recent = [] }) {
-  const popularItems = popular.length ? popular : fallbackPopular
-  const recentItems = recent.length ? recent : fallbackRecent
+export default function PopularAndRecent({ popular = [], recent = [], authenticated = false }) {
 
   return (
     <section className="popular-recent" aria-label="Popular games and recent purchases">
@@ -34,7 +18,8 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
           <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>Game Populer</h2></div>
         </header>
         <div className="mini-panel mini-panel--popular">
-          {popularItems.slice(0, 10).map((item, index) => <MiniItem item={item} image={fallbackPopular[index]?.image || assets.popularPubgAlt} key={item.id} />)}
+          {popular.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
+          {popular.length === 0 && <p role="status">Belum ada game populer.</p>}
         </div>
       </div>
 
@@ -43,7 +28,8 @@ export default function PopularAndRecent({ popular = [], recent = [] }) {
           <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>Terakhir Dibeli</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
-          {recentItems.slice(0, 3).map((item, index) => <MiniItem item={item} image={fallbackRecent[index]?.image || assets.recentMl} key={item.id} />)}
+          {recent.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
+          {recent.length === 0 && <p role="status">{authenticated ? 'Belum ada riwayat pembelian untuk akun ini.' : 'Masuk untuk melihat pembelian terakhirmu.'}</p>}
         </div>
       </div>
     </section>

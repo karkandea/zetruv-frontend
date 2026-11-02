@@ -70,22 +70,35 @@ try {
     await page.getByRole('heading', { name: 'Cek Pesanan' }).waitFor()
     assert.equal(await page.getByText('Z3truv!Ancient#2026').count(), 0)
 
-    // Merchandise guest cart: selected size, visible success confirmation,
-    // cart count, redirect to cart and sign-in requirement.
+    // Merchandise catalog-backed draft cart: variants and price are provided
+    // by a synthetic backend, never pre-seeded in frontend source.
+    await page.route('**/api/v1/catalog/products/zetruv-gaming-jersey', async route => route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({
+        id: 'bb000000-0000-4000-8000-000000000001', kind: 'Merchandise',
+        name: 'Zetruv Gaming Jersey', slug: 'zetruv-gaming-jersey',
+        description: 'Synthetic catalog description', isAvailable: true,
+        soldQuantity: 0, rating: null, reviewCount: 0,
+        images: [], thumbnailUrl: null,
+        variants: [
+          { id: 'bb000000-0000-4000-8000-000000000002', name: 'S', effectivePrice: 249000, isAvailable: true, stockQuantity: 5 },
+          { id: 'bb000000-0000-4000-8000-000000000003', name: 'L', effectivePrice: 269000, isAvailable: true, stockQuantity: 3 },
+        ],
+      }),
+    }))
     await page.goto(site + '/merchandise/zetruv-gaming-jersey')
     await page.getByRole('heading', { name: 'Zetruv Gaming Jersey' }).waitFor()
-    assert.equal(await page.getByRole('button', { name: 'Pilih Ukuran Dulu' }).isDisabled(), true)
-    await page.locator('.physical-size-options').getByRole('button', { name: 'L', exact: true }).click()
-    await page.getByRole('button', { name: 'Tambah ke Keranjang' }).click()
-    await page.getByRole('status').getByText(/berhasil dimasukkan ke keranjang/).waitFor()
+    await page.locator('.physical-size-options').getByRole('button', { name: /L · Rp269.000/ }).click()
+    await page.getByRole('button', { name: 'Simpan Draft Keranjang' }).click()
+    await page.getByRole('status').getByText(/disimpan ke keranjang/).waitFor()
     assert.equal(await page.locator('.nav-cart-count').first().innerText(), '1')
     await page.getByRole('button', { name: 'Lihat Keranjang' }).click()
     await page.waitForURL('**/cart?flow=physical')
-    await page.getByText('Black · Size L').waitFor()
+    await page.getByText('Varian L').waitFor()
     await page.getByRole('button', { name: 'Masuk untuk Checkout' }).waitFor()
     assert.equal(await page.getByText('Checkout merchandise belum aktif').count(), 1)
     const physical = await page.evaluate(() => JSON.parse(sessionStorage.getItem('zetruv-physical-cart-v1') || 'null'))
     assert.equal(physical.size, 'L')
+    assert.equal(physical.price, 269000)
     assert.equal(physical.qty, 1)
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     assert.ok(overflow <= 2, device + ' horizontal overflow: ' + overflow)
