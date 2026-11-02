@@ -17,6 +17,15 @@ export function accountRequirements(product) {
     })).filter(field => field.slot)
 }
 
+/** A catalog lookup in flight is not a failed account validation. */
+export function isCartCatalogPending(item, catalogProducts = {}, catalogErrors = {}) {
+  if (!['AUTO_ID', 'MANUAL_LOGIN'].includes(item?.fulfillmentMethod)) return false
+  const slug = item?.productSlug
+  if (!slug) return false
+  return !Object.prototype.hasOwnProperty.call(catalogProducts, slug) &&
+    !Object.prototype.hasOwnProperty.call(catalogErrors, slug)
+}
+
 export function checkCartDestination(item, requirements) {
   if (item.fulfillmentMethod !== 'AUTO_ID') return { valid: true, message: '' }
   if (!Array.isArray(requirements) || requirements.length === 0) {

@@ -144,6 +144,16 @@
   font-size: 10px !important;
 }
 .digital-shell .digital-cart-item__warning svg { flex: none; margin-top: 1px; }
+.digital-shell .digital-cart-item__checking {
+  color: #526584 !important;
+  font-size: 10px !important;
+  line-height: 1.6;
+}
+.digital-shell .digital-cart-item__target button:disabled {
+  color: #929caf;
+  cursor: wait;
+  text-decoration: none;
+}
 .digital-shell .digital-cart-item__side {
   min-width: 0;
   display: flex;
