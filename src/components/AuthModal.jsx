@@ -3,6 +3,7 @@ import { assets } from '../data/assets'
 import { ArrowLeft } from 'lucide-react'
 import { authenticateCheckoutCustomer } from '../services/checkoutGatewayService'
 import { apiRequest } from '../api/httpClient'
+import { clearPendingRegistration, readPendingRegistration, savePendingRegistration, validCustomerEmail } from '../services/registrationVerification'
 
 function maskEmail(email) {
   const value = String(email || '').trim()
@@ -21,17 +22,22 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   const [resetError, setResetError] = useState('')
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
-  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerEmail, setRegisterEmail] = useState(() => readPendingRegistration()?.email || '')
+  const [registrationToken, setRegistrationToken] = useState(() => readPendingRegistration()?.token || '')
+  const [editedEmail, setEditedEmail] = useState('')
+  const [registerBusy, setRegisterBusy] = useState(false)
+  const [registerError, setRegisterError] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [resendSeconds, setResendSeconds] = useState(45)
+  const [resendSeconds, setResendSeconds] = useState(0)
   const dialogRef = useRef(null)
 
   const isRegister = mode === 'register'
   const isRegisterVerify = mode === 'register-verify'
   const isRegisterVerified = mode === 'register-verified'
   const isRegisterExpired = mode === 'register-expired'
-  const isRegisterFlow = isRegisterVerify || isRegisterVerified || isRegisterExpired
+  const isRegisterEdit = mode === 'register-edit'
+  const isRegisterFlow = isRegisterVerify || isRegisterVerified || isRegisterExpired || isRegisterEdit
 
   const isForgotRequest = mode === 'forgot'
   const isForgotCheck = mode === 'forgot-check'
@@ -83,26 +89,99 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     event.preventDefault()
     if(authBusy)return
     setAuthBusy(true);setAuthError('')
+    let submittedEmail = ''
     try {
       const form=new FormData(event.currentTarget)
       const email=String(form.get('email')||'').trim()
+      submittedEmail = email
       const password=String(form.get('password')||'')
       if(isRegister){
-        await apiRequest('/auth/register',{method:'POST',body:JSON.stringify({
+        const result = await apiRequest('/auth/register',{method:'POST',body:JSON.stringify({
           name:String(form.get('name')||'').trim(),email,password,
         })})
+        setRegistrationToken(result?.registrationToken || '')
+        savePendingRegistration(email, result?.registrationToken, result?.verificationExpiresInHours)
         setRegisterEmail(email)
-        setResendSeconds(45)
+        setRegisterError('')
+        setResendSeconds(Number(result?.resendAfterSeconds) || 45)
         onModeChange?.('register-verify')
       }else{
         const response=await authenticateCheckoutCustomer(email,password)
         if(!response?.accessToken)throw Error('Autentikasi server tidak berhasil.')
+        clearPendingRegistration()
         onAuthenticated?.(response)
         onClose?.()
       }
-    }catch(e){setAuthError(e.status===401?'Email atau password Zetruv salah.':
-      e.message||'Belum dapat terhubung ke server.')}
+    }catch(e){
+      if (!isRegister && e.code === 'EMAIL_NOT_VERIFIED') {
+        const pending = readPendingRegistration()
+        setRegisterEmail(submittedEmail)
+        setRegistrationToken(pending?.email.toLowerCase() === submittedEmail.toLowerCase() ? pending.token : '')
+        setResendSeconds(0)
+        setRegisterError('Email belum diverifikasi. Kirim ulang tautan verifikasi bila diperlukan.')
+        onModeChange?.('register-verify')
+      } else {
+        setAuthError(e.status===401?'Email atau password Zetruv salah.':
+          e.message||'Belum dapat terhubung ke server.')
+      }
+    }
     finally{setAuthBusy(false)}
+  }
+
+  async function requestVerificationEmail() {
+    if (registerBusy) return
+    const email = registerEmail.trim()
+    if (!validCustomerEmail(email)) {
+      setRegisterError('Masukkan alamat email yang valid untuk menerima tautan verifikasi.')
+      return
+    }
+    setRegisterBusy(true)
+    setRegisterError('')
+    try {
+      const result = await apiRequest('/auth/resend-verification', {
+        method: 'POST', body: JSON.stringify({ email }),
+      })
+      setResendSeconds(Number(result?.resendAfterSeconds) || 45)
+      onModeChange?.('register-verify')
+    } catch (error) {
+      setRegisterError(error?.message || 'Email verifikasi belum terkirim. Coba lagi.')
+    } finally {
+      setRegisterBusy(false)
+    }
+  }
+
+  async function handleChangeRegistrationEmail(event) {
+    event.preventDefault()
+    if (registerBusy) return
+    const newEmail = editedEmail.trim()
+    if (!validCustomerEmail(newEmail)) {
+      setRegisterError('Masukkan alamat email yang valid.')
+      return
+    }
+    if (!registrationToken) {
+      setRegisterError('Sesi edit email sudah habis. Gunakan kirim ulang verifikasi ke email awal.')
+      return
+    }
+    setRegisterBusy(true)
+    setRegisterError('')
+    try {
+      const result = await apiRequest('/auth/change-registration-email', {
+        method: 'POST', body: JSON.stringify({ registrationToken, newEmail }),
+      })
+      setRegisterEmail(newEmail)
+      setRegistrationToken(result?.registrationToken || '')
+      savePendingRegistration(newEmail, result?.registrationToken, result?.verificationExpiresInHours)
+      setResendSeconds(Number(result?.resendAfterSeconds) || 45)
+      onModeChange?.('register-verify')
+    } catch (error) {
+      if (error?.code === 'REGISTRATION_SESSION_INVALID') {
+        setRegistrationToken('')
+        clearPendingRegistration()
+      }
+      setRegisterError(error?.message || 'Email belum dapat diubah. Coba lagi.')
+    } finally {
+      setRegisterBusy(false)
+    }
   }
 
   async function requestResetLink() {
@@ -166,7 +245,9 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   }
 
   function handleResend() {
-    if (resendSeconds === 0) void requestResetLink()
+    if (resendSeconds !== 0) return
+    if (isRegisterVerify) void requestVerificationEmail()
+    else if (isForgotCheck) void requestResetLink()
   }
 
   return (
@@ -179,6 +260,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
           isRegisterVerify ? 'Verify your email'
             : isRegisterVerified ? 'Email verified'
               : isRegisterExpired ? 'Verification link expired'
+                : isRegisterEdit ? 'Edit registration email'
                 : isForgotRequest ? 'Forgot password'
                   : isForgotCheck ? 'Check your email'
                     : isForgotNew ? 'Create a new password'
@@ -204,22 +286,57 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             <div className="auth-register-heading auth-register-heading--verify">
               <h2>Verify your email</h2>
               <p>
-                We sent a verification link to {maskedRegisterEmail}. Open the email and click Verify email to activate your account.
+                {registerEmail ? `We sent a verification link to ${maskedRegisterEmail}. Open the email and click Verify email to activate your account.` : 'Enter your registered email to request a verification link.'}
               </p>
             </div>
 
-            <button className="auth-secondary auth-register-edit" type="button" onClick={() => onModeChange?.('register')}>
-              Edit email address
-            </button>
+            {registrationToken ? (
+              <button className="auth-secondary auth-register-edit" type="button" onClick={() => {
+                setEditedEmail(registerEmail)
+                setRegisterError('')
+                onModeChange?.('register-edit')
+              }}>Edit email address</button>
+            ) : (
+              <input className="auth-input auth-register-email-input" type="email" value={registerEmail}
+                onChange={(event) => setRegisterEmail(event.target.value)}
+                placeholder="Registered email" autoComplete="email" maxLength={320} aria-label="Registered email" />
+            )}
+
+            {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
 
             <div className="auth-register-resend">
               <span>Didn’t get it?</span>
-              <button type="button" disabled={resendSeconds > 0} onClick={handleResend}>
-                {resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
+              <button type="button" disabled={registerBusy || resendSeconds > 0} onClick={handleResend}>
+                {registerBusy ? 'Sending...' : resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
               </button>
             </div>
 
             <p className="auth-register-note">Verification links expire after 24 hours.</p>
+          </div>
+        )}
+
+        {isRegisterEdit && (
+          <div className="auth-modal__content auth-modal__content--register-verify">
+            <div className="auth-register-icon auth-register-icon--verify">
+              <img src={assets.authRegisterVerify} alt="" />
+            </div>
+            <div className="auth-register-heading">
+              <h2>Edit email address</h2>
+              <p>We’ll send a new verification link to the updated email address. Your old link will stop working.</p>
+            </div>
+            <form className="auth-register-edit-form" onSubmit={handleChangeRegistrationEmail}>
+              <input className="auth-input" type="email" name="newEmail" placeholder="New email address"
+                autoComplete="email" required maxLength={320} value={editedEmail}
+                onChange={(event) => setEditedEmail(event.target.value)} />
+              {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
+              <button className="auth-submit auth-register-primary" type="submit" disabled={registerBusy}>
+                {registerBusy ? 'Updating...' : 'Save and send verification'}
+              </button>
+              <button className="auth-secondary" type="button" onClick={() => {
+                setRegisterError('')
+                onModeChange?.('register-verify')
+              }}>Back to verification</button>
+            </form>
           </div>
         )}
 
@@ -231,7 +348,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
             <div className="auth-register-heading auth-register-heading--verified">
               <h2>Email verified</h2>
-              <p>Your email has been verified successfully. Sign in to continue to your Zetruv account.</p>
+              <p>Your email has been verified successfully. Your Zetruv account is ready.</p>
             </div>
 
             <button className="auth-submit auth-register-primary" type="button" onClick={() => onModeChange?.('login')}>
@@ -253,16 +370,18 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               <p>This link is no longer valid. Request a new verification email to finish setting up your account.</p>
             </div>
 
+            <input className="auth-input auth-register-email-input" type="email" value={registerEmail}
+              onChange={(event) => setRegisterEmail(event.target.value)}
+              placeholder="Registered email" autoComplete="email" maxLength={320} aria-label="Registered email" />
+            {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
             <div className="auth-register-actions">
               <button
                 className="auth-submit auth-register-primary"
                 type="button"
-                onClick={() => {
-                  setResendSeconds(45)
-                  onModeChange?.('register-verify')
-                }}
+                disabled={registerBusy}
+                onClick={() => void requestVerificationEmail()}
               >
-                Send new verification email
+                {registerBusy ? 'Sending...' : 'Send new verification email'}
               </button>
               <button className="auth-secondary" type="button" onClick={() => onModeChange?.('login')}>
                 Back to login
@@ -331,8 +450,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
 
             <div className="auth-resend">
               <span>Didn’t get the email?</span>
-              <button type="button" disabled={resendSeconds > 0} onClick={handleResend}>
-                {resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
+              <button type="button" disabled={resetBusy || resendSeconds > 0} onClick={handleResend}>
+                {resetBusy ? 'Sending...' : resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
               </button>
             </div>
           </div>
@@ -452,7 +571,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               <form className="auth-form" onSubmit={handleAuthSubmit}>
                 {authError && <p role="alert" className="auth-error">{authError}</p>}
                 {isRegister && (
-                  <input className="auth-input" type="text" name="name" placeholder="Name" autoComplete="name" />
+                  <input className="auth-input" type="text" name="name" placeholder="Name" autoComplete="name" maxLength={120} required />
                 )}
 
                 {isRegister ? (
@@ -462,11 +581,13 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                     name="email"
                     placeholder="Email"
                     autoComplete="email"
+                    required
+                    maxLength={320}
                     value={registerEmail}
                     onChange={(event) => setRegisterEmail(event.target.value)}
                   />
                 ) : (
-                  <input className="auth-input" type="email" name="email" placeholder="Email" autoComplete="email" />
+                  <input className="auth-input" type="email" name="email" placeholder="Email" autoComplete="email" required maxLength={320} />
                 )}
 
                 <div className="auth-password-group">
@@ -476,6 +597,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                       name="password"
                       placeholder="Password"
                       autoComplete={isRegister ? 'new-password' : 'current-password'}
+                      required
                     />
                     <button
                       className="auth-password__toggle"

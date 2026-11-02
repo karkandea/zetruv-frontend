@@ -1043,6 +1043,13 @@
   flex: 0 0 42px;
 }
 
+.auth-register-email-input { width: min(350px, 100%); flex: 0 0 42px; }
+.auth-register-edit-form { display: flex; flex-direction: column; width: min(350px, 100%); gap: 12px; }
+.auth-register-edit-form .auth-input,
+.auth-register-edit-form .auth-submit,
+.auth-register-edit-form .auth-secondary { width: 100%; }
+.auth-register-edit-form .auth-secondary { min-height: 42px; }
+
 .auth-register-resend {
   height: 18px;
   display: flex;

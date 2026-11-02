@@ -6,6 +6,7 @@ import { ChevronDown, ClipboardList, Gamepad2, Globe2, Home, LogIn, LogOut, Menu
 import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
+import { readPendingRegistration } from '../services/registrationVerification'
 
 const productLinks = [
   { label: 'Browse All Categories', href: '/search', arrow: true },
@@ -186,6 +187,10 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
     onAuthenticated?.(response)
   }
 
+  function openRegistration() {
+    setAuthMode(readPendingRegistration() ? 'register-verify' : 'register')
+  }
+
   return (
     <>
       <header className={navbarClasses}>
@@ -319,7 +324,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
         <div className="navbar__mobile-auth">
           {verifiedSession ? <button type="button" onClick={() => { logoutCustomer(); setVerifiedSession(null); setIsHomepageDrawerOpen(false) }}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('login') }}><LogIn size={18} aria-hidden="true" />{t.login}</button>
-            <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('register') }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
+            <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); openRegistration() }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
           </>}
         </div>
       </div>}
@@ -393,7 +398,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <button className="btn btn--outline navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>
                 <img src={assets.login} alt="" />{t.login}
               </button>
-              <button className="btn btn--ghost navbar-control" type="button" aria-haspopup="dialog" onClick={() => setAuthMode('register')}>
+              <button className="btn btn--ghost navbar-control" type="button" aria-haspopup="dialog" onClick={openRegistration}>
                 <img src={assets.register} alt="" />{t.register}
               </button>
             </div>
