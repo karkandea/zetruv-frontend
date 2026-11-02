@@ -3,7 +3,6 @@ import { ArrowRight, CheckCircle2, Flame, Gem, ShoppingCart, Star, UserRound } f
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
 import { productDetailAssets as media } from '../data/productDetailAssets'
-import { getDemoTopUp } from '../data/topUpDemoCatalog'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { addCartItem, awaitCartPersistence } from '../services/cartService'
 import { getCartSyncStatus, readCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
@@ -29,10 +28,12 @@ function Stars({ small = false }) {
 }
 
 export default function ProductDetailPage({ slug = 'mobile-legends' }) {
-  const [product, setProduct] = useState(() => getDemoTopUp(slug))
-  const [selectedId, setSelectedId] = useState(() => getDemoTopUp(slug)?.variants?.[0]?.id || '')
+  const [product, setProduct] = useState(null)
+  const [selectedId, setSelectedId] = useState('')
+  const [catalogStatus, setCatalogStatus] = useState('loading')
+  const [catalogError, setCatalogError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
   const [account, setAccount] = useState({ userId: '', zone: '' })
-  const [tab, setTab] = useState('Diamonds')
   const [notice, setNotice] = useState('')
   const [saving,setSaving] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(readCustomerSession()))
@@ -44,12 +45,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
 
   useEffect(() => {
     let active = true
-    const demo = getDemoTopUp(slug)
-    setProduct(demo)
-    setSelectedId(demo?.variants?.[0]?.id || '')
+    setCatalogStatus('loading')
+    setCatalogError('')
+    setProduct(null)
+    setSelectedId('')
     setAccount({ userId: '', zone: '' })
     setNotice('')
-    setTab(demo?.category?.name || '')
 
     getCatalogProduct(slug).then((data) => {
       if (!active) return
@@ -58,23 +59,21 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
         window.location.replace(`/product/${encodeURIComponent(data.slug)}/login`)
         return
       }
-      if (data.kind !== 'TopUpGame' || data.slug !== slug) return
-      const merged = {
-        ...demo,
-        ...data,
-        accountLabels: data.accountLabels || demo?.accountLabels || { first: 'Player ID', second: '', needsSecond: false },
-        variants: data.variants?.length ? data.variants : (demo?.variants || []),
-        isDemo: false,
-      }
-      setProduct(merged)
-      const first = merged.variants.find((item) => item.isAvailable) || merged.variants[0]
+      if (data.kind !== 'TopUpGame' || data.slug !== slug)
+        throw new Error('Produk tidak sesuai dengan katalog.')
+      if (!Array.isArray(data.variants) || data.variants.length === 0)
+        throw new Error('Belum ada paket tersedia untuk produk ini.')
+      setProduct(data)
+      const first = data.variants.find((item) => item.isAvailable) || data.variants[0]
       setSelectedId(first?.id || '')
-    }).catch(() => {
-      // The demo entry is valid for its own slug only.
-      if (active) setProduct(demo)
+      setCatalogStatus('ready')
+    }).catch((error) => {
+      if (!active) return
+      setCatalogError(error?.message || 'Katalog produk tidak dapat dimuat.')
+      setCatalogStatus('error')
     })
     return () => { active = false }
-  }, [slug])
+  }, [slug, retryCount])
 
   const selected = useMemo(() => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0], [product, selectedId])
   const accountFields = useMemo(() => (product?.inputFields || [])
@@ -101,16 +100,14 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const { subtotal, discount, serviceFee, total } = getDigitalPricing([{ unitPrice, regularPrice, quantity: 1 }])
   const maxQuantity = selected?.stockQuantity === null || selected?.stockQuantity === undefined
     ? 99 : Math.max(1, Math.min(99, Number(selected.stockQuantity)))
-  const canPurchase = !saving && Boolean(product?.isDemo === false && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
+  const canPurchase = !saving && Boolean(catalogStatus === 'ready' && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
   const gameArt = product?.thumbnailUrl || product?.game?.imageUrl || media.gameCover
   const productName = product?.name || ''
   const incompleteFields = [
     ...(!validUserId ? [firstLabel] : []),
     ...(showSecond && !validZone ? [secondLabel] : []),
   ]
-  const ctaHint = product?.isDemo !== false
-    ? 'Harga dan paket belum berhasil diverifikasi di server. Transaksi tidak tersedia hingga katalog pulih.'
-    : selected?.isAvailable === false
+  const ctaHint = selected?.isAvailable === false
     ? 'Paket ini sedang tidak tersedia. Pilih paket lain.'
     : !verified
       ? `Lengkapi ${incompleteFields.join(' dan ')} untuk menambahkan ke keranjang.`
@@ -146,8 +143,18 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
     finally {setSaving(false)}
   }
 
-  if (!product || !selected) {
-    return <div className="product-detail-shell"><Navbar /><main className="product-detail-page" style={{ paddingTop: 170, minHeight: '75vh', textAlign: 'center' }}><h1>Produk tidak ditemukan</h1><p>Produk ini belum tersedia di katalog.</p><a href="/search">Kembali ke katalog</a></main></div>
+  if (catalogStatus !== 'ready' || product?.slug !== slug || !selected) {
+    const loading = catalogStatus === 'loading' || Boolean(product && product.slug !== slug)
+    return <div className="product-detail-shell"><Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} />
+      <main className="product-detail-page pdp-data-state" aria-busy={loading}>
+        <div className="product-detail-container pdp-data-state__content" role={loading ? 'status' : 'alert'}>
+          <h1>{loading ? 'Memuat produk dan harga…' : 'Produk belum bisa dimuat'}</h1>
+          <p>{loading ? 'Harga dan paket akan ditampilkan setelah diverifikasi dari katalog Zetruv.' : catalogError || 'Produk ini belum tersedia di katalog.'}</p>
+          {loading ? <div className="pdp-data-state__skeleton" aria-hidden="true"><span /><span /><span /></div>
+            : <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>Coba lagi</button><a href="/search">Kembali ke katalog</a></div>}
+        </div>
+      </main>
+    </div>
   }
 
   return (
@@ -239,7 +246,6 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
               </div>
             </section>
 
-            {product.isDemo && <p className="pdp-sidebar-preview" role="status">Katalog API belum tersedia. Paket yang ditampilkan hanya referensi visual dan tidak dapat dibeli.</p>}
             <div className="pdp-sidebar-action">
               <button className="pdp-sidebar-add" type="button" disabled={!canPurchase} onClick={add}>
                 <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />

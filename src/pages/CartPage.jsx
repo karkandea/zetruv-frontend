@@ -11,7 +11,7 @@ import {
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
-import { accountRequirements, checkCartDestination, getCartItemProblem } from '../services/digitalCartValidation'
+import { accountRequirements, checkCartDestination, getCartItemProblem, isCartCatalogPending } from '../services/digitalCartValidation'
 import '../styles/digital-commerce.css'
 import '../styles/digital-cart-improvements.css'
 import '../styles/service-unavailable-polish.css'
@@ -165,16 +165,19 @@ export default function CartPage() {
 
   const pricing = useMemo(() => getDigitalPricing(items), [items])
   const itemCount = cartCount(items)
+  const isChecking = (item) => isCartCatalogPending(item, catalogProducts, catalogErrors)
+  const checkingCatalog = items.some(isChecking)
   const problems = items.map(item => ({
     key: item.cartKey,
     message: item.serverLineId && item.isAvailable===false
       ? 'Produk, stok, atau validasi akun tujuan sudah kedaluwarsa. Periksa dan verifikasi ulang sebelum checkout.'
+      : isChecking(item) ? ''
       : item.fulfillmentMethod === 'MANUAL_LOGIN' &&
       !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
         ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
         : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
   })).filter(problem => problem.message)
-  const canCheckout = items.length > 0 && problems.length === 0 &&
+  const canCheckout = items.length > 0 && problems.length === 0 && !checkingCatalog &&
     (!readCustomerSession() || cartSync.state==='synced')
   const editing = items.find((item) => item.cartKey === editingKey) || null
 
@@ -265,10 +268,12 @@ export default function CartPage() {
                   const qty = Math.max(1, Number(item.quantity) || 1)
                   const lineTotal = Number(item.unitPrice || 0) * qty
                   const allowsQuantity = supportsCartQuantity(item)
-                  const loginUnavailable = item.fulfillmentMethod==='MANUAL_LOGIN' &&
+                  const checking = isChecking(item)
+                  const loginUnavailable = !checking && item.fulfillmentMethod==='MANUAL_LOGIN' &&
                     !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
                   const issue = item.serverLineId && item.isAvailable===false
                     ? 'Produk, stok, atau target akun ini tidak tersedia. Verifikasi ulang sebelum checkout.'
+                    : checking ? ''
                     : loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
                     : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
@@ -288,12 +293,13 @@ export default function CartPage() {
                               <strong>Tujuan:</strong> {clean(target.userId) || 'User ID belum diisi'}
                               {clean(target.zone) && <> · Zona: {clean(target.zone)}</>}
                             </span>
-                            <button type="button" onClick={() => setEditingKey(item.cartKey)}
+                            <button type="button" disabled={checking} onClick={() => setEditingKey(item.cartKey)}
                               aria-label={`Edit data akun tujuan ${item.variantName}`}>
                               <Pencil size={13} aria-hidden="true" /> Edit
                             </button>
                           </div>
                         ) : <p>{itemContext(item)}</p>}
+                        {checking && !issue && <p className="digital-cart-item__checking" role="status">Memverifikasi aturan produk dan data akun…</p>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
                         {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
                           <button type="button" onClick={() => remove(item)}>Hapus paket ini</button>
@@ -358,7 +364,8 @@ export default function CartPage() {
             </button>
             {problems.length > 0 ? (
               <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />Periksa data pesanan: {problems[0].message}</p>
-            ) : <p>{items.length ? 'Harga dan promo akan diperiksa kembali pada checkout.' : 'Tambahkan produk untuk melanjutkan.'}</p>}
+            ) : checkingCatalog ? <p role="status">Memverifikasi katalog sebelum checkout…</p>
+              : <p>{items.length ? 'Harga dan promo akan diperiksa kembali pada checkout.' : 'Tambahkan produk untuk melanjutkan.'}</p>}
             {status && <p className="digital-cart-summary__success" role="status"><CheckCircle2 size={15} />{status}</p>}
           </aside>
         </div>
