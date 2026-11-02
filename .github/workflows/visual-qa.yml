@@ -38,6 +38,8 @@ jobs:
         run: node scripts/cart-multibrowser-qa.mjs
       - name: Verified order lookup and merchandise guest-cart flow (desktop/mobile)
         run: node scripts/order-lookup-merch-qa.mjs
+      - name: Live storefront API wiring with synthetic CMS and customer fixtures
+        run: node scripts/live-storefront-wiring-qa.mjs
       - name: Real auth API contract on mock browser - email and reset-token flows
         run: node scripts/auth-reset-browser-qa.mjs
       - name: Digital checkout and payment state E2E (synthetic server only)
