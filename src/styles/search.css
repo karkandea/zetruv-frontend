@@ -336,3 +336,220 @@
 .alphabet-filter-collapsible summary { display: inline-flex; align-items: center; cursor: pointer; border: 1px solid #dfe3ee; border-radius: 9px; padding: 10px 14px; color: #010154; background: #fff; font-size: 12px; min-height: 42px; }
 .alphabet-filter-collapsible summary:focus-visible { outline: 2px solid #010154; outline-offset: 2px; }
 .alphabet-filter-collapsible .alphabet-filter { margin-top: 9px; }
+
+/* The mobile search is placed before category filters; desktop keeps its Figma layout. */
+.catalog-search--mobile { display: none; }
+
+@media (min-width: 901px) and (max-width: 1199px) {
+  /* The Figma desktop catalog uses fixed 1152/904px widths. Reflow on tablets. */
+  .search-page--browse .search-catalog--browse {
+    width: 100%;
+    height: auto;
+    min-height: 581px;
+    grid-template-columns: clamp(205px, 22%, 248px) minmax(0, 1fr);
+  }
+
+  .search-page--browse .search-sidebar--browse {
+    width: auto;
+    height: auto;
+    min-height: 579px;
+  }
+
+  .search-page--browse .search-sidebar--browse .search-category,
+  .search-page--browse .search-sidebar--browse .search-help-card {
+    width: 100%;
+  }
+
+  .search-page--browse .search-catalog__content--browse {
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 555px;
+    overflow: visible;
+    padding: 24px 22px 32px;
+  }
+
+  .search-page--browse .search-catalog__content--browse .catalog-search,
+  .search-page--browse .search-game-grid--browse-primary,
+  .search-page--browse .search-game-grid--browse-more,
+  .search-page--browse .search-empty--browse {
+    width: 100%;
+  }
+
+  .search-page--browse .search-game-grid--browse-primary,
+  .search-page--browse .search-game-grid--browse-more {
+    height: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+
+  .search-page--browse .search-game-card {
+    width: 100%;
+  }
+
+  .search-page--browse .search-section-heading--browse-more {
+    width: 100%;
+    height: auto;
+  }
+}
+
+@media (min-width: 1101px) and (max-width: 1199px) {
+  .search-page--browse .search-game-grid--browse-primary,
+  .search-page--browse .search-game-grid--browse-more {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Reuse the exact Lucide hamburger/drawer from the responsive homepage. */
+  .search-site-shell .navbar--homepage-mobile {
+    height: 64px;
+  }
+
+  .search-site-shell .navbar--homepage-mobile .navbar__top {
+    width: calc(100% - 32px);
+    height: 64px;
+    grid-template-columns: 52px minmax(0, 1fr) 44px;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .search-page--browse {
+    padding-top: 88px;
+  }
+}
+
+@media (max-width: 900px) {
+  .search-page--browse .search-catalog--browse {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .search-page--browse .catalog-search--mobile {
+    width: calc(100% - 32px);
+    margin: 16px 16px 0;
+    display: grid;
+    flex: none;
+  }
+
+  .search-page--browse .search-catalog__content--browse .catalog-search--desktop {
+    display: none;
+  }
+
+  .search-page--browse .search-sidebar--browse {
+    min-height: 0;
+    border-bottom: 1px solid #e3e5f0;
+  }
+
+  .search-page--browse .search-catalog__content--browse {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .search-site-shell .navbar--homepage-mobile .navbar__top {
+    width: calc(100% - 24px);
+    grid-template-columns: 48px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+
+  .search-page--browse {
+    padding-top: 84px;
+    padding-bottom: 32px;
+  }
+
+  .search-page--browse .search-page__container {
+    width: calc(100% - 24px);
+  }
+
+  .search-page--browse h1 {
+    font-size: 24px;
+    line-height: 34px;
+  }
+
+  .search-page--browse .search-page__intro {
+    margin-top: 4px;
+    line-height: 18px;
+  }
+
+  .search-page--browse .search-catalog--browse {
+    margin-top: 16px;
+  }
+
+  .search-page--browse .catalog-search--mobile {
+    height: 46px;
+    min-height: 46px;
+    grid-template-columns: 18px minmax(0, 1fr) 76px;
+    gap: 8px;
+    padding: 5px 6px 5px 12px;
+  }
+
+  .search-page--browse .catalog-search--mobile button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .search-page--browse .search-sidebar--browse {
+    padding: 16px 16px 14px;
+  }
+
+  .search-page--browse .search-sidebar--browse h2 {
+    margin: 0 0 8px;
+  }
+
+  .search-page--browse .search-category-list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .search-page--browse .search-category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .search-page--browse .search-category {
+    width: 174px;
+    min-width: 174px;
+    flex: 0 0 174px;
+    height: 56px;
+    scroll-snap-align: start;
+    font-size: 11px;
+  }
+
+  .search-page--browse .search-help-card {
+    min-height: 58px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .search-page--browse .search-help-card strong {
+    flex: none;
+    font-size: 12px;
+  }
+
+  .search-page--browse .search-help-card span {
+    text-align: right;
+  }
+
+  .search-page--browse .search-catalog__content--browse {
+    padding: 12px 16px 20px;
+  }
+
+  .search-page--browse .search-game-grid {
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .search-page--browse .search-game-card {
+    min-width: 0;
+  }
+}

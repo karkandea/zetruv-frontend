@@ -381,7 +381,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   return (
     <div className={`search-site-shell${isLoginMode ? ' search-site-shell--login' : ''}`}>
-      <Navbar variant={isLoginMode ? 'loginCatalog' : 'default'} />
+      <Navbar variant={isLoginMode ? 'loginCatalog' : 'default'} homepageMobileMenu={!isLoginMode} />
 
       <main className={`search-page${isLoginMode ? ' search-page--login' : ' search-page--browse'}`}>
         <div className="search-page__container">
@@ -396,6 +396,16 @@ export default function SearchPage({ mode = 'player-id' }) {
           )}
 
           <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label="Browse Zetruv categories">
+            {!isLoginMode && <form className="catalog-search catalog-search--mobile" onSubmit={handleSearch} role="search" aria-label="Search catalog on mobile">
+              <img src={searchAssets.searchIcon} alt="" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search games or categories"
+                aria-label="Search games or categories"
+              />
+              <button type="submit" disabled={queryTooShort}>Search</button>
+            </form>}
             <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
               <h2>{isLoginMode ? 'Kategori' : 'Categories'}</h2>
               <div className="search-category-list">
@@ -420,7 +430,7 @@ export default function SearchPage({ mode = 'player-id' }) {
             </aside>
 
             <div className={`search-catalog__content${isLoginMode ? '' : ' search-catalog__content--browse'}`}>
-              <form className="catalog-search" onSubmit={handleSearch}>
+              <form className="catalog-search catalog-search--desktop" onSubmit={handleSearch}>
                 <img src={searchAssets.searchIcon} alt="" />
                 <input
                   value={query}
