@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
+import { ChevronDown, ClipboardList, Gamepad2, Globe2, Home, LogIn, LogOut, Menu, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus, X } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
@@ -26,9 +27,11 @@ function readPhysicalCartCount() {
   }
 }
 
-export default function Navbar({ variant = 'default', onAuthenticated }) {
+export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isHomepageDrawerOpen, setIsHomepageDrawerOpen] = useState(false)
+  const [isHomepageProductsOpen, setIsHomepageProductsOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [language, setLanguage] = useState(readNavbarLanguage)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -47,6 +50,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   const productMenuRef = useRef(null)
   const cartMenuRef = useRef(null)
   const mobileMenuRef = useRef(null)
+  const homepageDrawerRef = useRef(null)
   const resetToken = useRef(typeof window === 'undefined' ? '' : (window.location.pathname === '/auth/reset-password' ? new URLSearchParams(window.location.search).get('token') || '' : ''))
   const languageMenuRef = useRef(null)
   const languageButtonRef = useRef(null)
@@ -123,6 +127,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
         setIsCartOpen(false)
       }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) setIsMobileMenuOpen(false)
+      if (homepageDrawerRef.current && !homepageDrawerRef.current.contains(event.target)) setIsHomepageDrawerOpen(false)
       if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
         setIsLanguageOpen(false)
       }
@@ -134,6 +139,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
         setIsCartOpen(false)
         setIsLanguageOpen(false)
         setIsMobileMenuOpen(false)
+        setIsHomepageDrawerOpen(false)
       }
     }
 
@@ -149,6 +155,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     'navbar',
     isLoggedIn ? 'navbar--catalog' : '',
     isHomeLoggedIn ? 'navbar--home-final' : '',
+    homepageMobileMenu ? 'navbar--homepage-mobile' : '',
   ].filter(Boolean).join(' ')
 
   function selectNav(name) {
@@ -157,6 +164,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
     setIsCartOpen(false)
     setIsLanguageOpen(false)
     setIsMobileMenuOpen(false)
+    setIsHomepageDrawerOpen(false)
   }
 
   function selectLanguage(code) {
@@ -181,6 +189,7 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
   return (
     <>
       <header className={navbarClasses}>
+      <div ref={homepageDrawerRef} className="navbar__homepage-mobile-wrapper">
       <div className="navbar__top design-container">
         <a className="brand navbar-control" href="/" aria-label="Zetruv home">
           <img src={assets.logo} alt="Zetruv" />
@@ -272,6 +281,48 @@ export default function Navbar({ variant = 'default', onAuthenticated }) {
           </div>
           {verifiedSession && <a className="nav-avatar" href="/account" aria-label="Akun Zetruv">{String(verifiedSession.customer?.name||'A').slice(0,1).toUpperCase()}</a>}
         </div>
+        {homepageMobileMenu && <button
+          className="navbar__hamburger navbar-control"
+          type="button"
+          aria-label={isHomepageDrawerOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+          aria-controls="zetruv-homepage-mobile-nav"
+          aria-expanded={isHomepageDrawerOpen}
+          onClick={() => {
+            setIsHomepageDrawerOpen((open) => !open)
+            setIsProductOpen(false)
+            setIsCartOpen(false)
+            setIsLanguageOpen(false)
+          }}
+        >{isHomepageDrawerOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}</button>}
+      </div>
+
+      {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" hidden={!isHomepageDrawerOpen}>
+        <nav className="navbar__mobile-links" aria-label="Navigasi Zetruv mobile">
+          <a className={activeNav === 'home' ? 'is-current' : ''} href="/" onClick={() => selectNav('home')}><Home size={18} aria-hidden="true" />{t.home}</a>
+          <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>
+            <Gamepad2 size={18} aria-hidden="true" />{productLabel}<ChevronDown className={isHomepageProductsOpen ? 'is-rotated' : ''} size={17} aria-hidden="true" />
+          </button>
+          {isHomepageProductsOpen && <div id="zetruv-homepage-products" className="navbar__mobile-submenu">
+            {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{t.products[link.label] || link.label}</a>)}
+          </div>}
+          <a href="/articles" onClick={() => selectNav('article')}><Newspaper size={18} aria-hidden="true" />{articleLabel}</a>
+          <a href="/order-status" onClick={() => selectNav('transaction')}><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
+          <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>
+          <a href="/cart" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
+          <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.physicalCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
+          {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />Akun Saya</a>}
+        </nav>
+        <div className="navbar__mobile-language" aria-label={t.language}>
+          <Globe2 size={18} aria-hidden="true" />
+          {NAVBAR_LANGUAGES.map((option) => <button key={option.code} type="button" aria-label={`${t.language}: ${option.name}`} aria-pressed={language === option.code} onClick={() => selectLanguage(option.code)}>{option.badge}</button>)}
+        </div>
+        <div className="navbar__mobile-auth">
+          {verifiedSession ? <button type="button" onClick={() => { logoutCustomer(); setVerifiedSession(null); setIsHomepageDrawerOpen(false) }}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
+            <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('login') }}><LogIn size={18} aria-hidden="true" />{t.login}</button>
+            <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('register') }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
+          </>}
+        </div>
+      </div>}
       </div>
 
       <div className="navbar__bottom">

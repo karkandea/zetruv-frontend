@@ -63,6 +63,7 @@ export default function HomePage() {
     <div className="site-shell site-shell--homepage-final">
       <Navbar
         variant={session ? 'homeLoggedIn' : 'default'}
+        homepageMobileMenu
         onAuthenticated={() => setSession(readCustomerSession())}
       />
       <main>
