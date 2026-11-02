@@ -1,0 +1,19 @@
+.verify-email-page { min-height: 100vh; background: #f6f8fc; }
+.verify-email-main { display: flex; justify-content: center; align-items: flex-start; min-height: 55vh; padding: 76px 20px 100px; }
+.verify-email-card { width: min(100%, 480px); padding: 40px 36px; background: #fff; border: 1px solid #e4e9f4; border-radius: 20px; box-shadow: 0 12px 40px rgb(0 25 85 / 6%); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+.verify-email-card h1 { color: #101648; font: 700 26px/1.35 'Poppins', sans-serif; margin: 0; }
+.verify-email-card > p { color: #60687b; font: 400 14px/1.65 'Poppins', sans-serif; margin: 0; }
+.verify-email-icon--loading { color: #010154; animation: verify-email-spin 1.15s linear infinite; }
+.verify-email-icon--success { color: #139457; }
+.verify-email-icon--error { color: #c67000; }
+.verify-email-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; padding-top: 10px; }
+.verify-email-button { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 13px; }
+.verify-email-resend-form { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: 10px; text-align: left; }
+.verify-email-resend-form label { color: #1b1b1e; font: 600 13px 'Poppins', sans-serif; }
+.verify-email-resend-form .auth-input { width: 100%; }
+.verify-email-sent { color: #166b42; background: #ebf7f0; padding: 16px; border-radius: 12px; font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.verify-email-card .verify-email-warning { color: #a76d00; }
+.verify-email-back { color: #010154; font-size: 13px; font-weight: 600; }
+@keyframes verify-email-spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) { .verify-email-main { padding: 40px 16px 60px; } .verify-email-card { padding: 32px 22px; } .verify-email-card h1 { font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .verify-email-icon--loading { animation: none; } }

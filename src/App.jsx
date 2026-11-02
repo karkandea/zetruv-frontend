@@ -13,6 +13,7 @@ import { LivePhysicalCatalogPage, LivePhysicalProductPage } from './pages/LivePh
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import Navbar from './components/Navbar'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
 import {
   GameAccountCartPage,
@@ -38,6 +39,8 @@ export default function App() {
   const params = new URLSearchParams(window.location.search)
   const flow = params.get('flow')
   const kind = params.get('kind')
+
+  if (path === '/auth/verify-email') return <VerifyEmailPage />
 
   if (path === '/account' || path === '/my-account') return <AccountOverviewPage />
   if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
