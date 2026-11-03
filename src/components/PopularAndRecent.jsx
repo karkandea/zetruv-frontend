@@ -1,15 +1,39 @@
 import { assets } from '../data/assets'
+import { identifyHomepageGame } from '../services/homeArtwork'
+
+const gameArtwork = {
+  mlbb: assets.popularMl,
+  genshin: assets.genshin,
+  pubg: assets.popularPubg,
+  valorant: assets.popularValorant,
+  freeFire: assets.popularFreeFire,
+  codm: assets.codm,
+}
+
+function displayGameName(name) {
+  return identifyHomepageGame(name) === 'mlbb' ? 'Mobile Legends' : name
+}
 
 function MiniItem({ item }) {
+  const artwork = item.image || gameArtwork[identifyHomepageGame(item.name)] || assets.homepageCategoryAccount
   return (
     <article className="mini-game">
-      <span className="mini-game__image">{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true">🎮</span>}</span>
-      <span>{item.name}</span>
+      <span className="mini-game__image"><img src={artwork} alt={item.name} loading="lazy" decoding="async" /></span>
+      <span>{item.label || displayGameName(item.name)}</span>
     </article>
   )
 }
 
-export default function PopularAndRecent({ popular = [], recent = [], authenticated = false }) {
+export default function PopularAndRecent({ popular = [], recent = [], featured = [], authenticated = false }) {
+  // Never represent promotional items as a customer's purchase history.
+  // Guests see public featured offers; signed-in users see their own orders.
+  const showFeatured = !authenticated && featured.length > 0
+  const sidebarItems = showFeatured
+    ? featured.map((item) => ({
+      ...item,
+      label: item.item ? item.item + ' · ' + (identifyHomepageGame(item.name) === 'mlbb' ? 'MLBB' : item.name) : item.name,
+    }))
+    : recent
 
   return (
     <section className="popular-recent" aria-label="Popular games and recent purchases">
@@ -25,11 +49,11 @@ export default function PopularAndRecent({ popular = [], recent = [], authentica
 
       <div className="popular-recent__column">
         <header className="compact-heading">
-          <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>Terakhir Dibeli</h2></div>
+          <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>{showFeatured ? 'Featured Items' : 'Terakhir Dibeli'}</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
-          {recent.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
-          {recent.length === 0 && <p role="status">{authenticated ? 'Belum ada riwayat pembelian untuk akun ini.' : 'Masuk untuk melihat pembelian terakhirmu.'}</p>}
+          {sidebarItems.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
+          {sidebarItems.length === 0 && <p role="status">{authenticated ? 'Belum ada riwayat pembelian untuk akun ini.' : 'Masuk untuk melihat pembelian terakhirmu.'}</p>}
         </div>
       </div>
     </section>

@@ -72,7 +72,7 @@ export default function HomePage() {
         <Hero items={data.heroes} />
         <ServiceCategories items={data.serviceCategories} />
         <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} />
-        <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} authenticated={Boolean(session)} />
+        <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} featured={data.flashSale} authenticated={Boolean(session)} />
         <JockeyGames items={data.jockeyGames} />
         <GameAccounts items={data.gameAccounts} />
         <Merchandise items={data.merchandise} />
