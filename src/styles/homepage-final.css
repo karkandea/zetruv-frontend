@@ -254,9 +254,9 @@
 
 .site-shell--homepage-final .mini-panel {
   height: 316px;
-  padding: 22px 30px;
-  column-gap: 16px;
-  row-gap: 16px;
+  padding: 22px 24px;
+  column-gap: 12px;
+  row-gap: 12px;
   border: 1px solid rgba(58, 67, 166, .75);
   border-radius: 28px;
   background: linear-gradient(115deg, #080846 0%, #171970 100%);
@@ -269,7 +269,8 @@
 
 .site-shell--homepage-final .mini-panel--recent {
   height: 316px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Keep a consistent five-slot rhythm, even when CMS has only three items. */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: 124px;
   align-content: start;
 }
@@ -325,7 +326,13 @@
 
 .site-shell--homepage-final .jockey-section__button {
   height: 42px;
-  margin-top: 18px;
+  width: fit-content;
+  min-width: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 18px auto 0;
+  padding-inline: 22px;
 }
 
 /* Game accounts */
@@ -389,7 +396,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  padding: 0 12px;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -636,12 +643,12 @@
   width: 100%;
   height: 530px;
   margin-top: 100px;
-  padding: 42px max(40px, calc((100% - 1100px) / 2));
+  padding: 42px max(40px, calc((100% - 1200px) / 2));
   background: #fff;
 }
 
 .homepage-articles__header {
-  width: min(1100px, 100%);
+  width: min(1200px, 100%);
   height: 98px;
   margin-inline: auto;
   display: flex;
@@ -693,11 +700,11 @@
 }
 
 .homepage-articles__grid {
-  width: min(1100px, 100%);
+  width: min(1200px, 100%);
   height: 330px;
   margin: 18px auto 0;
   display: grid;
-  grid-template-columns: 520px 260px 280px;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
 
