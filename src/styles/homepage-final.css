@@ -269,6 +269,7 @@
 
 .site-shell--homepage-final .mini-panel--recent {
   height: 316px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: 124px;
   align-content: start;
 }
