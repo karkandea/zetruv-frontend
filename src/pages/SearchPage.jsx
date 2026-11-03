@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
@@ -233,6 +234,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   const [loadingCatalog, setLoadingCatalog] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [catalogError, setCatalogError] = useState('')
+  const [supportOpen, setSupportOpen] = useState(false)
 
   const trimmedQuery = query.trim()
   const queryTooShort = trimmedQuery.length > 0 && trimmedQuery.length < 3
@@ -423,7 +425,7 @@ export default function SearchPage({ mode = 'player-id' }) {
                 ))}
               </div>
 
-              <button className="search-help-card" type="button">
+              <button className="search-help-card" type="button" onClick={() => setSupportOpen(true)}>
                 <strong>{isLoginMode ? 'Admin Support' : 'Need Help?'}</strong>
                 <span>{isLoginMode ? 'Chat admin jika terjadi kendala' : 'Chat with our support team.'}</span>
               </button>
@@ -507,6 +509,7 @@ export default function SearchPage({ mode = 'player-id' }) {
           </section>
         </div>
       </main>
+      <SupportChat open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   )
 }
