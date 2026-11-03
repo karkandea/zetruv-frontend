@@ -283,6 +283,17 @@
   font-weight: 500;
 }
 
+/* Long CMS offer names stay within the same two-line card rhythm. */
+.site-shell--homepage-final .mini-game > span:last-child {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .site-shell--homepage-final .mini-game__image {
   width: 82px;
   height: 82px;
@@ -1714,9 +1725,22 @@
   right: 0;
   bottom: 0;
   height: 75px;
-  background: linear-gradient(74.32deg, rgba(0,0,0,.48) 19.8%, rgba(102,102,102,.30) 148.28%);
+  isolation: isolate;
+  background: transparent;
+}
+
+/* Match Flash Sale's soft fade, but keep the white captions on dark glass. */
+.site-shell--homepage-final .jockey-card__caption::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -20px 0 0;
+  background: linear-gradient(180deg, rgba(9, 9, 18, 0) 0%, rgba(9, 9, 18, .62) 43%, rgba(9, 9, 18, .94) 100%);
   -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 32%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 32%);
+  pointer-events: none;
 }
 
 /* 4) Floating support button — exact 160x42 Figma treatment and no wrapping. */
