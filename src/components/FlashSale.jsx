@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import { getFlashSalePages } from './flashSaleLayout'
+import { identifyHomepageGame } from '../services/homeArtwork'
+
+const flashArtwork = {
+  mlbb: assets.flashMobileLegends,
+  genshin: assets.genshin,
+  pubg: assets.flashPubg,
+  valorant: assets.flashValorant,
+  freeFire: assets.freeFire,
+  codm: assets.codm,
+}
+
+function getFlashSaleImage(item) {
+  return item.image || flashArtwork[identifyHomepageGame(item.name)] || assets.homepageHeroArtwork
+}
 
 const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(value)}`
 
@@ -15,7 +29,7 @@ function FlashSaleItem({ item }) {
   return (
     <article className="sale-item">
       <div className="sale-item__image">
-        <img src={item.image || assets.flashMobileLegends} alt={item.name || 'Produk Flash Sale'} loading="lazy" decoding="async" />
+        <img src={getFlashSaleImage(item)} alt={item.name || 'Produk Flash Sale'} loading="lazy" decoding="async" />
       </div>
       <div className="sale-item__body">
         <div className="sale-item__info">

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { adaptHomepageResponse } from './homeAdapter.js'
+import { identifyHomepageGame } from './homeArtwork.js'
 
 test('empty CMS content stays empty; never synthesizes banners, products or articles', () => {
   const result = adaptHomepageResponse({ heroes: [], serviceCategories: [], merchandise: [], latestArticles: [] })
@@ -26,4 +27,17 @@ test('homepage adapter preserves CMS identifiers, routes, article slugs and real
   assert.equal(data.merchandise[0].rating, null)
   assert.equal(data.merchandise[0].isAvailable, false)
   assert.equal(data.latestArticles[0].slug, 'live-story')
+})
+
+
+test('homepage artwork identifies known games without mislabeling unknown products', () => {
+  assert.equal(identifyHomepageGame('Mobile Legends: Bang Bang'), 'mlbb')
+  assert.equal(identifyHomepageGame('Joki MLBB — Epic ke Legend'), 'mlbb')
+  assert.equal(identifyHomepageGame('Genshin Impact'), 'genshin')
+  assert.equal(identifyHomepageGame('PUBG Mobile'), 'pubg')
+  assert.equal(identifyHomepageGame('Valorant'), 'valorant')
+  assert.equal(identifyHomepageGame('Garena Free Fire'), 'freeFire')
+  assert.equal(identifyHomepageGame('Call of Duty Mobile'), 'codm')
+  assert.equal(identifyHomepageGame('Keyboard RGB'), null)
+  assert.equal(identifyHomepageGame(''), null)
 })
