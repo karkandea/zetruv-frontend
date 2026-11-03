@@ -4,10 +4,16 @@ import { submitSupportReport } from '../services/supportService'
 
 const initialForm = { name: '', phone: '', description: '' }
 
-export default function SupportChat() {
-  const [open, setOpen] = useState(false)
+export default function SupportChat({ open: controlledOpen, onOpenChange } = {}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
   const [form, setForm] = useState(initialForm)
   const [status, setStatus] = useState('idle')
+
+  function setOpen(nextOpen) {
+    if (controlledOpen === undefined) setInternalOpen(nextOpen)
+    onOpenChange?.(nextOpen)
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -23,7 +29,7 @@ export default function SupportChat() {
 
   return (
     <>
-      <button className="contact-fab" type="button" onClick={() => setOpen(true)}>
+      <button className="contact-fab" type="button" aria-label="Hubungi admin Zetruv" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <img src={assets.chat} alt="" /> Contact our team
       </button>
       {open && (
