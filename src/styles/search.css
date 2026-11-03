@@ -337,6 +337,19 @@
 .alphabet-filter-collapsible summary:focus-visible { outline: 2px solid #010154; outline-offset: 2px; }
 .alphabet-filter-collapsible .alphabet-filter { margin-top: 9px; }
 
+/* Share the same fixed support launcher as other Zetruv pages. */
+.search-site-shell > .contact-fab {
+  position: fixed;
+  z-index: 85;
+  top: 56%;
+  right: 26px;
+}
+
+.search-site-shell > .contact-fab:focus-visible {
+  outline: 2px solid #a0b2ff;
+  outline-offset: 3px;
+}
+
 /* The mobile search is placed before category filters; desktop keeps its Figma layout. */
 .catalog-search--mobile { display: none; }
 
@@ -402,6 +415,12 @@
 }
 
 @media (max-width: 1024px) {
+  .search-site-shell > .contact-fab {
+    top: auto;
+    right: 20px;
+    bottom: 20px;
+  }
+
   /* Reuse the exact Lucide hamburger/drawer from the responsive homepage. */
   .search-site-shell .navbar--homepage-mobile {
     height: 64px;
@@ -524,21 +543,19 @@
   }
 
   .search-page--browse .search-help-card {
-    min-height: 58px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 14px;
+    display: none;
   }
 
-  .search-page--browse .search-help-card strong {
-    flex: none;
-    font-size: 12px;
-  }
-
-  .search-page--browse .search-help-card span {
-    text-align: right;
+  .search-site-shell > .contact-fab {
+    right: 14px;
+    bottom: 14px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
   }
 
   .search-page--browse .search-catalog__content--browse {
