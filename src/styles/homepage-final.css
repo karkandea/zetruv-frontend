@@ -1727,6 +1727,9 @@
   height: 75px;
   isolation: isolate;
   background: transparent;
+  /* The legacy caption blur had a hard edge at 122px, hiding the fade below. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Match Flash Sale's soft fade, but keep the white captions on dark glass. */
