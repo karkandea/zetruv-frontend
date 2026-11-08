@@ -12,13 +12,21 @@ const knownSections = {
   joki: 'Joki Game',
   game_accounts: 'Akun Game Pilihan',
   merchandise: 'Merchandise',
-  latest_articles: 'Artikel Terbaru',
+  articles: 'Artikel Terbaru',
+}
+
+const sectionDisplayName = (item) => {
+  const legacyLabels = { service_categories: ['Services', 'Service Categories'], articles: ['Latest Articles'] }
+  return legacyLabels[item.key]?.includes(item.title) ? knownSections[item.key] : item.title || knownSections[item.key] || 'Bagian Beranda'
 }
 
 const knownDestinations = [
   { value: '', label: 'Pilih halaman tujuan' },
   { value: '/', label: 'Beranda' },
   { value: '/search', label: 'Semua produk' },
+  { value: '/joki', label: 'Joki Game' },
+  { value: '/game-account', label: 'Akun Game' },
+  { value: '/merchandise', label: 'Merchandise' },
   { value: '/articles', label: 'Artikel' },
 ]
 
@@ -59,7 +67,7 @@ function LayoutEditor({ item, onClose, onSave }) {
   const destinationKnown = knownDestinations.some((option) => option.value === form.ctaUrl)
   return <div className="cms-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) close() }}>
     <section role="dialog" aria-modal="true" aria-labelledby="cms-layout-dialog-title" className="cms-layout-dialog">
-      <header><div><small>ATUR BAGIAN BERANDA</small><h2 id="cms-layout-dialog-title">Atur {knownSections[item.key] || item.title}</h2></div><button type="button" aria-label="Tutup pengaturan" onClick={close}><X size={20} /></button></header>
+      <header><div><small>ATUR BAGIAN BERANDA</small><h2 id="cms-layout-dialog-title">Atur {sectionDisplayName(item)}</h2></div><button type="button" aria-label="Tutup pengaturan" onClick={close}><X size={20} /></button></header>
       <form onSubmit={save}>
         <div className="cms-dialog-content">
           <label className="cms-input-field">Judul Bagian<input ref={firstInput} maxLength={160} value={form.title} onChange={(event) => update('title', event.target.value)} required /></label>
@@ -98,7 +106,7 @@ export default function HomeLayoutPage({ storefrontUrl }) {
     const item = items[from]
     setItems((current) => shiftItem(current, from, to))
     setDirty(true)
-    setAnnouncement(`${knownSections[item.key] || item.title} pindah ke posisi ${to + 1}.`)
+    setAnnouncement(`${sectionDisplayName(item)} pindah ke posisi ${to + 1}.`)
   }
   async function saveOrder() {
     setSaving(true); setError('')
@@ -117,7 +125,7 @@ export default function HomeLayoutPage({ storefrontUrl }) {
     {loading ? <div className="cms-list-placeholder">Memuat susunan beranda…</div> : !items.length ? <div className="cms-list-placeholder">Belum ada bagian beranda yang bisa diatur.</div> : <div className="cms-sortable-list cms-layout-list">
       {items.map((item, index) => <article key={item.key} className="cms-layout-row" draggable onDragStart={(event) => { dragged.current = index; event.dataTransfer.effectAllowed = 'move' }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (dragged.current !== null) move(dragged.current, index); dragged.current = null }} onDragEnd={() => { dragged.current = null }}>
         <div className="cms-sort-controls"><GripVertical size={20} /><div><button type="button" aria-label={`Naikkan ${item.title}`} disabled={index === 0} onClick={() => move(index, index - 1)}><ArrowUp size={15} /></button><button type="button" aria-label={`Turunkan ${item.title}`} disabled={index === items.length - 1} onClick={() => move(index, index + 1)}><ArrowDown size={15} /></button></div></div>
-        <span className="cms-layout-position">{index + 1}</span><div className="cms-layout-row-copy"><strong>{knownSections[item.key] || item.title}</strong><span>{item.itemLimit} item ditampilkan</span></div>
+        <span className="cms-layout-position">{index + 1}</span><div className="cms-layout-row-copy"><strong>{sectionDisplayName(item)}</strong><span>{item.itemLimit} item ditampilkan</span></div>
         <span className={`cms-status cms-status--${item.isEnabled ? 'aktif' : 'nonaktif'}`}>{item.isEnabled ? 'Aktif' : 'Nonaktif'}</span>
         <button className="admin-button admin-button--ghost" type="button" onClick={() => { if (dirty && !window.confirm('Urutan belum disimpan. Lanjut ke pengaturan bagian?')) return; setEditing(item) }}><Settings2 size={15} /> Atur</button>
       </article>)}
