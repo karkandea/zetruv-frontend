@@ -1,0 +1,106 @@
+/* Catalog UX extends the current Zetruv CMS design system and its purple/neutral tokens. */
+.catalog-ux .admin-page-header{margin-bottom:17px}
+.catalog-ux .admin-tabs{margin-bottom:18px}
+.catalog-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.catalog-search{display:flex;align-items:center;gap:9px;flex:1 1 260px;min-width:0;background:white;border:1px solid #e3e7f0;border-radius:11px;padding:0 13px;color:#8893a5}
+.catalog-search:focus-within{border-color:#8579ec;box-shadow:0 0 0 3px #edeaff}
+.catalog-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:12px 0;color:#253047;font-size:13px}
+.catalog-filter-row{display:flex;flex-wrap:wrap;gap:9px}
+.catalog-filter-row select{min-width:136px;border:1px solid #e2e7f0;background:#fff;border-radius:10px;padding:10px 31px 10px 12px;font-size:12px;color:#404b60}
+.catalog-record-list{display:flex;flex-direction:column}
+.catalog-record{display:flex;align-items:center;gap:15px;min-width:0;padding:16px 20px;border-bottom:1px solid #eef1f6}
+.catalog-record:last-child{border-bottom:0}
+.catalog-record-thumb{width:76px;height:56px;border:1px solid #e9edf4;border-radius:10px;display:grid;place-items:center;flex:none;background:#f7f8fc;color:#999fb4;overflow:hidden}
+.catalog-record-thumb img{width:100%;height:100%;object-fit:cover}
+.catalog-record-main{min-width:0;flex:1}
+.catalog-record-main>strong{font-size:14px;line-height:1.4;color:#222a3b;display:block}
+.catalog-record-main>p{font-size:12px;color:#707e92;margin:5px 0}
+.catalog-record-main>small{font-size:11px;color:#56647c}
+.catalog-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.catalog-state{display:inline-flex;align-items:center;gap:4px;align-self:center;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.catalog-state.is-active{color:#17845b;background:#e7f8ef}
+.catalog-state.is-inactive{color:#758299;background:#f0f2f6}
+.catalog-state.is-featured{color:#6c50c6;background:#f1ecfe}
+.catalog-record-actions{display:flex;align-items:center;gap:7px;flex:none}
+.catalog-more{position:relative}
+.catalog-more>summary{list-style:none;border:1px solid transparent;background:transparent;display:flex;align-items:center;justify-content:center;width:35px;height:35px;border-radius:9px;cursor:pointer;color:#69768e}
+.catalog-more>summary::-webkit-details-marker{display:none}
+.catalog-more[open]>summary,.catalog-more>summary:hover{background:#f1f2f9}
+.catalog-more>div{position:absolute;right:0;top:39px;z-index:15;min-width:150px;background:#fff;padding:5px;border:1px solid #e1e5ef;border-radius:10px;box-shadow:0 16px 32px rgba(18,25,42,.13)}
+.catalog-more>div:empty{display:none}
+.catalog-more>div>button{display:block;width:100%;border:0;background:transparent;border-radius:7px;text-align:left;padding:9px 11px;color:#bc4444;font-size:12px}
+.catalog-more>div>button:hover{background:#fff1f1}
+.catalog-back{display:inline-flex;align-items:center;gap:8px;border:0;background:none;color:#6656d2;font-weight:700;font-size:12px;padding:6px 0;margin-bottom:16px}
+.catalog-back:hover{text-decoration:underline}
+.catalog-editor-heading,.catalog-account-heading{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:20px}
+.catalog-editor-heading h1,.catalog-account-heading h1{margin:0;font-size:27px;letter-spacing:-.04em;color:#20283a}
+.catalog-editor-heading p,.catalog-account-heading p{color:#728198;font-size:13px;margin:5px 0 0}
+.catalog-product-form{display:block}
+.catalog-product-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:17px;align-items:start}
+.catalog-form-stack{display:grid;gap:17px;min-width:0}
+.catalog-form-card,.catalog-account-list{background:#fff;border:1px solid #e4e9f2;border-radius:15px;padding:21px 23px;box-shadow:0 8px 25px rgba(21,31,50,.03);min-width:0}
+.catalog-form-card h2{font-size:15px;margin:0 0 17px;color:#263044;letter-spacing:-.01em}
+.catalog-form-card .admin-field,.catalog-compact-form .admin-field,.catalog-info-form .admin-field{display:grid;gap:7px;margin-bottom:15px;font-size:12px;font-weight:670;color:#404c61}
+.catalog-form-card .admin-field input,.catalog-form-card .admin-field select,.catalog-form-card .admin-field textarea,.catalog-compact-form .admin-field input,.catalog-compact-form .admin-field select,.catalog-compact-form .admin-field textarea,.catalog-info-form .admin-field input,.catalog-info-form .admin-field select,.catalog-info-form .admin-field textarea{width:100%;border:1px solid #dce3ed;border-radius:9px;padding:10px 12px;min-height:41px;font-size:13px;color:#263247;background:#fff;line-height:1.5}
+.catalog-form-card .admin-field textarea,.catalog-compact-form .admin-field textarea,.catalog-info-form .admin-field textarea{resize:vertical}
+.catalog-form-card .admin-field small,.catalog-compact-form .admin-field small,.catalog-info-form .admin-field small{font-weight:400;font-size:11px;line-height:1.5;color:#7c889a}
+.catalog-form-card .admin-toggle,.catalog-compact-form .admin-toggle,.catalog-info-form .admin-toggle{display:flex;margin:13px 0}
+.catalog-form-card .admin-toggle b,.catalog-compact-form .admin-toggle b,.catalog-info-form .admin-toggle b{font-weight:620;font-size:12px}
+.catalog-field-note,.catalog-muted{font-size:12px;line-height:1.65;color:#7a869a;margin:8px 0 13px}
+.catalog-field-note strong{color:#394563}
+.catalog-action-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f8f8ff;border:1px solid #e8e6fb;border-radius:10px;color:#5d50be;padding:13px 15px;text-align:left;font-size:12px;font-weight:750}
+.catalog-action-row:hover{background:#efedff}
+.catalog-quiet-warning{display:flex;gap:9px;align-items:flex-start;border:1px solid #f3e1ba;border-radius:10px;background:#fffaf0;color:#936c2c;padding:12px;font-size:11px;line-height:1.6;margin-bottom:12px}
+.catalog-quiet-warning svg{flex:none}
+.catalog-sticky-footer{position:sticky;bottom:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border:1px solid #e4e9f2;border-radius:12px;padding:13px 16px;margin-top:17px;display:flex;justify-content:flex-end;gap:9px;box-shadow:0 -7px 32px rgba(19,27,47,.06)}
+.catalog-editor-extras{margin-top:27px;scroll-margin-top:76px}
+.catalog-advanced{border-top:1px solid #edf0f6;padding-top:14px;margin-top:15px;font-size:12px;color:#6356cc}
+.catalog-advanced summary{cursor:pointer;font-weight:700}
+.catalog-advanced>div{margin-top:11px;padding:13px;border-radius:9px;background:#f8f9fd;display:grid;gap:6px;color:#637186}
+.catalog-advanced code{font-size:12px;color:#394260;overflow-wrap:anywhere}
+.catalog-advanced p{font-size:11px;margin:0}
+.catalog-image-field h3{font-size:14px;font-weight:750;margin:0 0 13px;color:#2d3546}
+.catalog-image-preview{width:100%;max-height:200px;aspect-ratio:16/8.2;border:1px solid #e9edf4;border-radius:11px;overflow:hidden;margin-bottom:11px;background:#f7f9fc}
+.catalog-image-preview img{width:100%;height:100%;object-fit:contain}
+.catalog-customer-preview{border:1px solid #e7eaf2;border-radius:12px;background:#fcfcff;overflow:hidden;display:grid;grid-template-columns:125px minmax(0,1fr);gap:13px;align-items:center;padding:9px}
+.catalog-customer-preview-image{height:95px;border-radius:8px;display:grid;place-items:center;background:#f0eefb;color:#857fc7;overflow:hidden}
+.catalog-customer-preview-image img{width:100%;height:100%;object-fit:cover}
+.catalog-customer-preview>div:last-child{display:grid;gap:6px;min-width:0}
+.catalog-customer-preview strong{font-size:13px;color:#2a3448;overflow-wrap:anywhere}
+.catalog-customer-preview small{font-size:10px;color:#7d899a}
+.catalog-customer-preview span{font-size:10px;color:#6453c6}
+.catalog-image-drop{border:1px dashed #aaa4dd;background:#faf9ff;border-radius:12px;min-height:155px;padding:18px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;color:#6f65c5}
+.catalog-image-drop>span{font-size:12px;font-weight:700;color:#47516c}
+.catalog-image-drop>small{font-size:11px;color:#8b92a5}
+.catalog-image-drop .admin-button{margin-top:4px}
+.catalog-image-unavailable{display:flex;gap:8px;align-items:flex-start;padding:13px;border-radius:10px;background:#fff8ed;color:#8c6a38;font-size:12px;line-height:1.5}
+.catalog-inline-error,.catalog-inline-success{display:flex;align-items:center;gap:7px;font-size:11px;line-height:1.5;margin:9px 0}
+.catalog-inline-error{color:#b34242}.catalog-inline-success{color:#17845b}
+.catalog-compact-form{display:grid;gap:4px}
+.catalog-compact-form .catalog-image-field h3{font-size:12px}
+.catalog-compact-form .catalog-image-drop{min-height:116px}
+.catalog-editor-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:13px;padding-top:15px;border-top:1px solid #eceff5}
+.catalog-account-heading .admin-button{display:flex;align-items:center;gap:7px}
+.catalog-account-list{margin-top:18px}
+.catalog-account-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.catalog-account-list-heading h2{font-size:15px;color:#263044;margin:0}
+.catalog-account-list-heading span{font-size:12px;color:#8390a3}
+.catalog-account-row{display:flex;align-items:center;gap:12px;border:1px solid #e7eaf2;border-radius:12px;padding:13px;margin-top:11px;background:#fff;min-width:0}
+.catalog-account-row:hover{border-color:#d9d2f8}
+.catalog-account-row-info{flex:1;min-width:0}
+.catalog-account-row-info strong{font-size:13px;color:#283247}.catalog-account-row-info strong small{color:#c43f4a}
+.catalog-account-row-info p{margin:5px 0 0;font-size:11px;color:#8591a4}
+.catalog-drag-handle{cursor:grab;color:#a1a9b9;flex:none}
+.catalog-account-move{display:flex;flex-direction:column}
+.catalog-account-move button{border:0;background:transparent;color:#7d88a0;height:22px;width:22px;display:grid;place-items:center;border-radius:5px}
+.catalog-account-move button:hover:not(:disabled){background:#efedff;color:#5f52da}
+.catalog-account-move button:disabled{opacity:.3;cursor:not-allowed}
+.catalog-order-actions{display:flex;gap:13px;align-items:center;justify-content:flex-end;margin-top:14px;font-size:12px;color:#7365c2}
+.catalog-info-overlay{position:fixed;inset:0;background:rgba(15,20,34,.5);z-index:100;display:grid;place-items:center;padding:18px}
+.catalog-info-modal{width:min(510px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:24px;background:#fff;border-radius:16px;box-shadow:0 30px 95px rgba(10,19,42,.25)}
+.catalog-info-modal h2{margin:0 0 18px;font-size:18px}
+.catalog-account-page .admin-account-guidance{font-size:12px;line-height:1.65}
+.catalog-product-editor button:focus-visible,.catalog-ux button:focus-visible,.catalog-account-page button:focus-visible,.catalog-more summary:focus-visible,.catalog-image-drop button:focus-visible{outline:3px solid #b6adfa;outline-offset:2px}
+@media(max-width:1060px){.catalog-product-grid{grid-template-columns:1fr}.catalog-record{flex-wrap:wrap}.catalog-record-actions{margin-left:90px}}
+@media(max-width:720px){.catalog-toolbar{align-items:stretch}.catalog-search{flex-basis:100%}.catalog-filter-row{width:100%}.catalog-filter-row select{flex:1;min-width:125px}.catalog-record{align-items:flex-start;padding:15px}.catalog-record-thumb{width:55px;height:55px}.catalog-record-actions{margin-left:70px;width:calc(100% - 70px);justify-content:flex-end}.catalog-form-card{padding:17px}.catalog-editor-heading h1,.catalog-account-heading h1{font-size:23px}.catalog-account-row{gap:7px;flex-wrap:wrap}.catalog-account-row-info{min-width:110px}.catalog-account-row .catalog-state{margin-left:38px}.catalog-account-heading{align-items:flex-start;flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.catalog-sticky-footer{backdrop-filter:none}}

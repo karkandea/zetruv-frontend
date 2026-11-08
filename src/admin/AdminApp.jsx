@@ -1,19 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { cmsRequest, getAdminSession, loginAdmin, logoutAdmin } from './api'
 import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
+import { attributeKeyFromLabel } from './gameAccountValues'
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
 import BannerPage from './BannerPage'
 import HomeLayoutPage from './HomeLayoutPage'
+import CatalogImageField, { discardCatalogAssets } from './CatalogImageField'
 import GameVoucherInventory from './GameVoucherInventory'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
   FileText, Image, LayoutDashboard, LogOut, Menu, Package, PanelsTopLeft,
   Settings, ShoppingBag, Tags, TicketPercent, X, Zap,
+  AlertTriangle, ArrowLeft, ChevronRight, MoreHorizontal, Search, Star,
 } from 'lucide-react'
 import { getDashboardCounts, getRecentOrders } from './dashboardData'
 import './order-destination.css'
+import './catalog-ux.css'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 
@@ -32,6 +36,15 @@ const NAV = [
 ]
 
 const PRODUCT_KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount']
+const PRODUCT_LABELS = {
+  TopUpGame: 'Top Up Game', TopUpLogin: 'Top Up menggunakan Login', GameVoucher: 'Voucher Game',
+  Joki: 'Joki Game', GameAccount: 'Akun Game', Merchandise: 'Merchandise',
+}
+const FULFILLMENT_LABELS = {
+  AUTO_ID: 'Diproses otomatis berdasarkan ID game',
+  MANUAL_LOGIN: 'Diproses oleh admin melalui alur login resmi',
+  MANUAL: 'Diproses secara manual oleh admin',
+}
 const INPUT_FIELD_TYPES = ['Text', 'Password', 'Email', 'Number', 'Select']
 const fulfillmentForKind = (kind) => kind === 'TopUpGame' ? 'AUTO_ID' : kind === 'TopUpLogin' ? 'MANUAL_LOGIN' : 'MANUAL'
 const ORDER_STATUSES = ['Pending', 'Processing', 'Completed', 'Cancelled']
@@ -101,6 +114,36 @@ function Modal({ title, onClose, children, wide = false }) {
       <div className="admin-modal-body">{children}</div>
     </div>
   </div>
+}
+
+function useCatalogUnsavedGuard(dirty) {
+  useEffect(() => {
+    if (!dirty) return undefined
+    const initialHash = window.location.hash
+    let restoring = false
+    const beforeUnload = (event) => event.preventDefault()
+    const onHashChange = () => {
+      if (restoring) { restoring = false; return }
+      if (!window.confirm('Ada perubahan yang belum disimpan. Yakin ingin meninggalkan halaman?')) {
+        restoring = true
+        window.location.hash = initialHash
+      }
+    }
+    window.addEventListener('beforeunload', beforeUnload)
+    window.addEventListener('hashchange', onHashChange)
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnload)
+      window.removeEventListener('hashchange', onHashChange)
+    }
+  }, [dirty])
+}
+
+function useCatalogAssetCleanup(assets) {
+  const currentAssets = useRef(assets)
+  const handled = useRef(false)
+  useEffect(() => { currentAssets.current = assets }, [assets])
+  useEffect(() => () => { if (!handled.current) void discardCatalogAssets(currentAssets.current) }, [])
+  return () => { handled.current = true }
 }
 
 function Login({ onLogin }) {
@@ -302,92 +345,376 @@ function HomepagePage() {
   </div>
 }
 
-function CategoryForm({ item, onDone }) {
-  const [form, setForm] = useState(item || { key: '', name: '', slug: '', description: '', iconUrl: '', kind: 'TopUpGame', isActive: true, sortOrder: 0 }); const [error, setError] = useState(''); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  async function save(e) { e.preventDefault(); setError(''); try { await cmsRequest(item ? `/catalog/categories/${item.id}` : '/catalog/categories', { method: item ? 'PUT' : 'POST', body: JSON.stringify({ key: form.key, name: form.name, slug: form.slug || slugify(form.name), description: form.description || null, iconUrl: form.iconUrl || null, kind: form.kind, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }) }); onDone() } catch (err) { setError(err.message) } }
-  return <form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="Key"><TextInput value={form.key} onChange={(e) => set('key', e.target.value)} required /></Field><Field label="Slug"><TextInput value={form.slug} onChange={(e) => set('slug', e.target.value)} placeholder={slugify(form.name)} /></Field><Field label="Product kind"><Select value={form.kind} onChange={(e) => set('kind', e.target.value)} options={PRODUCT_KINDS} /></Field><Field label="Icon URL" wide><TextInput value={form.iconUrl || ''} onChange={(e) => set('iconUrl', e.target.value)} /></Field><Field label="Description" wide><TextArea value={form.description || ''} onChange={(e) => set('description', e.target.value)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Active" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save category</button></div></form>
+function CategoryForm({ item, hasProducts, onDone, onCancel, onDirtyChange }) {
+  const initial = useMemo(() => item || { key: '', name: '', slug: '', description: '', iconUrl: '', kind: 'TopUpGame', isActive: true, sortOrder: 0 }, [item])
+  const [form, setForm] = useState(initial)
+  const [assets, setAssets] = useState([])
+  const markAssetsHandled = useCatalogAssetCleanup(assets)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [imageReady, setImageReady] = useState(!initial.iconUrl)
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial)
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange])
+  useCatalogUnsavedGuard(dirty)
+  const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
+  async function cancel() {
+    if (dirty && !confirm('Perubahan kategori belum disimpan. Batalkan?')) return
+    await discardCatalogAssets(assets)
+    markAssetsHandled()
+    onCancel()
+  }
+  async function save(event) {
+    event.preventDefault(); setError(''); setBusy(true)
+    if (form.iconUrl && !imageReady) { setError('Ikon kategori tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
+    const slug = item?.slug || slugify(form.name)
+    try {
+      await cmsRequest(item ? `/catalog/categories/${item.id}` : '/catalog/categories', {
+        method: item ? 'PUT' : 'POST',
+        body: JSON.stringify({ key: item?.key || slug.replaceAll('-', '_'), name: form.name.trim(), slug,
+          description: form.description || null, iconUrl: form.iconUrl || null,
+          kind: form.kind, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }),
+      })
+      await discardCatalogAssets(assets, form.iconUrl)
+      markAssetsHandled()
+      onDone()
+    } catch (cause) { setError(cause.message) }
+    finally { setBusy(false) }
+  }
+  return <form className="catalog-compact-form" onSubmit={save}>
+    <ErrorBox error={error} />
+    <Field label="Nama Kategori"><TextInput value={form.name} maxLength={120} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: Top Up Game" /></Field>
+    <Field label="Jenis Produk" hint={hasProducts ? 'Jenis dikunci karena kategori sudah digunakan oleh produk.' : 'Jenis menentukan pengaturan produk dalam kategori ini.'}>
+      <Select disabled={Boolean(hasProducts)} value={form.kind} onChange={(e) => set('kind', e.target.value)} options={PRODUCT_KINDS.map((value) => ({ value, label: PRODUCT_LABELS[value] }))} />
+    </Field>
+    <CatalogImageField compact title="Ikon Kategori" value={form.iconUrl} onChange={(value) => set('iconUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((previous) => [...previous, asset])} />
+    <Field label="Deskripsi (opsional)"><TextArea rows={3} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Jelaskan kategori secara singkat…" /></Field>
+    <Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Tampilkan di Toko" />
+    <div className="catalog-editor-footer"><Button tone="ghost" onClick={cancel}>Batal</Button><button className="admin-button admin-button--primary" disabled={busy}>{busy ? 'Menyimpan…' : item ? 'Simpan Perubahan' : 'Tambah Kategori'}</button></div>
+  </form>
 }
 
-function GameForm({ item, onDone }) {
-  const [form, setForm] = useState(item || { name: '', slug: '', publisher: '', imageUrl: '', isActive: true, isPopular: false, sortOrder: 0 }); const [error, setError] = useState(''); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  async function save(e) { e.preventDefault(); try { await cmsRequest(item ? `/catalog/games/${item.id}` : '/catalog/games', { method: item ? 'PUT' : 'POST', body: JSON.stringify({ name: form.name, slug: form.slug || slugify(form.name), publisher: form.publisher || null, imageUrl: form.imageUrl || null, isActive: form.isActive, isPopular: form.isPopular, sortOrder: Number(form.sortOrder || 0) }) }); onDone() } catch (err) { setError(err.message) } }
-  return <form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Game name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="Slug"><TextInput value={form.slug} onChange={(e) => set('slug', e.target.value)} placeholder={slugify(form.name)} /></Field><Field label="Publisher"><TextInput value={form.publisher || ''} onChange={(e) => set('publisher', e.target.value)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Image URL" wide><TextInput value={form.imageUrl || ''} onChange={(e) => set('imageUrl', e.target.value)} /></Field><Field label="Visibility"><Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Active" /></Field><Field label="Homepage"><Toggle checked={form.isPopular} onChange={(value) => set('isPopular', value)} label="Popular" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save game</button></div></form>
+function GameForm({ item, onDone, onCancel, onDirtyChange }) {
+  const initial = useMemo(() => item || { name: '', slug: '', publisher: '', imageUrl: '', isActive: true, isPopular: false, sortOrder: 0 }, [item])
+  const [form, setForm] = useState(initial)
+  const [assets, setAssets] = useState([])
+  const markAssetsHandled = useCatalogAssetCleanup(assets)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [imageReady, setImageReady] = useState(!initial.imageUrl)
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial)
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange])
+  useCatalogUnsavedGuard(dirty)
+  const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
+  async function cancel() {
+    if (dirty && !confirm('Perubahan game belum disimpan. Batalkan?')) return
+    await discardCatalogAssets(assets)
+    markAssetsHandled()
+    onCancel()
+  }
+  async function save(event) {
+    event.preventDefault(); setError(''); setBusy(true)
+    if (form.imageUrl && !imageReady) { setError('Logo game tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
+    try {
+      await cmsRequest(item ? `/catalog/games/${item.id}` : '/catalog/games', {
+        method: item ? 'PUT' : 'POST',
+        body: JSON.stringify({ name: form.name.trim(), slug: item?.slug || slugify(form.name),
+          publisher: form.publisher || null, imageUrl: form.imageUrl || null,
+          isActive: form.isActive, isPopular: form.isPopular, sortOrder: Number(form.sortOrder || 0) }),
+      })
+      await discardCatalogAssets(assets, form.imageUrl)
+      markAssetsHandled()
+      onDone()
+    } catch (cause) { setError(cause.message) }
+    finally { setBusy(false) }
+  }
+  return <form className="catalog-compact-form" onSubmit={save}>
+    <ErrorBox error={error} />
+    <Field label="Nama Game"><TextInput value={form.name} maxLength={120} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: Mobile Legends: Bang Bang" /></Field>
+    <Field label="Penerbit (opsional)"><TextInput value={form.publisher || ''} onChange={(e) => set('publisher', e.target.value)} placeholder="Contoh: Moonton" /></Field>
+    <CatalogImageField compact title="Logo Game" value={form.imageUrl} onChange={(value) => set('imageUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((previous) => [...previous, asset])} />
+    <Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Tampilkan di Toko" />
+    <Toggle checked={form.isPopular} onChange={(value) => set('isPopular', value)} label="Tampilkan sebagai Game Populer" />
+    <div className="catalog-editor-footer"><Button tone="ghost" onClick={cancel}>Batal</Button><button className="admin-button admin-button--primary" disabled={busy}>{busy ? 'Menyimpan…' : item ? 'Simpan Perubahan' : 'Tambah Game'}</button></div>
+  </form>
 }
 
 function VariantEditor({ productId, detail, onReload }) {
   const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [voucherVariant, setVoucherVariant] = useState(null); const [error, setError] = useState('')
   async function saveVariant(form, id) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
-  async function saveImage(form, id) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
+  async function saveImage(form, id, assets = [], markHandled) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); await discardCatalogAssets(assets, form.url); markHandled?.(); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveInputField(form, id) {
     const scope = detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
     const isSensitive = detail.fulfillmentMethod === 'AUTO_ID' ? false : form.type === 'Password' ? true : Boolean(form.isSensitive)
     const options = form.type === 'Select' ? String(form.optionsText || '').split(/[,\n]/).map((value) => value.trim()).filter(Boolean) : []
-    const body = { key: form.key, label: form.label, scope, type: form.type, placeholder: form.placeholder || null, helpText: form.helpText || null, isRequired: Boolean(form.isRequired), isSensitive, maxLength: Number(form.maxLength || 200), options, sortOrder: Number(form.sortOrder || 0) }
+    const body = { key: id ? form.key : attributeKeyFromLabel(form.label, detail.inputFields?.map((entry) => entry.key)), label: form.label, scope, type: form.type, placeholder: form.placeholder || null, helpText: form.helpText || null, isRequired: Boolean(form.isRequired), isSensitive, maxLength: Number(form.maxLength || 200), options, sortOrder: Number(form.sortOrder || 0) }
     try { await cmsRequest(id ? `/catalog/products/${productId}/input-fields/${id}` : `/catalog/products/${productId}/input-fields`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setFieldEditing(undefined); onReload() } catch (err) { setError(err.message) }
   }
-  async function disableVariant(item) { if (!confirm(`Disable SKU ${item.sku}?`)) return; await cmsRequest(`/catalog/products/${productId}/variants/${item.id}`, { method: 'DELETE' }); onReload() }
-  async function deleteImage(item) { if (!confirm('Delete this image?')) return; await cmsRequest(`/catalog/products/${productId}/images/${item.id}`, { method: 'DELETE' }); onReload() }
-  async function deleteInputField(item) { if (!confirm(`Delete field ${item.label}?`)) return; try { await cmsRequest(`/catalog/products/${productId}/input-fields/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
+  async function disableVariant(item) { if (!confirm(`Nonaktifkan varian ${item.name}? Data penjualan lama tetap tersimpan.`)) return; try { await cmsRequest(`/catalog/products/${productId}/variants/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
+  async function deleteImage(item) { if (!confirm('Hapus gambar dari galeri produk ini?')) return; try { await cmsRequest(`/catalog/products/${productId}/images/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
+  async function deleteInputField(item) { if (!confirm(`Nonaktifkan informasi ${item.label}?`)) return; try { await cmsRequest(`/catalog/products/${productId}/input-fields/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
   const supportsInputSchema = detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
-  return <div className="admin-product-subresources"><ErrorBox error={error} /><Panel title="Variants" subtitle="Price, stock, physical weight, and SKU" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Variant</Button>}><div className="admin-mini-list">{detail.variants?.map((item) => <div key={item.id}><div><strong>{item.name}</strong><code>{item.sku}</code>{item.groupName && <small>Package group: {item.groupName}</small>}</div><span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Unlimited' : `${item.stockQuantity} stock`}</span><Pill value={item.isActive ? 'Active' : 'Inactive'} /><div>{detail.kind === 'GameVoucher' && <Button tone="ghost" onClick={() => setVoucherVariant(item)}>Codes</Button>}<Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disableVariant(item)}>Disable</Button></div></div>)}</div></Panel><Panel title="Images" subtitle="Product gallery URLs" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Image</Button>}><div className="admin-image-grid">{detail.images?.map((item) => <article key={item.id}>{item.url ? <img src={item.url} alt={item.altText || ''} /> : <span>Image</span>}<div><small>{item.altText || 'No alt text'}</small><div><Button tone="ghost" onClick={() => setImageEditing(item)}>Edit</Button><Button tone="danger" onClick={() => deleteImage(item)}>Delete</Button></div></div></article>)}</div></Panel>
-    {supportsInputSchema && <Panel title="Customer input fields" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Non-sensitive account fields collected before validation' : 'Credentials collected only at checkout and encrypted by backend'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Field</Button>}><div className="admin-mini-list">{detail.inputFields?.length ? detail.inputFields.map((item) => <div key={item.id}><div><strong>{item.label}</strong><code>{item.key}</code></div><span>{item.type}</span><span>{item.isRequired ? 'Required' : 'Optional'}</span><Pill value={item.isSensitive ? 'Sensitive' : item.scope} /><div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Edit</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Delete</Button></div></div>) : <Empty text="No input fields configured. Product will stay unavailable until required schema exists." />}</div></Panel>}
-    {editing !== undefined && <Modal title={editing ? 'Edit variant' : 'Add variant'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form) => saveVariant(form, editing?.id)} onCancel={() => setEditing(undefined)} /></Modal>}
-    {voucherVariant && <Modal title={`${voucherVariant.name} · encrypted voucher codes`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
-    {imageEditing !== undefined && <Modal title={imageEditing ? 'Edit image' : 'Add image'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form) => saveImage(form, imageEditing?.id)} onCancel={() => setImageEditing(undefined)} /></Modal>}
-    {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Edit customer input field' : 'Add customer input field'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
+  return <div className="admin-product-subresources"><ErrorBox error={error} />
+    <Panel title="Harga & Varian" subtitle="Kelola pilihan paket, harga, dan stok" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Tambah Varian</Button>}>
+      <div className="admin-mini-list">{detail.variants?.map((item) => <div key={item.id}><div><strong>{item.name}</strong><small>Kode SKU: {item.sku}</small>{item.groupName && <small>Kelompok: {item.groupName}</small>}</div>
+        <span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Tanpa batas' : `${item.stockQuantity} stok`}</span>
+        <span className={`catalog-state ${item.isActive ? 'is-active' : 'is-inactive'}`}>{item.isActive ? 'Aktif' : 'Nonaktif'}</span>
+        <div>{detail.kind === 'GameVoucher' && <Button tone="ghost" onClick={() => setVoucherVariant(item)}>Kode Voucher</Button>}
+          <Button tone="ghost" onClick={() => setEditing(item)}>Ubah</Button>{item.isActive && <Button tone="danger" onClick={() => disableVariant(item)}>Nonaktifkan</Button>}</div>
+      </div>)}</div>
+    </Panel>
+    <Panel title="Galeri Produk" subtitle="Gambar tambahan yang dapat dilihat pelanggan" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Tambah Gambar</Button>}>
+      <div className="admin-image-grid">{detail.images?.map((item) => <article key={item.id}>{item.url ? <img src={item.url} alt={item.altText || ''} /> : <span>Gambar</span>}
+        <div><small>{item.altText || 'Tanpa keterangan'}</small><div><Button tone="ghost" onClick={() => setImageEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteImage(item)}>Hapus</Button></div></div></article>)}</div>
+    </Panel>
+    {supportsInputSchema && <Panel title="Informasi yang Diisi Pembeli" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Informasi akun nonrahasia untuk validasi sebelum pemesanan' : 'Data login dikumpulkan hanya saat checkout melalui proses aman'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Tambah Isian</Button>}>
+      <div className="admin-mini-list">{detail.inputFields?.length ? detail.inputFields.map((item) => <div key={item.id}><div><strong>{item.label}</strong><small>{item.isRequired ? 'Wajib diisi' : 'Opsional'}</small></div>
+        <span>{item.type === 'Text' ? 'Teks' : item.type === 'Number' ? 'Angka' : item.type === 'Select' ? 'Pilihan' : item.type === 'Password' ? 'Kata Sandi' : item.type}</span><span>{item.isSensitive ? 'Data sensitif' : 'Data umum'}</span>
+        <div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Nonaktifkan</Button></div>
+      </div>) : <Empty text="Belum ada isian pembeli. Produk tertentu memerlukan informasi ini agar dapat dipesan." />}</div>
+    </Panel>}
+    {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form) => saveVariant(form, editing?.id)} onCancel={() => setEditing(undefined)} /></Modal>}
+    {voucherVariant && <Modal title={`${voucherVariant.name} · Kode Voucher Terenkripsi`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
+    {imageEditing !== undefined && <Modal title={imageEditing ? 'Ubah Gambar' : 'Tambah Gambar'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form, assets, markHandled) => saveImage(form, imageEditing?.id, assets, markHandled)} onCancel={() => setImageEditing(undefined)} /></Modal>}
+    {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Ubah Isian Pembeli' : 'Tambah Isian Pembeli'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
   </div>
 }
 
 function VariantForm({ item, kind, onSave, onCancel }) {
-  const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: '', weightGrams: '', isActive: true, sortOrder: 0 }); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}><Field label="Name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="SKU"><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>{kind !== 'Merchandise' && <Field label="Package group" hint="CMS-defined PDP tab. Examples: Diamonds, Starlight, UC, VP. Existing SKUs may leave this blank."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} placeholder="Diamonds" /></Field>}<Field label="Price"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field><Field label="Compare-at price"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>{kind === 'GameVoucher' ? <Field label="Stock" hint="Managed automatically by encrypted voucher-code inventory"><TextInput type="number" min="0" value={form.stockQuantity ?? 0} disabled /></Field> : <Field label="Stock"><TextInput type="number" min="0" value={form.stockQuantity ?? ''} onChange={(e) => set('stockQuantity', e.target.value)} placeholder="Blank = unlimited" /></Field>}<Field label="Weight (grams)"><TextInput type="number" min="0" value={form.weightGrams ?? ''} onChange={(e) => set('weightGrams', e.target.value)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save variant</button></div></form>
+  const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: kind === 'GameAccount' ? 1 : kind === 'GameVoucher' ? 0 : '', weightGrams: '', isActive: true, sortOrder: 0 })
+  const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
+  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}>
+    <Field label="Nama Varian"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: 86 Diamonds" /></Field>
+    <Field label="Kode SKU" hint="Kode unik varian untuk stok dan transaksi."><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>
+    {kind !== 'Merchandise' && <Field label="Kelompok Paket (opsional)" hint="Contoh: Diamonds, Starlight, UC."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} /></Field>}
+    <Field label="Harga Jual"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field>
+    <Field label="Harga Coret (opsional)"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>
+    <Field label="Stok" hint={kind === 'GameVoucher' ? 'Stok mengikuti daftar kode voucher terenkripsi.' : kind === 'GameAccount' ? 'Setiap akun game adalah satu produk unik.' : 'Kosongkan untuk stok tanpa batas.'}>
+      <TextInput type="number" min="0" value={kind === 'GameVoucher' ? 0 : kind === 'GameAccount' ? 1 : form.stockQuantity ?? ''} disabled={kind === 'GameVoucher' || kind === 'GameAccount'} onChange={(e) => set('stockQuantity', e.target.value)} />
+    </Field>
+    {kind === 'Merchandise' && <Field label="Berat Barang (gram)"><TextInput type="number" min="0" value={form.weightGrams ?? ''} onChange={(e) => set('weightGrams', e.target.value)} /></Field>}
+    <Field label="Penayangan"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Varian Aktif" /></Field>
+    <div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Batal</Button><button className="admin-button admin-button--primary">Simpan Varian</button></div>
+  </form>
 }
-function ImageForm({ item, onSave, onCancel }) { const [form, setForm] = useState(item || { url: '', altText: '', sortOrder: 0 }); return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}><Field label="Image URL" wide><TextInput value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} required /></Field><Field label="Alt text"><TextInput value={form.altText || ''} onChange={(e) => setForm({ ...form, altText: e.target.value })} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: e.target.value })} /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save image</button></div></form> }
+function ImageForm({ item, onSave, onCancel }) {
+  const [form, setForm] = useState(item || { url: '', altText: '', sortOrder: 0 })
+  const [assets, setAssets] = useState([])
+  const markAssetsHandled = useCatalogAssetCleanup(assets)
+  const [imageReady, setImageReady] = useState(!item?.url)
+  const [error, setError] = useState('')
+  async function cancel() { await discardCatalogAssets(assets); markAssetsHandled(); onCancel() }
+  return <form className="catalog-compact-form" onSubmit={(event) => { event.preventDefault(); if (!form.url || !imageReady) { setError('Gambar belum dapat dimuat. Unggah gambar yang valid.'); return } onSave(form, assets, markAssetsHandled) }}>
+    <CatalogImageField title="Gambar Galeri" value={form.url} onChange={(url) => setForm((previous) => ({ ...previous, url }))} onUploaded={(asset) => setAssets((previous) => [...previous, asset])} onValidityChange={setImageReady} />
+    <Field label="Keterangan Gambar"><TextInput value={form.altText || ''} onChange={(event) => setForm({ ...form, altText: event.target.value })} placeholder="Contoh: Tampilan dalam game" /></Field>
+    <ErrorBox error={error} /><div className="catalog-editor-footer"><Button tone="ghost" onClick={cancel}>Batal</Button><button className="admin-button admin-button--primary">Simpan Gambar</button></div>
+  </form>
+}
 
 function InputFieldForm({ item, fulfillmentMethod, onSave, onCancel }) {
-  const scope = fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
   const [form, setForm] = useState(item ? { ...item, optionsText: (item.options || []).join(', ') } : { key: '', label: '', type: 'Text', placeholder: '', helpText: '', isRequired: true, isSensitive: false, maxLength: 200, optionsText: '', sortOrder: 0 })
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
   function typeChanged(value) { setForm((old) => ({ ...old, type: value, isSensitive: fulfillmentMethod === 'AUTO_ID' ? false : value === 'Password' ? true : old.isSensitive, optionsText: value === 'Select' ? old.optionsText : '' })) }
   return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}>
-    <Field label="Field key" hint="Stable API key, e.g. userId, server, password"><TextInput value={form.key} onChange={(e) => set('key', e.target.value)} required /></Field>
-    <Field label="Label"><TextInput value={form.label} onChange={(e) => set('label', e.target.value)} required /></Field>
-    <Field label="Scope"><TextInput value={scope} disabled /></Field>
-    <Field label="Type"><Select value={form.type} onChange={(e) => typeChanged(e.target.value)} options={INPUT_FIELD_TYPES.filter((value) => fulfillmentMethod !== 'AUTO_ID' || value !== 'Password')} /></Field>
-    <Field label="Placeholder"><TextInput value={form.placeholder || ''} onChange={(e) => set('placeholder', e.target.value)} /></Field>
-    <Field label="Max length"><TextInput type="number" min="1" max="1000" value={form.maxLength} onChange={(e) => set('maxLength', e.target.value)} required /></Field>
-    <Field label="Help text" wide><TextArea value={form.helpText || ''} onChange={(e) => set('helpText', e.target.value)} /></Field>
-    {form.type === 'Select' && <Field label="Select options" hint="Separate with commas or new lines" wide><TextArea value={form.optionsText || ''} onChange={(e) => set('optionsText', e.target.value)} required /></Field>}
-    <Field label="Validation"><Toggle checked={form.isRequired} onChange={(v) => set('isRequired', v)} label="Required" /></Field>
-    {fulfillmentMethod === 'MANUAL_LOGIN' && <Field label="Security"><Toggle checked={form.type === 'Password' ? true : form.isSensitive} onChange={(v) => set('isSensitive', v)} label="Sensitive" /></Field>}
-    <Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field>
-    <div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Cancel</Button><button className="admin-button admin-button--primary">Save field</button></div>
+    <Field label="Nama Isian"><TextInput value={form.label} onChange={(e) => set('label', e.target.value)} required placeholder="Contoh: User ID" /></Field>
+    <Field label="Jenis Isian"><Select value={form.type} onChange={(e) => typeChanged(e.target.value)} options={INPUT_FIELD_TYPES.filter((value) => fulfillmentMethod !== 'AUTO_ID' || value !== 'Password').map((value) => ({ value, label: ({ Text: 'Teks', Password: 'Kata Sandi', Email: 'Email', Number: 'Angka', Select: 'Pilihan' })[value] }))} /></Field>
+    <Field label="Contoh Isian"><TextInput value={form.placeholder || ''} onChange={(e) => set('placeholder', e.target.value)} /></Field>
+    <Field label="Petunjuk untuk Pembeli" wide><TextArea value={form.helpText || ''} onChange={(e) => set('helpText', e.target.value)} /></Field>
+    {form.type === 'Select' && <Field label="Daftar Pilihan" hint="Pisahkan dengan koma atau baris baru." wide><TextArea value={form.optionsText || ''} onChange={(e) => set('optionsText', e.target.value)} required /></Field>}
+    <Field label="Validasi"><Toggle checked={form.isRequired} onChange={(v) => set('isRequired', v)} label="Wajib diisi" /></Field>
+    {fulfillmentMethod === 'MANUAL_LOGIN' && <Field label="Keamanan"><Toggle checked={form.type === 'Password' ? true : form.isSensitive} onChange={(v) => set('isSensitive', v)} label="Informasi sensitif" /></Field>}
+    <details className="catalog-advanced admin-field--wide"><summary>Pengaturan Lanjutan</summary>
+      <Field label="Batas Panjang Isian"><TextInput type="number" min="1" max="1000" value={form.maxLength} onChange={(e) => set('maxLength', e.target.value)} required /></Field>
+      {item && <div><span>Identitas isian (tetap)</span><code>{form.key}</code></div>}
+    </details>
+    <div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Batal</Button><button className="admin-button admin-button--primary">Simpan Isian</button></div>
   </form>
 }
 
 function ProductEditor({ item, categories, games, onDone }) {
   const initialCategory = categories.find((category) => category.id === item?.categoryId) || categories[0]
-  const [form, setForm] = useState(item ? { ...item } : { categoryId: initialCategory?.id || '', gameId: '', name: '', slug: '', shortDescription: '', description: '', thumbnailUrl: '', kind: initialCategory?.kind || 'TopUpGame', fulfillmentMethod: fulfillmentForKind(initialCategory?.kind || 'TopUpGame'), requiresGameAccountValidation: fulfillmentForKind(initialCategory?.kind || 'TopUpGame') === 'AUTO_ID', isActive: true, isFeatured: false, sortOrder: 0 })
-  const [detail, setDetail] = useState(null); const [error, setError] = useState(''); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  async function loadDetail() { if (!item?.id) return; try { setDetail(await cmsRequest(`/catalog/products/${item.id}`)) } catch (err) { setError(err.message) } }
+  const initial = useMemo(() => item ? { ...item } : {
+    categoryId: initialCategory?.id || '', gameId: '', name: '', slug: '', shortDescription: '',
+    description: '', thumbnailUrl: '', kind: initialCategory?.kind || 'TopUpGame',
+    isActive: true, isFeatured: false, sortOrder: 0,
+  }, [item])
+  const [form, setForm] = useState(initial)
+  const [detail, setDetail] = useState(null)
+  const [assets, setAssets] = useState([])
+  const markAssetsHandled = useCatalogAssetCleanup(assets)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [imageReady, setImageReady] = useState(!initial.thumbnailUrl)
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial)
+  useCatalogUnsavedGuard(dirty)
+  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setError('') }
+  async function loadDetail() { if (!item?.id) return; try { setDetail(await cmsRequest(`/catalog/products/${item.id}`)) } catch (cause) { setError(cause.message) } }
   useEffect(() => { loadDetail() }, [item?.id])
-  function categoryChanged(id) { const category = categories.find((value) => value.id === id); const kind = category?.kind || form.kind; const fulfillmentMethod = fulfillmentForKind(kind); setForm((old) => ({ ...old, categoryId: id, kind, fulfillmentMethod, requiresGameAccountValidation: fulfillmentMethod === 'AUTO_ID' })) }
-  async function save(e) { e.preventDefault(); const fulfillmentMethod = fulfillmentForKind(form.kind); const payload = { categoryId: form.categoryId, gameId: form.gameId || null, name: form.name, slug: form.slug || slugify(form.name), shortDescription: form.shortDescription || null, description: form.description || null, thumbnailUrl: form.thumbnailUrl || null, kind: form.kind, fulfillmentMethod, requiresGameAccountValidation: fulfillmentMethod === 'AUTO_ID', isActive: form.isActive, isFeatured: form.isFeatured, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(item ? `/catalog/products/${item.id}` : '/catalog/products', { method: item ? 'PUT' : 'POST', body: JSON.stringify(payload) }); onDone() } catch (err) { setError(err.message) } }
-  return <><form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Product name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="Slug"><TextInput value={form.slug || ''} onChange={(e) => set('slug', e.target.value)} placeholder={slugify(form.name)} /></Field><Field label="Category"><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} options={categories.map((value) => ({ value: value.id, label: `${value.name} · ${value.kind}` }))} /></Field><Field label="Game" hint={form.kind === 'GameAccount' ? 'Required for account attribute schema' : undefined}><Select required={form.kind === 'GameAccount'} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: form.kind === 'GameAccount' ? 'Choose a game' : 'No game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} /></Field><Field label="Product kind"><TextInput value={form.kind} disabled /></Field><Field label="Fulfillment"><TextInput value={fulfillmentForKind(form.kind)} disabled /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} /></Field><Field label="Thumbnail URL" wide><TextInput value={form.thumbnailUrl || ''} onChange={(e) => set('thumbnailUrl', e.target.value)} /></Field><Field label="Short description" wide><TextArea value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} /></Field><Field label="Full description" wide><TextArea rows={7} value={form.description || ''} onChange={(e) => set('description', e.target.value)} /></Field><Field label="Visibility"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><Field label="Homepage"><Toggle checked={form.isFeatured} onChange={(v) => set('isFeatured', v)} label="Featured" /></Field><Field label="Validation"><TextInput value={fulfillmentForKind(form.kind) === 'AUTO_ID' ? 'Game account validation required' : 'No account pre-validation'} disabled /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save product</button></div></form>{item?.id && detail && <VariantEditor productId={item.id} detail={detail} onReload={loadDetail} />}{item?.id && detail?.kind === 'GameAccount' && <GameAccountListingEditor productId={item.id} />}</>
+  const lockedKind = Boolean(item?.id && (detail?.variants?.length || item.activeVariantCount))
+  const availableCategories = lockedKind ? categories.filter((value) => value.kind === item.kind) : categories
+  function categoryChanged(id) {
+    const category = categories.find((value) => value.id === id)
+    if (!category) return
+    setForm((old) => ({ ...old, categoryId: id, kind: category.kind }))
+  }
+  async function cancel() {
+    if (dirty && !window.confirm('Perubahan produk belum disimpan. Yakin ingin kembali?')) return
+    await discardCatalogAssets(assets)
+    markAssetsHandled()
+    onDone(null)
+  }
+  async function save(event) {
+    event.preventDefault(); setError(''); setBusy(true)
+    if (form.thumbnailUrl && !imageReady) { setError('Gambar produk tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
+    const fulfillmentMethod = fulfillmentForKind(form.kind)
+    const payload = {
+      categoryId: form.categoryId, gameId: form.gameId || null, name: form.name.trim(),
+      slug: item?.slug || slugify(form.name), shortDescription: form.shortDescription || null,
+      description: form.description || null, thumbnailUrl: form.thumbnailUrl || null, kind: form.kind,
+      fulfillmentMethod, requiresGameAccountValidation: fulfillmentMethod === 'AUTO_ID',
+      isActive: form.isActive, isFeatured: form.isFeatured, sortOrder: Number(form.sortOrder || 0),
+    }
+    try {
+      const result = await cmsRequest(item ? `/catalog/products/${item.id}` : '/catalog/products', {
+        method: item ? 'PUT' : 'POST', body: JSON.stringify(payload),
+      })
+      await discardCatalogAssets(assets, form.thumbnailUrl)
+      markAssetsHandled()
+      onDone(item ? null : result)
+    } catch (cause) { setError(cause.message) }
+    finally { setBusy(false) }
+  }
+  return <div className="admin-page catalog-product-editor">
+    <button className="catalog-back" type="button" onClick={cancel}><ArrowLeft size={17} /> Kembali ke Katalog</button>
+    <header className="catalog-editor-heading"><div><h1>{item ? 'Ubah Produk' : 'Tambah Produk'}</h1><p>{form.name || 'Lengkapi informasi produk yang akan dijual'}</p></div><Pill value={form.isActive ? 'Aktif' : 'Nonaktif'} /></header>
+    <form onSubmit={save} className="catalog-product-form">
+      <ErrorBox error={error} />
+      <div className="catalog-product-grid">
+        <div className="catalog-form-stack">
+          <section className="catalog-form-card"><h2>Informasi Produk</h2>
+            <Field label="Nama Produk"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required maxLength={180} placeholder="Contoh: Mobile Legends: Bang Bang" /></Field>
+            <Field label="Kategori"><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} required options={availableCategories.map((value) => ({ value: value.id, label: value.name }))} /></Field>
+            <p className="catalog-field-note">Jenis produk: <strong>{PRODUCT_LABELS[form.kind]}</strong>{lockedKind && ' · Tidak dapat diubah karena sudah memiliki varian.'}</p>
+            <Field label="Game" hint={form.kind === 'GameAccount' ? 'Wajib untuk akun game yang dijual.' : 'Pilih game terkait jika ada.'}>
+              <Select required={form.kind === 'GameAccount'} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
+            </Field>
+          </section>
+          <section className="catalog-form-card"><h2>Harga &amp; Varian</h2><p className="catalog-muted">Atur pilihan nominal, stok, dan harga produk.</p>
+            {item ? <button className="catalog-action-row" type="button" onClick={() => document.getElementById('catalog-variant-settings')?.scrollIntoView({ behavior: 'smooth' })}>Kelola Harga &amp; Varian <ChevronRight size={19} /></button>
+              : <p className="catalog-field-note">Simpan produk terlebih dahulu untuk menambahkan harga dan varian.</p>}
+          </section>
+          <section className="catalog-form-card"><h2>Cara Pemrosesan Pesanan</h2>
+            <p className="catalog-muted">{FULFILLMENT_LABELS[fulfillmentForKind(form.kind)]}</p>
+            {form.kind === 'TopUpLogin' && <div className="catalog-quiet-warning"><AlertTriangle size={17} /> Gunakan proses login resmi yang diizinkan penyedia game. Jangan meminta kredensial di luar alur checkout aman.</div>}
+            {item && (form.kind === 'TopUpGame' || form.kind === 'TopUpLogin') && <button className="catalog-action-row" type="button" onClick={() => document.getElementById('catalog-variant-settings')?.scrollIntoView({ behavior: 'smooth' })}>Atur informasi yang diisi pembeli <ChevronRight size={19} /></button>}
+          </section>
+        </div>
+        <div className="catalog-form-stack">
+          <section className="catalog-form-card"><CatalogImageField title="Gambar Produk" value={form.thumbnailUrl} onChange={(value) => set('thumbnailUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((old) => [...old, asset])} /></section>
+          <section className="catalog-form-card"><h2>Pratinjau Kartu Produk</h2><div className="catalog-customer-preview">
+            <div className="catalog-customer-preview-image">{form.thumbnailUrl && imageReady ? <img src={form.thumbnailUrl} alt="" /> : <Package size={27} />}</div>
+            <div><strong>{form.name || 'Nama Produk'}</strong><small>{PRODUCT_LABELS[form.kind] || 'Jenis produk'} · {categories.find((entry) => entry.id === form.categoryId)?.name || 'Kategori'}</small>
+              <span>{form.isActive ? 'Tampil di toko' : 'Disembunyikan dari toko'}{form.isFeatured && ' · Unggulan'}</span></div>
+          </div><p className="catalog-muted">Pratinjau membantu memeriksa gambar dan teks sebelum disimpan.</p></section>
+          <section className="catalog-form-card"><h2>Deskripsi Produk</h2>
+            <Field label="Ringkasan (opsional)"><TextArea rows={3} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Jelaskan keunggulan utama produk…" /></Field>
+            <Field label="Detail Produk"><TextArea rows={6} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi yang akan dibaca pelanggan…" /></Field>
+          </section>
+          <section className="catalog-form-card"><h2>Penayangan</h2>
+            <Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Tampilkan produk di toko" />
+            <Toggle checked={form.isFeatured} onChange={(value) => set('isFeatured', value)} label="Jadikan produk unggulan" />
+            <details className="catalog-advanced"><summary>Pengaturan Lanjutan</summary><div><span>Alamat produk (otomatis)</span><code>{item?.slug || slugify(form.name) || 'akan-dibuat-otomatis'}</code><p>Alamat lama dijaga agar tautan yang sudah dibagikan tetap berfungsi.</p></div></details>
+          </section>
+        </div>
+      </div>
+      <footer className="catalog-sticky-footer"><Button tone="ghost" onClick={cancel}>Batal</Button><button className="admin-button admin-button--primary" disabled={busy}>{busy ? 'Menyimpan…' : item ? 'Simpan Perubahan' : 'Simpan Produk'}</button></footer>
+    </form>
+    {item?.id && detail && <div id="catalog-variant-settings" className="catalog-editor-extras"><VariantEditor productId={item.id} detail={detail} onReload={loadDetail} />
+      {detail.kind === 'GameAccount' && <GameAccountListingEditor productId={item.id} />}</div>}
+  </div>
 }
 
 function CatalogPage() {
-  const [tab, setTab] = useState('products'); const [data, setData] = useState({ categories: [], games: [], products: [] }); const [editor, setEditor] = useState(undefined); const [schemaGame, setSchemaGame] = useState(null); const [error, setError] = useState('')
-  async function load() { try { const [categories, games, products] = await Promise.all([cmsRequest('/catalog/categories'), cmsRequest('/catalog/games'), cmsRequest('/catalog/products')]); setData({ categories, games, products }) } catch (err) { setError(err.message) } }
+  const [tab, setTab] = useState('products')
+  const [data, setData] = useState({ categories: [], games: [], products: [] })
+  const [editor, setEditor] = useState(undefined)
+  const [editorDirty, setEditorDirty] = useState(false)
+  const [schemaGame, setSchemaGame] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('')
+  const [kind, setKind] = useState('')
+  const [status, setStatus] = useState('')
+  async function load() {
+    try {
+      const [categories, games, products] = await Promise.all([
+        cmsRequest('/catalog/categories'), cmsRequest('/catalog/games'), cmsRequest('/catalog/products'),
+      ])
+      const updated = { categories, games, products }
+      setData(updated); setError('')
+      return updated
+    } catch (cause) { setError(cause.message); return null }
+    finally { setLoading(false) }
+  }
   useEffect(() => { load() }, [])
-  async function disable(type, item) { if (!confirm(`Disable ${item.name}?`)) return; try { await cmsRequest(`/catalog/${type}/${item.id}`, { method: 'DELETE' }); load() } catch (err) { setError(err.message) } }
-  const create = () => setEditor(null)
-  return <div className="admin-page"><PageHeader eyebrow="COMMERCE" title="Catalog" description="Categories, games, products, variants, stock, pricing, and product media." action={<Button onClick={create}>+ New {tab === 'products' ? 'product' : tab === 'games' ? 'game' : 'category'}</Button>} /><ErrorBox error={error} /><div className="admin-tabs">{['products', 'categories', 'games'].map((value) => <button className={tab === value ? 'is-active' : ''} type="button" key={value} onClick={() => { setTab(value); setEditor(undefined) }}>{value}</button>)}</div>
-    {tab === 'products' && <Panel title="Products" subtitle={`${data.products.length} products currently stored`}><div className="admin-table-wrap"><table><thead><tr><th>Product</th><th>Kind</th><th>Category</th><th>Price range</th><th>Status</th><th /></tr></thead><tbody>{data.products.map((item) => <tr key={item.id}><td><div className="admin-product-cell">{item.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" /> : <i>▦</i>}<div><strong>{item.name}</strong><small>{item.gameName || item.slug}</small></div></div></td><td><code>{item.kind}</code></td><td>{item.categoryName}</td><td>{item.minPrice == null ? 'No variants' : item.minPrice === item.maxPrice ? money(item.minPrice) : `${money(item.minPrice)} – ${money(item.maxPrice)}`}</td><td><Pill value={item.isActive ? item.isFeatured ? 'Featured' : 'Active' : 'Inactive'} /></td><td><div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditor(item)}>Manage</Button><Button tone="danger" onClick={() => disable('products', item)}>Disable</Button></div></td></tr>)}</tbody></table></div></Panel>}
-    {tab === 'categories' && <Panel title="Categories" subtitle="Category kind controls which product type can live inside it"><div className="admin-table-wrap"><table><thead><tr><th>Name</th><th>Key / slug</th><th>Kind</th><th>Status</th><th /></tr></thead><tbody>{data.categories.map((item) => <tr key={item.id}><td><strong>{item.name}</strong></td><td><code>{item.key}</code><small>{item.slug}</small></td><td>{item.kind}</td><td><Pill value={item.isActive ? 'Active' : 'Inactive'} /></td><td><div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditor(item)}>Edit</Button><Button tone="danger" onClick={() => disable('categories', item)}>Disable</Button></div></td></tr>)}</tbody></table></div></Panel>}
-    {tab === 'games' && <Panel title="Games" subtitle="Game taxonomy and homepage popularity"><div className="admin-card-list">{data.games.map((item) => <article className="admin-row-card" key={item.id}><div className="admin-thumb">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : '◇'}</div><div className="admin-row-card-copy"><div><strong>{item.name}</strong>{item.isPopular && <Pill value="Popular" />}</div><p>{item.publisher || 'No publisher'}</p><small>{item.slug}</small></div><Pill value={item.isActive ? 'Active' : 'Inactive'} /><div className="admin-row-actions"><Button tone="ghost" onClick={() => setSchemaGame(item)}>Account fields</Button><Button tone="ghost" onClick={() => setEditor(item)}>Edit</Button><Button tone="danger" onClick={() => disable('games', item)}>Disable</Button></div></article>)}</div></Panel>}
-    {schemaGame && <Modal title={`${schemaGame.name} · Account fields`} wide onClose={() => setSchemaGame(null)}><GameAccountSchemaEditor key={schemaGame.id} game={schemaGame} /></Modal>}
-    {editor !== undefined && <Modal title={`${editor ? 'Edit' : 'Create'} ${tab === 'products' ? 'product' : tab === 'games' ? 'game' : 'category'}`} onClose={() => setEditor(undefined)} wide={tab === 'products'}>{tab === 'products' ? <ProductEditor item={editor} categories={data.categories} games={data.games} onDone={() => { setEditor(undefined); load() }} /> : tab === 'games' ? <GameForm item={editor} onDone={() => { setEditor(undefined); load() }} /> : <CategoryForm item={editor} onDone={() => { setEditor(undefined); load() }} />}</Modal>}
+  const current = tab === 'products' ? data.products : tab === 'categories' ? data.categories : data.games
+  const filtered = current.filter((item) => {
+    const term = query.trim().toLocaleLowerCase('id')
+    if (term && ![item.name, item.gameName, item.categoryName, item.publisher].some((value) => String(value || '').toLocaleLowerCase('id').includes(term))) return false
+    if (tab === 'products' && category && item.categoryId !== category) return false
+    if (tab === 'products' && kind && item.kind !== kind) return false
+    if (status === 'active' && !item.isActive) return false
+    if (status === 'inactive' && item.isActive) return false
+    if (status === 'featured' && !(tab === 'games' ? item.isPopular : item.isFeatured)) return false
+    return true
+  })
+  async function disable(type, item) {
+    if (!confirm(`Nonaktifkan ${item.name}? Data tetap tersimpan, tetapi tidak akan ditampilkan di toko.`)) return
+    try { await cmsRequest(`/catalog/${type}/${item.id}`, { method: 'DELETE' }); await load() }
+    catch (cause) { setError(cause.message) }
+  }
+  async function doneProduct(createdId) {
+    const updated = await load()
+    const found = typeof createdId === 'string' ? updated?.products.find((row) => row.id === createdId) : null
+    setEditor(found || undefined)
+  }
+  const openEditor = (item) => { setEditorDirty(false); setEditor(item) }
+  const create = () => openEditor(null)
+  const tabs = [['products', 'Produk'], ['categories', 'Kategori'], ['games', 'Game']]
+  if (schemaGame) return <div className="admin-page catalog-ux"><GameAccountSchemaEditor key={schemaGame.id} game={schemaGame} onBack={() => setSchemaGame(null)} /></div>
+  if (tab === 'products' && editor !== undefined) return <ProductEditor key={editor?.id || 'new-product'} item={editor} categories={data.categories} games={data.games} onDone={doneProduct} />
+  return <div className="admin-page catalog-ux">
+    <PageHeader eyebrow="KATALOG TOKO" title="Katalog" description="Kelola produk, kategori, dan game di Zetruv."
+      action={<Button onClick={create}>+ Tambah {tab === 'products' ? 'Produk' : tab === 'categories' ? 'Kategori' : 'Game'}</Button>} />
+    <ErrorBox error={error} />
+    <div className="admin-tabs" role="tablist" aria-label="Jenis katalog">{tabs.map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={tab === value} className={tab === value ? 'is-active' : ''}
+      onClick={() => { setTab(value); setEditor(undefined); setQuery(''); setCategory(''); setKind(''); setStatus('') }}>{label}</button>)}</div>
+    <div className="catalog-toolbar"><label className="catalog-search"><Search size={17} /><input aria-label="Cari katalog" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tab === 'products' ? 'Cari nama produk atau game…' : tab === 'games' ? 'Cari game…' : 'Cari kategori…'} /></label>
+      <div className="catalog-filter-row">{tab === 'products' && <>
+        <select aria-label="Filter kategori" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Semua Kategori</option>{data.categories.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</select>
+        <select aria-label="Filter jenis produk" value={kind} onChange={(e) => setKind(e.target.value)}><option value="">Semua Jenis</option>{PRODUCT_KINDS.map((value) => <option key={value} value={value}>{PRODUCT_LABELS[value]}</option>)}</select>
+      </>}
+      <select aria-label="Filter status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Semua Status</option><option value="active">Aktif</option><option value="inactive">Nonaktif</option>{tab !== 'categories' && <option value="featured">{tab === 'games' ? 'Game Populer' : 'Unggulan'}</option>}</select></div>
+    </div>
+    <Panel title={tab === 'products' ? 'Daftar Produk' : tab === 'categories' ? 'Daftar Kategori' : 'Daftar Game'} subtitle={`${filtered.length} dari ${current.length} ${tab === 'products' ? 'produk' : tab === 'categories' ? 'kategori' : 'game'}`}>
+      {loading ? <div className="admin-loading">Memuat katalog…</div> : filtered.length === 0 ? <Empty text="Tidak ada data yang cocok. Ubah pencarian atau filter untuk melihat data lain." /> : <div className="catalog-record-list">
+        {filtered.map((item) => <article className="catalog-record" key={item.id}>
+          <div className="catalog-record-thumb">{(tab === 'products' ? item.thumbnailUrl : tab === 'categories' ? item.iconUrl : item.imageUrl) ? <img src={tab === 'products' ? item.thumbnailUrl : tab === 'categories' ? item.iconUrl : item.imageUrl} alt="" /> : <Package size={22} />}</div>
+          <div className="catalog-record-main"><strong>{item.name}</strong><p>{tab === 'products' ? `${PRODUCT_LABELS[item.kind] || item.kind} · ${item.categoryName || 'Tanpa kategori'}` : tab === 'categories' ? PRODUCT_LABELS[item.kind] || item.kind : item.publisher || 'Penerbit belum diisi'}</p>
+            {tab === 'products' && <small>{item.minPrice == null ? 'Belum ada varian' : item.minPrice === item.maxPrice ? money(item.minPrice) : `${money(item.minPrice)} – ${money(item.maxPrice)}`}</small>}
+            <div className="catalog-badges"><span className={`catalog-state ${item.isActive ? 'is-active' : 'is-inactive'}`}>{item.isActive ? 'Aktif' : 'Nonaktif'}</span>{(tab === 'products' ? item.isFeatured : tab === 'games' && item.isPopular) && <span className="catalog-state is-featured"><Star size={12} fill="currentColor" /> {tab === 'games' ? 'Populer' : 'Unggulan'}</span>}</div>
+          </div>
+          <div className="catalog-record-actions">{tab === 'games' && <Button tone="ghost" onClick={() => setSchemaGame(item)}>Informasi Akun</Button>}
+            <Button tone="ghost" onClick={() => openEditor(item)}>{tab === 'products' ? 'Kelola' : 'Ubah'}</Button>
+            <details className="catalog-more"><summary aria-label={`Opsi ${item.name}`}><MoreHorizontal size={19} /></summary><div>{item.isActive && <button type="button" onClick={(event) => { event.currentTarget.closest('details').open = false; disable(tab, item) }}>Nonaktifkan</button>}</div></details>
+          </div>
+        </article>)}
+      </div>}
+    </Panel>
+    {editor !== undefined && tab !== 'products' && <Modal title={`${editor ? 'Ubah' : 'Tambah'} ${tab === 'categories' ? 'Kategori' : 'Game'}`} onClose={() => { if (editorDirty && !confirm('Perubahan belum disimpan. Tutup editor?')) return; setEditor(undefined) }}>
+      {tab === 'games' ? <GameForm key={editor?.id || 'new-game'} item={editor} onDirtyChange={setEditorDirty} onCancel={() => setEditor(undefined)} onDone={() => { setEditor(undefined); load() }} />
+        : <CategoryForm key={editor?.id || 'new-category'} item={editor} hasProducts={Boolean(editor && data.products.some((product) => product.categoryId === editor.id))} onDirtyChange={setEditorDirty} onCancel={() => setEditor(undefined)} onDone={() => { setEditor(undefined); load() }} />}
+    </Modal>}
   </div>
 }
 
