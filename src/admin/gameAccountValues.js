@@ -2,6 +2,19 @@ export const ACCOUNT_ATTRIBUTE_TYPES = ['Text', 'Number', 'Boolean', 'Select', '
 
 export const isChoiceType = (type) => type === 'Select' || type === 'MultiSelect'
 
+export function attributeKeyFromLabel(label, keys = []) {
+  const normalized = String(label || '').toLowerCase().normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  const base = (/^[a-z]/.test(normalized) && normalized.length >= 2 ? normalized : `info_${normalized || 'akun'}`).slice(0, 45)
+  const existing = new Set(keys)
+  if (!existing.has(base)) return base
+  for (let suffix = 2; suffix < 100; suffix++) {
+    const candidate = `${base}_${suffix}`
+    if (!existing.has(candidate)) return candidate
+  }
+  return `${base}_${Date.now().toString(36).slice(-4)}`
+}
+
 export function parseAccountOptions(value) {
   return String(value || '').split(/[,\n]/).map((item) => item.trim()).filter(Boolean)
 }
