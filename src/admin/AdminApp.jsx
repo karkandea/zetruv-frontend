@@ -4,6 +4,8 @@ import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
+import BannerPage from './BannerPage'
+import HomeLayoutPage from './HomeLayoutPage'
 import GameVoucherInventory from './GameVoucherInventory'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
@@ -20,6 +22,7 @@ const NAV = [
   ['orders', 'Pesanan'],
   ['catalog', 'Katalog'],
   ['homepage', 'Banner'],
+  ['home-layout', 'Susunan Beranda'],
   ['flash-sale', 'Flash Sale'],
   ['articles', 'Artikel'],
   ['promotions', 'Promosi'],
@@ -132,9 +135,9 @@ function Login({ onLogin }) {
 
 function Shell({ session, onLogout }) {
   const [route, navigate] = useRoute()
-  const [storeOpen, setStoreOpen] = useState(() => ['homepage', 'flash-sale', 'articles'].includes(route))
+  const [storeOpen, setStoreOpen] = useState(() => ['homepage', 'home-layout', 'flash-sale', 'articles'].includes(route))
   const [mobileOpen, setMobileOpen] = useState(false)
-  const storeActive = ['homepage', 'flash-sale', 'articles'].includes(route)
+  const storeActive = ['homepage', 'home-layout', 'flash-sale', 'articles'].includes(route)
   useEffect(() => {
     if (storeActive) setStoreOpen(true)
   }, [storeActive])
@@ -153,7 +156,8 @@ function Shell({ session, onLogout }) {
   )
   const page = {
     dashboard: <Dashboard onNavigate={goTo} />,
-    homepage: <HomepagePage />,
+    homepage: <BannerPage storefrontUrl={STOREFRONT_URL} />,
+    'home-layout': <HomeLayoutPage storefrontUrl={STOREFRONT_URL} />,
     catalog: <CatalogPage />,
     'provider-mapping': <ProviderMappingPage />,
     promotions: <PromotionsPage />,
@@ -178,6 +182,7 @@ function Shell({ session, onLogout }) {
           </button>
           {storeOpen && <div id="admin-store-nav" className="admin-nav-children">
             {navButton('homepage', 'Banner', Image, true)}
+            {navButton('home-layout', 'Susunan Beranda', PanelsTopLeft, true)}
             {navButton('flash-sale', 'Flash Sale', Zap, true)}
             {navButton('articles', 'Artikel', FileText, true)}
           </div>}
