@@ -5,22 +5,27 @@ import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccount
 import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
 import GameVoucherInventory from './GameVoucherInventory'
+import {
+  AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
+  FileText, Image, LayoutDashboard, LogOut, Menu, Package, PanelsTopLeft,
+  Settings, ShoppingBag, Tags, TicketPercent, X, Zap,
+} from 'lucide-react'
+import { getDashboardCounts, getRecentOrders } from './dashboardData'
 import './order-destination.css'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
-const storefrontHost = STOREFRONT_URL ? new URL(STOREFRONT_URL).host : 'Storefront DEV'
-const adminHost = typeof window !== 'undefined' ? window.location.host : 'Admin DEV'
 
 const NAV = [
-  ['dashboard', 'Overview', '⌂'],
-  ['homepage', 'Homepage', '◫'],
-  ['catalog', 'Catalog', '▦'],
-  ['provider-mapping', 'Provider Mapping', '⇄'],
-  ['promotions', 'Promotions', '⚡'],
-  ['discount-vouchers', 'Discount vouchers', '◎'],
-  ['articles', 'Articles', '✎'],
-  ['orders', 'Orders', '◎'],
-  ['site', 'Site settings', '⚙'],
+  ['dashboard', 'Dashboard'],
+  ['orders', 'Pesanan'],
+  ['catalog', 'Katalog'],
+  ['homepage', 'Banner'],
+  ['flash-sale', 'Flash Sale'],
+  ['articles', 'Artikel'],
+  ['promotions', 'Promosi'],
+  ['discount-vouchers', 'Voucher'],
+  ['site', 'Pengaturan'],
+  ['provider-mapping', 'Integrasi Penyedia'],
 ]
 
 const PRODUCT_KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount']
@@ -127,12 +132,32 @@ function Login({ onLogin }) {
 
 function Shell({ session, onLogout }) {
   const [route, navigate] = useRoute()
+  const [storeOpen, setStoreOpen] = useState(() => ['homepage', 'flash-sale', 'articles'].includes(route))
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const storeActive = ['homepage', 'flash-sale', 'articles'].includes(route)
+  useEffect(() => {
+    if (storeActive) setStoreOpen(true)
+  }, [storeActive])
+  useEffect(() => {
+    if (!mobileOpen) return undefined
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setMobileOpen(false) }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [mobileOpen])
+  const goTo = (next) => { navigate(next); setMobileOpen(false) }
+  const navButton = (id, label, Icon, nested = false) => (
+    <button key={id} type="button" className={`${route === id ? 'is-active' : ''}${nested ? ' admin-nav-child' : ''}`}
+      aria-current={route === id ? 'page' : undefined} onClick={() => goTo(id)}>
+      {!nested && <i><Icon aria-hidden="true" size={18} strokeWidth={1.8} /></i>}<span>{label}</span>
+    </button>
+  )
   const page = {
-    dashboard: <Dashboard />,
+    dashboard: <Dashboard onNavigate={goTo} />,
     homepage: <HomepagePage />,
     catalog: <CatalogPage />,
     'provider-mapping': <ProviderMappingPage />,
     promotions: <PromotionsPage />,
+    'flash-sale': <PromotionsPage flashSaleOnly />,
     'discount-vouchers': <DiscountVouchersPage />,
     articles: <ArticlesPage />,
     orders: <OrdersPage />,
@@ -140,39 +165,100 @@ function Shell({ session, onLogout }) {
   }[route]
 
   return <div className="admin-shell">
-    <aside className="admin-sidebar">
-      <div className="admin-brand"><span>Z</span><div><strong>Zetruv</strong><small>Admin</small></div></div>
-      <nav>{NAV.map(([id, label, icon]) => <button className={route === id ? 'is-active' : ''} key={id} type="button" onClick={() => navigate(id)}><i>{icon}</i><span>{label}</span></button>)}</nav>
-      <div className="admin-user"><div className="admin-user-avatar">{session.email?.[0]?.toUpperCase() || 'A'}</div><div><strong>{session.email}</strong><small>{session.role}</small></div><button type="button" title="Sign out" onClick={onLogout}>↗</button></div>
+    {mobileOpen && <button type="button" className="admin-mobile-scrim" aria-label="Tutup menu" onClick={() => setMobileOpen(false)} />}
+    <aside className={`admin-sidebar${mobileOpen ? ' admin-sidebar--open' : ''}`}>
+      <div className="admin-brand"><span>Z</span><div><strong>Zetruv</strong><small>Admin Panel</small></div><button className="admin-sidebar-close" type="button" aria-label="Tutup menu" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
+      <nav aria-label="Navigasi admin">
+        {navButton('dashboard', 'Dashboard', LayoutDashboard)}
+        {navButton('orders', 'Pesanan', ShoppingBag)}
+        {navButton('catalog', 'Katalog', Package)}
+        <div className="admin-nav-group">
+          <button type="button" className={`admin-nav-group-toggle${storeActive ? ' is-group-active' : ''}`} aria-expanded={storeOpen} aria-controls="admin-store-nav" onClick={() => setStoreOpen((open) => !open)}>
+            <i><PanelsTopLeft aria-hidden="true" size={18} strokeWidth={1.8} /></i><span>Tampilan Toko</span><ChevronDown className="admin-nav-chevron" aria-hidden="true" size={16} />
+          </button>
+          {storeOpen && <div id="admin-store-nav" className="admin-nav-children">
+            {navButton('homepage', 'Banner', Image, true)}
+            {navButton('flash-sale', 'Flash Sale', Zap, true)}
+            {navButton('articles', 'Artikel', FileText, true)}
+          </div>}
+        </div>
+        {navButton('promotions', 'Promosi', Tags)}
+        {navButton('discount-vouchers', 'Voucher', TicketPercent)}
+        <div className="admin-nav-separator" />
+        {navButton('site', 'Pengaturan', Settings)}
+      </nav>
+      <div className="admin-user"><div className="admin-user-avatar">{session.email?.[0]?.toUpperCase() || 'A'}</div><div><strong>{session.email}</strong><small>{session.role}</small></div><button type="button" title="Keluar" aria-label="Keluar" onClick={onLogout}><LogOut size={18} /></button></div>
     </aside>
-    <main className="admin-main"><div className="admin-topbar"><span className="admin-live-dot" /> Connected to DEV CMS API {STOREFRONT_URL && <a href={STOREFRONT_URL} target="_blank" rel="noreferrer">Open storefront ↗</a>}</div>{page}</main>
+    <main className="admin-main"><div className="admin-topbar">
+      <button className="admin-menu-toggle" type="button" aria-label="Buka menu" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={20} /></button>
+      <span className="admin-env-badge">Mode Uji</span>
+      {STOREFRONT_URL && <a href={STOREFRONT_URL} target="_blank" rel="noreferrer">Lihat Toko <ExternalLink aria-hidden="true" size={14} /></a>}
+    </div>{page}</main>
   </div>
 }
 
-function Dashboard() {
+function Dashboard({ onNavigate }) {
   const [stats, setStats] = useState(null)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [partialError, setPartialError] = useState(false)
   useEffect(() => {
-    Promise.all([
-      cmsRequest('/homepage/heroes'), cmsRequest('/catalog/categories'), cmsRequest('/catalog/games'), cmsRequest('/catalog/products'),
-      cmsRequest('/promotions'), cmsRequest('/articles'), cmsRequest('/orders?page=1&pageSize=1'),
-    ]).then(([heroes, categories, games, products, promotions, articles, orders]) => setStats({
-      heroes: heroes.length, categories: categories.length, games: games.length, products: products.length,
-      promotions: promotions.filter((item) => item.isActive).length, articles: articles.length, orders: orders.totalItems || 0,
-      featured: products.filter((item) => item.isFeatured).length,
-    })).catch((err) => setError(err.message))
+    let mounted = true
+    const endpoints = {
+      heroes: '/homepage/heroes', products: '/catalog/products', promotions: '/promotions',
+      orders: '/orders?page=1&pageSize=5',
+      processing: '/orders?page=1&pageSize=1&status=Processing',
+      paidPending: '/orders?page=1&pageSize=1&status=Pending&paymentStatus=Paid',
+      paymentFailed: '/orders?page=1&pageSize=1&paymentStatus=Failed',
+    }
+    Promise.allSettled(Object.entries(endpoints).map(async ([key, path]) => [key, await cmsRequest(path)]))
+      .then((results) => {
+        if (!mounted) return
+        const available = Object.fromEntries(results.filter((result) => result.status === 'fulfilled').map((result) => result.value))
+        setPartialError(results.some((result) => result.status === 'rejected'))
+        setStats({ ...getDashboardCounts(available), orders: getRecentOrders(available.orders) })
+      })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
   }, [])
 
   const cards = stats ? [
-    ['Products', stats.products, `${stats.featured} featured`, '▦'], ['Orders', stats.orders, 'All-time records', '◎'], ['Games', stats.games, `${stats.categories} categories`, '◇'],
-    ['Articles', stats.articles, 'CMS content', '✎'], ['Active promos', stats.promotions, 'Scheduled campaigns', '⚡'], ['Hero banners', stats.heroes, 'Homepage slots', '◫'],
-  ] : []
+    { label: 'Total Pesanan', value: stats.totalOrders, description: 'Lihat pesanan', icon: ShoppingBag, route: 'orders' },
+    { label: 'Total Produk', value: stats.totalProducts, description: 'Kelola katalog', icon: Package, route: 'catalog' },
+    { label: 'Promo Aktif', value: stats.activePromotions, description: 'Kelola promosi', icon: Tags, route: 'promotions' },
+    { label: 'Banner Terdaftar', value: stats.totalBanners, description: 'Kelola banner', icon: Image, route: 'homepage' },
+  ].filter((item) => item.value !== null) : []
+  const alerts = stats ? [
+    { label: 'Menunggu diproses', value: stats.paidPendingOrders, icon: Clock3, route: 'orders/paid-pending' },
+    { label: 'Sedang diproses', value: stats.processingOrders, icon: ShoppingBag, route: 'orders/processing' },
+    { label: 'Pembayaran gagal', value: stats.failedPayments, icon: CreditCard, route: 'orders/payment-failed' },
+  ].filter((item) => item.value !== null) : []
+  const activeAlerts = alerts.filter((item) => item.value > 0)
+  const shortcuts = [
+    { title: 'Banner', helper: 'Atur tampilan', icon: Image, route: 'homepage' },
+    { title: 'Flash Sale', helper: 'Atur promo kilat', icon: Zap, route: 'flash-sale' },
+    { title: 'Artikel', helper: 'Kelola konten', icon: FileText, route: 'articles' },
+  ]
 
-  return <div className="admin-page"><PageHeader eyebrow="ZETRUV OPERATIONS" title="Overview" description="A live snapshot of the content and commerce data currently owned by the Zetruv backend." />
-    <ErrorBox error={error} />
-    {!stats ? <div className="admin-loading">Loading operational data…</div> : <><div className="admin-stat-grid">{cards.map(([label, value, helper, icon]) => <article key={label}><div><small>{label}</small><strong>{value}</strong><span>{helper}</span></div><i>{icon}</i></article>)}</div>
-      <div className="admin-dashboard-grid"><Panel title="Admin coverage" subtitle="Backend modules already wired into this console"><div className="admin-coverage-list">{['Homepage content', 'Catalog & products', 'Promotions', 'Articles', 'Orders & payment status', 'Shipment fulfillment', 'Site & footer settings'].map((item) => <div key={item}><span>✓</span>{item}</div>)}</div></Panel>
-      <Panel title="Deployment model" subtitle="Storefront and admin stay independently deployable"><div className="admin-architecture"><div><b>Storefront</b><code>dist/</code><span>{storefrontHost}</span></div><i>→</i><div><b>Same DEV API</b><code>/api/v1</code><span>.NET + PostgreSQL</span></div><i>←</i><div><b>Admin</b><code>dist-admin/</code><span>{adminHost}</span></div></div></Panel></div></>}
+  return <div className="admin-page admin-dashboard"><PageHeader title="Dashboard" description="Ringkasan aktivitas toko" />
+    {loading ? <div className="admin-loading" role="status">Memuat ringkasan toko…</div> : <>
+      {partialError && <div className="admin-dashboard-warning" role="status"><AlertCircle size={17} /> Sebagian data belum bisa dimuat. Angka yang tidak tersedia disembunyikan.</div>}
+      {alerts.length > 0 && <section className="admin-dashboard-attention" aria-labelledby="admin-attention-heading">
+        <div className="admin-section-heading"><div><h2 id="admin-attention-heading">Perlu Perhatian</h2><p>Status pesanan dari sistem</p></div></div>
+        {activeAlerts.length > 0 ? <div className="admin-attention-grid">{activeAlerts.map(({ label, value, icon: Icon, route }) => <button type="button" key={label} onClick={() => onNavigate(route)} className="admin-attention-card"><Icon size={19} aria-hidden="true" /><span>{label}</span><strong>{value}</strong><ArrowRight size={17} aria-hidden="true" /></button>)}</div> : <p className="admin-attention-clear">Tidak ada pesanan yang perlu ditangani pada status yang tersedia.</p>}
+      </section>}
+      {cards.length > 0 && <section aria-labelledby="admin-summary-heading">
+        <div className="admin-section-heading"><div><h2 id="admin-summary-heading">Ringkasan Toko</h2><p>Seluruh data yang tercatat</p></div></div>
+        <div className="admin-stat-grid">{cards.map(({ label, value, description, icon: Icon, route }) => <button type="button" className="admin-stat-card" key={label} onClick={() => onNavigate(route)} aria-label={`${label}: ${value}. ${description}`}>
+          <div><small>{label}</small><strong>{value}</strong><span>{description} <ArrowRight size={13} aria-hidden="true" /></span></div><i><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></i>
+        </button>)}</div>
+      </section>}
+      <Panel className="admin-recent-orders" title="Pesanan Terbaru" action={<button type="button" className="admin-inline-link" onClick={() => onNavigate('orders')}>Lihat Semua <ArrowRight size={15} aria-hidden="true" /></button>}>
+        {!stats.orders ? <div className="admin-empty">Data pesanan belum tersedia. Coba buka halaman Pesanan.</div> : stats.orders.length === 0 ? <div className="admin-empty">Belum ada pesanan. Pesanan baru akan muncul di sini.</div> : <div className="admin-table-wrap"><table><thead><tr><th>Pesanan</th><th>Total</th><th>Status</th><th>Pembayaran</th><th /></tr></thead><tbody>{stats.orders.map((order) => <tr key={order.id}>
+          <td><strong>{order.orderNumber || 'Pesanan'}</strong><small>{date(order.createdAt)}</small></td><td>{money(order.grandTotal)}</td><td><Pill value={order.status} /></td><td><Pill value={order.paymentStatus} /></td><td><button className="admin-inline-link" type="button" onClick={() => onNavigate(`orders/${encodeURIComponent(order.id)}`)}>Detail <ArrowRight size={14} aria-hidden="true" /></button></td>
+        </tr>)}</tbody></table></div>}
+      </Panel>
+      <Panel title="Kelola Toko" subtitle="Akses cepat untuk memperbarui konten toko" className="admin-shortcuts"><div className="admin-shortcuts-grid">{shortcuts.map(({ title, helper, icon: Icon, route }) => <button type="button" key={title} onClick={() => onNavigate(route)}><i><Icon size={22} strokeWidth={1.8} aria-hidden="true" /></i><strong>{title}</strong><span>{helper}</span><ArrowRight size={17} className="admin-shortcut-arrow" aria-hidden="true" /></button>)}</div></Panel>
+    </>}
   </div>
 }
 
@@ -307,12 +393,23 @@ function PromotionForm({ item, variantOptions, onDone }) {
   return <form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Promotion name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="Slug"><TextInput value={form.slug} onChange={(e) => set('slug', e.target.value)} placeholder={slugify(form.name)} /></Field><Field label="Starts at"><TextInput type="datetime-local" value={form.startsAt} onChange={(e) => set('startsAt', e.target.value)} required /></Field><Field label="Ends at"><TextInput type="datetime-local" value={form.endsAt} onChange={(e) => set('endsAt', e.target.value)} required /></Field><Field label="Type"><Toggle checked={form.isFlashSale} onChange={(v) => set('isFlashSale', v)} label="Flash sale" /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><div className="admin-field admin-field--wide"><span>Promotion items</span><div className="admin-promo-items">{form.items.map((row, index) => <div key={`${row.productVariantId}-${index}`}><Select value={row.productVariantId} onChange={(e) => changeItem(index, 'productVariantId', e.target.value)} options={[{ value: '', label: 'Choose product variant' }, ...variantOptions]} /><input type="number" min="0" placeholder="Sale price" value={row.salePrice} onChange={(e) => changeItem(index, 'salePrice', e.target.value)} required /><button type="button" onClick={() => set('items', form.items.filter((_, i) => i !== index))}>×</button></div>)}<Button tone="ghost" onClick={() => set('items', [...form.items, { productVariantId: '', salePrice: '', sortOrder: form.items.length }])}>+ Add variant</Button></div></div><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save promotion</button></div></form>
 }
 
-function PromotionsPage() {
+function PromotionsPage({ flashSaleOnly = false }) {
   const [promotions, setPromotions] = useState([]); const [variants, setVariants] = useState([]); const [editing, setEditing] = useState(undefined); const [error, setError] = useState('')
   async function load() { try { const [promo, products] = await Promise.all([cmsRequest('/promotions'), cmsRequest('/catalog/products')]); setPromotions(promo); const details = await Promise.all(products.map((product) => cmsRequest(`/catalog/products/${product.id}`))); setVariants(details.flatMap((product) => (product.variants || []).map((variant) => ({ value: variant.id, label: `${product.name} · ${variant.name} · ${money(variant.price)}` })))); } catch (err) { setError(err.message) } }
   useEffect(() => { load() }, [])
   async function disable(item) { if (!confirm(`Disable ${item.name}?`)) return; await cmsRequest(`/promotions/${item.id}`, { method: 'DELETE' }); load() }
-  return <div className="admin-page"><PageHeader eyebrow="MERCHANDISING" title="Promotions" description="Schedule flash sales and override variant prices without changing the base catalog price." action={<Button onClick={() => setEditing(null)}>+ New promotion</Button>} /><ErrorBox error={error} /><Panel title="Campaigns" subtitle={`${promotions.length} promotion records`}><div className="admin-card-list">{promotions.map((item) => <article className="admin-row-card" key={item.id}><div className="admin-promo-icon">⚡</div><div className="admin-row-card-copy"><div><strong>{item.name}</strong><Pill value={item.isActive ? 'Active' : 'Inactive'} /></div><p>{item.items?.length || 0} variants · {item.isFlashSale ? 'Flash Sale' : 'Promotion'}</p><small>{date(item.startsAt)} → {date(item.endsAt)}</small></div><div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disable(item)}>Disable</Button></div></article>)}</div></Panel>{editing !== undefined && <Modal title={editing ? 'Edit promotion' : 'Create promotion'} onClose={() => setEditing(undefined)} wide><PromotionForm item={editing} variantOptions={variants} onDone={() => { setEditing(undefined); load() }} /></Modal>}</div>
+  const visiblePromotions = flashSaleOnly ? promotions.filter((item) => item.isFlashSale) : promotions
+  return <div className="admin-page">
+    <PageHeader eyebrow="TOKO" title={flashSaleOnly ? 'Flash Sale' : 'Promosi'} description={flashSaleOnly ? 'Atur promo kilat yang tampil di toko.' : 'Kelola promosi dan jadwal potongan harga.'} action={<Button onClick={() => setEditing(null)}>+ {flashSaleOnly ? 'Buat Flash Sale' : 'Buat Promosi'}</Button>} />
+    <ErrorBox error={error} />
+    <Panel title={flashSaleOnly ? 'Daftar Flash Sale' : 'Daftar Promosi'} subtitle={`${visiblePromotions.length} tercatat`}>
+      <div className="admin-card-list">{visiblePromotions.length === 0 ? <Empty text="Belum ada promosi di bagian ini." /> : visiblePromotions.map((item) => <article className="admin-row-card" key={item.id}>
+        <div className="admin-promo-icon">⚡</div><div className="admin-row-card-copy"><div><strong>{item.name}</strong><Pill value={item.isActive ? 'Active' : 'Inactive'} /></div><p>{item.items?.length || 0} variants · {item.isFlashSale ? 'Flash Sale' : 'Promotion'}</p><small>{date(item.startsAt)} → {date(item.endsAt)}</small></div>
+        <div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disable(item)}>Disable</Button></div>
+      </article>)}</div>
+    </Panel>
+    {editing !== undefined && <Modal title={editing ? 'Edit promotion' : 'Create promotion'} onClose={() => setEditing(undefined)} wide><PromotionForm item={editing} variantOptions={variants} onDone={() => { setEditing(undefined); load() }} /></Modal>}
+  </div>
 }
 
 function ArticleCategoryForm({ item, onDone }) { const [form, setForm] = useState(item || { name: '', slug: '', isActive: true, sortOrder: 0 }); const [error, setError] = useState(''); async function save(e) { e.preventDefault(); try { await cmsRequest(item ? `/articles/categories/${item.id}` : '/articles/categories', { method: item ? 'PUT' : 'POST', body: JSON.stringify({ name: form.name, slug: form.slug || slugify(form.name), isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }) }); onDone() } catch (err) { setError(err.message) } } return <form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Name"><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></Field><Field label="Slug"><TextInput value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder={slugify(form.name)} /></Field><Field label="Sort order"><TextInput type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: e.target.value })} /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => setForm({ ...form, isActive: v })} label="Active" /></Field><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save category</button></div></form> }
@@ -326,9 +423,18 @@ function ArticlesPage() {
 }
 
 function OrdersPage() {
+  const orderPath = window.location.hash.replace(/^#\/?/, '').split('/')[1]
+  let orderDetailId = null
+  if (orderPath && !['processing', 'paid-pending', 'payment-failed'].includes(orderPath)) {
+    try { orderDetailId = decodeURIComponent(orderPath) } catch { /* Ignore malformed links. */ }
+  }
   const [orders, setOrders] = useState([])
   const [detail, setDetail] = useState(null)
-  const [filters, setFilters] = useState({ status: '', paymentStatus: '', q: '' })
+  const [filters, setFilters] = useState(() => ({
+    status: orderPath === 'processing' ? 'Processing' : orderPath === 'paid-pending' ? 'Pending' : '',
+    paymentStatus: orderPath === 'payment-failed' ? 'Failed' : orderPath === 'paid-pending' ? 'Paid' : '',
+    q: '',
+  }))
   const [error, setError] = useState('')
   const [total, setTotal] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -343,6 +449,12 @@ function OrdersPage() {
     } catch (err) { setError(err.message) }
   }
   useEffect(() => { load() }, [filters.status, filters.paymentStatus])
+  useEffect(() => {
+    if (!orderDetailId) return
+    cmsRequest(`/orders/${encodeURIComponent(orderDetailId)}`)
+      .then(setDetail)
+      .catch((err) => setError(err.message))
+  }, [orderDetailId])
   async function open(item) {
     try { setError(''); setDetail(await cmsRequest(`/orders/${item.id}`)) }
     catch (err) { setError(err.message) }
@@ -385,7 +497,7 @@ function OrdersPage() {
     }))
   }
   return <div className="admin-page">
-    <PageHeader eyebrow="OPERATIONS" title="Digital purchase & orders" description="Payment state comes from the provider. Process paid digital items individually; system derives the overall order status." />
+    <PageHeader title="Pesanan" description="Pantau pembayaran, proses pesanan yang masuk, dan perbarui pengiriman." />
     <ErrorBox error={error} />
     <Panel title="Order queue" subtitle={`${total} total orders`} action={<div className="admin-order-filters">
       <Select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} options={[{ value: '', label: 'All order status' }, ...ORDER_STATUSES]} />
@@ -499,7 +611,19 @@ function SitePage() {
   const footerFields = [{ key: 'group', label: 'Group', type: 'select', options: FOOTER_GROUPS }, { key: 'label', label: 'Label', required: true }, { key: 'url', label: 'URL', wide: true, required: true }, { key: 'sortOrder', label: 'Sort order', type: 'number', default: 0 }, { key: 'isActive', label: 'Status', type: 'toggle', default: true }]
   const socialFields = [{ key: 'platform', label: 'Platform', required: true }, { key: 'url', label: 'URL', wide: true, required: true }, { key: 'iconUrl', label: 'Icon URL', wide: true }, { key: 'sortOrder', label: 'Sort order', type: 'number', default: 0 }, { key: 'isActive', label: 'Status', type: 'toggle', default: true }]
   const paymentFields = [{ key: 'code', label: 'Code', required: true }, { key: 'name', label: 'Name', required: true }, { key: 'iconUrl', label: 'Icon URL', wide: true }, { key: 'sortOrder', label: 'Sort order', type: 'number', default: 0 }, { key: 'isActive', label: 'Status', type: 'toggle', default: true }]
-  return <div className="admin-page"><PageHeader eyebrow="BRAND SYSTEM" title="Site settings" description="Global brand, footer, social, and payment-method content served by the backend." /><ErrorBox error={error} /><Notice message={notice} />{data.settings && <SiteSettingsForm item={data.settings} onSave={updateSettings} />}<div className="admin-settings-grid"><CollectionEditor title="Footer links" items={data.footer} fields={footerFields} onCreate={(body) => mutate('/site/footer-links', 'POST', body)} onUpdate={(id, body) => mutate(`/site/footer-links/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.label}?`) && mutate(`/site/footer-links/${item.id}`, 'DELETE')} /><CollectionEditor title="Social links" items={data.socials} fields={socialFields} onCreate={(body) => mutate('/site/social-links', 'POST', body)} onUpdate={(id, body) => mutate(`/site/social-links/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.platform}?`) && mutate(`/site/social-links/${item.id}`, 'DELETE')} /><CollectionEditor title="Payment methods" items={data.payments} fields={paymentFields} onCreate={(body) => mutate('/site/payment-methods', 'POST', body)} onUpdate={(id, body) => mutate(`/site/payment-methods/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.name}?`) && mutate(`/site/payment-methods/${item.id}`, 'DELETE')} /></div></div>
+  return <div className="admin-page">
+    <PageHeader title="Pengaturan" description="Kelola informasi dan pengaturan toko." />
+    <ErrorBox error={error} /><Notice message={notice} />
+    {data.settings && <SiteSettingsForm item={data.settings} onSave={updateSettings} />}
+    <div className="admin-settings-grid">
+      <CollectionEditor title="Footer links" items={data.footer} fields={footerFields} onCreate={(body) => mutate('/site/footer-links', 'POST', body)} onUpdate={(id, body) => mutate(`/site/footer-links/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.label}?`) && mutate(`/site/footer-links/${item.id}`, 'DELETE')} />
+      <CollectionEditor title="Social links" items={data.socials} fields={socialFields} onCreate={(body) => mutate('/site/social-links', 'POST', body)} onUpdate={(id, body) => mutate(`/site/social-links/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.platform}?`) && mutate(`/site/social-links/${item.id}`, 'DELETE')} />
+      <CollectionEditor title="Payment methods" items={data.payments} fields={paymentFields} onCreate={(body) => mutate('/site/payment-methods', 'POST', body)} onUpdate={(id, body) => mutate(`/site/payment-methods/${id}`, 'PUT', body)} onDelete={(item) => confirm(`Delete ${item.name}?`) && mutate(`/site/payment-methods/${item.id}`, 'DELETE')} />
+    </div>
+    <Panel title="Pengaturan Lanjutan" subtitle="Untuk admin yang mengelola integrasi teknis">
+      <a href="#/provider-mapping" className="admin-settings-advanced"><Settings size={20} aria-hidden="true" /><span><strong>Integrasi Penyedia</strong><small>Atur hubungan produk dan penyedia layanan</small></span><ArrowRight size={18} aria-hidden="true" /></a>
+    </Panel>
+  </div>
 }
 function SiteSettingsForm({ item, onSave }) { const [form, setForm] = useState({ logoUrl: item.logoUrl || '', brandDescription: item.brandDescription || '', copyrightText: item.copyrightText || '', contactTeamLabel: item.contactTeamLabel || '', contactTeamUrl: item.contactTeamUrl || '' }); return <Panel title="Brand & contact" subtitle="Global settings used by site/footer responses"><form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave({ ...form, logoUrl: form.logoUrl || null, contactTeamUrl: form.contactTeamUrl || null }) }}><Field label="Logo URL" wide><TextInput value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} /></Field><Field label="Brand description" wide><TextArea value={form.brandDescription} onChange={(e) => setForm({ ...form, brandDescription: e.target.value })} required /></Field><Field label="Copyright"><TextInput value={form.copyrightText} onChange={(e) => setForm({ ...form, copyrightText: e.target.value })} required /></Field><Field label="Contact CTA label"><TextInput value={form.contactTeamLabel} onChange={(e) => setForm({ ...form, contactTeamLabel: e.target.value })} required /></Field><Field label="Contact CTA URL" wide><TextInput value={form.contactTeamUrl} onChange={(e) => setForm({ ...form, contactTeamUrl: e.target.value })} /></Field><div className="admin-form-actions"><button className="admin-button admin-button--primary">Save site settings</button></div></form></Panel> }
 
