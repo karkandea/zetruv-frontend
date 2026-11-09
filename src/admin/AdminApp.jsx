@@ -12,6 +12,8 @@ import VariantPricingTable from './VariantPricingTable'
 import { variantPriceWarning } from './variantPriceWarnings'
 import GameVoucherInventory from './GameVoucherInventory'
 import OrdersOperationsPage from './OrdersOperationsPage'
+import FlashSaleAdminPage from './FlashSaleAdminPage'
+import { toWibInput, wibInputToIso } from './flashSaleAdminUtils'
 import { PRODUCT_EDITOR_FIELDS, mergeProductTab, isProductTabDirty } from './productEditorTabs'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
@@ -207,7 +209,7 @@ function Shell({ session, onLogout }) {
     catalog: <CatalogPage />,
     'provider-mapping': <ProviderMappingPage />,
     promotions: <PromotionsPage />,
-    'flash-sale': <PromotionsPage flashSaleOnly />,
+    'flash-sale': <FlashSaleAdminPage />,
     'discount-vouchers': <DiscountVouchersPage />,
     articles: <ArticlesPage />,
     orders: <OrdersOperationsPage />,
@@ -757,9 +759,9 @@ function CatalogPage() {
 }
 
 function PromotionForm({ item, variantOptions, onDone }) {
-  const [form, setForm] = useState(item ? { ...item, startsAt: toInputDate(item.startsAt), endsAt: toInputDate(item.endsAt), items: item.items || [] } : { name: '', slug: '', isFlashSale: true, isActive: true, startsAt: '', endsAt: '', items: [] }); const [error, setError] = useState(''); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
+  const [form, setForm] = useState(item ? { ...item, startsAt: toWibInput(item.startsAt), endsAt: toWibInput(item.endsAt), items: item.items || [] } : { name: '', slug: '', isFlashSale: false, isActive: true, startsAt: '', endsAt: '', items: [] }); const [error, setError] = useState(''); const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
   const changeItem = (index, key, value) => setForm((old) => ({ ...old, items: old.items.map((row, rowIndex) => rowIndex === index ? { ...row, [key]: value } : row) }))
-  async function save(e) { e.preventDefault(); try { await cmsRequest(item ? `/promotions/${item.id}` : '/promotions', { method: item ? 'PUT' : 'POST', body: JSON.stringify({ name: form.name, slug: form.slug || slugify(form.name), isFlashSale: form.isFlashSale, isActive: form.isActive, startsAt: toIso(form.startsAt), endsAt: toIso(form.endsAt), items: form.items.map((row, index) => ({ productVariantId: row.productVariantId, salePrice: Number(row.salePrice), sortOrder: Number(row.sortOrder ?? index) })) }) }); onDone() } catch (err) { setError(err.message) } }
+  async function save(e) { e.preventDefault(); try { await cmsRequest(item ? `/promotions/${item.id}` : '/promotions', { method: item ? 'PUT' : 'POST', body: JSON.stringify({ name: form.name, slug: form.slug || slugify(form.name), isFlashSale: form.isFlashSale, isActive: form.isActive, startsAt: wibInputToIso(form.startsAt), endsAt: wibInputToIso(form.endsAt), items: form.items.map((row, index) => ({ productVariantId: row.productVariantId, salePrice: Number(row.salePrice), sortOrder: Number(row.sortOrder ?? index) })) }) }); onDone() } catch (err) { setError(err.message) } }
   return <form className="admin-form-grid" onSubmit={save}><ErrorBox error={error} /><Field label="Promotion name"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field><Field label="Slug"><TextInput value={form.slug} onChange={(e) => set('slug', e.target.value)} placeholder={slugify(form.name)} /></Field><Field label="Starts at"><TextInput type="datetime-local" value={form.startsAt} onChange={(e) => set('startsAt', e.target.value)} required /></Field><Field label="Ends at"><TextInput type="datetime-local" value={form.endsAt} onChange={(e) => set('endsAt', e.target.value)} required /></Field><Field label="Type"><Toggle checked={form.isFlashSale} onChange={(v) => set('isFlashSale', v)} label="Flash sale" /></Field><Field label="Status"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Active" /></Field><div className="admin-field admin-field--wide"><span>Promotion items</span><div className="admin-promo-items">{form.items.map((row, index) => <div key={`${row.productVariantId}-${index}`}><Select value={row.productVariantId} onChange={(e) => changeItem(index, 'productVariantId', e.target.value)} options={[{ value: '', label: 'Choose product variant' }, ...variantOptions]} /><input type="number" min="0" placeholder="Sale price" value={row.salePrice} onChange={(e) => changeItem(index, 'salePrice', e.target.value)} required /><button type="button" onClick={() => set('items', form.items.filter((_, i) => i !== index))}>×</button></div>)}<Button tone="ghost" onClick={() => set('items', [...form.items, { productVariantId: '', salePrice: '', sortOrder: form.items.length }])}>+ Add variant</Button></div></div><div className="admin-form-actions"><Button tone="ghost" onClick={onDone}>Cancel</Button><button className="admin-button admin-button--primary">Save promotion</button></div></form>
 }
 
@@ -775,7 +777,7 @@ function PromotionsPage({ flashSaleOnly = false }) {
     <Panel title={flashSaleOnly ? 'Daftar Flash Sale' : 'Daftar Promosi'} subtitle={`${visiblePromotions.length} tercatat`}>
       <div className="admin-card-list">{visiblePromotions.length === 0 ? <Empty text="Belum ada promosi di bagian ini." /> : visiblePromotions.map((item) => <article className="admin-row-card" key={item.id}>
         <div className="admin-promo-icon">⚡</div><div className="admin-row-card-copy"><div><strong>{item.name}</strong><Pill value={item.isActive ? 'Active' : 'Inactive'} /></div><p>{item.items?.length || 0} variants · {item.isFlashSale ? 'Flash Sale' : 'Promotion'}</p><small>{date(item.startsAt)} → {date(item.endsAt)}</small></div>
-        <div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disable(item)}>Disable</Button></div>
+        <div className="admin-row-actions"><Button tone="ghost" onClick={() => item.isFlashSale ? (window.location.hash = `/flash-sale/${item.id}`) : setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => disable(item)}>Disable</Button></div>
       </article>)}</div>
     </Panel>
     {editing !== undefined && <Modal title={editing ? 'Edit promotion' : 'Create promotion'} onClose={() => setEditing(undefined)} wide><PromotionForm item={editing} variantOptions={variants} onDone={() => { setEditing(undefined); load() }} /></Modal>}

@@ -25,7 +25,7 @@ function getColumns() {
   return 3
 }
 
-function FlashSaleItem({ item }) {
+export function FlashSaleItem({ item }) {
   return (
     <article className="sale-item">
       <div className="sale-item__image">
