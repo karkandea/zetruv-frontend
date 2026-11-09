@@ -3,7 +3,6 @@ import { cmsRequest, getAdminSession, loginAdmin, logoutAdmin } from './api'
 import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
 import { attributeKeyFromLabel } from './gameAccountValues'
-import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
 import BannerPage from './BannerPage'
 import HomeLayoutPage from './HomeLayoutPage'
@@ -12,6 +11,7 @@ import CatalogImageField, { discardCatalogAssets } from './CatalogImageField'
 import VariantPricingTable from './VariantPricingTable'
 import { variantPriceWarning } from './variantPriceWarnings'
 import GameVoucherInventory from './GameVoucherInventory'
+import OrdersOperationsPage from './OrdersOperationsPage'
 import { PRODUCT_EDITOR_FIELDS, mergeProductTab, isProductTabDirty } from './productEditorTabs'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
@@ -53,9 +53,6 @@ const FULFILLMENT_LABELS = {
 }
 const INPUT_FIELD_TYPES = ['Text', 'Password', 'Email', 'Number', 'Select']
 const fulfillmentForKind = (kind) => kind === 'TopUpGame' ? 'AUTO_ID' : kind === 'TopUpLogin' ? 'MANUAL_LOGIN' : 'MANUAL'
-const ORDER_STATUSES = ['Pending', 'Processing', 'Completed', 'Cancelled']
-const PAYMENT_STATUSES = ['Pending', 'Paid', 'Failed', 'Refunded']
-const SHIPMENT_STATUSES = ['Pending', 'ReadyToShip', 'Shipped', 'Delivered', 'Cancelled']
 const FOOTER_GROUPS = ['Page', 'Support', 'Legality']
 
 const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value || 0))
@@ -213,7 +210,7 @@ function Shell({ session, onLogout }) {
     'flash-sale': <PromotionsPage flashSaleOnly />,
     'discount-vouchers': <DiscountVouchersPage />,
     articles: <ArticlesPage />,
-    orders: <OrdersPage />,
+    orders: <OrdersOperationsPage />,
     site: <SitePage />,
   }[route]
 
@@ -795,180 +792,6 @@ function ArticlesPage() {
   return <div className="admin-page"><PageHeader eyebrow="EDITORIAL" title="Articles" description="Draft, schedule, publish, feature, and organize editorial content." action={<Button onClick={() => setEditing(null)}>+ New {tab === 'articles' ? 'article' : 'category'}</Button>} /><ErrorBox error={error} /><div className="admin-tabs"><button className={tab === 'articles' ? 'is-active' : ''} onClick={() => { setTab('articles'); setEditing(undefined) }} type="button">articles</button><button className={tab === 'categories' ? 'is-active' : ''} onClick={() => { setTab('categories'); setEditing(undefined) }} type="button">categories</button></div>{tab === 'articles' ? <Panel title="Editorial library" subtitle={`${articles.length} articles`}><div className="admin-table-wrap"><table><thead><tr><th>Article</th><th>Category</th><th>Publishing</th><th>Updated</th><th /></tr></thead><tbody>{articles.map((item) => <tr key={item.id}><td><strong>{item.title}</strong><small>{item.slug}</small></td><td>{item.categoryName}</td><td><Pill value={item.isPublished ? item.isFeatured ? 'Featured' : 'Published' : 'Draft'} /></td><td>{date(item.updatedAt)}</td><td><div className="admin-row-actions"><Button tone="ghost" onClick={async () => setEditing(await cmsRequest(`/articles/${item.id}`))}>Edit</Button><Button tone="danger" onClick={() => remove(item)}>Delete</Button></div></td></tr>)}</tbody></table></div></Panel> : <Panel title="Article categories" subtitle="Public article taxonomy"><div className="admin-card-list">{categories.map((item) => <article className="admin-row-card" key={item.id}><div className="admin-promo-icon">#</div><div className="admin-row-card-copy"><div><strong>{item.name}</strong><Pill value={item.isActive ? 'Active' : 'Inactive'} /></div><p>{item.articleCount} articles</p><small>{item.slug}</small></div><div className="admin-row-actions"><Button tone="ghost" onClick={() => setEditing(item)}>Edit</Button><Button tone="danger" onClick={() => remove(item)}>Disable</Button></div></article>)}</div></Panel>}{editing !== undefined && <Modal title={`${editing ? 'Edit' : 'Create'} ${tab === 'articles' ? 'article' : 'category'}`} onClose={() => setEditing(undefined)} wide={tab === 'articles'}>{tab === 'articles' ? <ArticleForm item={editing} categories={categories} onDone={() => { setEditing(undefined); load() }} /> : <ArticleCategoryForm item={editing} onDone={() => { setEditing(undefined); load() }} />}</Modal>}</div>
 }
 
-function OrdersPage() {
-  const orderPath = window.location.hash.replace(/^#\/?/, '').split('/')[1]
-  let orderDetailId = null
-  if (orderPath && !['processing', 'paid-pending', 'payment-failed'].includes(orderPath)) {
-    try { orderDetailId = decodeURIComponent(orderPath) } catch { /* Ignore malformed links. */ }
-  }
-  const [orders, setOrders] = useState([])
-  const [detail, setDetail] = useState(null)
-  const [filters, setFilters] = useState(() => ({
-    status: orderPath === 'processing' ? 'Processing' : orderPath === 'paid-pending' ? 'Pending' : '',
-    paymentStatus: orderPath === 'payment-failed' ? 'Failed' : orderPath === 'paid-pending' ? 'Paid' : '',
-    q: '',
-  }))
-  const [error, setError] = useState('')
-  const [total, setTotal] = useState(0)
-  const [busy, setBusy] = useState(false)
-  async function load() {
-    const params = new URLSearchParams({ page: '1', pageSize: '50' })
-    if (filters.status) params.set('status', filters.status)
-    if (filters.paymentStatus) params.set('paymentStatus', filters.paymentStatus)
-    if (filters.q) params.set('q', filters.q)
-    try {
-      const result = await cmsRequest(`/orders?${params}`)
-      setOrders(result.items || []); setTotal(result.totalItems || 0)
-    } catch (err) { setError(err.message) }
-  }
-  useEffect(() => { load() }, [filters.status, filters.paymentStatus])
-  useEffect(() => {
-    if (!orderDetailId) return
-    cmsRequest(`/orders/${encodeURIComponent(orderDetailId)}`)
-      .then(setDetail)
-      .catch((err) => setError(err.message))
-  }, [orderDetailId])
-  async function open(item) {
-    try { setError(''); setDetail(await cmsRequest(`/orders/${item.id}`)) }
-    catch (err) { setError(err.message) }
-  }
-  async function apply(action) {
-    if (!detail) return
-    setBusy(true); setError('')
-    try {
-      await action()
-      setDetail(await cmsRequest(`/orders/${detail.id}`))
-      await load()
-    } catch (err) { setError(err.message) }
-    finally { setBusy(false) }
-  }
-  function cancelOrder() {
-    if (!window.confirm('Cancel this order? Active inventory reservation will be released.')) return
-    return apply(() => cmsRequest(`/orders/${detail.id}/status`, {
-      method: 'PUT', body: JSON.stringify({ status: 'Cancelled' }),
-    }))
-  }
-  function updateFulfillment(item, form) {
-    return apply(() => cmsRequest(`/orders/${detail.id}/items/${item.id}/fulfillment`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        status: form.status,
-        reference: form.reference?.trim() || null,
-        message: form.status === 'Completed' ? null : form.message?.trim() || null,
-      }),
-    }))
-  }
-  function reconcile(transaction) {
-    return apply(() => cmsRequest(`/payments/transactions/${transaction.id}/reconcile`, { method: 'POST' }))
-  }
-  function retryGameVoucher(item) {
-    return apply(() => cmsRequest(`/orders/${detail.id}/items/${item.id}/game-voucher-assign`, { method: 'POST' }))
-  }
-  function updateShipment(status, trackingNumber) {
-    return apply(() => cmsRequest(`/orders/${detail.id}/shipment`, {
-      method: 'PUT', body: JSON.stringify({ status, trackingNumber: trackingNumber || null }),
-    }))
-  }
-  return <div className="admin-page">
-    <PageHeader title="Pesanan" description="Pantau pembayaran, proses pesanan yang masuk, dan perbarui pengiriman." />
-    <ErrorBox error={error} />
-    <Panel title="Order queue" subtitle={`${total} total orders`} action={<div className="admin-order-filters">
-      <Select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} options={[{ value: '', label: 'All order status' }, ...ORDER_STATUSES]} />
-      <Select value={filters.paymentStatus} onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })} options={[{ value: '', label: 'All payment status' }, ...PAYMENT_STATUSES]} />
-      <input placeholder="Search order/customer" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && load()} />
-      <Button tone="ghost" onClick={load}>Search</Button>
-    </div>}><div className="admin-table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Order status</th><th>Payment</th><th>Created</th><th /></tr></thead>
-      <tbody>{orders.map((item) => <tr key={item.id}>
-        <td><strong>{item.orderNumber}</strong><small>{item.itemCount} items</small></td>
-        <td>{item.customerName || 'Guest'}</td><td>{money(item.grandTotal)}</td>
-        <td><Pill value={item.status} /></td><td><Pill value={item.paymentStatus} /></td>
-        <td>{date(item.createdAt)}</td><td><Button tone="ghost" onClick={() => open(item)}>View</Button></td>
-      </tr>)}</tbody>
-    </table></div></Panel>
-    {detail && <Modal title={detail.orderNumber} onClose={() => setDetail(null)} wide>
-      <OrderDetail detail={detail} busy={busy} onCancel={cancelOrder} onFulfillment={updateFulfillment} onVoucherRetry={retryGameVoucher} onReconcile={reconcile} onShipment={updateShipment} />
-    </Modal>}
-  </div>
-}
-
-function FulfillmentItemActions({ item, paid, busy, onSave }) {
-  const available = nextFulfillmentStatuses(item.fulfillmentStatus, paid ? 'Paid' : 'Pending')
-  const [status, setStatus] = useState(available[0] || '')
-  const [reference, setReference] = useState(item.fulfillmentReference || '')
-  const [message, setMessage] = useState(item.fulfillmentMessage || '')
-  if (!paid || available.length === 0 || item.productKind === 'GameVoucher') return null
-  return <form className="admin-fulfillment-actions" onSubmit={(event) => {
-    event.preventDefault()
-    onSave({ status: available.includes(status) ? status : available[0], reference, message })
-  }}>
-    <label>Next step<select value={available.includes(status) ? status : available[0]} onChange={(event) => setStatus(event.target.value)}>
-      {available.map((value) => <option key={value}>{value}</option>)}
-    </select></label>
-    <label>Provider / delivery reference<input maxLength={180} value={reference} onChange={(event) => setReference(event.target.value)} placeholder="Reference (optional)" /></label>
-    <label>Operational note<input maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Reason / processing note" /></label>
-    <button className="admin-button admin-button--primary" disabled={busy} type="submit">Update fulfillment</button>
-  </form>
-}
-
-function OrderDetail({ detail, busy, onCancel, onFulfillment, onVoucherRetry, onReconcile, onShipment }) {
-  const [tracking, setTracking] = useState(detail.shipment?.trackingNumber || '')
-  const paid = detail.paymentStatus === 'Paid'
-  const canCancel = detail.status !== 'Cancelled' && detail.status !== 'Completed'
-    && !(detail.items || []).some((item) => item.fulfillmentStatus === 'Completed')
-  return <div className="admin-order-detail">
-    <div className="admin-order-summary">
-      <div><small>Customer</small><strong>{detail.customerName || '—'}</strong><span>{detail.customerEmail || 'No email'}</span><span>WhatsApp: {detail.customerPhone || 'Not provided'}</span></div>
-      <div><small>Grand total</small><strong>{money(detail.grandTotal)}</strong><span>Subtotal {money(detail.subtotal)} · Discount {money(detail.discountAmount)}</span>{detail.voucherCode && <span>Voucher {detail.voucherCode} · {money(detail.voucherDiscountAmount)} discount</span>}</div>
-      <div><small>Created</small><strong>{date(detail.createdAt)}</strong><span>{detail.paymentProvider || 'No payment provider'}</span></div>
-    </div>
-    <div className="admin-order-controls">
-      <div><small>Order status · derived from fulfillment</small><Pill value={detail.status} /></div>
-      <div><small>Payment · provider/webhook/reconciliation</small><Pill value={detail.paymentStatus} /></div>
-      {canCancel && <Button tone="danger" disabled={busy} onClick={onCancel}>Cancel order</Button>}
-    </div>
-    <Panel title="Order items" subtitle="Each paid item has its own fulfillment lifecycle">
-      <div className="admin-fulfillment-items">{detail.items.map((item) => <article className="admin-fulfillment-item" key={item.id}>
-        <div className="admin-fulfillment-item__top">
-          <div><strong>{item.productName}</strong><small>{item.variantName || item.sku} · {item.productKind} · {item.fulfillmentMethod}</small></div>
-          <Pill value={item.fulfillmentStatus} /><span>×{item.quantity}</span><b>{money(item.lineTotal)}</b>
-        </div>
-        {item.accountTarget && <section className="admin-order-target" aria-label="Validated account destination">
-          <div className="admin-order-target__heading">
-            <strong>Account destination</strong>
-            <span>{item.accountTarget.accountDisplayName || 'Validated account'}</span>
-          </div>
-          <dl>{Object.entries(item.accountTarget.fields || {}).map(([key, value]) =>
-            <div key={key}>
-              <dt>{key.replace(/[_-]/g, ' ')}</dt>
-              <dd>{value}</dd>
-            </div>
-          )}</dl>
-          <small>Validated {date(item.accountTarget.validatedAt)} · linked to this order item</small>
-        </section>}
-        {item.fulfillmentReference && <small>Reference: {item.fulfillmentReference}</small>}
-        {item.fulfillmentMessage && <small>Note: {item.fulfillmentMessage}</small>}
-        {item.hasManualLoginCredentials && <small>Login credentials are encrypted. Never copy them into a note or reference.</small>}
-        {item.productKind === 'GameVoucher' && item.fulfillmentStatus === 'Completed' && <small>Redeem code(s) assigned securely. Raw codes are visible only to the owning customer.</small>}
-        {paid && item.productKind === 'GameVoucher' && ['Processing', 'Failed'].includes(item.fulfillmentStatus) && <Button tone="ghost" disabled={busy} onClick={() => onVoucherRetry(item)}>{item.fulfillmentStatus === 'Failed' ? 'Retry code allocation' : 'Allocate code(s)'}</Button>}
-        <FulfillmentItemActions key={`${item.id}:${item.fulfillmentStatus}`} item={item} paid={paid} busy={busy} onSave={(form) => onFulfillment(item, form)} />
-      </article>)}</div>
-    </Panel>
-    {detail.shipment && <Panel title="Shipment" subtitle={`${detail.shipment.provider} · ${detail.shipment.serviceName}`}>
-      <div className="admin-shipment-grid"><div><small>Status</small><Pill value={detail.shipment.status} /></div><div><small>Destination</small><strong>{detail.shipment.city}, {detail.shipment.province}</strong><span>{detail.shipment.postalCode}</span></div><div><small>Shipping cost</small><strong>{money(detail.shipment.cost)}</strong><span>{detail.shipment.totalWeightGrams}g</span></div></div>
-      <div className="admin-shipment-controls"><input value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="Tracking number" />
-        <Select value={detail.shipment.status} disabled={busy} onChange={(e) => onShipment(e.target.value, tracking)} options={SHIPMENT_STATUSES} /></div>
-    </Panel>}
-    {detail.transactions?.length > 0 && <Panel title="Payment transactions" subtitle="Live provider state; never simulate paid status in CMS">
-      <div className="admin-fulfillment-items">{detail.transactions.map((tx) => <article key={tx.id} className="admin-fulfillment-item">
-        <div className="admin-fulfillment-item__top"><div><strong>{tx.provider}</strong><small>{tx.providerReference || 'No reference'}</small></div>
-          <Pill value={tx.status} /><b>{money(tx.amount)}</b><span>{date(tx.createdAt)}</span></div>
-        {tx.reconciliationMessage && <small>{tx.reconciliationMessage}</small>}
-        {tx.nextReconciliationAt && <small>Next reconciliation: {date(tx.nextReconciliationAt)}</small>}
-        {tx.type === 'Payment' && tx.status === 'Pending' && <Button tone="ghost" disabled={busy} onClick={() => onReconcile(tx)}>Check provider status</Button>}
-      </article>)}</div>
-    </Panel>}
-  </div>
-}
 
 function CollectionEditor({ title, items, fields, onCreate, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(undefined)
