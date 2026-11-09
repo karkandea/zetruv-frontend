@@ -8,6 +8,7 @@ import { addCartItem, awaitCartPersistence } from '../services/cartService'
 import { getCartSyncStatus, readCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { getCatalogProduct } from '../services/catalogService'
+import { selectLinkedVariant } from '../services/flashSaleFlow'
 import '../styles/product-detail.css'
 import '../styles/product-detail-improvements.css'
 import '../styles/product-detail-sidebar.css'
@@ -30,7 +31,7 @@ function Stars({ small = false }) {
   return <span className={`pdp-stars${small ? ' is-small' : ''}`}>{[0,1,2,3,4].map((n) => <Star key={n} fill="#fed218" strokeWidth={0} />)}</span>
 }
 
-export default function ProductDetailPage({ slug = 'mobile-legends' }) {
+export default function ProductDetailPage({ slug = 'mobile-legends', initialVariantId = '' }) {
   const [product, setProduct] = useState(null)
   const [selectedId, setSelectedId] = useState('')
   const [catalogStatus, setCatalogStatus] = useState('loading')
@@ -38,6 +39,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
   const [retryCount, setRetryCount] = useState(0)
   const [account, setAccount] = useState({ userId: '', zone: '' })
   const [notice, setNotice] = useState('')
+  const [selectionWarning, setSelectionWarning] = useState('')
   const [saving,setSaving] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(readCustomerSession()))
   useEffect(() => {
@@ -54,12 +56,14 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
     setSelectedId('')
     setAccount({ userId: '', zone: '' })
     setNotice('')
+    setSelectionWarning('')
 
     getCatalogProduct(slug).then((data) => {
       if (!active) return
       // A different kind or slug must never populate this PDP.
       if (data.kind === 'TopUpLogin') {
-        window.location.replace(`/product/${encodeURIComponent(data.slug)}/login`)
+        const query = initialVariantId ? `?variant=${encodeURIComponent(initialVariantId)}` : ''
+        window.location.replace(`/product/${encodeURIComponent(data.slug)}/login${query}`)
         return
       }
       if (data.kind !== 'TopUpGame' || data.slug !== slug)
@@ -67,8 +71,10 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       if (!Array.isArray(data.variants) || data.variants.length === 0)
         throw new Error('Belum ada paket tersedia untuk produk ini.')
       setProduct(data)
-      const first = data.variants.find((item) => item.isAvailable) || data.variants[0]
-      setSelectedId(first?.id || '')
+      const selection = selectLinkedVariant(data.variants, initialVariantId)
+      setSelectedId(selection.variant?.id || '')
+      if (selection.invalidSelection) setSelectionWarning('Varian dari Flash Sale tidak tersedia lagi. Pilih paket yang masih tersedia sebelum membeli.')
+      else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning('Flash Sale untuk paket ini sudah berakhir. Harga yang tampil adalah harga katalog terbaru.')
       setCatalogStatus('ready')
     }).catch((error) => {
       if (!active) return
@@ -76,7 +82,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
       setCatalogStatus('error')
     })
     return () => { active = false }
-  }, [slug, retryCount])
+  }, [slug, initialVariantId, retryCount])
 
   const selected = useMemo(() => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0], [product, selectedId])
   const accountFields = useMemo(() => (product?.inputFields || [])
@@ -180,7 +186,8 @@ export default function ProductDetailPage({ slug = 'mobile-legends' }) {
         <div className="product-detail-container product-detail-layout">
           <section className="product-selection-panel">
             <div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || 'Top Up'}</button></div></div>
-            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flashsale</span>}</button>)}</div>
+            {selectionWarning && <p className="pdp-variant-warning" role="status">{selectionWarning}</p>}
+            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flash Sale</span>}</button>)}</div>
 
             <section className="product-reviews"><h2>Ulasan Produk</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>394 Ulasan</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>Ulasan Terakhir</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>2 hari lalu</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>

@@ -42,6 +42,24 @@
   flex: 0 0 calc((100% - 32px) / 3);
 }
 
+.site-shell--homepage-final .flash-carousel--adaptive .sale-item--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.site-shell--homepage-final .flash-carousel--adaptive .sale-item--link:hover {
+  box-shadow: 0 9px 24px #0b174c35;
+  transform: translateY(-2px);
+}
+.site-shell--homepage-final .flash-carousel--adaptive .sale-item--link:focus-visible {
+  outline: 3px solid #ffd22f;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-shell--homepage-final .flash-carousel--adaptive .sale-item--link { transition: none; }
+}
+
 /* The Figma cards place their caption on a blurred gradient over the artwork. */
 .site-shell--homepage-final .flash-carousel--adaptive .sale-item__image {
   height: 100%;

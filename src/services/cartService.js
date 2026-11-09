@@ -1,8 +1,35 @@
 const CART_KEY = 'zetruv-cart-v1'
 const CART_EVENT = 'zetruv-cart-change'
+const QUOTED_PRICES_KEY = 'zetruv-cart-price-quotes-v1'
 let remoteItems = null
 let remoteWriter = null
 let lastRemoteWrite = Promise.resolve()
+
+// Only quoted unit prices keyed by non-sensitive SKU IDs, never account IDs or credentials.
+// The backend remains authoritative; checkout compares each quote against current catalog.
+function savedPriceQuotes() {
+  try {
+    const data = JSON.parse(window.sessionStorage.getItem(QUOTED_PRICES_KEY) || '{}')
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {}
+  } catch { return {} }
+}
+
+function storePriceQuotes(quoted) {
+  try { window.sessionStorage.setItem(QUOTED_PRICES_KEY, JSON.stringify(quoted)) } catch { /* Session storage may be disabled. */ }
+}
+
+export function clearCartPriceQuotes() {
+  try { window.sessionStorage.removeItem(QUOTED_PRICES_KEY) } catch { /* No storage available. */ }
+}
+
+export function seedCartPriceQuotes(rows) {
+  const quotes = savedPriceQuotes()
+  for (const row of rows) {
+    const price = Number(row.unitPrice)
+    if (row.variantId && price > 0 && Number.isFinite(price)) quotes[row.variantId] = price
+  }
+  storePriceQuotes(quotes)
+}
 const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount'])
 const CREDENTIAL_METHODS = new Set(['MANUAL_LOGIN', 'JOKI_MANUAL'])
 
@@ -111,7 +138,12 @@ function emitCart(items) {
 }
 
 export function setAuthenticatedCart(items, persist) {
-  remoteItems = mergeEntries(items)
+  const quotes = savedPriceQuotes()
+  remoteItems = mergeEntries(items.map(item => {
+    const remembered = Number(quotes[item.variantId])
+    return remembered > 0 && Number.isFinite(remembered) ? { ...item, unitPrice: remembered } : item
+  }))
+  seedCartPriceQuotes(remoteItems)
   remoteWriter = persist
   emitCart(remoteItems)
 }
@@ -134,6 +166,11 @@ function writeCart(items) {
   const normalized = mergeEntries(items)
   if (remoteItems !== null) {
     remoteItems = normalized
+    const currentQuotes = {}
+    for (const item of normalized) {
+      if (item.variantId && Number(item.unitPrice) > 0) currentQuotes[item.variantId] = Number(item.unitPrice)
+    }
+    storePriceQuotes(currentQuotes)
     emitCart(normalized)
     if (typeof remoteWriter === 'function')
       lastRemoteWrite = Promise.resolve(remoteWriter(normalized))

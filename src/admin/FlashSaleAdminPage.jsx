@@ -7,6 +7,7 @@ import {
 import { cmsRequest } from './api'
 import { FlashSaleItem } from '../components/FlashSale'
 import { getFlashSalePages } from '../components/flashSaleLayout'
+import { suspiciousCatalogPrice } from '../services/flashSaleFlow'
 import {
   FLASH_STATUS, discountPercent, flashPayload, flashState,
   overlappingFlashSales, toWibInput, validateFlashDraft, wibInputToIso,
@@ -56,7 +57,7 @@ function StorePreview({ draft, variants }) {
     </div>
     {items.length === 0 ? <div className="fsa-preview-empty">Tambahkan varian di tab Produk & Harga untuk melihat kartu toko.</div> : <>
       <div className="fsa-preview-carousel"><button type="button" className="fsa-preview-arrow" onClick={() => setPage((safePage - 1 + pages.length) % pages.length)} disabled={pages.length < 2} aria-label="Slide sebelumnya"><ChevronLeft size={21} /></button>
-        <div className="fsa-preview-grid">{pages[safePage].map((item) => <FlashSaleItem key={item.id} item={item} />)}</div>
+        <div className="fsa-preview-grid">{pages[safePage].map((item) => <FlashSaleItem key={item.id} item={item} interactive={false} />)}</div>
         <button type="button" className="fsa-preview-arrow" onClick={() => setPage((safePage + 1) % pages.length)} disabled={pages.length < 2} aria-label="Slide berikutnya"><ChevronRight size={21} /></button>
       </div>
       {pages.length > 1 && <div className="fsa-preview-dots" aria-label="Halaman pratinjau">{pages.map((_, index) => <button key={index} type="button" aria-label={`Slide ${index + 1}`} aria-current={safePage === index ? 'page' : undefined} className={safePage === index ? 'is-active' : ''} onClick={() => setPage(index)} />)}</div>}
@@ -67,16 +68,22 @@ function StorePreview({ draft, variants }) {
 
 function VariantPicker({ variants, selected, onAdd, onClose }) {
   const [query, setQuery] = useState('')
-  const options = useMemo(() => [...variants.values()].filter((variant) => `${variant.productName} ${variant.gameName} ${variant.name} ${variant.sku}`.toLowerCase().includes(query.toLowerCase())), [variants, query])
+  const [chosen, setChosen] = useState(new Set())
+  const allVariants = useMemo(() => [...variants.values()], [variants])
+  const options = useMemo(() => allVariants.filter((variant) => `${variant.productName} ${variant.gameName} ${variant.name} ${variant.sku}`.toLowerCase().includes(query.toLowerCase())), [allVariants, query])
+  const toggle = (id) => setChosen((previous) => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next })
+  useEffect(() => { const dismiss = (event) => { if (event.key === 'Escape') onClose() }; window.addEventListener('keydown', dismiss); return () => window.removeEventListener('keydown', dismiss) }, [onClose])
   return <div className="fsa-dialog-layer" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }} role="presentation">
     <section className="fsa-picker" role="dialog" aria-modal="true" aria-labelledby="fsa-picker-title">
-      <div className="fsa-picker-head"><div><h2 id="fsa-picker-title">Tambah Varian</h2><p>Cari berdasarkan nama game, varian, atau SKU.</p></div><button type="button" className="fsa-ghost" onClick={onClose}>Tutup</button></div>
+      <div className="fsa-picker-head"><div><h2 id="fsa-picker-title">Tambah Varian</h2><p>Pilih beberapa varian sekaligus, lalu tambahkan ke promo.</p></div><button type="button" className="fsa-ghost" onClick={onClose}>Tutup</button></div>
       <label className="fsa-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Cari produk atau nominal…" /></label>
       <div className="fsa-picker-list">{options.length ? options.map((variant) => {
         const exists = selected.has(variant.id)
         const unavailable = !variant.isActive || !variant.productActive || !variant.gameActive
-        return <div className="fsa-picker-row" key={variant.id}><div><strong>{variant.gameName || variant.productName} · {variant.name}</strong><small>{rupiah(variant.price)} · {unavailable ? 'Nonaktif' : exists ? 'Sudah ditambahkan' : 'Tersedia'}</small></div><button className="fsa-outline" type="button" disabled={exists || unavailable} onClick={() => onAdd(variant.id)}>{exists ? 'Terpilih' : unavailable ? 'Tidak tersedia' : 'Tambah'}</button></div>
+        const warning = suspiciousCatalogPrice(variant, allVariants)
+        return <div className="fsa-picker-row" key={variant.id}><div><strong>{variant.gameName || variant.productName} · {variant.name}</strong><small>{rupiah(variant.price)} · {unavailable ? 'Nonaktif' : exists ? 'Sudah ditambahkan' : chosen.has(variant.id) ? 'Dipilih untuk ditambahkan' : 'Tersedia'}</small>{warning && <small className="fsa-catalog-warning"><AlertTriangle size={13} />{warning}</small>}</div><button className={`fsa-outline${chosen.has(variant.id) ? ' fsa-outline--chosen' : ''}`} type="button" disabled={exists || unavailable} aria-pressed={chosen.has(variant.id)} onClick={() => toggle(variant.id)}>{exists ? 'Sudah ada' : unavailable ? 'Nonaktif' : chosen.has(variant.id) ? 'Dipilih ✓' : 'Pilih'}</button></div>
       }) : <p className="fsa-inline-empty">Tidak ada varian yang cocok.</p>}</div>
+      <footer className="fsa-picker-footer"><span>{chosen.size} varian dipilih</span><div><button type="button" className="fsa-ghost" onClick={onClose}>Batal</button><button type="button" className="fsa-primary" disabled={chosen.size === 0} onClick={() => onAdd([...chosen])}>Tambahkan {chosen.size} Varian</button></div></footer>
     </section>
   </div>
 }
@@ -130,7 +137,7 @@ function FlashEditor({ promo, promos, variants, onBack, onSaved }) {
 
   return <div className="admin-page fsa-admin fsa-editor">
     <button className="fsa-back" type="button" onClick={goBack}><ArrowLeft size={17} /> Kembali ke Flash Sale</button>
-    <header className="fsa-editor-title"><div><span className="fsa-eyebrow">EDITOR FLASH SALE</span><h1>{promo ? draft.name : 'Buat Flash Sale'}</h1><p>{promo ? 'Atur promo dan periksa hasilnya sebelum disimpan.' : 'Atur jadwal dan harga untuk promo baru.'}</p></div><div className="fsa-editor-cta"><span className="fsa-dirty">{dirty ? '● Perubahan belum disimpan' : 'Perubahan tersimpan'}</span><button type="button" className="fsa-primary" onClick={save} disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan Flash Sale'}</button></div></header>
+    <header className="fsa-editor-title"><div><span className="fsa-eyebrow">EDITOR FLASH SALE</span><h1>{promo ? draft.name : 'Buat Flash Sale'}</h1><p>{promo ? 'Atur promo dan periksa hasilnya sebelum disimpan.' : 'Atur jadwal dan harga untuk promo baru.'}</p></div><div className="fsa-editor-cta"><span className="fsa-dirty">{dirty ? '● Perubahan belum disimpan' : promo ? 'Perubahan tersimpan' : 'Belum disimpan'}</span><button type="button" className="fsa-primary" onClick={save} disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan Flash Sale'}</button></div></header>
     <nav className="fsa-tabs" aria-label="Bagian editor">{[['info', 'Informasi Flash Sale'], ['products', `Produk & Harga (${draft.items.length})`], ['preview', 'Pratinjau Toko']].map(([key, label]) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} className={tab === key ? 'is-active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>
     {errors.length > 0 && <div className="fsa-errors" role="alert"><AlertTriangle size={19} /><ul>{errors.map((error, index) => <li key={index}>{error}</li>)}</ul></div>}
     {tab === 'info' && <div className="fsa-editor-grid"><section className="fsa-panel"><h2>Informasi Flash Sale</h2><p className="fsa-section-sub">Informasi internal dan periode promo yang terlihat di toko.</p>
@@ -146,9 +153,10 @@ function FlashEditor({ promo, promos, variants, onBack, onSaved }) {
         const discount = discountPercent(variant?.price, row.salePrice)
         const invalidPrice = !Number(row.salePrice) || Number(row.salePrice) >= Number(variant?.price)
         const inactive = variant && (!variant.isActive || !variant.productActive || !variant.gameActive)
+        const catalogWarning = suspiciousCatalogPrice(variant, [...variants.values()])
         return <tr key={`${row.productVariantId}-${index}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); moveItem(dragged, index); setDragged(null) }}>
           <td><div className="fsa-order"><button type="button" draggable onDragStart={() => setDragged(index)} onDragEnd={() => setDragged(null)} title="Seret untuk mengurutkan" aria-label={`Seret varian ${index + 1}`}><GripVertical size={19} /></button><span>{index + 1}</span></div></td>
-          <td><div className="fsa-variant-name"><strong>{variant?.gameName || variant?.productName || 'Varian tidak ditemukan'}</strong><span>{variant?.name || row.productVariantId}</span>{inactive && <small className="fsa-invalid">Varian/produk nonaktif</small>}</div></td><td className="fsa-price-normal">{variant ? rupiah(variant.price) : '—'}</td>
+          <td><div className="fsa-variant-name"><strong>{variant?.gameName || variant?.productName || 'Varian tidak ditemukan'}</strong><span>{variant?.name || row.productVariantId}</span>{inactive && <small className="fsa-invalid">Varian/produk nonaktif</small>}{catalogWarning && <small className="fsa-catalog-warning"><AlertTriangle size={13} />{catalogWarning}</small>}</div></td><td className="fsa-price-normal">{variant ? rupiah(variant.price) : '—'}</td>
           <td><div className="fsa-price-input"><span>Rp</span><input inputMode="numeric" aria-label={`Harga promo ${variant?.name || index + 1}`} value={row.salePrice === '' ? '' : new Intl.NumberFormat('id-ID').format(Number(row.salePrice) || 0)} onChange={(event) => changeItem(row.productVariantId, event.target.value.replace(/\D/g, ''))} placeholder="0" /></div>{invalidPrice && <small className="fsa-invalid">Harus lebih rendah dari harga normal</small>}</td>
           <td>{discount != null && discount > 0 ? <span className="fsa-discount">−{discount}%</span> : '—'}</td><td><div className="fsa-row-actions"><button type="button" disabled={index === 0} title="Naikkan urutan" aria-label={`Naikkan ${variant?.name}`} onClick={() => moveItem(index, index - 1)}>↑</button><button type="button" disabled={index === draft.items.length - 1} title="Turunkan urutan" aria-label={`Turunkan ${variant?.name}`} onClick={() => moveItem(index, index + 1)}>↓</button><button type="button" title="Hapus varian" aria-label={`Hapus ${variant?.name}`} onClick={() => update({ items: draft.items.filter((_, idx) => idx !== index) })}><Trash2 size={16} /></button></div></td>
         </tr>
@@ -156,7 +164,7 @@ function FlashEditor({ promo, promos, variants, onBack, onSaved }) {
       <p className="fsa-table-note">Urutan 1–3 = slide pertama, 4–6 = slide kedua pada tampilan desktop. Pratinjau mengikuti urutan dan harga draf.</p></section><section className="fsa-panel fsa-preview-section"><div className="fsa-section-heading"><div><h2>Pratinjau Toko</h2><p className="fsa-section-sub">Kartu yang sama dengan homepage, diperbarui sebelum disimpan.</p></div><button type="button" className="fsa-ghost" onClick={() => setTab('preview')}>Perbesar <ArrowRight size={15} /></button></div><StorePreview draft={draft} variants={variants} /></section></>}
     {tab === 'preview' && <section className="fsa-panel fsa-preview-section"><div className="fsa-section-heading"><div><h2>Pratinjau Toko</h2><p className="fsa-section-sub">Gunakan panah atau titik navigasi untuk memeriksa seluruh kartu Flash Sale.</p></div><a href="https://dev.zetruv.com" target="_blank" rel="noopener noreferrer" className="fsa-outline">Lihat Toko <ArrowRight size={15} /></a></div><StorePreview draft={draft} variants={variants} /></section>}
     <footer className="fsa-editor-footer"><span>{dirty ? 'Perubahan belum disimpan' : 'Pastikan produk dan jadwal sudah sesuai sebelum menyimpan.'}</span><div><button type="button" className="fsa-ghost" onClick={goBack}>Kembali</button><button type="button" className="fsa-primary" disabled={saving} onClick={save}>{saving ? 'Menyimpan…' : 'Simpan Flash Sale'}</button></div></footer>
-    {picker && <VariantPicker variants={variants} selected={selected} onClose={() => setPicker(false)} onAdd={(id) => { update({ items: [...draft.items, { productVariantId: id, salePrice: '' }] }); setPicker(false) }} />}
+    {picker && <VariantPicker variants={variants} selected={selected} onClose={() => setPicker(false)} onAdd={(ids) => { update({ items: [...draft.items, ...ids.filter((id) => !selected.has(id)).map((id) => ({ productVariantId: id, salePrice: '' }))] }); setPicker(false) }} />}
   </div>
 }
 
@@ -180,7 +188,7 @@ export default function FlashSaleAdminPage() {
       for (let index = 0; index < products.length; index += 5) details.push(...await Promise.all(products.slice(index, index + 5).map((product) => cmsRequest(`/catalog/products/${product.id}`))))
       setPromos(promotions.filter((promotion) => promotion.isFlashSale))
       setVariants(new Map(details.flatMap((product) => (product.variants || []).map((variant) => [variant.id, {
-        ...variant, productName: product.name, productActive: product.isActive,
+        ...variant, productId: product.id, productName: product.name, productActive: product.isActive,
         gameName: gameMap.get(product.gameId)?.name || '', gameActive: gameMap.get(product.gameId)?.isActive !== false,
         thumbnailUrl: product.thumbnailUrl,
       }]))))

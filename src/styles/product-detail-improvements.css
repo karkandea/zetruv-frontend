@@ -234,3 +234,7 @@
     transition: none;
   }
 }
+/* Price provenance stays visible when the customer arrives from Flash Sale. */
+.pdp-variant-warning { margin: 14px 0 0; padding: 12px 14px; border: 1px solid #efc185; border-radius: 12px; background: #fff7e8; color: #83501b; font-size: 13px; line-height: 1.5; }
+.product-detail-page .sku-card__copy .pdp-original-price { margin-left: 8px; color: #999; font-size: 11px; font-weight: 400; }
+.product-detail-page .sku-card.active .sku-card__copy .pdp-original-price { color: #e7dfe9; }

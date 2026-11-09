@@ -4,6 +4,7 @@ import { verifyTopUpIdDestination } from './digitalPurchaseCapabilities'
 import {
   readGuestCart, clearGuestCart, setAuthenticatedCart,
   leaveAuthenticatedCart, isAuthenticatedCart,
+  clearCartPriceQuotes, seedCartPriceQuotes,
 } from './cartService'
 import { serverLineToCart } from './serverCartMapper'
 
@@ -41,6 +42,7 @@ export function setCustomerSession(response){
   boot=null
   currentRevision=null
   conflict=null
+  clearCartPriceQuotes()
   writing++ // Invalidate outstanding responses from the previous account.
   leaveAuthenticatedCart() // Never render another customer's lines while authenticating.
   notify('loading')
@@ -53,6 +55,7 @@ export function logoutCustomer(){
   boot=null
   currentRevision=null
   conflict=null
+  clearCartPriceQuotes()
   writing++
   leaveAuthenticatedCart()
   notify('guest')
@@ -241,6 +244,7 @@ export async function activateCustomerCart(){
       await mergeServerCart(token,await toServerItems(guest))
       // Only this verified session may clear its own guest draft.
       if(token!==activeToken())return
+      seedCartPriceQuotes(guest)
       clearGuestCart()
     }
     adopt(await getServerCart(token),token)

@@ -29,6 +29,17 @@ test('homepage adapter preserves CMS identifiers, routes, article slugs and real
   assert.equal(data.latestArticles[0].slug, 'live-story')
 })
 
+test('Flash Sale homepage mapping keeps product route and exact catalog variant', () => {
+  const result = adaptHomepageResponse({ flashSale: { items: [{
+    promotionItemId: 'promo-row', productSlug: 'mobile-legends', variantId: 'sku-5',
+    gameName: 'Mobile Legends', variantName: '5 Diamond', originalPrice: 1500, salePrice: 1300,
+  }] } })
+  assert.deepEqual(result.flashSale[0], {
+    id: 'promo-row', name: 'Mobile Legends', productSlug: 'mobile-legends', variantId: 'sku-5',
+    image: undefined, price: 1300, originalPrice: 1500, item: '5 Diamond',
+  })
+})
+
 
 test('homepage artwork identifies known games without mislabeling unknown products', () => {
   assert.equal(identifyHomepageGame('Mobile Legends: Bang Bang'), 'mlbb')

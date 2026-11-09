@@ -18,6 +18,7 @@ export function adaptHomepageResponse(result = {}) {
     })),
     flashSale: (flashSale?.items ?? []).map((item) => ({
       id: item.promotionItemId, name: item.gameName || item.productName,
+      productSlug: item.productSlug, variantId: item.variantId,
       image: item.thumbnailUrl || undefined, price: item.salePrice,
       originalPrice: item.originalPrice, item: item.variantName,
     })),

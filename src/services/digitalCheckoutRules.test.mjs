@@ -4,6 +4,7 @@ import {
   normalizeIndonesianWhatsApp, checkoutFields, validateCheckoutField,
   validateCheckoutAccount, matchingAccountSource, currentCatalogDifferences,
   paymentSelectionAllowed,
+  priceChangeExplanation,
 } from './digitalCheckoutRules.js'
 
 const product = {id:'p1',slug:'genshin',isAvailable:true,kind:'TopUpLogin',
@@ -61,6 +62,12 @@ test('catalog reprice and unavailable products block checkout until resolved',()
  assert.equal(currentCatalogDifferences([a],{genshin:changed}).changes[0].newPrice,17000)
  const off={...product,isAvailable:false}
  assert.equal(currentCatalogDifferences([a],{genshin:off}).problems.length,1)
+})
+test('expired promo price is explained with old and new values before acceptance',()=>{
+  assert.equal(priceChangeExplanation({variantName:'5 Diamond',oldPrice:1300,newPrice:1500,regularPrice:1500}),
+    'Harga promo 5 Diamond telah berakhir. Harga berubah dari Rp1.300 menjadi Rp1.500.')
+  assert.equal(priceChangeExplanation({variantName:'50 Diamond',oldPrice:9500,newPrice:9000,regularPrice:10234}),
+    'Harga 50 Diamond berubah dari Rp9.500 menjadi Rp9.000.')
 })
 test('backend live gateway determines available selected methods',()=>{
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:false,availableMethods:[]},'QRIS'),false)

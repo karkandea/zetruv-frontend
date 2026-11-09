@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import { getFlashSalePages } from './flashSaleLayout'
 import { identifyHomepageGame } from '../services/homeArtwork'
+import { flashSaleProductHref } from '../services/flashSaleFlow'
 
 const flashArtwork = {
   mlbb: assets.flashMobileLegends,
@@ -25,9 +26,11 @@ function getColumns() {
   return 3
 }
 
-export function FlashSaleItem({ item }) {
+export function FlashSaleItem({ item, interactive = true, tabIndex }) {
+  const href = interactive ? flashSaleProductHref(item) : null
+  const Card = href ? 'a' : 'article'
   return (
-    <article className="sale-item">
+    <Card className={`sale-item${href ? ' sale-item--link' : ''}`} {...(href ? { href, tabIndex, 'aria-label': `${item.name} — ${item.item}, ${rupiah(item.price)}. Lihat detail produk.` } : {})}>
       <div className="sale-item__image">
         <img src={getFlashSaleImage(item)} alt={item.name || 'Produk Flash Sale'} loading="lazy" decoding="async" />
       </div>
@@ -41,7 +44,7 @@ export function FlashSaleItem({ item }) {
         </div>
         <span className="diamond-pill"><img src={assets.diamond} alt="" />{item.item}</span>
       </div>
-    </article>
+    </Card>
   )
 }
 
@@ -144,7 +147,7 @@ export default function FlashSale({ items = [], countdown }) {
                   aria-hidden={hasCarousel ? pageIndex !== safePage : undefined}
                 >
                   {pageItems.map((item, itemIndex) => (
-                    <FlashSaleItem key={item.id ?? `${pageIndex}-${itemIndex}`} item={item} />
+                    <FlashSaleItem key={item.id ?? `${pageIndex}-${itemIndex}`} item={item} tabIndex={hasCarousel && pageIndex !== safePage ? -1 : undefined} />
                   ))}
                 </div>
               ))}

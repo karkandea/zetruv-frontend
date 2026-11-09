@@ -5,6 +5,7 @@ import ProductBenefits from '../components/ProductBenefits'
 import genshinHero from '../assets/game-account-flow/genshin-impact.png'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
+import { selectLinkedVariant } from '../services/flashSaleFlow'
 import { addCartItem, awaitCartPersistence, supportsCartQuantity, cartItemLimit } from '../services/cartService' 
 import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
@@ -69,7 +70,7 @@ function VariantImage({ src, fallback, alt = '' }) {
   />
 }
 
-export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
+export default function ProductDetailLoginPage({ slug = 'genshin-impact', initialVariantId = '' }) {
   const [product, setProduct] = useState(null)
   const [serviceReadiness, setServiceReadiness] = useState(null)
   const [selectedId, setSelectedId] = useState('')
@@ -77,6 +78,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState(false)
+  const [selectionWarning, setSelectionWarning] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [reloadCount, setReloadCount] = useState(0)
   const addGuard = useRef(false)
@@ -89,6 +91,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
     setServiceReadiness(null)
     setSelectedId('')
     setNotice(false)
+    setSelectionWarning('')
     setQuantity(1)
     getCatalogProduct(slug)
       .then(async (data) => {
@@ -100,7 +103,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
           throw new Error('Belum ada paket tersedia di katalog.')
         }
         setProduct(data)
-        setSelectedId(firstAvailableVariant(data)?.id || '')
+        const selection = selectLinkedVariant(data.variants, initialVariantId)
+        setSelectedId((selection.variant && selection.variant.isAvailable ? selection.variant : firstAvailableVariant(data))?.id || '')
+        if (selection.invalidSelection) setSelectionWarning('Varian dari Flash Sale tidak tersedia lagi. Pilih paket lain sebelum membeli.')
+        else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning('Flash Sale untuk paket ini sudah berakhir. Harga yang tampil adalah harga katalog terbaru.')
         try {
           const readiness = await getManualLoginReadiness(data.id)
           if (!active) return
@@ -117,7 +123,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
         setStatus('error')
       })
     return () => { active = false }
-  }, [slug, reloadCount])
+  }, [slug, initialVariantId, reloadCount])
 
   const selected = useMemo(
     () => product?.variants?.find((variant) => variant.id === selectedId) || null,
@@ -147,6 +153,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
 
   function selectVariant(variant) {
     setSelectedId(variant.id)
+    setSelectionWarning('')
     setQuantity(1)
     setNotice(false)
   }
@@ -247,6 +254,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
                 <section className="login-package-panel" aria-labelledby="login-packages-heading">
                   <h2 id="login-packages-heading">Pilih Paket</h2>
                   <p className="login-package-description">Pilih paket untuk akun game kamu.</p>
+                  {selectionWarning && <p className="login-variant-warning" role="status"><CircleAlert size={16} aria-hidden="true" />{selectionWarning}</p>}
                   <div className="login-package-grid">
                     {product.variants.map((variant, index) => {
                       const active = selectedId === variant.id
@@ -263,7 +271,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
                           </span>
                           <span className="login-package-card__copy">
                             <strong>{variant.name}</strong>
-                            <small>{rupiah(variant.effectivePrice ?? variant.price)}</small>
+                            <small>{rupiah(variant.effectivePrice ?? variant.price)}{variant.isOnSale && Number(variant.price) > Number(variant.effectivePrice) && <del className="login-variant-old-price">{rupiah(variant.price)}</del>}</small>
                             {!purchasable && <em>Tidak tersedia</em>}
                           </span>
                         </button>

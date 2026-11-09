@@ -502,3 +502,5 @@
   .login-product-shell .login-product-spin { animation: none; }
   .login-product-shell .login-package-card { transition: none; }
 }
+.login-variant-warning{display:flex;align-items:flex-start;gap:8px;padding:11px 13px;background:#fff7e8;color:#83501b;border:1px solid #efc185;border-radius:12px;font-size:13px;line-height:1.5;margin:11px 0 17px}.login-variant-warning svg{flex:none}
+.login-variant-old-price{margin-left:8px;color:#898a91;font-size:11px}

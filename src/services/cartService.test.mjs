@@ -2,12 +2,14 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { getDigitalPricing } from './digitalCartPricing.js'
 import { accountRequirements, checkCartDestination } from './digitalCartValidation.js'
-import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount, setAuthenticatedCart, leaveAuthenticatedCart, readGuestCart, clearGuestCart, awaitCartPersistence } from './cartService.js'
+import { addCartItem, readCart, removeCartItem, restoreCartItem, updateCartAccount, updateCartQuantity, supportsCartQuantity, cartCount, setAuthenticatedCart, leaveAuthenticatedCart, readGuestCart, clearGuestCart, clearCartPriceQuotes, seedCartPriceQuotes, acceptCartPriceChanges, awaitCartPersistence } from './cartService.js'
 
 const storage = new Map()
+const sessionStorage = new Map()
 const listeners = new Map()
 globalThis.window = {
   localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) },
+  sessionStorage: { getItem: k => sessionStorage.get(k) || null, setItem: (k, v) => sessionStorage.set(k, v), removeItem: k => sessionStorage.delete(k) },
   addEventListener: (name, fn) => { listeners.set(name, [...(listeners.get(name) || []), fn]) },
   removeEventListener: () => {},
   dispatchEvent: (event) => { (listeners.get(event.type) || []).forEach(fn => fn(event)) },
@@ -67,6 +69,7 @@ test('backend input definitions drive destination validation', () => {
 
 test('authenticated remote cart never leaks to anonymous localStorage on logout', async()=>{
   storage.clear()
+  clearCartPriceQuotes()
   addCartItem(item('guest','10'))
   let persisted=null
   setAuthenticatedCart([item('account','20')],async rows=>{persisted=rows})
@@ -79,6 +82,20 @@ test('authenticated remote cart never leaks to anonymous localStorage on logout'
   assert.equal(readCart()[0].accountFields.userId,'guest')
   clearGuestCart()
   assert.equal(readCart().length,0)
+})
+
+test('authenticated refresh preserves promo quote until the buyer accepts a higher price', async()=>{
+  clearCartPriceQuotes()
+  seedCartPriceQuotes([item('account','20')])
+  setAuthenticatedCart([{...item('account','20'),unitPrice:1500}],()=>Promise.resolve())
+  assert.equal(readCart()[0].unitPrice,1234)
+  const oldKey=readCart()[0].cartKey
+  acceptCartPriceChanges([{key:oldKey,newPrice:1500,regularPrice:1500}])
+  await awaitCartPersistence()
+  setAuthenticatedCart([{...item('account','20'),unitPrice:1500}],()=>Promise.resolve())
+  assert.equal(readCart()[0].unitPrice,1500)
+  leaveAuthenticatedCart()
+  clearCartPriceQuotes()
 })
 
 test('server validated same-SKU lines never coalesce even when account labels match',()=>{

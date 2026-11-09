@@ -99,10 +99,10 @@ export default function App() {
 
   const loginProductMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)\/login$/)
     || path.match(/^\/product\/login\/([^/]+)$/)
-  if (loginProductMatch) return <ProductDetailLoginPage slug={decodeURIComponent(loginProductMatch[1])} />
+  if (loginProductMatch) return <ProductDetailLoginPage slug={decodeURIComponent(loginProductMatch[1])} initialVariantId={params.get('variant') || ''} />
 
   const productMatch = path.match(/^\/(?:product|product-detail)\/([^/]+)$/)
-  if (productMatch) return <ProductDetailPage slug={decodeURIComponent(productMatch[1])} />
+  if (productMatch) return <ProductDetailPage slug={decodeURIComponent(productMatch[1])} initialVariantId={params.get('variant') || ''} />
 
   if (path === '/search/login' || path === '/categories/login') return <SearchPage mode="login" />
   if (path === '/search' || path === '/categories') return <SearchPage />

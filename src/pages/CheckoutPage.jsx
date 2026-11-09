@@ -7,6 +7,7 @@ import { getDigitalPricing } from '../services/digitalCartPricing'
 import {
   checkoutFields, normalizeIndonesianWhatsApp, validateCheckoutAccount,
   validateCheckoutField, matchingAccountSource, currentCatalogDifferences, paymentSelectionAllowed,
+  priceChangeExplanation,
 } from '../services/digitalCheckoutRules'
 import {
   getCheckoutPaymentOptions, previewCheckoutVoucher, authenticateCheckoutCustomer,
@@ -519,7 +520,11 @@ export default function CheckoutPage() {
           const item=items.find(x=>x.variantId===change.productVariantId)
           return item && {key:item.cartKey,variantName:item.variantName,oldPrice:change.expectedUnitPrice,newPrice:change.currentUnitPrice,regularPrice:item.regularPrice}
         }).filter(Boolean)
-        if(updates.length)setError('Harga berubah di server. Muat ulang katalog dan konfirmasi sebelum mencoba lagi.')
+        // Server price is authoritative. Never silently accept it or reuse an old order quote.
+        await refreshCatalog()
+        setError(updates.length
+          ? `${priceChangeExplanation(updates[0])} Periksa perubahan dan setujui harga terbaru sebelum membayar.`
+          : 'Harga berubah di server. Periksa perubahan harga dan setujui sebelum membayar.')
       } else setError(e.message||'Pembayaran belum bisa dimulai. Silakan coba lagi.')
       if([400,409,422].includes(e.status)&&!order){clearCheckoutAttempt();setPendingAttempt(null)}
       setPaymentState('error')
@@ -592,12 +597,12 @@ export default function CheckoutPage() {
                 onVerifyId={verifyId} verifyingId={verifyingId===item.cartKey}
                 idValidation={idValidations[item.cartKey]}
                 serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug])} onRemove={removeBlockedItem}
-                productProblem={issue} priceProblem={price?`Harga berubah: ${rupiah(price.oldPrice)} → ${rupiah(price.newPrice)}`:''}/>
+                productProblem={issue} priceProblem={price ? priceChangeExplanation(price) : ''}/>
             }) : <div className="digital-checkout-empty">Keranjang kosong. <a href="/search">Pilih produk</a></div>}
           </div>
           {changes.length>0 && <div className="checkout-price-change" role="alert">
             <AlertCircle size={17} aria-hidden="true"/>
-            <div><strong>Harga produk berubah</strong><p>Konfirmasi harga terbaru sebelum melanjutkan pembayaran.</p>
+            <div><strong>Perubahan harga perlu persetujuan</strong>{changes.map((change) => <p key={change.key}>{priceChangeExplanation(change)}</p>)}<p>Harga baru belum diterapkan ke keranjang. Periksa dan setujui sebelum melanjutkan pembayaran.</p>
               <button type="button" onClick={confirmPriceChange}>Setujui harga terbaru</button>
             </div>
           </div>}

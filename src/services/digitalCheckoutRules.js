@@ -91,6 +91,19 @@ export function currentCatalogDifferences(items, catalogBySlug) {
   return {changes,problems}
 }
 
+/** Describe repricing before the customer explicitly accepts a new quote. */
+export function priceChangeExplanation(change) {
+  const name = String(change.variantName || 'produk')
+  const oldPrice = Number(change.oldPrice)
+  const newPrice = Number(change.newPrice)
+  const regularPrice = Number(change.regularPrice)
+  const money = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
+  if (Number.isFinite(regularPrice) && oldPrice < regularPrice && newPrice === regularPrice && newPrice > oldPrice) {
+    return `Harga promo ${name} telah berakhir. Harga berubah dari ${money(oldPrice)} menjadi ${money(newPrice)}.`
+  }
+  return `Harga ${name} berubah dari ${money(oldPrice)} menjadi ${money(newPrice)}.`
+}
+
 export function paymentSelectionAllowed(readiness, code) {
   return Boolean(readiness?.canAcceptLivePayments && code &&
     readiness.availableMethods?.some(m => m.code === code))
