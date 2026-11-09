@@ -1,0 +1,36 @@
+/* Product editor: one task per tab, consistent with Zetruv CMS tokens. */
+.catalog-editor-heading{align-items:center;margin-bottom:17px}
+.catalog-editor-heading h1{font-size:25px}
+.catalog-editor-badges{display:flex;align-items:center;gap:7px;margin-top:9px}
+.catalog-editor-badges .admin-pill--aktif{background:#e4f8ec;color:#197b52}
+.catalog-editor-badges .admin-pill--nonaktif{background:#f0f2f7;color:#6f798b}
+.catalog-editor-badges .admin-pill--unggulan{background:#f0e9ff;color:#6e48b3}
+.catalog-store-link{display:inline-flex;align-items:center;gap:8px;flex:none;border:1px solid #dfe4ed;border-radius:9px;padding:9px 12px;text-decoration:none;color:#34415b;background:#fff;font-size:12px;font-weight:700}
+.catalog-store-link:hover{background:#f7f6ff;border-color:#c6bdf8;color:#6252c9}
+.catalog-editor-tabs{display:flex;align-items:stretch;gap:5px;border-bottom:1px solid #e2e7f0;margin:0 0 22px;overflow-x:auto;scrollbar-width:thin}
+.catalog-editor-tabs button{position:relative;display:flex;align-items:center;gap:7px;flex:none;padding:13px 15px;border:0;border-bottom:3px solid transparent;background:transparent;color:#6b768c;font-size:12px;font-weight:700;white-space:nowrap;transition:background .15s,color .15s}
+.catalog-editor-tabs button:hover:not(:disabled){background:#f2f0ff;color:#5c51c8}
+.catalog-editor-tabs button.is-active{color:#5d50d4;border-bottom-color:#6b5bef}
+.catalog-editor-tabs button:disabled{opacity:.4;cursor:not-allowed}
+.catalog-tab-dirty{height:6px;width:6px;border-radius:50%;background:#ef9d31}
+.catalog-editor-guidance{border:1px solid #e7dffc;background:#f8f6ff;color:#6456b6;border-radius:10px;padding:12px 15px;font-size:12px;margin:-6px 0 18px}
+.catalog-product-grid.is-images,.catalog-product-grid.is-publishing{grid-template-columns:minmax(0,1fr);max-width:850px}
+.catalog-product-grid.is-images>.catalog-form-stack:first-child,.catalog-product-grid.is-publishing>.catalog-form-stack:first-child{display:none}
+.catalog-product-grid.is-information{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+.catalog-product-editor .catalog-customer-preview{grid-template-columns:1fr;gap:12px;padding:12px}
+.catalog-product-editor .catalog-customer-preview-image{height:auto;aspect-ratio:16/7.5}
+.catalog-product-editor .catalog-customer-preview>div:last-child{gap:8px}
+.catalog-product-editor .catalog-customer-preview strong{font-size:14px}
+.catalog-product-editor .catalog-customer-preview small,.catalog-product-editor .catalog-customer-preview span{font-size:12px}
+.catalog-product-editor .catalog-sticky-footer{justify-content:space-between;align-items:center;gap:14px}
+.catalog-product-editor .catalog-sticky-footer>span{font-size:11px;color:#738094}
+.catalog-product-editor .catalog-sticky-footer>div{display:flex;align-items:center;gap:8px}
+.catalog-product-editor .admin-button:disabled{opacity:.52;cursor:not-allowed;box-shadow:none}
+.catalog-editor-extras{margin-top:0}
+.catalog-editor-extras .admin-panel{margin-bottom:18px}
+.catalog-editor-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:190px;text-align:center;padding:26px;color:#8c85c9}
+.catalog-editor-empty strong{color:#354058;font-size:14px}
+.catalog-editor-empty p{color:#8791a4;font-size:12px;line-height:1.6;max-width:400px;margin:0}
+@media(max-width:1060px){.catalog-product-grid.is-information{grid-template-columns:1fr}}
+@media(max-width:720px){.catalog-editor-heading{align-items:flex-start;flex-wrap:wrap}.catalog-editor-heading h1{font-size:22px}.catalog-editor-tabs button{padding:11px 12px}.catalog-product-grid.is-information{grid-template-columns:1fr}.catalog-product-editor .catalog-sticky-footer{flex-wrap:wrap}.catalog-product-editor .catalog-sticky-footer>div{width:100%;justify-content:flex-end}}
+@media(prefers-reduced-motion:reduce){.catalog-editor-tabs button{transition:none}}

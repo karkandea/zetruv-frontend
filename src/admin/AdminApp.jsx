@@ -7,8 +7,12 @@ import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import DiscountVouchersPage from './DiscountVouchersPage'
 import BannerPage from './BannerPage'
 import HomeLayoutPage from './HomeLayoutPage'
+import { searchProductHref } from '../services/navbarSearchHelpers'
 import CatalogImageField, { discardCatalogAssets } from './CatalogImageField'
+import VariantPricingTable from './VariantPricingTable'
+import { variantPriceWarning } from './variantPriceWarnings'
 import GameVoucherInventory from './GameVoucherInventory'
+import { PRODUCT_EDITOR_FIELDS, mergeProductTab, isProductTabDirty } from './productEditorTabs'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
   FileText, Image, LayoutDashboard, LogOut, Menu, Package, PanelsTopLeft,
@@ -18,6 +22,8 @@ import {
 import { getDashboardCounts, getRecentOrders } from './dashboardData'
 import './order-destination.css'
 import './catalog-ux.css'
+import './product-editor-tabs.css'
+import './product-variant-table.css'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 
@@ -438,7 +444,7 @@ function GameForm({ item, onDone, onCancel, onDirtyChange }) {
   </form>
 }
 
-function VariantEditor({ productId, detail, onReload }) {
+function VariantEditor({ productId, detail, onReload, section = 'variants' }) {
   const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [voucherVariant, setVoucherVariant] = useState(null); const [error, setError] = useState('')
   async function saveVariant(form, id, assets = [], markHandled) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, iconUrl: form.iconUrl?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); await discardCatalogAssets(assets, form.iconUrl); markHandled?.(); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveImage(form, id, assets = [], markHandled) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); await discardCatalogAssets(assets, form.url); markHandled?.(); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
@@ -454,43 +460,43 @@ function VariantEditor({ productId, detail, onReload }) {
   async function deleteInputField(item) { if (!confirm(`Nonaktifkan informasi ${item.label}?`)) return; try { await cmsRequest(`/catalog/products/${productId}/input-fields/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
   const supportsInputSchema = detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
   return <div className="admin-product-subresources"><ErrorBox error={error} />
-    <Panel title="Harga & Varian" subtitle="Kelola pilihan paket, harga, dan stok" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Tambah Varian</Button>}>
-      <div className="admin-mini-list catalog-variant-list">{detail.variants?.map((item) => <div key={item.id}><span className="catalog-variant-list-icon">{item.iconUrl ? <img src={item.iconUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : <Image size={17} />}</span><div><strong>{item.name}</strong><small>Kode SKU: {item.sku}</small>{item.groupName && <small>Kelompok: {item.groupName}</small>}</div>
-        <span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Tanpa batas' : `${item.stockQuantity} stok`}</span>
-        <span className={`catalog-state ${item.isActive ? 'is-active' : 'is-inactive'}`}>{item.isActive ? 'Aktif' : 'Nonaktif'}</span>
-        <div>{detail.kind === 'GameVoucher' && <Button tone="ghost" onClick={() => setVoucherVariant(item)}>Kode Voucher</Button>}
-          <Button tone="ghost" onClick={() => setEditing(item)}>Ubah</Button>{item.isActive && <Button tone="danger" onClick={() => disableVariant(item)}>Nonaktifkan</Button>}</div>
-      </div>)}</div>
-    </Panel>
-    <Panel title="Galeri Produk" subtitle="Gambar tambahan yang dapat dilihat pelanggan" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Tambah Gambar</Button>}>
-      <div className="admin-image-grid">{detail.images?.map((item) => <article key={item.id}>{item.url ? <img src={item.url} alt={item.altText || ''} /> : <span>Gambar</span>}
-        <div><small>{item.altText || 'Tanpa keterangan'}</small><div><Button tone="ghost" onClick={() => setImageEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteImage(item)}>Hapus</Button></div></div></article>)}</div>
-    </Panel>
-    {supportsInputSchema && <Panel title="Informasi yang Diisi Pembeli" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Informasi akun nonrahasia untuk validasi sebelum pemesanan' : 'Data login dikumpulkan hanya saat checkout melalui proses aman'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Tambah Isian</Button>}>
+    {section === 'variants' && <Panel title="Harga & Varian" subtitle="Kelola nominal, harga, dan ketersediaan produk." action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Tambah Varian</Button>}>
+      <VariantPricingTable variants={detail.variants || []} kind={detail.kind} onEdit={setEditing} onDisable={disableVariant} onVoucher={setVoucherVariant} />
+    </Panel>}
+    {section === 'images' && <Panel title="Galeri Produk" subtitle="Gambar tambahan yang dapat dilihat pelanggan" action={<Button tone="ghost" onClick={() => setImageEditing(null)}>+ Unggah Gambar</Button>}>
+      {detail.images?.length ? <div className="admin-image-grid">{detail.images.map((image) => <article key={image.id}>{image.url ? <img src={image.url} alt={image.altText || ''} /> : <span>Gambar</span>}
+        <div><small>{image.altText || 'Tanpa keterangan'}</small><div><Button tone="ghost" onClick={() => setImageEditing(image)}>Ubah</Button><Button tone="danger" onClick={() => deleteImage(image)}>Hapus</Button></div></div></article>)}</div>
+      : <div className="catalog-editor-empty"><Image size={28} /><strong>Belum ada gambar tambahan</strong><p>Unggah gambar lain agar pembeli bisa melihat produk dari beberapa sisi.</p><Button onClick={() => setImageEditing(null)}>Unggah Gambar</Button></div>}
+    </Panel>}
+    {section === 'inputs' && supportsInputSchema && <Panel title="Informasi yang Diisi Pembeli" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Informasi akun nonrahasia untuk validasi sebelum pemesanan' : 'Data login dikumpulkan hanya saat checkout melalui proses aman'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Tambah Isian</Button>}>
       <div className="admin-mini-list">{detail.inputFields?.length ? detail.inputFields.map((item) => <div key={item.id}><div><strong>{item.label}</strong><small>{item.isRequired ? 'Wajib diisi' : 'Opsional'}</small></div>
         <span>{item.type === 'Text' ? 'Teks' : item.type === 'Number' ? 'Angka' : item.type === 'Select' ? 'Pilihan' : item.type === 'Password' ? 'Kata Sandi' : item.type}</span><span>{item.isSensitive ? 'Data sensitif' : 'Data umum'}</span>
         <div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Nonaktifkan</Button></div>
       </div>) : <Empty text="Belum ada isian pembeli. Produk tertentu memerlukan informasi ini agar dapat dipesan." />}</div>
     </Panel>}
-    {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form, assets, markHandled) => saveVariant(form, editing?.id, assets, markHandled)} onCancel={() => setEditing(undefined)} /></Modal>}
+    {section === 'inputs' && !supportsInputSchema && <div className="catalog-editor-empty"><strong>Produk ini tidak memerlukan isian pembeli.</strong><p>Informasi akun hanya dibutuhkan untuk produk top up via ID atau login.</p></div>}
+    {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} siblings={detail.variants || []} onSave={(form, assets, markHandled) => saveVariant(form, editing?.id, assets, markHandled)} onCancel={() => setEditing(undefined)} /></Modal>}
     {voucherVariant && <Modal title={`${voucherVariant.name} · Kode Voucher Terenkripsi`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
     {imageEditing !== undefined && <Modal title={imageEditing ? 'Ubah Gambar' : 'Tambah Gambar'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form, assets, markHandled) => saveImage(form, imageEditing?.id, assets, markHandled)} onCancel={() => setImageEditing(undefined)} /></Modal>}
     {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Ubah Isian Pembeli' : 'Tambah Isian Pembeli'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
   </div>
 }
 
-function VariantForm({ item, kind, onSave, onCancel }) {
+function VariantForm({ item, kind, siblings = [], onSave, onCancel }) {
   const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: kind === 'GameAccount' ? 1 : kind === 'GameVoucher' ? 0 : '', weightGrams: '', iconUrl: '', isActive: true, sortOrder: 0 })
   const [assets, setAssets] = useState([])
   const markAssetsHandled = useCatalogAssetCleanup(assets)
   const [imageReady, setImageReady] = useState(!item?.iconUrl)
   const [error, setError] = useState('')
-  const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); if (form.iconUrl && !imageReady) { setError('Ikon belum dapat dimuat. Ganti atau hapus ikon sebelum menyimpan.'); return } onSave(form, assets, markAssetsHandled) }}>
+  const [acknowledgePrice, setAcknowledgePrice] = useState(false)
+  const priceWarning = variantPriceWarning({ ...form, id: item?.id }, siblings)
+  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); if (['price', 'name', 'groupName'].includes(key)) setAcknowledgePrice(false) }
+  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); setError(''); if (form.iconUrl && !imageReady) { setError('Ikon belum dapat dimuat. Ganti atau hapus ikon sebelum menyimpan.'); return } if (priceWarning && !acknowledgePrice) { setError('Periksa dan konfirmasi peringatan harga sebelum menyimpan varian.'); return } onSave(form, assets, markAssetsHandled) }}>
     <Field label="Nama Varian"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: 86 Diamonds" /></Field>
     <Field label="Kode SKU" hint="Kode unik varian untuk stok dan transaksi."><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>
     {kind !== 'Merchandise' && <Field label="Kelompok Paket (opsional)" hint="Contoh: Diamonds, Starlight, UC."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} /></Field>}
     <Field label="Harga Jual"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field>
+    {priceWarning && <div className="catalog-price-advice" role="status"><AlertTriangle size={18} /><div><strong>Periksa pola harga varian</strong><p>{priceWarning}</p><label><input type="checkbox" checked={acknowledgePrice} onChange={(e) => setAcknowledgePrice(e.target.checked)} /> Saya sudah memeriksa harga ini dan ingin melanjutkan.</label></div></div>}
     <section className="catalog-variant-icon-panel">
       <CatalogImageField title="Ikon Varian (opsional)" value={form.iconUrl || ''} uploadPath="/media/catalog/variant-icon" compact onChange={(url) => { set('iconUrl', url); setError('') }} onUploaded={(asset) => setAssets((old) => [...old, asset])} onValidityChange={setImageReady} />
       <p className="catalog-muted">Ikon ditampilkan di pilihan paket pada toko. Dioptimasi otomatis menjadi WebP, maksimal 256 px dan target 100 KB.</p>
@@ -539,6 +545,8 @@ function InputFieldForm({ item, fulfillmentMethod, onSave, onCancel }) {
   </form>
 }
 
+
+
 function ProductEditor({ item, categories, games, onDone }) {
   const initialCategory = categories.find((category) => category.id === item?.categoryId) || categories[0]
   const initial = useMemo(() => item ? { ...item } : {
@@ -547,13 +555,19 @@ function ProductEditor({ item, categories, games, onDone }) {
     isActive: true, isFeatured: false, sortOrder: 0,
   }, [item])
   const [form, setForm] = useState(initial)
+  const [savedForm, setSavedForm] = useState(initial)
+  const [activeTab, setActiveTab] = useState('information')
+  const [notice, setNotice] = useState('')
   const [detail, setDetail] = useState(null)
   const [assets, setAssets] = useState([])
   const markAssetsHandled = useCatalogAssetCleanup(assets)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [imageReady, setImageReady] = useState(!initial.thumbnailUrl)
-  const dirty = JSON.stringify(form) !== JSON.stringify(initial)
+  const dirty = JSON.stringify(form) !== JSON.stringify(savedForm)
+  const tabHasChanges = (tab) => isProductTabDirty(savedForm, form, tab)
+  const tabDirty = tabHasChanges(activeTab)
+  const tabs = [['information', 'Informasi'], ['variants', 'Harga & Varian (' + (detail?.variants?.length ?? 0) + ')'], ['images', 'Gambar'], ['inputs', 'Isian Pembeli (' + (detail?.inputFields?.length ?? 0) + ')'], ['publishing', 'Penayangan']]
   useCatalogUnsavedGuard(dirty)
   const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setError('') }
   async function loadDetail() { if (!item?.id) return; try { setDetail(await cmsRequest(`/catalog/products/${item.id}`)) } catch (cause) { setError(cause.message) } }
@@ -571,74 +585,92 @@ function ProductEditor({ item, categories, games, onDone }) {
     markAssetsHandled()
     onDone(null)
   }
+  function resetTab() {
+    const keys = PRODUCT_EDITOR_FIELDS[activeTab] || []
+    setForm((previous) => ({ ...previous, ...Object.fromEntries(keys.map((key) => [key, savedForm[key]])) }))
+    setError(''); setNotice('')
+    if (activeTab === 'images') setImageReady(!savedForm.thumbnailUrl)
+  }
   async function save(event) {
-    event.preventDefault(); setError(''); setBusy(true)
-    if (form.thumbnailUrl && !imageReady) { setError('Gambar produk tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
-    const fulfillmentMethod = fulfillmentForKind(form.kind)
+    event.preventDefault(); setError(''); setNotice(''); setBusy(true)
+    if (activeTab === 'images' && form.thumbnailUrl && !imageReady) { setError('Gambar produk tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
+    const nextSaved = item ? mergeProductTab(savedForm, form, activeTab) : { ...form }
+    const fulfillmentMethod = fulfillmentForKind(nextSaved.kind)
     const payload = {
-      categoryId: form.categoryId, gameId: form.gameId || null, name: form.name.trim(),
-      slug: item?.slug || slugify(form.name), shortDescription: form.shortDescription || null,
-      description: form.description || null, thumbnailUrl: form.thumbnailUrl || null, kind: form.kind,
+      categoryId: nextSaved.categoryId, gameId: nextSaved.gameId || null, name: String(nextSaved.name || '').trim(),
+      slug: item?.slug || slugify(nextSaved.name), shortDescription: nextSaved.shortDescription || null,
+      description: nextSaved.description || null, thumbnailUrl: nextSaved.thumbnailUrl || null, kind: nextSaved.kind,
       fulfillmentMethod, requiresGameAccountValidation: fulfillmentMethod === 'AUTO_ID',
-      isActive: form.isActive, isFeatured: form.isFeatured, sortOrder: Number(form.sortOrder || 0),
+      isActive: nextSaved.isActive, isFeatured: nextSaved.isFeatured, sortOrder: Number(nextSaved.sortOrder || 0),
     }
     try {
-      const result = await cmsRequest(item ? `/catalog/products/${item.id}` : '/catalog/products', {
+      const result = await cmsRequest(item ? '/catalog/products/' + item.id : '/catalog/products', {
         method: item ? 'PUT' : 'POST', body: JSON.stringify(payload),
       })
-      await discardCatalogAssets(assets, form.thumbnailUrl)
-      markAssetsHandled()
-      onDone(item ? null : result)
+      if (activeTab === 'images') {
+        await discardCatalogAssets(assets, nextSaved.thumbnailUrl)
+        setAssets([])
+      }
+      if (item) {
+        setSavedForm(nextSaved)
+        if (activeTab === 'information') await loadDetail()
+        setNotice(activeTab === 'information' ? 'Informasi berhasil disimpan.' : activeTab === 'images' ? 'Gambar utama berhasil disimpan.' : 'Penayangan berhasil disimpan.')
+      } else {
+        markAssetsHandled()
+        onDone(result)
+      }
     } catch (cause) { setError(cause.message) }
     finally { setBusy(false) }
   }
   return <div className="admin-page catalog-product-editor">
     <button className="catalog-back" type="button" onClick={cancel}><ArrowLeft size={17} /> Kembali ke Katalog</button>
-    <header className="catalog-editor-heading"><div><h1>{item ? 'Ubah Produk' : 'Tambah Produk'}</h1><p>{form.name || 'Lengkapi informasi produk yang akan dijual'}</p></div><Pill value={form.isActive ? 'Aktif' : 'Nonaktif'} /></header>
-    <form onSubmit={save} className="catalog-product-form">
-      <ErrorBox error={error} />
-      <div className="catalog-product-grid">
+    <header className="catalog-editor-heading"><div><h1>{form.name || (item ? 'Ubah Produk' : 'Tambah Produk')}</h1><div className="catalog-editor-badges"><Pill value={form.isActive ? 'Aktif' : 'Nonaktif'} />{form.isFeatured && <Pill value="Unggulan" />}</div></div>
+      {item?.slug && STOREFRONT_URL && <a className="catalog-store-link" href={STOREFRONT_URL + searchProductHref({ ...item, ...savedForm })} target="_blank" rel="noreferrer"><ExternalLink size={15} /> Lihat di Toko</a>}
+    </header>
+    <nav className="catalog-editor-tabs" role="tablist" aria-label="Bagian produk">
+      {tabs.map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={activeTab === value} className={activeTab === value ? 'is-active' : ''} disabled={!item && value !== 'information'} title={!item && value !== 'information' ? 'Buat produk pada tab Informasi terlebih dahulu.' : undefined} onClick={() => { setActiveTab(value); setError(''); setNotice('') }}>{label}{item && tabHasChanges(value) && <span className="catalog-tab-dirty" title="Belum disimpan" />}</button>)}
+    </nav>
+    {!item && <p className="catalog-editor-guidance">Simpan informasi produk terlebih dahulu untuk membuka pengaturan harga, gambar, isian pembeli, dan penayangan.</p>}
+    <ErrorBox error={error} /><Notice message={notice} />
+    {!['variants', 'inputs'].includes(activeTab) && <form onSubmit={save} className="catalog-product-form">
+
+      <div className={'catalog-product-grid is-' + activeTab}>
         <div className="catalog-form-stack">
-          <section className="catalog-form-card"><h2>Informasi Produk</h2>
+          {activeTab === 'information' && <section className="catalog-form-card"><h2>Informasi Produk</h2>
             <Field label="Nama Produk"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required maxLength={180} placeholder="Contoh: Mobile Legends: Bang Bang" /></Field>
             <Field label="Kategori"><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} required options={availableCategories.map((value) => ({ value: value.id, label: value.name }))} /></Field>
             <p className="catalog-field-note">Jenis produk: <strong>{PRODUCT_LABELS[form.kind]}</strong>{lockedKind && ' · Tidak dapat diubah karena sudah memiliki varian.'}</p>
             <Field label="Game" hint={form.kind === 'GameAccount' ? 'Wajib untuk akun game yang dijual.' : 'Pilih game terkait jika ada.'}>
               <Select required={form.kind === 'GameAccount'} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
             </Field>
-          </section>
-          <section className="catalog-form-card"><h2>Harga &amp; Varian</h2><p className="catalog-muted">Atur pilihan nominal, stok, dan harga produk.</p>
-            {item ? <button className="catalog-action-row" type="button" onClick={() => document.getElementById('catalog-variant-settings')?.scrollIntoView({ behavior: 'smooth' })}>Kelola Harga &amp; Varian <ChevronRight size={19} /></button>
-              : <p className="catalog-field-note">Simpan produk terlebih dahulu untuk menambahkan harga dan varian.</p>}
-          </section>
-          <section className="catalog-form-card"><h2>Cara Pemrosesan Pesanan</h2>
-            <p className="catalog-muted">{FULFILLMENT_LABELS[fulfillmentForKind(form.kind)]}</p>
-            {form.kind === 'TopUpLogin' && <div className="catalog-quiet-warning"><AlertTriangle size={17} /> Gunakan proses login resmi yang diizinkan penyedia game. Jangan meminta kredensial di luar alur checkout aman.</div>}
-            {item && (form.kind === 'TopUpGame' || form.kind === 'TopUpLogin') && <button className="catalog-action-row" type="button" onClick={() => document.getElementById('catalog-variant-settings')?.scrollIntoView({ behavior: 'smooth' })}>Atur informasi yang diisi pembeli <ChevronRight size={19} /></button>}
-          </section>
+            <Field label="Deskripsi Singkat (opsional)"><TextArea rows={3} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Tulis keunggulan utama produk…" /></Field>
+            <Field label="Detail Produk"><TextArea rows={6} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi untuk pelanggan…" /></Field>
+          </section>}
+
+
         </div>
         <div className="catalog-form-stack">
-          <section className="catalog-form-card"><CatalogImageField title="Gambar Produk" value={form.thumbnailUrl} onChange={(value) => set('thumbnailUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((old) => [...old, asset])} /></section>
-          <section className="catalog-form-card"><h2>Pratinjau Kartu Produk</h2><div className="catalog-customer-preview">
-            <div className="catalog-customer-preview-image">{form.thumbnailUrl && imageReady ? <img src={form.thumbnailUrl} alt="" /> : <Package size={27} />}</div>
+          {activeTab === 'images' && <section className="catalog-form-card"><CatalogImageField title="Gambar Utama Produk" value={form.thumbnailUrl} onChange={(value) => set('thumbnailUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((old) => [...old, asset])} /></section>}
+          {activeTab === 'information' && <section className="catalog-form-card"><h2>Pratinjau Produk</h2><div className="catalog-customer-preview">
+            <div className="catalog-customer-preview-image">{form.thumbnailUrl ? <img src={form.thumbnailUrl} alt="" /> : <Package size={27} />}</div>
             <div><strong>{form.name || 'Nama Produk'}</strong><small>{PRODUCT_LABELS[form.kind] || 'Jenis produk'} · {categories.find((entry) => entry.id === form.categoryId)?.name || 'Kategori'}</small>
               <span>{form.isActive ? 'Tampil di toko' : 'Disembunyikan dari toko'}{form.isFeatured && ' · Unggulan'}</span></div>
-          </div><p className="catalog-muted">Pratinjau membantu memeriksa gambar dan teks sebelum disimpan.</p></section>
-          <section className="catalog-form-card"><h2>Deskripsi Produk</h2>
-            <Field label="Ringkasan (opsional)"><TextArea rows={3} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Jelaskan keunggulan utama produk…" /></Field>
-            <Field label="Detail Produk"><TextArea rows={6} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi yang akan dibaca pelanggan…" /></Field>
-          </section>
-          <section className="catalog-form-card"><h2>Penayangan</h2>
-            <Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Tampilkan produk di toko" />
-            <Toggle checked={form.isFeatured} onChange={(value) => set('isFeatured', value)} label="Jadikan produk unggulan" />
-            <details className="catalog-advanced"><summary>Pengaturan Lanjutan</summary><div><span>Alamat produk (otomatis)</span><code>{item?.slug || slugify(form.name) || 'akan-dibuat-otomatis'}</code><p>Alamat lama dijaga agar tautan yang sudah dibagikan tetap berfungsi.</p></div></details>
-          </section>
+          </div><p className="catalog-muted">Pratinjau kartu akan mengikuti perubahan yang belum disimpan.</p></section>}
+
+          {activeTab === 'publishing' && <section className="catalog-form-card"><h2>Penayangan</h2>
+            <p className="catalog-muted">Atur apakah produk dapat ditemukan pelanggan dan ditampilkan sebagai unggulan.</p>
+            <Toggle checked={form.isActive} onChange={(value) => set('isActive', value)} label="Tampilkan di Toko" />
+            <Toggle checked={form.isFeatured} onChange={(value) => set('isFeatured', value)} label="Jadikan Produk Unggulan" />
+            <details className="catalog-advanced"><summary>Pengaturan Lanjutan</summary><div><span>Alamat produk (otomatis)</span><code>{item?.slug || slugify(form.name) || 'akan-dibuat-otomatis'}</code><p>Alamat lama dijaga agar tautan yang sudah dibagikan tetap berfungsi.</p><span>Proses pesanan</span><p>{FULFILLMENT_LABELS[fulfillmentForKind(savedForm.kind)]}</p>{savedForm.kind === 'TopUpLogin' && <p>Gunakan proses login resmi yang diizinkan penyedia game.</p>}</div></details>
+          </section>}
         </div>
       </div>
-      <footer className="catalog-sticky-footer"><Button tone="ghost" onClick={cancel}>Batal</Button><button className="admin-button admin-button--primary" disabled={busy}>{busy ? 'Menyimpan…' : item ? 'Simpan Perubahan' : 'Simpan Produk'}</button></footer>
-    </form>
-    {item?.id && detail && <div id="catalog-variant-settings" className="catalog-editor-extras"><VariantEditor productId={item.id} detail={detail} onReload={loadDetail} />
-      {detail.kind === 'GameAccount' && <GameAccountListingEditor productId={item.id} />}</div>}
+      <footer className="catalog-sticky-footer"><span>{tabDirty ? 'Perubahan pada tab ini belum disimpan' : 'Tidak ada perubahan pada tab ini'}</span><div><Button tone="ghost" onClick={resetTab} disabled={!tabDirty || busy}>Batal</Button><button className="admin-button admin-button--primary" disabled={busy || (Boolean(item) && !tabDirty)}>{busy ? 'Menyimpan…' : !item ? 'Buat Produk' : activeTab === 'information' ? 'Simpan Informasi' : activeTab === 'images' ? 'Simpan Gambar Utama' : 'Simpan Penayangan'}</button></div></footer>
+    </form>}
+    {item?.id && detail && activeTab === 'variants' && <div className="catalog-editor-extras"><VariantEditor key="variants" section="variants" productId={item.id} detail={detail} onReload={loadDetail} />{detail.kind === 'GameAccount' && <GameAccountListingEditor productId={item.id} />}</div>}
+    {item?.id && detail && activeTab === 'images' && <div className="catalog-editor-extras"><VariantEditor key="images" section="images" productId={item.id} detail={detail} onReload={loadDetail} /></div>}
+    {item?.id && detail && activeTab === 'inputs' && <div className="catalog-editor-extras"><VariantEditor key="inputs" section="inputs" productId={item.id} detail={detail} onReload={loadDetail} /></div>}
+    {item?.id && !detail && ['variants', 'images', 'inputs'].includes(activeTab) && <div className="admin-loading">Memuat pengaturan produk…</div>}
   </div>
 }
 
