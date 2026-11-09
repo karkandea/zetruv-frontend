@@ -15,12 +15,15 @@ import '../styles/product-detail-sidebar.css'
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 
 function TopUpCurrencyIcon({ slug, variant, index }) {
+  const [iconFailed, setIconFailed] = useState(false)
+  useEffect(() => { setIconFailed(false) }, [variant?.iconUrl])
   const currency = getTopUpCurrencyArt(slug, variant, index)
-  if (!currency) {
+  const image = !iconFailed && variant?.iconUrl ? variant.iconUrl : currency?.image
+  if (!image) {
     // Never show a game cover as a denomination's currency logo.
     return <span className="sku-art__placeholder" aria-hidden="true"><Gem size={21} strokeWidth={1.8} /></span>
   }
-  return <img src={currency.image} alt="" loading="lazy" decoding="async" />
+  return <img src={image} alt="" loading="lazy" decoding="async" onError={() => setIconFailed(true)} />
 }
 
 function Stars({ small = false }) {

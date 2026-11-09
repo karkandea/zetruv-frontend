@@ -10,7 +10,7 @@ export async function discardCatalogAssets(assets, keepUrl = '') {
     .map((item) => cmsRequest(`/media/${item.id}`, { method: 'DELETE' })))
 }
 
-export default function CatalogImageField({ title, value, onChange, onUploaded, onValidityChange, compact = false }) {
+export default function CatalogImageField({ title, value, onChange, onUploaded, onValidityChange, compact = false, uploadPath = '/media/catalog' }) {
   const fileRef = useRef(null)
   const [supported, setSupported] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -38,7 +38,7 @@ export default function CatalogImageField({ title, value, onChange, onUploaded, 
     try {
       const body = new FormData()
       body.append('file', file)
-      const asset = await cmsRequest('/media/catalog', { method: 'POST', body })
+      const asset = await cmsRequest(uploadPath, { method: 'POST', body })
       onUploaded?.(asset)
       onChange(asset.url)
       setDetail(`Berhasil diunggah · ${(asset.sizeBytes / 1024).toFixed(0)} KB setelah optimasi`)

@@ -440,7 +440,7 @@ function GameForm({ item, onDone, onCancel, onDirtyChange }) {
 
 function VariantEditor({ productId, detail, onReload }) {
   const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [voucherVariant, setVoucherVariant] = useState(null); const [error, setError] = useState('')
-  async function saveVariant(form, id) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
+  async function saveVariant(form, id, assets = [], markHandled) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, iconUrl: form.iconUrl?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); await discardCatalogAssets(assets, form.iconUrl); markHandled?.(); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveImage(form, id, assets = [], markHandled) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); await discardCatalogAssets(assets, form.url); markHandled?.(); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveInputField(form, id) {
     const scope = detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
@@ -455,7 +455,7 @@ function VariantEditor({ productId, detail, onReload }) {
   const supportsInputSchema = detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
   return <div className="admin-product-subresources"><ErrorBox error={error} />
     <Panel title="Harga & Varian" subtitle="Kelola pilihan paket, harga, dan stok" action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Tambah Varian</Button>}>
-      <div className="admin-mini-list">{detail.variants?.map((item) => <div key={item.id}><div><strong>{item.name}</strong><small>Kode SKU: {item.sku}</small>{item.groupName && <small>Kelompok: {item.groupName}</small>}</div>
+      <div className="admin-mini-list catalog-variant-list">{detail.variants?.map((item) => <div key={item.id}><span className="catalog-variant-list-icon">{item.iconUrl ? <img src={item.iconUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : <Image size={17} />}</span><div><strong>{item.name}</strong><small>Kode SKU: {item.sku}</small>{item.groupName && <small>Kelompok: {item.groupName}</small>}</div>
         <span>{money(item.price)}</span><span>{item.stockQuantity == null ? 'Tanpa batas' : `${item.stockQuantity} stok`}</span>
         <span className={`catalog-state ${item.isActive ? 'is-active' : 'is-inactive'}`}>{item.isActive ? 'Aktif' : 'Nonaktif'}</span>
         <div>{detail.kind === 'GameVoucher' && <Button tone="ghost" onClick={() => setVoucherVariant(item)}>Kode Voucher</Button>}
@@ -472,7 +472,7 @@ function VariantEditor({ productId, detail, onReload }) {
         <div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Nonaktifkan</Button></div>
       </div>) : <Empty text="Belum ada isian pembeli. Produk tertentu memerlukan informasi ini agar dapat dipesan." />}</div>
     </Panel>}
-    {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form) => saveVariant(form, editing?.id)} onCancel={() => setEditing(undefined)} /></Modal>}
+    {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} onSave={(form, assets, markHandled) => saveVariant(form, editing?.id, assets, markHandled)} onCancel={() => setEditing(undefined)} /></Modal>}
     {voucherVariant && <Modal title={`${voucherVariant.name} · Kode Voucher Terenkripsi`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
     {imageEditing !== undefined && <Modal title={imageEditing ? 'Ubah Gambar' : 'Tambah Gambar'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form, assets, markHandled) => saveImage(form, imageEditing?.id, assets, markHandled)} onCancel={() => setImageEditing(undefined)} /></Modal>}
     {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Ubah Isian Pembeli' : 'Tambah Isian Pembeli'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
@@ -480,13 +480,22 @@ function VariantEditor({ productId, detail, onReload }) {
 }
 
 function VariantForm({ item, kind, onSave, onCancel }) {
-  const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: kind === 'GameAccount' ? 1 : kind === 'GameVoucher' ? 0 : '', weightGrams: '', isActive: true, sortOrder: 0 })
+  const [form, setForm] = useState(item || { name: '', sku: '', groupName: '', price: '', compareAtPrice: '', stockQuantity: kind === 'GameAccount' ? 1 : kind === 'GameVoucher' ? 0 : '', weightGrams: '', iconUrl: '', isActive: true, sortOrder: 0 })
+  const [assets, setAssets] = useState([])
+  const markAssetsHandled = useCatalogAssetCleanup(assets)
+  const [imageReady, setImageReady] = useState(!item?.iconUrl)
+  const [error, setError] = useState('')
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}>
+  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); if (form.iconUrl && !imageReady) { setError('Ikon belum dapat dimuat. Ganti atau hapus ikon sebelum menyimpan.'); return } onSave(form, assets, markAssetsHandled) }}>
     <Field label="Nama Varian"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: 86 Diamonds" /></Field>
     <Field label="Kode SKU" hint="Kode unik varian untuk stok dan transaksi."><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>
     {kind !== 'Merchandise' && <Field label="Kelompok Paket (opsional)" hint="Contoh: Diamonds, Starlight, UC."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} /></Field>}
     <Field label="Harga Jual"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field>
+    <section className="catalog-variant-icon-panel">
+      <CatalogImageField title="Ikon Varian (opsional)" value={form.iconUrl || ''} uploadPath="/media/catalog/variant-icon" compact onChange={(url) => { set('iconUrl', url); setError('') }} onUploaded={(asset) => setAssets((old) => [...old, asset])} onValidityChange={setImageReady} />
+      <p className="catalog-muted">Ikon ditampilkan di pilihan paket pada toko. Dioptimasi otomatis menjadi WebP, maksimal 256 px dan target 100 KB.</p>
+      {form.iconUrl && <Button tone="ghost" onClick={() => { set('iconUrl', ''); setImageReady(true); setError('') }}>Hapus Ikon Varian</Button>}
+    </section>
     <Field label="Harga Coret (opsional)"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>
     <Field label="Stok" hint={kind === 'GameVoucher' ? 'Stok mengikuti daftar kode voucher terenkripsi.' : kind === 'GameAccount' ? 'Setiap akun game adalah satu produk unik.' : 'Kosongkan untuk stok tanpa batas.'}>
       <TextInput type="number" min="0" value={kind === 'GameVoucher' ? 0 : kind === 'GameAccount' ? 1 : form.stockQuantity ?? ''} disabled={kind === 'GameVoucher' || kind === 'GameAccount'} onChange={(e) => set('stockQuantity', e.target.value)} />

@@ -45,7 +45,7 @@ function productMedia(product) {
   }
 }
 
-function variantMedia(product, variant, index) {
+function variantMedia(product, variant, index, ignoreUploadedIcon = false) {
   const gameSlug = product?.game?.slug || product?.slug
   const gameArt = productMedia(product)
   const art = getTopUpCurrencyArt(gameSlug, variant, index)
@@ -55,7 +55,7 @@ function variantMedia(product, variant, index) {
   const official = isGenshin
     ? /welkin|moon/i.test(name) ? genshinOfficialArt.welkin : genshinOfficialArt[amount]
     : null
-  return variant?.imageUrl || variant?.thumbnailUrl || official || art?.image || gameArt.cover
+  return (!ignoreUploadedIcon && variant?.iconUrl) || variant?.imageUrl || variant?.thumbnailUrl || official || art?.image || gameArt.cover
 }
 
 function VariantImage({ src, fallback, alt = '' }) {
@@ -259,7 +259,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact' }) {
                           onClick={() => selectVariant(variant)}>
                           <span className="login-package-card__icon">
                             <VariantImage
-                              src={variantMedia(product, variant, index)} fallback={cover.cover} />
+                              src={variantMedia(product, variant, index)} fallback={variantMedia(product, variant, index, true)} />
                           </span>
                           <span className="login-package-card__copy">
                             <strong>{variant.name}</strong>
