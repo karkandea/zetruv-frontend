@@ -1,6 +1,7 @@
 export const PAYMENT_LABELS = {
   Pending: 'Menunggu Pembayaran', Paid: 'Pembayaran Berhasil',
   Failed: 'Pembayaran Gagal', Refunded: 'Dana Dikembalikan',
+  NotStarted: 'Belum Dimulai', Expired: 'Kedaluwarsa', Cancelled: 'Dibatalkan',
 }
 
 export const PROCESS_LABELS = {
@@ -14,8 +15,14 @@ export const SHIPMENT_LABELS = {
 }
 
 export const TRANSACTION_LABELS = {
-  Pending: 'Menunggu', Succeeded: 'Berhasil', Failed: 'Gagal',
+  Pending: 'Menunggu', Succeeded: 'Berhasil', Failed: 'Gagal', Expired: 'Kedaluwarsa',
 }
+
+export const paymentState = (order) => order?.paymentState || order?.paymentStatus || 'NotStarted'
+
+export const activePaymentSession = (order, now = Date.now()) =>
+  (order?.transactions || []).find((tx) => tx.type === 'Payment' && tx.status === 'Pending'
+    && (!tx.expiresAt || new Date(tx.expiresAt).getTime() > now))
 
 export function needsProcessing(order) {
   return order?.paymentStatus === 'Paid'
@@ -25,13 +32,15 @@ export function needsProcessing(order) {
 }
 
 export function hasOrderIssue(order) {
-  return order?.paymentStatus === 'Failed' || Boolean(order?.hasFulfillmentIssue)
+  return paymentState(order) === 'Failed' || Boolean(order?.hasFulfillmentIssue)
     || (order?.status === 'Cancelled' && order?.paymentStatus === 'Paid')
 }
 
 export function quickMatch(order, filter) {
   switch (filter) {
-    case 'waiting': return order.paymentStatus === 'Pending' && order.status !== 'Cancelled'
+    case 'waiting': return paymentState(order) === 'Pending' && order.status !== 'Cancelled'
+    case 'not-started': return paymentState(order) === 'NotStarted'
+    case 'expired': return paymentState(order) === 'Expired'
     case 'attention': return needsProcessing(order)
     case 'complete': return order.status === 'Completed'
     case 'issues': return hasOrderIssue(order)
@@ -56,6 +65,8 @@ export function orderAdvice(order) {
       ? { tone: 'warning', title: 'Pesanan Dibatalkan · Pembayaran Tercatat', detail: 'Pembatalan tidak otomatis mengembalikan dana. Periksa pengembalian dana melalui proses terpisah.' }
       : { tone: 'neutral', title: 'Pesanan Dibatalkan', detail: 'Pesanan ini tidak akan diproses. Tindakan pembatalan tidak bisa dibatalkan dari CMS.' }
   }
+  if (paymentState(order) === 'Expired') return { tone: 'warning', title: 'Sesi Pembayaran Kedaluwarsa', detail: 'Sesi terakhir sudah berakhir dan tidak diperiksa otomatis lagi. Pesanan belum otomatis gagal; pelanggan dapat mencoba pembayaran baru jika masih memenuhi syarat.' }
+  if (paymentState(order) === 'NotStarted') return { tone: 'neutral', title: 'Pembayaran Belum Dimulai', detail: 'Belum ada sesi pembayaran untuk pesanan ini. Pemrosesan produk menunggu konfirmasi pembayaran.' }
   if (order.paymentStatus === 'Pending') return { tone: 'warning', title: 'Menunggu Pembayaran', detail: 'Pembayaran belum terkonfirmasi. Pesanan tidak boleh diproses sampai pembayaran berhasil.' }
   if (order.paymentStatus === 'Failed') return { tone: 'danger', title: 'Pembayaran Gagal', detail: 'Belum ada pembayaran berhasil. Periksa transaksi dan tunggu konfirmasi resmi sebelum memproses.' }
   if (order.paymentStatus === 'Refunded') return { tone: 'neutral', title: 'Dana Dikembalikan', detail: 'Lihat riwayat transaksi untuk memastikan rincian pengembalian dana yang tercatat.' }
@@ -88,7 +99,9 @@ export function orderTimeline(order) {
   for (const transaction of order.transactions || []) {
     entries.push({
       kind: 'transaction',
-      label: transaction.type === 'Refund' ? 'Transaksi pengembalian dana tercatat' : 'Transaksi pembayaran tercatat',
+      label: transaction.type === 'Refund' ? 'Transaksi pengembalian dana tercatat'
+        : transaction.status === 'Expired' ? 'Sesi pembayaran kedaluwarsa'
+          : 'Transaksi pembayaran tercatat',
       at: transaction.processedAt || transaction.createdAt,
       transaction,
     })

@@ -5,7 +5,7 @@
 .ops-list-heading{margin-bottom:19px}
 .ops-list-heading h1,.ops-detail-heading h1{font-size:29px;letter-spacing:-.03em;margin:6px 0}
 .ops-list-heading p,.ops-detail-heading p{margin:0;color:#8390a4;font-size:13px}
-.ops-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:18px}
+.ops-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}
 .ops-metrics article{min-width:0;background:#fff;border:1px solid #e4e9f2;border-radius:13px;padding:19px 21px;display:flex;flex-direction:column;gap:5px;box-shadow:0 6px 24px rgba(20,30,55,.025)}
 .ops-metrics span{font-size:12px;color:#657289;font-weight:660}
 .ops-metrics strong{font-size:29px;font-variant-numeric:tabular-nums;line-height:1.35;color:#26354b}
@@ -165,4 +165,5 @@
 @media(max-width:1040px){.ops-detail-columns{grid-template-columns:1fr}.ops-shipping-form{grid-template-columns:1fr 1fr}.ops-shipping-form button{grid-column:1/-1}}
 @media(max-width:760px){.ops-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ops-metrics article{padding:13px 11px}.ops-metrics span{font-size:10px}.ops-metrics strong{font-size:22px}.ops-metrics small{font-size:9px}.ops-toolbar{flex-direction:column;gap:12px}.ops-search{max-width:none;width:100%}.ops-toolbar-filters{justify-content:flex-end;width:100%}.ops-table{min-width:790px}.ops-detail-heading h1{font-size:19px}.ops-advice{padding:13px}.ops-card>header,.ops-card-body{padding:15px}.ops-item-controls form{grid-template-columns:1fr}.ops-shipping-grid{grid-template-columns:1fr 1fr}.ops-shipping-form{grid-template-columns:1fr}.ops-shipping-form button{grid-column:auto}.ops-dialog{padding:21px}}
 @media(max-width:420px){.ops-metrics article{padding:12px 8px}.ops-metrics span{min-height:30px}.ops-metrics strong{font-size:20px}.ops-toolbar-filters{gap:5px}.ops-filter-popup>summary{padding:0 9px}}
+@media(max-width:760px){.ops-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.ops-page *{scroll-behavior:auto!important;transition:none!important}}

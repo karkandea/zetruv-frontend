@@ -9,7 +9,7 @@ import { nextFulfillmentStatuses } from './digitalPurchaseRules'
 import {
   PAYMENT_LABELS, PROCESS_LABELS, SHIPMENT_LABELS, TRANSACTION_LABELS,
   canCancelOrder, hasOrderIssue, inDateRange, needsProcessing, orderAdvice,
-  orderTimeline, processLabel, quickMatch,
+  activePaymentSession, orderTimeline, paymentState, processLabel, quickMatch,
 } from './orderOperations'
 import './orders-ux.css'
 
@@ -40,6 +40,7 @@ function Badge({ value, type = 'process' }) {
   const label = type === 'payment' ? PAYMENT_LABELS[value] : type === 'shipment' ? SHIPMENT_LABELS[value] : type === 'transaction' ? TRANSACTION_LABELS[value] : PROCESS_LABELS[value]
   const tone = ['Paid', 'Completed', 'Succeeded', 'Delivered'].includes(value) ? 'good'
     : ['Failed', 'Cancelled'].includes(value) ? 'bad'
+      : value === 'Expired' ? 'waiting'
       : ['Pending'].includes(value) ? 'waiting' : ['Refunded'].includes(value) ? 'muted' : 'info'
   return <span className={`ops-badge ops-badge--${tone}`}>{label || value || '—'}</span>
 }
@@ -112,7 +113,7 @@ function DetailPage({ id, detail, loading, busy, error, notice, onBack, onReconc
   const allowed = getAdminSession()?.role === 'Admin'
   const advice = orderAdvice(detail)
   const transactions = detail.transactions || []
-  const pendingPayment = transactions.find((tx) => tx.type === 'Payment' && tx.status === 'Pending')
+  const pendingPayment = activePaymentSession(detail)
   const cancelable = canCancelOrder(detail)
   return <main className="admin-page ops-page ops-detail">
     <button type="button" className="ops-back" onClick={onBack}><ArrowLeft size={17} /> Kembali ke Pesanan</button>
@@ -146,7 +147,9 @@ function DetailPage({ id, detail, loading, busy, error, notice, onBack, onReconc
         {Number(detail.voucherDiscountAmount) > 0 && <div className="ops-amount-row"><span>Diskon voucher</span><strong>−{money(detail.voucherDiscountAmount)}</strong></div>}
         {Number(detail.shippingAmount) > 0 && <div className="ops-amount-row"><span>Ongkos kirim</span><strong>{money(detail.shippingAmount)}</strong></div>}
         <div className="ops-amount-total"><span>Total</span><strong>{money(detail.grandTotal)}</strong></div>
-        <div className="ops-payment-status"><span>Status Pembayaran</span><Badge value={detail.paymentStatus} type="payment" /></div>
+        <div className="ops-payment-status"><span>Status Pembayaran</span><Badge value={paymentState(detail)} type="payment" /></div>
+        {paymentState(detail) === 'Expired' && <p className="ops-hint">Sesi pembayaran terakhir sudah kedaluwarsa. Pesanan tetap tercatat dan dapat dicoba bayar ulang oleh pelanggan jika memenuhi syarat.</p>}
+        {paymentState(detail) === 'Pending' && pendingPayment?.expiresAt && <p className="ops-hint">Batas pembayaran: {date(pendingPayment.expiresAt)}</p>}
         {pendingPayment && <button className="ops-secondary ops-refresh-payment" type="button" disabled={busy} onClick={() => onReconcile(pendingPayment)}><RefreshCw size={14} /> {busy ? 'Memeriksa…' : 'Periksa Status Pembayaran'}</button>}
         {allowed && (detail.customerEmail || detail.customerPhone) && <details className="ops-customer-contact"><summary>Kontak Pelanggan <ChevronDown size={14} /></summary><div><p>{detail.customerName || 'Pelanggan'}</p>{detail.customerEmail && <p>Email: {detail.customerEmail}</p>}{detail.customerPhone && <p>Telepon: {detail.customerPhone}</p>}</div></details>}
       </Card>
@@ -157,7 +160,7 @@ function DetailPage({ id, detail, loading, busy, error, notice, onBack, onReconc
     </Card>
     {detail.shipment && <ShipmentControls key={detail.shipment.status} shipment={detail.shipment} busy={busy} onSave={onShipment} />}
     <Card title="Riwayat Pembayaran" subtitle="Hanya transaksi yang benar-benar tercatat di sistem">
-      {transactions.length ? <div className="ops-transactions">{transactions.map((tx, index) => <article key={tx.id}><div><CreditCard size={18} /><div><strong>{tx.type === 'Refund' ? 'Pengembalian Dana' : `Pembayaran ${transactions.length - index}`}</strong><small>{date(tx.processedAt || tx.createdAt)}</small>{tx.providerReference && <small>Referensi: {tx.providerReference}</small>}</div></div><div><b>{money(tx.amount)}</b><Badge value={tx.status} type="transaction" /></div></article>)}</div> : <p className="ops-empty">Belum ada transaksi pembayaran tercatat untuk pesanan ini.</p>}
+      {transactions.length ? <div className="ops-transactions">{transactions.map((tx, index) => <article key={tx.id}><div><CreditCard size={18} /><div><strong>{tx.type === 'Refund' ? 'Pengembalian Dana' : `Pembayaran ${transactions.length - index}`}</strong><small>{date(tx.processedAt || tx.createdAt)}</small>{tx.expiresAt && <small>Batas sesi: {date(tx.expiresAt)}</small>}{tx.providerReference && <small>Referensi: {tx.providerReference}</small>}</div></div><div><b>{money(tx.amount)}</b><Badge value={tx.status === 'Pending' && tx.expiresAt && new Date(tx.expiresAt).getTime() <= Date.now() ? 'Expired' : tx.status} type="transaction" /></div></article>)}</div> : <p className="ops-empty">Belum ada transaksi pembayaran tercatat untuk pesanan ini.</p>}
     </Card>
     <Card title="Riwayat Aktivitas" subtitle="Dibentuk dari waktu kejadian yang tersimpan, bukan perkiraan">
       <ol className="ops-timeline">{orderTimeline(detail).map((event, index) => <li key={`${event.kind}-${index}`}><span className={`ops-timeline-dot ops-timeline-dot--${event.kind}`} /><div><strong>{event.label}</strong><small>{date(event.at)}</small></div></li>)}</ol>
@@ -228,10 +231,12 @@ export default function OrdersOperationsPage() {
   const counts = useMemo(() => ({
     all: orders.length,
     waiting: orders.filter((item) => quickMatch(item, 'waiting')).length,
+    expired: orders.filter((item) => quickMatch(item, 'expired')).length,
+    notStarted: orders.filter((item) => quickMatch(item, 'not-started')).length,
     attention: orders.filter(needsProcessing).length,
   }), [orders])
   const matching = useMemo(() => (searchResults || orders).filter((order) => quickMatch(order, quick)
-    && (!paymentFilter || order.paymentStatus === paymentFilter)
+    && (!paymentFilter || paymentState(order) === paymentFilter)
     && (!processFilter || order.status === processFilter)
     && inDateRange(order.createdAt, startDate, endDate)), [orders, searchResults, quick, paymentFilter, processFilter, startDate, endDate])
 
@@ -243,11 +248,11 @@ export default function OrdersOperationsPage() {
     onVoucherRetry={(item) => perform(() => cmsRequest(`/orders/${detail.id}/items/${item.id}/game-voucher-assign`, { method: 'POST' }))}
     onShipment={(status, trackingNumber) => perform(() => cmsRequest(`/orders/${detail.id}/shipment`, { method: 'PUT', body: JSON.stringify({ status, trackingNumber: trackingNumber || null }) }))} />
 
-  const filters = [ ['all', `Semua (${counts.all})`], ['waiting', `Menunggu Pembayaran (${counts.waiting})`], ['attention', `Perlu Diproses (${counts.attention})`], ['complete', 'Selesai'], ['issues', 'Bermasalah'] ]
+  const filters = [ ['all', `Semua (${counts.all})`], ['waiting', `Menunggu Pembayaran (${counts.waiting})`], ['not-started', `Belum Dimulai (${counts.notStarted})`], ['expired', `Kedaluwarsa (${counts.expired})`], ['attention', `Perlu Diproses (${counts.attention})`], ['complete', 'Selesai'], ['issues', 'Bermasalah'] ]
   return <main className="admin-page ops-page">
     <header className="ops-list-heading"><span className="ops-eyebrow">OPERASIONAL TOKO</span><h1>Pesanan</h1><p>Pantau pembayaran dan proses pesanan pelanggan.</p></header>
     {error && <div className="admin-error" role="alert">{error}</div>}{notice && <div className="admin-notice" role="status">{notice}</div>}
-    <div className="ops-metrics"><article><span>Total Pesanan</span><strong>{counts.all}</strong><small>Semua waktu</small></article><article><span>Menunggu Pembayaran</span><strong>{counts.waiting}</strong><small>Belum dibayar</small></article><article><span>Perlu Diproses</span><strong>{counts.attention}</strong><small>Menunggu tindakan admin</small></article></div>
+    <div className="ops-metrics"><article><span>Total Pesanan</span><strong>{counts.all}</strong><small>Semua waktu</small></article><article><span>Menunggu Pembayaran</span><strong>{counts.waiting}</strong><small>Sesi masih aktif</small></article><article><span>Kedaluwarsa</span><strong>{counts.expired}</strong><small>Sesi pembayaran berakhir</small></article><article><span>Perlu Diproses</span><strong>{counts.attention}</strong><small>Menunggu tindakan admin</small></article></div>
     <div className="ops-list-card">
       <nav className="ops-chips" aria-label="Filter cepat pesanan">{filters.map(([id, label]) => <button key={id} type="button" className={quick === id ? 'is-active' : ''} aria-pressed={quick === id} onClick={() => setQuick(id)}>{label}</button>)}</nav>
       <div className="ops-toolbar">
@@ -258,7 +263,7 @@ export default function OrdersOperationsPage() {
         </div>
       </div>
       <div className="ops-table-scroll"><table className="ops-table"><thead><tr><th>Pesanan</th><th>Pelanggan</th><th>Total</th><th>Pembayaran</th><th>Proses</th><th>Dibuat</th><th>Aksi</th></tr></thead><tbody>
-        {!listLoading && matching.map((order) => <tr key={order.id}><td><strong>{order.orderNumber}</strong><small>{order.itemCount} item</small></td><td>{order.customerName || 'Pelanggan'}</td><td className="ops-total">{money(order.grandTotal)}</td><td><Badge value={order.paymentStatus} type="payment" /></td><td><ProcessBadge order={order} /></td><td>{date(order.createdAt)}</td><td><a className="ops-detail-link" href={`#/orders/${order.id}`}>Lihat Detail</a></td></tr>)}
+        {!listLoading && matching.map((order) => <tr key={order.id}><td><strong>{order.orderNumber}</strong><small>{order.itemCount} item</small></td><td>{order.customerName || 'Pelanggan'}</td><td className="ops-total">{money(order.grandTotal)}</td><td><Badge value={paymentState(order)} type="payment" /></td><td><ProcessBadge order={order} /></td><td>{date(order.createdAt)}</td><td><a className="ops-detail-link" href={`#/orders/${order.id}`}>Lihat Detail</a></td></tr>)}
       </tbody></table></div>
       {listLoading ? <div className="ops-loading">Memuat pesanan…</div> : !matching.length && <div className="ops-empty-state"><Package size={26} /><strong>Tidak ada pesanan yang cocok</strong><p>Coba ubah pencarian, periode, atau filter status.</p><button className="ops-secondary" type="button" onClick={() => { setQuick('all'); setStartDate(''); setEndDate(''); setPaymentFilter(''); setProcessFilter(''); setSearchInput(''); setSearchQuery(''); void loadOrders('') }}>Tampilkan Semua</button></div>}
       {!listLoading && matching.length > 0 && <div className="ops-results">Menampilkan {matching.length} pesanan</div>}

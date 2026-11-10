@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { canCancelOrder, hasOrderIssue, inDateRange, needsProcessing, orderAdvice, orderTimeline, quickMatch } from './orderOperations.js'
+import { activePaymentSession, canCancelOrder, hasOrderIssue, inDateRange, needsProcessing, orderAdvice, orderTimeline, paymentState, quickMatch } from './orderOperations.js'
 
 test('unpaid pending is never an admin processing queue item', () => {
   const order = { status: 'Pending', paymentStatus: 'Pending', hasFulfillmentIssue: false }
@@ -8,6 +8,36 @@ test('unpaid pending is never an admin processing queue item', () => {
   assert.equal(quickMatch(order, 'waiting'), true)
   assert.equal(quickMatch(order, 'attention'), false)
   assert.match(orderAdvice(order).detail, /tidak boleh diproses/)
+})
+
+test('expired attempt is excluded from waiting, remains retryable order, and has clear CMS copy', () => {
+  const order = { status: 'Pending', paymentStatus: 'Pending', paymentState: 'Expired', transactions: [
+    { type: 'Payment', status: 'Expired', expiresAt: '2026-09-16T11:50:00Z' },
+  ] }
+  assert.equal(paymentState(order), 'Expired')
+  assert.equal(quickMatch(order, 'waiting'), false)
+  assert.equal(quickMatch(order, 'expired'), true)
+  assert.equal(quickMatch(order, 'issues'), false)
+  assert.equal(activePaymentSession(order), undefined)
+  assert.match(orderAdvice(order).title, /Kedaluwarsa/)
+  assert.match(orderAdvice(order).detail, /belum otomatis gagal/)
+})
+
+test('new attempt takes precedence over old expired attempt', () => {
+  const order = { status: 'Pending', paymentStatus: 'Pending', paymentState: 'Pending', transactions: [
+    { type: 'Payment', status: 'Pending', expiresAt: '2026-11-10T12:00:00Z' },
+    { type: 'Payment', status: 'Expired', expiresAt: '2026-09-16T11:50:00Z' },
+  ] }
+  assert.ok(activePaymentSession(order, Date.parse('2026-11-10T11:00:00Z')))
+  assert.equal(quickMatch(order, 'waiting'), true)
+  assert.equal(quickMatch(order, 'expired'), false)
+})
+
+test('not started is distinct from active payment session', () => {
+  const order = { status: 'Pending', paymentStatus: 'Pending', paymentState: 'NotStarted', transactions: [] }
+  assert.equal(quickMatch(order, 'not-started'), true)
+  assert.equal(quickMatch(order, 'waiting'), false)
+  assert.match(orderAdvice(order).title, /Belum Dimulai/)
 })
 
 test('paid pending and paid failed fulfillment require attention', () => {
