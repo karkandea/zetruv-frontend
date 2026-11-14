@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
-import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
+import HelpCenterDialog from './HelpCenterDialog'
+import { ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Newspaper, Settings, ShoppingBag, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
 import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
@@ -37,6 +38,9 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const language = useNavbarLanguage()
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const [verifiedSession,setVerifiedSession]=useState(readCustomerSession)
   const [logoutError, setLogoutError] = useState('')
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
@@ -58,15 +62,18 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const resetToken = useRef(typeof window === 'undefined' ? '' : (window.location.pathname === '/auth/reset-password' ? new URLSearchParams(window.location.search).get('token') || '' : ''))
   const languageMenuRef = useRef(null)
   const languageButtonRef = useRef(null)
+  const accountMenuRef = useRef(null)
+  const accountButtonRef = useRef(null)
+  const brandRef = useRef(null)
 
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
   const isHomeLoggedIn = variant === 'homeLoggedIn'
   const isLeaderboard = variant === 'leaderboard'
   const isArticle = variant === 'article'
-  const isAccount = variant === 'account'
   const isLoggedIn = Boolean(verifiedSession) // Page variant is never authentication.
-  const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn || isAccount
+  const accountInitial = String(verifiedSession?.customer?.name || 'A').slice(0, 1).toUpperCase()
+  const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
 
   const [activeNav, setActiveNav] = useState(() => {
     if (isLeaderboard) return 'leaderboard'
@@ -89,7 +96,11 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
 
   useEffect(() => onCartChange(setCartItems), [])
   useEffect(()=>{
-    const refreshSession=()=>setVerifiedSession(readCustomerSession())
+    const refreshSession=()=>{
+      const session = readCustomerSession()
+      setVerifiedSession(session)
+      if (!session) setIsAccountOpen(false)
+    }
     const onFocus=()=>{if(readCustomerSession())refreshCustomerCart().catch(()=>{})}
     window.addEventListener(CUSTOMER_EVENT,refreshSession)
     window.addEventListener('focus',onFocus)
@@ -125,10 +136,13 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
         setIsLanguageOpen(false)
       }
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) setIsAccountOpen(false)
     }
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
+        if (event.target.closest?.('#navbar-account-dropdown')) accountButtonRef.current?.focus()
+        setIsAccountOpen(false)
         if (event.target.closest?.('#zetruv-homepage-mobile-nav')) homepageMenuButtonRef.current?.focus()
         setIsProductOpen(false)
         setIsCartOpen(false)
@@ -149,6 +163,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const navbarClasses = [
     'navbar',
     isLoggedIn ? 'navbar--catalog' : '',
+    isLoggedIn ? 'navbar--has-account' : '',
     isHomeLoggedIn ? 'navbar--home-final' : '',
     homepageMobileMenu ? 'navbar--homepage-mobile' : '',
   ].filter(Boolean).join(' ')
@@ -160,6 +175,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
     setIsLanguageOpen(false)
     setIsMobileMenuOpen(false)
     setIsHomepageDrawerOpen(false)
+    setIsAccountOpen(false)
   }
 
   function selectLanguage(code) {
@@ -176,12 +192,18 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   }
 
   async function handleLogout() {
+    if (loggingOut) return
     setLogoutError('')
+    setLoggingOut(true)
     try {
       await logoutCustomer()
+      setIsAccountOpen(false)
       setIsHomepageDrawerOpen(false)
+      brandRef.current?.focus()
     } catch {
       setLogoutError(t.logoutError)
+    } finally {
+      setLoggingOut(false)
     }
   }
 
@@ -194,7 +216,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       <header className={navbarClasses}>
       <div ref={homepageDrawerRef} className="navbar__homepage-mobile-wrapper">
       <div className="navbar__top design-container">
-        <a className="brand navbar-control" href="/" aria-label="Zetruv home">
+        <a ref={brandRef} className="brand navbar-control" href="/" aria-label="Zetruv home">
           <img src={assets.logo} alt="Zetruv" />
         </a>
 
@@ -215,6 +237,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
                 setIsProductOpen(false)
                 setIsCartOpen(false)
                 setIsMobileMenuOpen(false)
+                setIsAccountOpen(false)
               }}
             >
               <span className="nav-pill__icon nav-language-flag"><img src={assets[selectedLanguage.flag]} alt="" /></span>
@@ -264,6 +287,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
                 setIsProductOpen(false)
                 setIsLanguageOpen(false)
                 setIsMobileMenuOpen(false)
+                setIsAccountOpen(false)
                 setPhysicalCartCount(readPhysicalCartCount())
               }}
             >
@@ -282,8 +306,48 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               </a>
             </div>
           </div>
-          {verifiedSession && <a className="nav-avatar" href="/account" aria-label="Akun Zetruv">{String(verifiedSession.customer?.name||'A').slice(0,1).toUpperCase()}</a>}
         </div>
+        {verifiedSession && (
+          <div ref={accountMenuRef} className="nav-account" onBlur={(event) => {
+            if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setIsAccountOpen(false)
+          }}>
+            <button
+              ref={accountButtonRef}
+              className="nav-account__trigger"
+              type="button"
+              aria-label={t.accountMenu}
+              aria-expanded={isAccountOpen}
+              aria-controls="navbar-account-dropdown"
+              onClick={() => {
+                setIsAccountOpen((open) => !open)
+                setIsProductOpen(false)
+                setIsCartOpen(false)
+                setIsLanguageOpen(false)
+                setIsMobileMenuOpen(false)
+                setIsHomepageDrawerOpen(false)
+              }}
+            >
+              <span className="nav-account__avatar" aria-hidden="true">{accountInitial}</span>
+              <ChevronDown size={14} aria-hidden="true" />
+            </button>
+            <nav id="navbar-account-dropdown" className="nav-account__dropdown" aria-label={t.accountMenu} hidden={!isAccountOpen}>
+              <a className="nav-account__identity" href="/account" onClick={() => setIsAccountOpen(false)}>
+                <span className="nav-account__avatar" aria-hidden="true">{accountInitial}</span>
+                <span><strong>{verifiedSession.customer?.name || t.account}</strong><small>{verifiedSession.customer?.email}</small></span>
+              </a>
+              <div className="nav-account__links">
+                <a href="/account#account-settings" onClick={() => setIsAccountOpen(false)}><Settings size={18} aria-hidden="true" />{t.settings}</a>
+                <button type="button" aria-haspopup="dialog" onClick={() => {
+                  setIsAccountOpen(false)
+                  setIsHelpOpen(true)
+                }}><LifeBuoy size={18} aria-hidden="true" />{t.helpCenter}</button>
+              </div>
+              <div className="nav-account__footer">
+                <button type="button" onClick={handleLogout} disabled={loggingOut}><LogOut size={18} aria-hidden="true" />{t.logout}</button>
+              </div>
+            </nav>
+          </div>
+        )}
         {homepageMobileMenu && <button
           className="navbar__hamburger navbar-control"
           ref={homepageMenuButtonRef}
@@ -296,6 +360,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             setIsProductOpen(false)
             setIsCartOpen(false)
             setIsLanguageOpen(false)
+            setIsAccountOpen(false)
           }}
         >
           <span className="navbar__hamburger-icon" aria-hidden="true"><span /><span /><span /></span>
@@ -322,7 +387,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>
           <a href="/cart" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
           <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.physicalCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
-          {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />Akun Saya</a>}
+          {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />{t.account}</a>}
         </nav>
         <div className="navbar__mobile-language" role="group" aria-label={t.language}>
           {NAVBAR_LANGUAGES.map((option) => (
@@ -331,12 +396,10 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </button>
           ))}
         </div>
-        <div className="navbar__mobile-auth">
-          {verifiedSession ? <button type="button" onClick={handleLogout}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
+        {!verifiedSession && <div className="navbar__mobile-auth">
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('login') }}><LogIn size={18} aria-hidden="true" />{t.login}</button>
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); openRegistration() }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
-          </>}
-        </div>
+        </div>}
       </div>}
       </div>
 
@@ -365,6 +428,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
                   setIsProductOpen((open) => !open)
                   setIsLanguageOpen(false)
                   setIsMobileMenuOpen(false)
+                  setIsAccountOpen(false)
                 }}
               >
                 {productLabel} <img src={assets.navDown} alt="" />
@@ -413,13 +477,15 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               </button>
             </div>
           )}
-          {verifiedSession && <div className="auth-actions"><button type="button" className="btn btn--outline navbar-control"
-            onClick={handleLogout}>{t.logout}</button></div>}
         </div>
       </div>
       </header>
 
       {logoutError && <p className="navbar-logout-error" role="alert">{logoutError}</p>}
+      {isHelpOpen && <HelpCenterDialog labels={t} onClose={() => {
+        setIsHelpOpen(false)
+        requestAnimationFrame(() => accountButtonRef.current?.focus())
+      }} />}
       {authMode && (
         <AuthModal mode={authMode} resetToken={resetToken.current} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
       )}

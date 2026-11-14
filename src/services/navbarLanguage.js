@@ -30,6 +30,8 @@ export const NAVBAR_COPY = {
     login: 'Login', register: 'Register', logout: 'Logout', language: 'Change language',
     logoutError: 'Could not sign out. Please try again.',
     help: 'Help', back: 'Back',
+    account: 'My Account', accountMenu: 'Account menu', settings: 'Settings', helpCenter: 'Help Center',
+    helpOrderHint: 'Have an order code? Use it to check your order and payment status.',
     products: {},
   },
   id: {
@@ -41,6 +43,8 @@ export const NAVBAR_COPY = {
     login: 'Masuk', register: 'Daftar', logout: 'Keluar', language: 'Pilih bahasa',
     logoutError: 'Belum bisa keluar. Silakan coba lagi.',
     help: 'Bantuan', back: 'Kembali',
+    account: 'Akun Saya', accountMenu: 'Menu akun', settings: 'Pengaturan', helpCenter: 'Pusat Bantuan',
+    helpOrderHint: 'Punya kode pesanan? Gunakan untuk cek status pesanan dan pembayaran.',
     products: {
       'Browse All Categories': 'Lihat Semua Kategori',
       'Top Up Via ID': 'Top Up via ID',
@@ -60,6 +64,8 @@ export const NAVBAR_COPY = {
     login: 'Log Masuk', register: 'Daftar', logout: 'Log Keluar', language: 'Pilih bahasa',
     logoutError: 'Tidak dapat log keluar. Sila cuba lagi.',
     help: 'Bantuan', back: 'Kembali',
+    account: 'Akaun Saya', accountMenu: 'Menu akaun', settings: 'Tetapan', helpCenter: 'Pusat Bantuan',
+    helpOrderHint: 'Ada kod pesanan? Gunakannya untuk menyemak status pesanan dan bayaran.',
     products: {
       'Browse All Categories': 'Lihat Semua Kategori',
       'Top Up Via ID': 'Tambah Nilai melalui ID',

@@ -16,6 +16,7 @@ import './styles/homepage-slider.css'
 import './styles/flash-sale-adaptive.css'
 import './styles/navbar-search-dropdown.css'
 import './styles/homepage-responsive.css'
+import './styles/navbar-account.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
