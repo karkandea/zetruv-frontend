@@ -36,6 +36,8 @@ jobs:
         run: node scripts/cart-qa.mjs
       - name: PDP pricing and cart catalog-loading regression (desktop/mobile)
         run: node scripts/catalog-loading-qa.mjs
+      - name: Joki catalog, cart and checkout regression (desktop/mobile)
+        run: node scripts/joki-catalog-qa.mjs
       - name: Multi-browser concurrency 409 and account-isolation UI test
         run: node scripts/cart-multibrowser-qa.mjs
       - name: Verified order lookup and merchandise guest-cart flow (desktop/mobile)

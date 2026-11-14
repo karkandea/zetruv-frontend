@@ -27,6 +27,6 @@ export async function getCatalogProducts({
   return apiRequest(`/catalog/products?${params.toString()}`, { signal })
 }
 
-export async function getCatalogProduct(slug) {
-  return apiRequest(`/catalog/products/${encodeURIComponent(slug)}`)
+export async function getCatalogProduct(slug, { signal } = {}) {
+  return apiRequest(`/catalog/products/${encodeURIComponent(slug)}`, { signal })
 }
