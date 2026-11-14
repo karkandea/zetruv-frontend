@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import { getFlashSalePages } from './flashSaleLayout'
@@ -27,12 +29,13 @@ function getColumns() {
 }
 
 export function FlashSaleItem({ item, interactive = true, tabIndex }) {
+  const copy = useStorefrontCopy()
   const href = interactive ? flashSaleProductHref(item) : null
   const Card = href ? 'a' : 'article'
   return (
-    <Card className={`sale-item${href ? ' sale-item--link' : ''}`} {...(href ? { href, tabIndex, 'aria-label': `${item.name} — ${item.item}, ${rupiah(item.price)}. Lihat detail produk.` } : {})}>
+    <Card className={`sale-item${href ? ' sale-item--link' : ''}`} {...(href ? { href, tabIndex, 'aria-label': formatCopy(copy.viewProductDetails, { product: `${item.name} — ${item.item}, ${rupiah(item.price)}` }) } : {})}>
       <div className="sale-item__image">
-        <img src={getFlashSaleImage(item)} alt={item.name || 'Produk Flash Sale'} loading="lazy" decoding="async" />
+        <img src={getFlashSaleImage(item)} alt={item.name || copy.flashSaleProducts} loading="lazy" decoding="async" />
       </div>
       <div className="sale-item__body">
         <div className="sale-item__info">
@@ -49,6 +52,7 @@ export function FlashSaleItem({ item, interactive = true, tabIndex }) {
 }
 
 export default function FlashSale({ items = [], countdown }) {
+  const copy = useStorefrontCopy()
   const [columns, setColumns] = useState(getColumns)
   const [currentPage, setCurrentPage] = useState(0)
   const [now, setNow] = useState(Date.now)
@@ -115,14 +119,14 @@ export default function FlashSale({ items = [], countdown }) {
         <div className="flash-heading">
           <div className="flash-heading__title">
             <img src={assets.fire} alt="" loading="lazy" decoding="async" />
-            <h2 id="flash-title">Flash Sale</h2>
+            <h2 id="flash-title">{copy.flashSale}</h2>
           </div>
           {timeLabel && <div className="countdown-line"><strong>{timeLabel}</strong></div>}
         </div>
 
         <div className={`flash-carousel flash-carousel--adaptive${hasCarousel ? '' : ' flash-carousel--static'}`} style={{ '--flash-columns': columns }}>
           {hasCarousel && (
-            <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Flash Sale sebelumnya" onClick={() => changePage(-1)}>
+            <button className="carousel-arrow carousel-arrow--left" type="button" aria-label={copy.previousFlashSaleProducts} onClick={() => changePage(-1)}>
               <img src={assets.expandLeft} alt="" />
             </button>
           )}
@@ -130,8 +134,8 @@ export default function FlashSale({ items = [], countdown }) {
           <div
             className="flash-carousel__viewport"
             role={hasCarousel ? 'region' : undefined}
-            aria-roledescription={hasCarousel ? 'carousel' : undefined}
-            aria-label={hasCarousel ? 'Produk Flash Sale' : undefined}
+            aria-roledescription={hasCarousel ? copy.carousel : undefined}
+            aria-label={hasCarousel ? copy.flashSaleProducts : undefined}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchCancel={() => { touchStart.current = null }}
@@ -142,7 +146,7 @@ export default function FlashSale({ items = [], countdown }) {
                   className="flash-grid flash-grid--adaptive"
                   key={`flash-page-${pageIndex}`}
                   role={hasCarousel ? 'group' : undefined}
-                  aria-roledescription={hasCarousel ? 'slide' : undefined}
+                  aria-roledescription={hasCarousel ? copy.slide : undefined}
                   aria-label={hasCarousel ? `Halaman ${pageIndex + 1} dari ${pages.length}` : undefined}
                   aria-hidden={hasCarousel ? pageIndex !== safePage : undefined}
                 >
@@ -155,27 +159,27 @@ export default function FlashSale({ items = [], countdown }) {
           </div>
 
           {hasCarousel && (
-            <button className="carousel-arrow carousel-arrow--right" type="button" aria-label="Flash Sale berikutnya" onClick={() => changePage(1)}>
+            <button className="carousel-arrow carousel-arrow--right" type="button" aria-label={copy.nextFlashSaleProducts} onClick={() => changePage(1)}>
               <img src={assets.expandLeft} alt="" />
             </button>
           )}
         </div>
 
         {hasCarousel && (
-          <div className="carousel-dots flash-carousel__dots" aria-label="Halaman Flash Sale">
+          <div className="carousel-dots flash-carousel__dots" aria-label={copy.flashSalePages}>
             {pages.map((_, index) => (
               <button
                 key={index}
                 type="button"
                 className={`flash-carousel__dot${index === safePage ? ' is-active' : ''}`}
-                aria-label={`Tampilkan halaman Flash Sale ${index + 1} dari ${pages.length}`}
+                aria-label={formatCopy(copy.showFlashSalePage, { number: formatCopy(copy.of, { current: index + 1, total: pages.length }) })}
                 aria-current={index === safePage ? 'true' : undefined}
                 onClick={() => setCurrentPage(index)}
               />
             ))}
           </div>
         )}
-        {hasCarousel && <span className="flash-carousel__sr-only" role="status">Halaman {safePage + 1} dari {pages.length}</span>}
+        {hasCarousel && <span className="flash-carousel__sr-only" role="status">{copy.page} {formatCopy(copy.of, { current: safePage + 1, total: pages.length })}</span>}
       </div>
     </section>
   )

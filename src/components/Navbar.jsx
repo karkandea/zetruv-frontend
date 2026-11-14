@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
@@ -31,6 +32,7 @@ function readPhysicalCartCount() {
 }
 
 export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, restoreSession = true }) {
+  const copy = useStorefrontCopy()
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHomepageDrawerOpen, setIsHomepageDrawerOpen] = useState(false)
@@ -216,7 +218,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       <header className={navbarClasses}>
       <div ref={homepageDrawerRef} className="navbar__homepage-mobile-wrapper">
       <div className="navbar__top design-container">
-        <a ref={brandRef} className="brand navbar-control" href="/" aria-label="Zetruv home">
+        <a ref={brandRef} className="brand navbar-control" href="/" aria-label={copy.zetruvHome}>
           <img src={assets.logo} alt="Zetruv" />
         </a>
 
@@ -297,11 +299,11 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </button>
             <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen}>
               <a className="navbar-control" href="/cart" role="menuitem" onClick={() => setIsCartOpen(false)}>
-                <span><strong>{t.digitalCart}</strong><small>Top Up, Voucher, Joki &amp; Akun Game</small></span>
+                <span><strong>{t.digitalCart}</strong><small>{copy.topUpsVouchersBoostingGameAccounts}</small></span>
                 <b>{cartCount(cartItems)}</b>
               </a>
               <a className="navbar-control" href="/cart?flow=physical" role="menuitem" onClick={() => setIsCartOpen(false)}>
-                <span><strong>{t.physicalCart}</strong><small>Merchandise</small></span>
+                <span><strong>{t.physicalCart}</strong><small>{copy.merchandise}</small></span>
                 <b>{physicalCartCount}</b>
               </a>
             </div>
@@ -352,7 +354,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           className="navbar__hamburger navbar-control"
           ref={homepageMenuButtonRef}
           type="button"
-          aria-label={isHomepageDrawerOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+          aria-label={isHomepageDrawerOpen ? copy.closeNavigationMenu : copy.openNavigationMenu}
           aria-controls="zetruv-homepage-mobile-nav"
           aria-expanded={isHomepageDrawerOpen}
           onClick={() => {
@@ -368,7 +370,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       </div>
 
       {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" data-open={isHomepageDrawerOpen} inert={!isHomepageDrawerOpen}>
-        <nav className="navbar__mobile-links" aria-label="Navigasi Zetruv mobile">
+        <nav className="navbar__mobile-links" aria-label={copy.zetruvMobileNavigation}>
           <a className={activeNav === 'home' ? 'is-current' : ''} href="/" onClick={() => selectNav('home')}><Home size={18} aria-hidden="true" />{t.home}</a>
           <div className="navbar__mobile-product">
             <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>
@@ -405,7 +407,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
 
       <div className="navbar__bottom">
         <div className="design-container navbar__bottom-inner">
-          <nav className="navlinks" aria-label="Main navigation">
+          <nav className="navlinks" aria-label={copy.mainNavigation}>
             <a
               className={`navbar-control${activeNav === 'home' ? ' active' : ''}`}
               href="/"
@@ -433,7 +435,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               >
                 {productLabel} <img src={assets.navDown} alt="" />
               </a>
-              <div className="product-dropdown" aria-label="Product categories" aria-hidden={!isProductOpen}>
+              <div className="product-dropdown" aria-label={copy.productCategories} aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a className="navbar-control" href={link.href} key={link.label}>
                     <span>{t.products[link.label] || link.label}</span>
@@ -453,13 +455,13 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <img src={assets.leaderboard} alt="" />{t.leaderboard}
             </a>
             <div className={`nav-mobile-more${isMobileMenuOpen ? ' is-open' : ''}`} ref={mobileMenuRef}>
-              <button type="button" className="nav-mobile-more__trigger navbar-control" aria-haspopup="menu" aria-expanded={isMobileMenuOpen} aria-label="Menu lainnya"
+              <button type="button" className="nav-mobile-more__trigger navbar-control" aria-haspopup="menu" aria-expanded={isMobileMenuOpen} aria-label={copy.moreOptions}
                 onClick={() => { setIsMobileMenuOpen(v => !v); setIsProductOpen(false); setIsCartOpen(false); setIsLanguageOpen(false) }}>
-                Menu <img src={assets.navDown} alt="" />
+                {copy.menu} <img src={assets.navDown} alt="" />
               </button>
               <div className="cart-dropdown nav-mobile-more__dropdown" role="menu" aria-hidden={!isMobileMenuOpen}>
                 <a href="/search" role="menuitem">{t.product}</a>
-                <a href="/merchandise" role="menuitem">Merchandise</a>
+                <a href="/merchandise" role="menuitem">{copy.merchandise}</a>
                 <a href="/articles" role="menuitem">{t.article}</a>
                 <a href="/order-status" role="menuitem">{t.transaction}</a>
                 <a href="/leaderboard" role="menuitem">{t.leaderboard}</a>

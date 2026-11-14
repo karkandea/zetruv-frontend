@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import SupportChat from '../components/SupportChat'
@@ -13,38 +15,38 @@ const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'GameA
 const CATEGORY_PRESENTATION = {
   TopUpGame: {
     key: 'player-id',
-    browseLabel: 'Top Up Games Via ID',
-    loginLabel: 'Top Up Via ID',
+    browseLabel: 'gameTopUpById',
+    loginLabel: 'topUpById',
     icon: searchAssets.categoryPlayerId,
   },
   TopUpLogin: {
     key: 'login',
-    browseLabel: 'Top Up Games Via Login',
-    loginLabel: 'Top Up Via Login',
+    browseLabel: 'gameTopUpByLogin',
+    loginLabel: 'topUpByLogin',
     icon: searchAssets.categoryLogin,
   },
   GameVoucher: {
     key: 'voucher',
-    browseLabel: 'Voucher Game',
-    loginLabel: 'Voucher Game',
+    browseLabel: 'gameVouchers',
+    loginLabel: 'gameVouchers',
     icon: searchAssets.categoryItems,
   },
   Joki: {
     key: 'joki',
-    browseLabel: 'Joki Game',
-    loginLabel: 'Joki Game',
+    browseLabel: 'gameBoosting',
+    loginLabel: 'gameBoosting',
     icon: searchAssets.categoryJoki || searchAssets.categoryItems,
   },
   GameAccount: {
     key: 'accounts',
-    browseLabel: 'Game Accounts',
-    loginLabel: 'Akun Game',
+    browseLabel: 'gameAccounts',
+    loginLabel: 'gameAccounts',
     icon: searchAssets.categoryAccounts,
   },
   Merchandise: {
     key: 'merchandise',
-    browseLabel: 'Merchandise',
-    loginLabel: 'Merchandise',
+    browseLabel: 'merchandise',
+    loginLabel: 'merchandise',
     icon: searchAssets.categoryMerchandise,
   },
 }
@@ -52,7 +54,6 @@ const CATEGORY_PRESENTATION = {
 const FALLBACK_CATEGORIES = CATEGORY_ORDER.map((kind, index) => ({
   id: `fallback-category-${index + 1}`,
   kind,
-  name: CATEGORY_PRESENTATION[kind].browseLabel,
   slug: CATEGORY_PRESENTATION[kind].key,
   iconUrl: CATEGORY_PRESENTATION[kind].icon,
 }))
@@ -121,7 +122,7 @@ function publisherForProduct(product, fallback) {
   if (product.publisher) return product.publisher
   if (product.gamePublisher) return product.gamePublisher
   if (product.game?.publisher) return product.game.publisher
-  if (['GameVoucher', 'Joki', 'GameAccount', 'Merchandise'].includes(product.kind)) return CATEGORY_PRESENTATION[product.kind]?.browseLabel || fallback
+  if (['GameVoucher', 'Joki', 'GameAccount', 'Merchandise'].includes(product.kind)) return product.gameName || fallback
 
   const value = `${product.name || ''} ${product.gameName || ''}`.toLowerCase()
   if (value.includes('mobile legend')) return 'Moonton'
@@ -145,6 +146,7 @@ function productHref(product) {
 }
 
 function CatalogCard({ product, categoryLabel }) {
+  const copy = useStorefrontCopy()
   const href = productHref(product)
   const available = product.isAvailable !== false
   const favoriteId = product.kind === 'Merchandise'
@@ -155,7 +157,7 @@ function CatalogCard({ product, categoryLabel }) {
   const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
   return (
     <article className={`search-game-card${!available ? ' is-unavailable' : ''}`}>
-      {available ? <a className="search-game-card__link" href={href} aria-label={`Lihat ${product.name}`} /> : null}
+      {available ? <a className="search-game-card__link" href={href} aria-label={formatCopy(copy.viewProduct, { product: product.name })} /> : null}
       <img src={thumbnail} alt="" onError={(event) => {
         const fallback = fallbackProductImage(product)
         if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
@@ -163,10 +165,10 @@ function CatalogCard({ product, categoryLabel }) {
       <span className="search-game-card__copy">
         <strong>{product.name}</strong>
         <small>{publisherForProduct(product, product.gameName || categoryLabel)}</small>
-        {!available && <small>Tidak tersedia</small>}
+        {!available && <small>{copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
-        aria-label={saved ? `Hapus ${product.name} dari favorit` : `Simpan ${product.name} ke favorit`}
+        aria-label={saved ? formatCopy(copy.removeFromFavorites, { product: product.name }) : formatCopy(copy.addToFavorites, { product: product.name })}
         aria-pressed={saved}
         onClick={() => setSaved(toggleFavorite({
           id: favoriteId, name: product.name, type: categoryLabel || product.kind,
@@ -217,6 +219,7 @@ function filterFallbackProducts(kind, search) {
 }
 
 export default function SearchPage({ mode = 'player-id' }) {
+  const copy = useStorefrontCopy()
   const isLoginMode = mode === 'login'
   const rawInitialQuery = new URLSearchParams(window.location.search).get('q') || ''
   const initialQuery = rawInitialQuery.trim().length >= 3 ? rawInitialQuery : ''
@@ -304,13 +307,13 @@ export default function SearchPage({ mode = 'player-id' }) {
     return {
       ...category,
       key: presentation.key,
-      label: isLoginMode ? presentation.loginLabel : presentation.browseLabel,
+      label: apiCategory?.name || copy[isLoginMode ? presentation.loginLabel : presentation.browseLabel],
       icon: category.iconUrl || presentation.icon,
     }
-  }), [categories, isLoginMode])
+  }), [categories, isLoginMode, copy])
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
-  const categoryLabel = globalResults ? 'All categories' : activeCategory?.label || CATEGORY_PRESENTATION[activeKind]?.browseLabel || 'Catalog'
+  const categoryLabel = globalResults ? copy.allCategories : activeCategory?.label || copy.catalog
   // The API is the only source of listed products. Never show preview items as stock.
   const sourceProducts = products
   const effectiveLetter = letterFiltering ? activeLetter : ''
@@ -389,27 +392,27 @@ export default function SearchPage({ mode = 'player-id' }) {
         <div className="search-page__container">
           {!isLoginMode && (
             <>
-              <p className="search-breadcrumb"><a href="/">Home</a> / Categories</p>
-              <h1>{globalResults ? 'Search results' : 'Browse Categories'}</h1>
+              <p className="search-breadcrumb"><a href="/">{copy.home2}</a> {copy.categories}</p>
+              <h1>{globalResults ? copy.searchResults : copy.browseCategories}</h1>
               <p className="search-page__intro">{globalResults
-                ? `Results for “${submittedQuery}” across all categories.`
-                : 'Find the game, top-up method, or product you’re looking for.'}</p>
+                ? formatCopy(copy.resultsForAcrossAllCategories, { query: submittedQuery })
+                : copy.findTheGameTopUpMethodOr}</p>
             </>
           )}
 
-          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label="Browse Zetruv categories">
-            {!isLoginMode && <form className="catalog-search catalog-search--mobile" onSubmit={handleSearch} role="search" aria-label="Search catalog on mobile">
+          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label={copy.browseZetruvCategories}>
+            {!isLoginMode && <form className="catalog-search catalog-search--mobile" onSubmit={handleSearch} role="search" aria-label={copy.searchTheCatalog}>
               <img src={searchAssets.searchIcon} alt="" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search games or categories"
-                aria-label="Search games or categories"
+                placeholder={copy.searchGamesOrCategories}
+                aria-label={copy.searchGamesOrCategories}
               />
-              <button type="submit" disabled={queryTooShort}>Search</button>
+              <button type="submit" disabled={queryTooShort}>{copy.search2}</button>
             </form>}
             <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
-              <h2>{isLoginMode ? 'Kategori' : 'Categories'}</h2>
+              <h2>{isLoginMode ? copy.categories3 : copy.categories2}</h2>
               <div className="search-category-list">
                 {categoryDefinitions.map((category) => (
                   <button
@@ -426,8 +429,8 @@ export default function SearchPage({ mode = 'player-id' }) {
               </div>
 
               <button className="search-help-card" type="button" onClick={() => setSupportOpen(true)}>
-                <strong>{isLoginMode ? 'Admin Support' : 'Need Help?'}</strong>
-                <span>{isLoginMode ? 'Chat admin jika terjadi kendala' : 'Chat with our support team.'}</span>
+                <strong>{isLoginMode ? copy.customerSupport : copy.needHelp}</strong>
+                <span>{isLoginMode ? copy.chatWithSupportIfYouNeedHelp : copy.chatWithOurSupportTeam}</span>
               </button>
             </aside>
 
@@ -437,35 +440,35 @@ export default function SearchPage({ mode = 'player-id' }) {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
-                  aria-label={isLoginMode ? 'Cari game atau kategori' : 'Search games or categories'}
+                  placeholder={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrCategories}
+                  aria-label={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrCategories}
                 />
-                <button type="submit" disabled={queryTooShort}>{isLoginMode ? 'Cari' : 'Search'}</button>
+                <button type="submit" disabled={queryTooShort}>{isLoginMode ? copy.search3 : copy.search2}</button>
               </form>
 
               <div className="search-query-state" aria-live="polite">
-                {searchState === 'min' && <span>Type at least 3 characters to start searching.</span>}
-                {searchState === 'loading' && <span>Loading results…</span>}
-                {searchState === 'error' && <span>Couldn’t load results. Showing available local catalog where possible.</span>}
-                {searchState === 'empty' && <span>No results found for “{submittedQuery}”. Try another keyword or category.</span>}
+                {searchState === 'min' && <span>{copy.typeAtLeast3CharactersToStart}</span>}
+                {searchState === 'loading' && <span>{copy.loadingResults}</span>}
+                {searchState === 'error' && <span>{copy.weCouldnTLoadTheLatestResults}</span>}
+                {searchState === 'empty' && <span>{formatCopy(copy.noResultsFoundForTryAnotherKeyword, { query: submittedQuery })}</span>}
               </div>
 
               {isLoginMode && (
                 <details className="alphabet-filter-collapsible">
-                  <summary>Filter menurut abjad {letterFiltering ? `· ${activeLetter}` : 'A–Z'}</summary>
-                  <div className="alphabet-filter" aria-label="Filter game berdasarkan abjad">
+                  <summary>{copy.filterByLetter} {letterFiltering ? `· ${activeLetter}` : 'A–Z'}</summary>
+                  <div className="alphabet-filter" aria-label={copy.filterGamesByLetter}>
                     <strong>A–Z</strong>
                     {alphabet.map((letter) => (
                       <button key={letter} type="button" className={activeLetter === letter && letterFiltering ? 'active' : ''} onClick={() => handleLetter(letter)}>{letter}</button>
                     ))}
-                    {letterFiltering && <button type="button" onClick={() => setLetterFiltering(false)}>Hapus filter</button>}
+                    {letterFiltering && <button type="button" onClick={() => setLetterFiltering(false)}>{copy.clearFilters}</button>}
                   </div>
                 </details>
               )}
 
               {isLoginMode && (
                 <div className="search-section-heading">
-                  <h2>Kategori Populer</h2>
+                  <h2>{copy.popularCategories}</h2>
                   <span>{categoryLabel}</span>
                 </div>
               )}
@@ -479,13 +482,13 @@ export default function SearchPage({ mode = 'player-id' }) {
                       ))}
                     </div>
                   ) : (
-                    <div className="search-empty search-empty--browse">No products found in this category.</div>
+                    <div className="search-empty search-empty--browse">{copy.noProductsFoundInThisCategory}</div>
                   )}
 
                   {(isLoginMode ? moreProducts : browseMoreProducts).length > 0 && (
                     <>
                       <div className="search-section-heading search-section-heading--more search-section-heading--browse-more">
-                        <div><h2>More Products</h2><p>Browse more products available on Zetruv.</p></div>
+                        <div><h2>{copy.moreProducts}</h2><p>{copy.browseMoreProductsAvailableOnZetruv}</p></div>
                       </div>
                       <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-more'}`}>
                         {(isLoginMode ? moreProducts : browseMoreProducts).map((product) => (
@@ -499,10 +502,10 @@ export default function SearchPage({ mode = 'player-id' }) {
 
               {searchState !== 'results' && (
                 <div className="search-empty search-empty--browse search-empty--state">
-                  {searchState === 'min' && 'Search starts after 3 characters.'}
-                  {searchState === 'loading' && 'Loading catalog…'}
-                  {searchState === 'error' && 'Catalog could not be loaded. Please try again.'}
-                  {searchState === 'empty' && 'No products match your search.'}
+                  {searchState === 'min' && copy.enterAtLeast3CharactersToSearch2}
+                  {searchState === 'loading' && copy.loadingCatalog}
+                  {searchState === 'error' && copy.weCouldnTLoadTheCatalogPlease}
+                  {searchState === 'empty' && copy.noProductsMatchYourSearch}
                 </div>
               )}
             </div>

@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { assets } from '../data/assets'
 import { identifyHomepageGame } from '../services/homeArtwork'
 
@@ -25,6 +26,7 @@ function MiniItem({ item }) {
 }
 
 export default function PopularAndRecent({ popular = [], recent = [], featured = [], authenticated = false }) {
+  const copy = useStorefrontCopy()
   // Never represent promotional items as a customer's purchase history.
   // Guests see public featured offers; signed-in users see their own orders.
   const showFeatured = !authenticated && featured.length > 0
@@ -36,24 +38,24 @@ export default function PopularAndRecent({ popular = [], recent = [], featured =
     : recent
 
   return (
-    <section className="popular-recent" aria-label="Popular games and recent purchases">
+    <section className="popular-recent" aria-label={copy.popularGamesAndRecentPurchases}>
       <div className="popular-recent__column">
         <header className="compact-heading">
-          <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>Game Populer</h2></div>
+          <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>{copy.popularGames}</h2></div>
         </header>
         <div className="mini-panel mini-panel--popular">
           {popular.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
-          {popular.length === 0 && <p role="status">Belum ada game populer.</p>}
+          {popular.length === 0 && <p role="status">{copy.thereAreNoPopularGamesYet}</p>}
         </div>
       </div>
 
       <div className={`popular-recent__column${authenticated || showFeatured ? '' : ' popular-recent__column--sign-in-prompt'}`}>
         <header className="compact-heading">
-          <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>{showFeatured ? 'Featured Items' : 'Terakhir Dibeli'}</h2></div>
+          <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>{showFeatured ? copy.featuredItems : copy.recentPurchases}</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
           {sidebarItems.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
-          {sidebarItems.length === 0 && <p role="status">{authenticated ? 'Belum ada riwayat pembelian untuk akun ini.' : 'Masuk untuk melihat pembelian terakhirmu.'}</p>}
+          {sidebarItems.length === 0 && <p role="status">{authenticated ? copy.thisAccountHasNoPurchaseHistoryYet : copy.logInToSeeYourRecentPurchases}</p>}
         </div>
       </div>
     </section>

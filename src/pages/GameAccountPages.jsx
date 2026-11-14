@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useMemo, useState } from 'react'
 import {
   Check,
@@ -315,6 +316,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
 }
 
 export function GameAccountCartPage() {
+  const copy = useStorefrontCopy()
   const account = readGameAccountCart()
   const game = account.game || getGame('dota-2')
   const [selected, setSelected] = useState(true)
@@ -325,8 +327,8 @@ export function GameAccountCartPage() {
       <Navbar variant="loginCatalog" />
       <main className="ga-cart ga-flow-1120">
         <header>
-          <h1>Keranjang Digital</h1>
-          <p>Review akun yang dipilih sebelum lanjut checkout.</p>
+          <h1>{copy.digitalCart}</h1>
+          <p>{copy.reviewYourSelectedAccountBeforeCheckout}</p>
         </header>
 
         <div className="ga-cart-layout">
@@ -334,42 +336,42 @@ export function GameAccountCartPage() {
             <div className="ga-cart-top">
               <div>
                 <button type="button" className={'ga-check' + (selected ? ' active' : '')} onClick={() => setSelected(!selected)}><Check size={14} /></button>
-                <strong>1 akun dipilih</strong>
+                <strong>{copy.label1AccountSelected}</strong>
               </div>
-              <button type="button" onClick={() => setSelected(false)}>Hapus pilihan</button>
+              <button type="button" onClick={() => setSelected(false)}>{copy.clearSelection}</button>
             </div>
 
             <div className="ga-cart-item">
               <button type="button" className={'ga-check' + (selected ? ' active' : '')} onClick={() => setSelected(!selected)}><Check size={14} /></button>
               <div className="ga-cart-thumb"><GameImage game={game} /></div>
               <div>
-                <h2>Akun {game.name} · {account.rank} · {account.heroes} Heroes</h2>
-                <span className="ga-destination"><MapPin size={12} />Region {account.region} · Level {account.level} · Email dapat diubah</span>
+                <h2>{copy.account} {game.name} · {account.rank} · {account.heroes} {copy.heroes}</h2>
+                <span className="ga-destination"><MapPin size={12} />{copy.region} {account.region} {copy.level} {account.level} {copy.emailCanBeChanged}</span>
               </div>
               <strong>{rupiahAccount(account.price)}</strong>
-              <button className="ga-remove" type="button" onClick={() => setSelected(false)} aria-label="Hapus akun"><X size={17} /></button>
+              <button className="ga-remove" type="button" onClick={() => setSelected(false)} aria-label={copy.removeAccount}><X size={17} /></button>
             </div>
 
-            <div className="ga-info"><Info size={18} /><span>Akun unik ini akan dikunci saat pesanan dibuat. Quantity selalu 1 akun.</span></div>
+            <div className="ga-info"><Info size={18} /><span>{copy.thisUniqueAccountIsReservedWhenYou}</span></div>
           </section>
 
           <aside className="ga-cart-summary">
-            <h2>Ringkasan</h2>
-            <div className="ga-summary-item"><span>Akun {game.name} · {account.rank}</span><b>{rupiahAccount(account.price)}</b></div>
+            <h2>{copy.summary}</h2>
+            <div className="ga-summary-item"><span>{copy.account} {game.name} · {account.rank}</span><b>{rupiahAccount(account.price)}</b></div>
             <hr />
-            <div className="ga-summary-row"><span>Subtotal</span><b>{rupiahAccount(account.price)}</b></div>
-            <div className="ga-summary-row"><span>Biaya layanan</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
+            <div className="ga-summary-row"><span>{copy.subtotal}</span><b>{rupiahAccount(account.price)}</b></div>
+            <div className="ga-summary-row"><span>{copy.serviceFee}</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
             <hr />
-            <div className="ga-summary-total"><span>Total</span><strong>{rupiahAccount(total)}</strong></div>
+            <div className="ga-summary-total"><span>{copy.total}</span><strong>{rupiahAccount(total)}</strong></div>
             <button
               className="ga-primary-cta"
               type="button"
               disabled={!selected}
               onClick={() => { window.location.href = '/checkout?flow=account' }}
             >
-              Lanjut ke Checkout <ChevronRight size={15} />
+              {copy.continueToCheckout} <ChevronRight size={15} />
             </button>
-            <small>Merchandise diproses melalui checkout terpisah.</small>
+            <small>{copy.merchandiseUsesASeparateCheckout}</small>
           </aside>
         </div>
       </main>
@@ -378,6 +380,7 @@ export function GameAccountCartPage() {
 }
 
 function AccountLoginGate({ account, onLoggedIn }) {
+  const copy = useStorefrontCopy()
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
   const total = account.price + SERVICE_FEE
@@ -391,42 +394,42 @@ function AccountLoginGate({ account, onLoggedIn }) {
   return (
     <>
       <div className="ga-gate-title">
-        <h1>Masuk untuk melanjutkan checkout</h1>
-        <p>Akun Zetruv diperlukan untuk melanjutkan pembayaran dan melihat status pesanan.</p>
+        <h1>{copy.logInToContinue}</h1>
+        <p>{copy.useYourZetruvAccountToContinueAnd}</p>
       </div>
 
       <div className="ga-gate-layout">
         <section className="ga-gate-card">
-          <h2>Pesanan yang akan dilanjutkan</h2>
+          <h2>{copy.yourOrder}</h2>
           <div className="ga-gate-order">
             <div><ShoppingCart size={26} /></div>
-            <span><strong>1 akun game · {account.rank} · {account.heroes} Heroes</strong><small>Keranjang tetap tersimpan</small></span>
+            <span><strong>{copy.label1GameAccount} {account.rank} · {account.heroes} {copy.heroes}</strong><small>{copy.yourCartStaysSaved}</small></span>
             <b>{rupiahAccount(account.price)}</b>
           </div>
-          <div className="ga-info"><Info size={18} /><span>Keranjang dan data tujuan akun tetap tersimpan setelah login.</span></div>
-          <div className="ga-summary-row"><span>Subtotal</span><b>{rupiahAccount(account.price)}</b></div>
-          <div className="ga-summary-row"><span>Biaya layanan</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
+          <div className="ga-info"><Info size={18} /><span>{copy.yourCartAndDestinationDetailsRemainSaved}</span></div>
+          <div className="ga-summary-row"><span>{copy.subtotal}</span><b>{rupiahAccount(account.price)}</b></div>
+          <div className="ga-summary-row"><span>{copy.serviceFee}</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
           <hr />
-          <div className="ga-summary-total"><span>Total</span><strong>{rupiahAccount(total)}</strong></div>
+          <div className="ga-summary-total"><span>{copy.total}</span><strong>{rupiahAccount(total)}</strong></div>
         </section>
 
         <section className="ga-login-card">
-          <h2>Masuk ke akun Zetruv</h2>
-          <p>Setelah login, kamu akan kembali ke Checkout Digital untuk memilih metode pembayaran dan menyelesaikan pesanan.</p>
+          <h2>{copy.logInToYourZetruvAccount2}</h2>
+          <p>{copy.afterLoggingInReturnToDigitalCheckout}</p>
           <form onSubmit={submit}>
-            <label>Email / username<input type="text" placeholder="nama@email.com" required /></label>
-            <label>Password
+            <label>{copy.emailOrUsername}<input type="text" placeholder="nama@email.com" required /></label>
+            <label>{copy.password}
               <span className="ga-password">
                 <input type={passwordVisible ? 'text' : 'password'} placeholder="••••••••" required />
-                <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} aria-label="Tampilkan password">
+                <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} aria-label={copy.showPassword3}>
                   {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </span>
             </label>
-            <button className="ga-primary-cta" type="submit">Masuk</button>
-            <button className="ga-outline-cta" type="button" onClick={() => setShowRegister(true)}>Buat akun baru</button>
+            <button className="ga-primary-cta" type="submit">{copy.login}</button>
+            <button className="ga-outline-cta" type="button" onClick={() => setShowRegister(true)}>{copy.createAccount}</button>
           </form>
-          <small>Belum punya akun? Buat akun baru lalu kembali ke checkout.</small>
+          <small>{copy.newToZetruvCreateAnAccountTo}</small>
         </section>
       </div>
 
@@ -457,6 +460,7 @@ function PaymentMethod({ name, description, active, icon: Icon, onClick }) {
 }
 
 export function GameAccountCheckoutPage() {
+  const copy = useStorefrontCopy()
   const account = readGameAccountCart()
   const game = account.game || getGame('dota-2')
   const [authenticated, setAuthenticated] = useState(() => window.sessionStorage.getItem(AUTH_PREVIEW_KEY) === '1')
@@ -495,51 +499,51 @@ export function GameAccountCheckoutPage() {
     <div className="ga-shell ga-shell--minimal">
       <main className="ga-checkout-page ga-flow-1120">
         <header>
-          <h1>Checkout Digital</h1>
-          <p>Periksa kembali detail pesanan, promo, metode pembayaran, dan total.</p>
+          <h1>{copy.digitalCheckout}</h1>
+          <p>{copy.reviewYourOrderPromotionPaymentMethodAnd}</p>
         </header>
 
         <div className="ga-checkout-layout">
           <section className="ga-checkout-order">
-            <h2>Ringkasan Pesanan</h2>
+            <h2>{copy.orderSummary}</h2>
             <div className="ga-checkout-row">
-              <span><strong>Akun {game.name} · {account.rank} · {account.heroes} Heroes</strong><small>{game.name} · Region {account.region}</small></span>
+              <span><strong>{copy.account} {game.name} · {account.rank} · {account.heroes} {copy.heroes}</strong><small>{game.name} {copy.region2} {account.region}</small></span>
               <b>{rupiahAccount(account.price)}</b>
             </div>
             <div className="ga-checkout-row">
-              <span><strong>Detail Akun</strong><small>Level {account.level} · {account.heroes} Heroes · Email dapat diubah</small></span>
-              <b>Garansi {account.warranty}</b>
+              <span><strong>{copy.accountDetails2}</strong><small>{copy.level2} {account.level} · {account.heroes} {copy.heroesEmailCanBeChanged}</small></span>
+              <b>{copy.guarantee} {account.warranty}</b>
             </div>
 
-            <label className="ga-voucher-label">Kode Voucher</label>
+            <label className="ga-voucher-label">{copy.voucherCode}</label>
             <div className="ga-voucher">
-              <input value={voucher} onChange={(event) => setVoucher(event.target.value)} placeholder="Masukkan kode voucher" />
-              <button type="button">Gunakan</button>
+              <input value={voucher} onChange={(event) => setVoucher(event.target.value)} placeholder={copy.enterVoucherCode} />
+              <button type="button">{copy.apply}</button>
             </div>
-            <p className="ga-helper">Voucher dapat memberikan potongan sesuai syarat yang berlaku.</p>
-            <div className="ga-unique-note"><Info size={16} /><span>Akun ini unik. Sistem mengecek ulang ketersediaan sebelum order dibuat.</span></div>
+            <p className="ga-helper">{copy.voucherDiscountsAreSubjectToTheirTerms}</p>
+            <div className="ga-unique-note"><Info size={16} /><span>{copy.weLlCheckTheAvailabilityOfThis}</span></div>
 
             <div className="ga-contact">
-              <h3>Informasi Kontak</h3>
-              <label>Nomor WhatsApp*<input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
-              <small>Digunakan jika ada kendala atau update terkait pesanan.</small>
+              <h3>{copy.contactInformation}</h3>
+              <label>{copy.whatsappNumber2}<input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+              <small>{copy.weLlUseThisNumberForOrder2}</small>
             </div>
           </section>
 
           <aside className="ga-payment">
-            <h2>Metode Pembayaran</h2>
+            <h2>{copy.paymentMethod}</h2>
             <div className="ga-payment-options">
-              <PaymentMethod name="QRIS" description="Scan QR untuk bayar" icon={QrCode} active={method === 'QRIS'} onClick={() => setMethod('QRIS')} />
-              <PaymentMethod name="Virtual Account" description="Transfer via bank" icon={Landmark} active={method === 'Virtual Account'} onClick={() => setMethod('Virtual Account')} />
-              <PaymentMethod name="E-Wallet" description="Buka aplikasi wallet" icon={WalletCards} active={method === 'E-Wallet'} onClick={() => setMethod('E-Wallet')} />
+              <PaymentMethod name="QRIS" description={copy.scanTheQrCodeToPay} icon={QrCode} active={method === 'QRIS'} onClick={() => setMethod('QRIS')} />
+              <PaymentMethod name={copy.virtualAccount} description={copy.bankTransfer2} icon={Landmark} active={method === 'Virtual Account'} onClick={() => setMethod('Virtual Account')} />
+              <PaymentMethod name="E-Wallet" description={copy.openYourDigitalWallet} icon={WalletCards} active={method === 'E-Wallet'} onClick={() => setMethod('E-Wallet')} />
             </div>
             <div className="ga-payment-summary">
-              <div className="ga-summary-row"><span>Subtotal</span><b>{rupiahAccount(account.price)}</b></div>
-              <div className="ga-summary-row"><span>Biaya layanan</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
+              <div className="ga-summary-row"><span>{copy.subtotal}</span><b>{rupiahAccount(account.price)}</b></div>
+              <div className="ga-summary-row"><span>{copy.serviceFee}</span><b>{rupiahAccount(SERVICE_FEE)}</b></div>
               <hr />
-              <div className="ga-summary-total"><span>Total</span><strong>{rupiahAccount(total)}</strong></div>
+              <div className="ga-summary-total"><span>{copy.total}</span><strong>{rupiahAccount(total)}</strong></div>
             </div>
-            <button className="ga-primary-cta" type="button" onClick={pay}>Bayar Sekarang</button>
+            <button className="ga-primary-cta" type="button" onClick={pay}>{copy.payNow}</button>
           </aside>
         </div>
       </main>
@@ -548,6 +552,7 @@ export function GameAccountCheckoutPage() {
 }
 
 export function GameAccountPaymentPage() {
+  const copy = useStorefrontCopy()
   const account = readGameAccountCart()
   const order = readAccountOrder()
   const total = order?.total || account.price + SERVICE_FEE
@@ -558,37 +563,37 @@ export function GameAccountPaymentPage() {
       <div className="ga-minimal-divider" />
       <main className="ga-account-payment-page ga-flow-1120">
         <header className="ga-payment-header">
-          <div><h1>Selesaikan Pembayaran</h1><p>Selesaikan sebelum timer habis agar pesanan dapat diproses.</p></div>
-          <span>MENUNGGU PEMBAYARAN</span>
+          <div><h1>{copy.completeYourPayment}</h1><p>{copy.completePaymentBeforeTheDeadlineSoWe}</p></div>
+          <span>{copy.awaitingPayment2}</span>
         </header>
 
         <div className="ga-account-payment-layout">
           <section className="ga-invoice-card">
-            <small>Invoice</small>
+            <small>{copy.invoice}</small>
             <h2>{invoice}</h2>
-            <h3>Detail Pemesanan</h3>
+            <h3>{copy.orderDetails}</h3>
             <div className="ga-invoice-grid">
-              <span>Produk</span><b>1 Akun Game</b>
-              <span>Akun</span><b>Akun Dota 2 · Divine 5 · 126 Heroes</b>
-              <span>Detail akun</span><b>Region SEA · Email dapat diubah</b>
-              <span>Metode Pembayaran</span><b>QRIS</b>
-              <span>Status</span><b className="pending">Menunggu Pembayaran</b>
+              <span>{copy.product}</span><b>{copy.label1GameAccount2}</b>
+              <span>{copy.account}</span><b>Akun Dota 2 · Divine 5 · 126 Heroes</b>
+              <span>{copy.accountDetails}</span><b>Region SEA · Email dapat diubah</b>
+              <span>{copy.paymentMethod}</span><b>QRIS</b>
+              <span>{copy.status2}</span><b className="pending">{copy.awaitingPayment3}</b>
             </div>
-            <button type="button" className="ga-invoice-download" onClick={() => window.print()}><Download size={16} />Unduh Invoice</button>
+            <button type="button" className="ga-invoice-download" onClick={() => window.print()}><Download size={16} />{copy.downloadInvoice}</button>
           </section>
 
           <section className="ga-qris-card">
             <h2>QRIS</h2>
-            <small>Total pembayaran</small>
+            <small>{copy.paymentTotal}</small>
             <strong>{rupiahAccount(total)}</strong>
-            <p>Scan QR menggunakan aplikasi pembayaran pilihan kamu.</p>
+            <p>{copy.scanTheQrCodeUsingYourPreferred}</p>
             <div className="ga-qris-crop">
-              <img src={gameAccountFlowAssets.qris} alt="QRIS pembayaran" decoding="async" />
+              <img src={gameAccountFlowAssets.qris} alt={copy.qrisPaymentCode} decoding="async" />
             </div>
-            <div className="ga-payment-expiry"><Clock3 size={16} /><span>Berlaku 23:42:18</span></div>
+            <div className="ga-payment-expiry"><Clock3 size={16} /><span>{copy.expiresAt234218}</span></div>
             <div className="ga-qris-actions">
-              <a href={gameAccountFlowAssets.qris} download="zetruv-qris.png">Unduh QR</a>
-              <button type="button" onClick={() => { window.location.href = '/order-status?flow=account' }}>Cek Status</button>
+              <a href={gameAccountFlowAssets.qris} download="zetruv-qris.png">{copy.downloadQrCode}</a>
+              <button type="button" onClick={() => { window.location.href = '/order-status?flow=account' }}>{copy.checkStatus2}</button>
             </div>
           </section>
         </div>

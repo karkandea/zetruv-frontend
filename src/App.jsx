@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from './hooks/useStorefrontCopy'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -23,12 +24,13 @@ import {
 } from './pages/GameAccountPages'
 
 function AccountOrderUnavailablePage() {
+  const copy = useStorefrontCopy()
   return <div className="account-page"><Navbar variant="account" homepageMobileMenu />
     <main className="account-layout" style={{ display: 'block' }}>
       <section className="account-main" style={{ marginInline: 'auto', maxWidth: 720, padding: '40px 24px', textAlign: 'center' }}>
-        <h1>Detail pesanan belum tersedia</h1>
-        <p>Detail pesanan tidak boleh berasal dari data contoh. Untuk informasi pesanan yang valid, gunakan kode pesanan pada halaman Cek Pesanan.</p>
-        <a href="/order-status" className="account-btn account-btn--primary">Cek Pesanan</a>
+        <h1>{copy.orderDetailsUnavailable}</h1>
+        <p>{copy.useYourOrderNumberOnTheCheck}</p>
+        <a href="/order-status" className="account-btn account-btn--primary">{copy.checkOrder}</a>
       </section>
     </main>
   </div>

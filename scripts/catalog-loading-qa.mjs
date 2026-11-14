@@ -46,6 +46,7 @@ try {
     ['mobile', { width: 390, height: 844 }],
   ]) {
     const context = await browser.newContext({ viewport })
+    await context.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const gate = deferred()
     await context.route('**/api/v1/catalog/products/mobile-legends', async (route) => {
       await gate.promise
@@ -74,7 +75,7 @@ try {
         : json(route, product)
     })
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'Produk belum bisa dimuat' }).waitFor()
+    await page.getByRole('heading', { name: 'Produk Belum Bisa Dimuat' }).waitFor()
     assert.equal(await page.getByText('Rp12.000').count(), 0)
     await page.getByRole('button', { name: 'Coba lagi' }).click()
     await page.getByRole('button', { name: /5 Diamond/ }).waitFor()
@@ -83,6 +84,8 @@ try {
     await context.close()
 
     const cartContext = await browser.newContext({ viewport })
+
+    await cartContext.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     await cartContext.addInitScript((draft) => {
       localStorage.setItem('zetruv-cart-v1', JSON.stringify([draft]))
     }, item)

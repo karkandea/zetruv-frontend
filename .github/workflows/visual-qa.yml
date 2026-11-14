@@ -48,6 +48,8 @@ jobs:
         run: node scripts/auth-reset-browser-qa.mjs
       - name: Digital checkout and payment state E2E (synthetic server only)
         run: node scripts/checkout-payment-browser-qa.mjs
+      - name: Storefront locale switching and CMS content
+        run: node scripts/storefront-localization-qa.mjs
       - name: QA evidence summary
         if: always()
         run: |

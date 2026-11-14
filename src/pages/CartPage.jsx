@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -9,7 +11,7 @@ import {
   restoreCartItem, supportsCartQuantity, updateCartAccount, updateCartQuantity,
 } from '../services/cartService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
-import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
 import { accountRequirements, checkCartDestination, getCartItemProblem, isCartCatalogPending } from '../services/digitalCartValidation'
 import '../styles/digital-commerce.css'
@@ -18,10 +20,10 @@ import '../styles/service-unavailable-polish.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 const methodLabel = {
-  AUTO_ID: 'Top Up Via ID',
-  MANUAL_LOGIN: 'Top Up Via Login',
-  VOUCHER_CODE: 'Voucher Game',
-  JOKI_MANUAL: 'Joki Game',
+  AUTO_ID: 'topUpById',
+  MANUAL_LOGIN: 'topUpByLogin',
+  VOUCHER_CODE: 'gameVouchers',
+  JOKI_MANUAL: 'gameBoosting',
 }
 const fallbackImages = {
   TopUpGame: '/assets/home/category-topup.png',
@@ -32,12 +34,12 @@ const fallbackImages = {
 }
 const clean = (value) => String(value ?? '').trim()
 
-function itemContext(item) {
-  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Informasi akun game diisi saat checkout jika layanan tersedia.'
-  if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode voucher dikirim setelah pembayaran berhasil.'
-  if (item.productKind === 'Joki') return 'Layanan diproses manual setelah pembayaran terkonfirmasi.'
-  if (item.productKind === 'GameAccount') return 'Akun game akan diverifikasi sebelum pemrosesan.'
-  return 'Produk digital'
+function itemContext(item, copy) {
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return copy.enterGameAccountInformationAtCheckoutIf
+  if (item.fulfillmentMethod === 'VOUCHER_CODE') return copy.theVoucherCodeWillBeSentAfter
+  if (item.productKind === 'Joki') return copy.manualServiceAfterPayment
+  if (item.productKind === 'GameAccount') return copy.weLlVerifyYourGameAccountBefore
+  return copy.digitalProduct
 }
 
 function CartThumbnail({ item }) {
@@ -53,12 +55,13 @@ function CartThumbnail({ item }) {
 }
 
 function AccountEditModal({ item, requirements, onClose, onSave }) {
+  const copy = useStorefrontCopy()
   const [value, setValue] = useState({
     userId: item.accountFields?.userId || '',
     zone: item.accountFields?.zone || '',
   })
   const fields = requirements || []
-  const invalid = checkCartDestination({ ...item, accountFields: value }, fields)
+  const invalid = checkCartDestination({ ...item, accountFields: value }, fields, copy)
   useEffect(() => {
     const escape = (event) => { if (event.key === 'Escape') onClose() }
     document.addEventListener('keydown', escape)
@@ -76,14 +79,14 @@ function AccountEditModal({ item, requirements, onClose, onSave }) {
     }}>
       <section className="digital-cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-edit-title">
         <header className="digital-cart-modal__header">
-          <div><h2 id="cart-edit-title">Edit Data Akun Tujuan</h2><p>{item.productName} · {item.variantName}</p></div>
-          <button type="button" aria-label="Tutup modal" onClick={onClose}><X size={19} aria-hidden="true" /></button>
+          <div><h2 id="cart-edit-title">{copy.editDestinationAccount}</h2><p>{item.productName} · {item.variantName}</p></div>
+          <button type="button" aria-label={copy.closeDialog} onClick={onClose}><X size={19} aria-hidden="true" /></button>
         </header>
         {fields.length ? (
           <form onSubmit={(event) => { event.preventDefault(); if (invalid.valid) onSave(value, fields) }}>
             {fields.map((field) => (
               <label key={field.key}>
-                {field.label}{!field.required && <span> (opsional)</span>}
+                {field.label}{!field.required && <span> {copy.optional}</span>}
                 <input type="text" required={field.required} maxLength={field.maxLength}
                   inputMode={field.type === 'Number' ? 'numeric' : 'text'}
                   autoComplete="off" autoFocus={field.slot === 'userId'}
@@ -96,13 +99,13 @@ function AccountEditModal({ item, requirements, onClose, onSave }) {
             ))}
             {!invalid.valid && <p className="digital-cart-modal__error" role="status">{invalid.message}</p>}
             <footer>
-              <button className="digital-cart-modal__cancel" type="button" onClick={onClose}>Batal</button>
-              <button className="digital-cart-modal__save" type="submit" disabled={!invalid.valid}>Simpan Perubahan</button>
+              <button className="digital-cart-modal__cancel" type="button" onClick={onClose}>{copy.cancel}</button>
+              <button className="digital-cart-modal__save" type="submit" disabled={!invalid.valid}>{copy.saveChanges}</button>
             </footer>
           </form>
         ) : (
           <p className="digital-cart-modal__error" role="alert">
-            Definisi field akun belum tersedia dari katalog. Periksa koneksi lalu muat ulang halaman.
+            {copy.accountFieldsAreUnavailableCheckYourConnection}
           </p>
         )}
       </section>
@@ -111,6 +114,7 @@ function AccountEditModal({ item, requirements, onClose, onSave }) {
 }
 
 export default function CartPage() {
+  const copy = useStorefrontCopy()
   const [items, setItems] = useState(readCart)
   const [requirements, setRequirements] = useState({})
   const [catalogErrors, setCatalogErrors] = useState({})
@@ -141,7 +145,7 @@ export default function CartPage() {
     Promise.all(slugs.map(async (slug) => {
       try {
         const product = await getCatalogProduct(slug)
-        if (product.slug !== slug) throw new Error('Produk tidak sesuai.')
+        if (product.slug !== slug) throw new Error(copy.thisProductDoesnTMatchTheCatalog)
         if (product.fulfillmentMethod === 'MANUAL_LOGIN') {
           const readiness = await getManualLoginReadiness(product.id).catch(() => null)
           if (active) setServiceReadiness(prev => ({...prev,[slug]:readiness}))
@@ -155,7 +159,7 @@ export default function CartPage() {
         if (active) {
           setCatalogProducts((prev) => ({...prev,[slug]:null}))
           setRequirements((prev) => ({ ...prev, [slug]: [] }))
-          setCatalogErrors((prev) => ({ ...prev, [slug]: 'Gagal memuat aturan data akun. Coba muat ulang halaman.' }))
+          setCatalogErrors((prev) => ({ ...prev, [slug]: true }))
         }
       }
     }))
@@ -169,12 +173,12 @@ export default function CartPage() {
   const problems = items.map(item => ({
     key: item.cartKey,
     message: item.serverLineId && item.isAvailable===false
-      ? 'Produk, stok, atau validasi akun tujuan sudah kedaluwarsa. Periksa dan verifikasi ulang sebelum checkout.'
+      ? copy.productStockOrAccountVerificationHasExpired
       : isChecking(item) ? ''
       : item.fulfillmentMethod === 'MANUAL_LOGIN' &&
       !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
-        ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
-        : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements),
+        ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
+        : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements : getCartItemProblem(item, requirements, copy),
   })).filter(problem => problem.message)
   const canCheckout = items.length > 0 && problems.length === 0 && !checkingCatalog &&
     (!readCustomerSession() || cartSync.state==='synced')
@@ -207,7 +211,7 @@ export default function CartPage() {
     const first = fields.find(f => f.slot === 'userId')
     setItems(updateCartAccount(editingKey, value, { first: first?.label }))
     setEditingKey(null)
-    setStatus('Data akun tujuan berhasil diperbarui.')
+    setStatus(copy.destinationAccountDetailsWereUpdated)
   }
 
   return (
@@ -215,51 +219,51 @@ export default function CartPage() {
       <Navbar />
       <main className="digital-cart-page digital-container">
         <header className="digital-page-heading">
-          <div><h1>Keranjang Digital</h1><p>Periksa produk dan akun tujuan sebelum checkout.</p></div>
-          <a href="/search">Lanjut Belanja</a>
+          <div><h1>{copy.digitalCart}</h1><p>{copy.reviewYourProductsAndDestinationAccountsBefore}</p></div>
+          <a href="/search">{copy.continueShopping}</a>
         </header>
 
         {readCustomerSession() && <section className="digital-info-strip" role="status" aria-live="polite">
           <Info size={18}/>
-          <span>{cartSync.state==='synced'?'Keranjang tersimpan di akun Zetruv dan dapat diakses di perangkat lain.':
-            cartSync.state==='saving'?'Menyimpan perubahan keranjang ke server...':
-            cartSync.state==='loading'?'Memuat dan menggabungkan keranjang akun...':
-            ['conflict','error'].includes(cartSync.state)?(cartSync.message||'Gagal menyinkronkan keranjang.'): 'Memuat keranjang akun...'}</span>
+          <span>{cartSync.state==='synced'?copy.yourCartIsSavedToYourZetruv:
+            cartSync.state==='saving'?copy.savingCartChanges:
+            cartSync.state==='loading'?copy.loadingAndMergingYourAccountCart:
+            ['conflict','error'].includes(cartSync.state)?(cartSync.message||copy.weCouldnTSyncYourCart): copy.loadingYourAccountCart}</span>
           <button type="button" disabled={['saving','loading','conflict','error'].includes(cartSync.state)}
-            onClick={()=>activateCustomerCart().catch(()=>{})}>Sinkronkan ulang</button>
+            onClick={()=>activateCustomerCart().catch(()=>{})}>{copy.syncAgain}</button>
         </section>}
         {readCustomerSession() && ['conflict','error'].includes(cartSync.state) && (
           <section className="digital-info-strip" role="alert" aria-live="assertive">
             <CircleAlert size={18} aria-hidden="true"/>
-            <span>Perubahan belum tersimpan. Bandingkan jumlah produk pada pesan di atas sebelum memilih. Checkout ditahan.</span>
+            <span>{copy.yourChangesHavenTBeenSavedCompare}</span>
             <button type="button" onClick={async()=>{
-              if(!window.confirm('Gunakan keranjang terbaru dari server? Perubahan lokal yang belum tersimpan akan dibuang.'))return
+              if(!window.confirm(copy.useTheLatestSavedCartUnsavedChanges))return
               try{await resolveCartConflict('server')}catch(e){setStatus(e.message)}
-            }}>Gunakan versi server</button>
+            }}>{copy.useSavedCart}</button>
             <button type="button" onClick={async()=>{
-              if(!window.confirm('Terapkan draft lokal ke server? Item dari perangkat lain yang tidak ada di draft lokal akan diganti.'))return
+              if(!window.confirm(copy.saveTheDraftFromThisDeviceItems))return
               try{await resolveCartConflict('local')}catch(e){setStatus(e.message)}
-            }}>Terapkan draft lokal</button>
+            }}>{copy.useDraft}</button>
           </section>
         )}
         <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
-          <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login baru dilengkapi saat checkout.</span>
+          <span>{copy.editYourGameUserIdAndZone}</span>
         </div>
 
         <div className="digital-cart-layout">
           <section className="digital-cart-list-card" aria-labelledby="digital-cart-title">
             <div className="digital-cart-list-head">
-              <strong id="digital-cart-title">Keranjang ({items.length} produk)</strong>
-              <span>{itemCount} item</span>
+              <strong id="digital-cart-title">{formatCopy(copy.cartProducts, { count: items.length })}</strong>
+              <span>{itemCount} {copy.items}</span>
             </div>
 
             {items.length === 0 ? (
               <div className="digital-empty-cart">
                 <ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" />
-                <strong>Keranjang digital masih kosong</strong>
-                <p>Pilih Top Up, Voucher, atau Joki Game untuk mulai transaksi.</p>
-                <a href="/search">Lihat Produk</a>
+                <strong>{copy.yourDigitalCartIsEmpty}</strong>
+                <p>{copy.chooseATopUpVoucherOrBoosting}</p>
+                <a href="/search">{copy.viewProducts}</a>
               </div>
             ) : (
               <div className="digital-cart-items">
@@ -271,57 +275,57 @@ export default function CartPage() {
                   const loginUnavailable = !checking && item.fulfillmentMethod==='MANUAL_LOGIN' &&
                     !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
                   const issue = item.serverLineId && item.isAvailable===false
-                    ? 'Produk, stok, atau target akun ini tidak tersedia. Verifikasi ulang sebelum checkout.'
+                    ? copy.thisProductStockOrDestinationAccountIs
                     : checking ? ''
-                    : loginUnavailable ? `${VIA_LOGIN_UNAVAILABLE_LABEL}. Hapus paket ini untuk melanjutkan.`
-                    : catalogErrors[item.productSlug] || getCartItemProblem(item, requirements)
+                    : loginUnavailable ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
+                    : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements : getCartItemProblem(item, requirements, copy)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
                   const target = item.accountFields || {}
                   return (
                     <article className="digital-cart-item" key={item.cartKey}>
                       <CartThumbnail item={item} />
                       <div className="digital-cart-item__copy">
-                        <span className="digital-cart-item__badge">{item.productKind === 'Joki' ? 'Joki Game' : methodLabel[item.fulfillmentMethod] || item.productKind || 'Digital Product'}</span>
+                        <span className="digital-cart-item__badge">{item.productKind === 'Joki' ? copy.gameBoosting : copy[methodLabel[item.fulfillmentMethod]] || copy.digitalProduct}</span>
                         <h2>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</h2>
                         <strong className="digital-cart-item__variant">{item.variantName}</strong>
-                        <span className="digital-cart-item__unit">Harga satuan: {rupiah(Number(item.unitPrice) || 0)}</span>
+                        <span className="digital-cart-item__unit">{copy.unitPrice} {rupiah(Number(item.unitPrice) || 0)}</span>
 
                         {isAccount ? (
                           <div className="digital-cart-item__target">
                             <span>
-                              <strong>Tujuan:</strong> {clean(target.userId) || 'User ID belum diisi'}
-                              {clean(target.zone) && <> · Zona: {clean(target.zone)}</>}
+                              <strong>{copy.destination}</strong> {clean(target.userId) || copy.userIdIsMissing}
+                              {clean(target.zone) && <> {copy.zone} {clean(target.zone)}</>}
                             </span>
                             <button type="button" disabled={checking} onClick={() => setEditingKey(item.cartKey)}
-                              aria-label={`Edit data akun tujuan ${item.variantName}`}>
-                              <Pencil size={13} aria-hidden="true" /> Edit
+                              aria-label={formatCopy(copy.editDestinationAccountFor, { product: item.variantName })}>
+                              <Pencil size={13} aria-hidden="true" /> {copy.edit}
                             </button>
                           </div>
-                        ) : <p>{itemContext(item)}</p>}
-                        {checking && !issue && <p className="digital-cart-item__checking" role="status">Memverifikasi aturan produk dan data akun…</p>}
+                        ) : <p>{itemContext(item, copy)}</p>}
+                        {checking && !issue && <p className="digital-cart-item__checking" role="status">{copy.checkingProductRequirementsAndAccountDetails}</p>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
                         {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
-                          <button type="button" onClick={() => remove(item)}>Hapus paket ini</button>
-                          <a href="/search">Cari produk lain</a>
+                          <button type="button" onClick={() => remove(item)}>{copy.removeThisPackage}</button>
+                          <a href="/search">{copy.browseOtherProducts2}</a>
                         </div>}
                       </div>
                       <div className="digital-cart-item__side">
                         <div className="digital-cart-item__subtotal">
-                          <small>Subtotal</small>
+                          <small>{copy.subtotal}</small>
                           <strong>{rupiah(lineTotal)}</strong>
                         </div>
                         <div className="digital-cart-item__actions">
                           {allowsQuantity ? (
                             <div className="digital-qty" role="group" aria-label={`Jumlah ${item.variantName}`}>
-                              <button type="button" aria-label="Kurangi jumlah" disabled={qty <= 1}
+                              <button type="button" aria-label={copy.decreaseQuantity} disabled={qty <= 1}
                                 onClick={() => changeQty(item, qty - 1)}><Minus size={15} aria-hidden="true" /></button>
-                              <output aria-label="Jumlah item">{qty}</output>
-                              <button type="button" aria-label="Tambah jumlah" disabled={qty >= cartItemLimit(item)}
+                              <output aria-label={copy.itemQuantity}>{qty}</output>
+                              <button type="button" aria-label={copy.increaseQuantity} disabled={qty >= cartItemLimit(item)}
                                 onClick={() => changeQty(item, qty + 1)}><Plus size={15} aria-hidden="true" /></button>
                             </div>
                           ) : <small className="digital-cart-item__fixed-qty">{qty} {qty === 1 ? 'paket' : 'paket (tergabung)'}</small>}
                           <button type="button" className="digital-cart-item__remove"
-                            aria-label={`Hapus produk ${item.variantName}`} title="Hapus produk"
+                            aria-label={formatCopy(copy.remove2, { product: item.variantName })} title={copy.removeProduct}
                             onClick={() => remove(item)}><Trash2 size={18} strokeWidth={1.8} aria-hidden="true" /></button>
                         </div>
                       </div>
@@ -333,38 +337,38 @@ export default function CartPage() {
 
             {items.some(item => item.fulfillmentMethod === 'MANUAL_LOGIN') && (
               <div className="digital-login-cart-rule">
-                <strong>Top Up Via Login</strong>
-                <p>Paket Via Login yang belum tersedia perlu dihapus sebelum melanjutkan. Informasi akun game tidak disimpan di keranjang.</p>
+                <strong>{copy.topUpByLogin}</strong>
+                <p>{copy.removeUnavailableTopUpByLoginPackages}</p>
               </div>
             )}
           </section>
 
           <aside className="digital-cart-summary" aria-labelledby="cart-summary-title">
-            <h2 id="cart-summary-title">Ringkasan Pembayaran</h2>
-            <div><span>Subtotal produk</span><strong>{rupiah(pricing.subtotal)}</strong></div>
+            <h2 id="cart-summary-title">{copy.paymentSummary}</h2>
+            <div><span>{copy.productSubtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             <div>
-              <span className="digital-cart-summary__fee">Biaya layanan
+              <span className="digital-cart-summary__fee">{copy.serviceFee}
                 <span className="digital-cart-fee-help">
-                  <button type="button" aria-label="Info biaya layanan" title="Backend belum mengenakan biaya layanan untuk checkout digital.">
+                  <button type="button" aria-label={copy.serviceFeeInformation} title={copy.digitalCheckoutCurrentlyHasNoServiceFee}>
                     <Info size={15} aria-hidden="true" />
                   </button>
-                  <span role="tooltip">Checkout digital belum mengenakan biaya layanan. Total final mengikuti harga dan promo yang divalidasi backend.</span>
+                  <span role="tooltip">{copy.digitalCheckoutCurrentlyHasNoServiceFee2}</span>
                 </span>
               </span>
               <strong>{rupiah(pricing.serviceFee)}</strong>
             </div>
-            {pricing.discount > 0 && <div className="digital-cart-summary__discount"><span>Diskon produk</span><strong>−{rupiah(pricing.discount)}</strong></div>}
+            {pricing.discount > 0 && <div className="digital-cart-summary__discount"><span>{copy.productDiscount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}
             <hr />
-            <div className="digital-cart-summary__total"><span>Total pembayaran</span><strong>{rupiah(pricing.total)}</strong></div>
+            <div className="digital-cart-summary__total"><span>{copy.paymentTotal}</span><strong>{rupiah(pricing.total)}</strong></div>
             <button type="button" className="digital-cart-checkout"
               disabled={!canCheckout}
               onClick={() => { if (canCheckout) { if (readCustomerSession()) window.location.href = '/checkout'; else setAuthMode('login') } }}>
-              {readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}
+              {readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}
             </button>
             {problems.length > 0 ? (
-              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />Periksa data pesanan: {problems[0].message}</p>
-            ) : checkingCatalog ? <p role="status">Memverifikasi katalog sebelum checkout…</p>
-              : <p>{items.length ? 'Harga dan promo akan diperiksa kembali pada checkout.' : 'Tambahkan produk untuk melanjutkan.'}</p>}
+              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails} {problems[0].message}</p>
+            ) : checkingCatalog ? <p role="status">{copy.verifyingTheCatalogBeforeCheckout}</p>
+              : <p>{items.length ? copy.pricesAndPromotionsWillBeCheckedAgain : copy.addAProductToContinue}</p>}
             {status && <p className="digital-cart-summary__success" role="status"><CheckCircle2 size={15} />{status}</p>}
           </aside>
         </div>
@@ -375,10 +379,10 @@ export default function CartPage() {
           try {
             setCustomerSession(response)
             await activateCustomerCart()
-            if (getCartSyncStatus().state !== 'synced') throw new Error('Keranjang belum selesai tersinkron.')
+            if (getCartSyncStatus().state !== 'synced') throw new Error(copy.yourCartIsStillSyncing)
             window.location.href = '/checkout'
           } catch (error) {
-            setStatus(error?.message || 'Keranjang belum siap. Periksa ulang sebelum checkout.')
+            setStatus(error?.message || copy.yourCartIsnTReadyReviewIt)
           }
         }} />}
       {editing && (
@@ -391,10 +395,10 @@ export default function CartPage() {
       {removed && (
         <div className="digital-cart-undo" role="status" aria-live="polite">
           <CheckCircle2 size={18} aria-hidden="true" />
-          <span>{removed.item.variantName} dihapus.</span>
-          <button type="button" onClick={undo}>Undo</button>
+          <span>{removed.item.variantName} {copy.wasRemoved}</span>
+          <button type="button" onClick={undo}>{copy.undo}</button>
           <button type="button" className="digital-cart-undo__close" onClick={() => setRemoved(null)}
-            aria-label="Tutup notifikasi"><X size={16} aria-hidden="true" /></button>
+            aria-label={copy.dismissNotification}><X size={16} aria-hidden="true" /></button>
         </div>
       )}
     </div>

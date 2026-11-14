@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { ChevronRight, RotateCcw, Search, X } from 'lucide-react'
 import { assets } from '../data/assets'
@@ -49,11 +51,12 @@ function ResultItem({ product, id, selected, onSelect, onHover }) {
 }
 
 function SearchSkeleton({ query, showSkeleton }) {
+  const copy = useStorefrontCopy()
   return (
     <div className="navbar-search-dropdown__loading" role="status" aria-live="polite">
       <p className="navbar-search-dropdown__loading-label">
         <span className="navbar-search-dropdown__spinner" aria-hidden="true" />
-        Searching for “{query}”...
+        {formatCopy(copy.searchingFor, { query })}…
       </p>
       {showSkeleton && Array.from({ length: 2 }, (_, index) => (
         <div className="navbar-search-dropdown__skeleton" key={index} aria-hidden="true">
@@ -68,6 +71,7 @@ function SearchSkeleton({ query, showSkeleton }) {
 }
 
 export default function NavbarSearch({ placeholder, initialQuery = '' }) {
+  const copy = useStorefrontCopy()
   const popupId = useId()
   const inputRef = useRef(null)
   const containerRef = useRef(null)
@@ -243,7 +247,7 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
         onClick={() => setIsOpen(true)}
         onKeyDown={handleInputKey}
         placeholder={placeholder}
-        aria-label="Search games, vouchers, or products"
+        aria-label={copy.searchGamesVouchersOrProducts}
         aria-autocomplete="list"
         role="combobox"
         aria-expanded={isOpen}
@@ -256,7 +260,7 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
         <button
           className="navbar-searchbox__clear"
           type="button"
-          aria-label="Clear search"
+          aria-label={copy.clearSearch}
           onClick={clearQuery}
         >
           <X size={18} aria-hidden="true" />
@@ -267,7 +271,7 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
         <div
           className={`navbar-search-dropdown navbar-search-dropdown--${resultState}`}
           id={popupId}
-          aria-label="Search suggestions"
+          aria-label={copy.searchSuggestions}
           onMouseDown={(event) => {
             // Keep input focus while clicking options or controls in the popup.
             if (event.target.closest('a, button')) return
@@ -276,19 +280,19 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
         >
           {resultState === 'hint' && (
             <div className="navbar-search-dropdown__hint" role="status">
-              <strong>Searches</strong>
+              <strong>{copy.search}</strong>
               <p>{trimmed.length === 0
-                ? 'Type a game, voucher, or service to search.'
-                : 'Ketik minimal 3 karakter untuk mencari.'}</p>
+                ? copy.typeAGameVoucherOrServiceTo
+                : copy.enterAtLeast3CharactersToSearch}</p>
             </div>
           )}
           {resultState === 'loading' && <SearchSkeleton query={trimmed} showSkeleton={showSkeleton} />}
           {resultState === 'results' && (
             <>
-              <div className="navbar-search-dropdown__list" role="listbox" aria-label="Search results">
+              <div className="navbar-search-dropdown__list" role="listbox" aria-label={copy.searchResults}>
                 {groups.best.length > 0 && (
-                  <div className="navbar-search-dropdown__group" role="group" aria-label="Best match">
-                    <h3>Best match</h3>
+                  <div className="navbar-search-dropdown__group" role="group" aria-label={copy.bestMatch}>
+                    <h3>{copy.bestMatch}</h3>
                     {groups.best.map((product, index) => (
                       <ResultItem
                         key={product.id}
@@ -302,8 +306,8 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
                   </div>
                 )}
                 {groups.suggestions.length > 0 && (
-                  <div className="navbar-search-dropdown__group" role="group" aria-label="Suggestions">
-                    <h3>Suggestions</h3>
+                  <div className="navbar-search-dropdown__group" role="group" aria-label={copy.suggestions}>
+                    <h3>{copy.suggestions}</h3>
                     {groups.suggestions.map((product, index) => {
                       const optionIndex = groups.best.length + index
                       return <ResultItem
@@ -319,25 +323,25 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
                 )}
               </div>
               <a className="navbar-search-dropdown__view-all" href={`/search?q=${encodeURIComponent(trimmed)}`}>
-                View all results <ChevronRight size={18} aria-hidden="true" />
+                {copy.viewAllResults} <ChevronRight size={18} aria-hidden="true" />
               </a>
             </>
           )}
           {resultState === 'empty' && (
             <div className="navbar-search-dropdown__empty" role="status">
               <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
-              <strong>No results found</strong>
-              <p>We couldn't find “{trimmed}”. Try another game, voucher, or service.</p>
-              <a href="/search">Browse all categories →</a>
+              <strong>{copy.noResultsFound}</strong>
+              <p>{formatCopy(copy.weCouldnTFindTryAnotherGame, { query: trimmed })}</p>
+              <a href="/search">{copy.browseAllCategories}</a>
             </div>
           )}
           {resultState === 'error' && (
             <div className="navbar-search-dropdown__empty" role="alert">
               <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
-              <strong>Search unavailable</strong>
-              <p>We couldn't load results right now. Please try again.</p>
+              <strong>{copy.searchUnavailable}</strong>
+              <p>{copy.weCouldnTLoadResultsRightNow}</p>
               <button type="button" className="navbar-search-dropdown__retry" onClick={() => setRetryIndex(value => value + 1)}>
-                <RotateCcw size={15} aria-hidden="true" /> Try again
+                <RotateCcw size={15} aria-hidden="true" /> {copy.tryAgain}
               </button>
             </div>
           )}

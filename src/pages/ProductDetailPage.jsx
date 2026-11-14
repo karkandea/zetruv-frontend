@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CheckCircle2, Flame, Gem, ShoppingCart, Star, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -32,6 +34,7 @@ function Stars({ small = false }) {
 }
 
 export default function ProductDetailPage({ slug = 'mobile-legends', initialVariantId = '' }) {
+  const copy = useStorefrontCopy()
   const [product, setProduct] = useState(null)
   const [selectedId, setSelectedId] = useState('')
   const [catalogStatus, setCatalogStatus] = useState('loading')
@@ -67,18 +70,18 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
         return
       }
       if (data.kind !== 'TopUpGame' || data.slug !== slug)
-        throw new Error('Produk tidak sesuai dengan katalog.')
+        throw new Error(copy.thisProductDoesNotMatchTheCatalog)
       if (!Array.isArray(data.variants) || data.variants.length === 0)
-        throw new Error('Belum ada paket tersedia untuk produk ini.')
+        throw new Error(copy.noPackagesAreAvailableForThisProduct)
       setProduct(data)
       const selection = selectLinkedVariant(data.variants, initialVariantId)
       setSelectedId(selection.variant?.id || '')
-      if (selection.invalidSelection) setSelectionWarning('Varian dari Flash Sale tidak tersedia lagi. Pilih paket yang masih tersedia sebelum membeli.')
-      else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning('Flash Sale untuk paket ini sudah berakhir. Harga yang tampil adalah harga katalog terbaru.')
+      if (selection.invalidSelection) setSelectionWarning(copy.thisFlashSaleOptionIsNoLonger)
+      else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning(copy.theFlashSaleForThisPackageHas)
       setCatalogStatus('ready')
     }).catch((error) => {
       if (!active) return
-      setCatalogError(error?.message || 'Katalog produk tidak dapat dimuat.')
+      setCatalogError(copy.weCouldnTLoadTheProductCatalog)
       setCatalogStatus('error')
     })
     return () => { active = false }
@@ -90,7 +93,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)), [product])
   const firstField = accountFields[0]
   const secondField = accountFields[1]
-  const firstLabel = firstField?.label || product?.accountLabels?.first || 'User ID'
+  const firstLabel = firstField?.label || product?.accountLabels?.first || copy.userId
   const secondLabel = secondField?.label || product?.accountLabels?.second || 'Zona / Server'
   const showSecond = Boolean(secondField || product?.accountLabels?.needsSecond)
   const secondRequired = secondField ? secondField.isRequired : Boolean(product?.accountLabels?.needsSecond)
@@ -117,9 +120,9 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     ...(showSecond && !validZone ? [secondLabel] : []),
   ]
   const ctaHint = selected?.isAvailable === false
-    ? 'Paket ini sedang tidak tersedia. Pilih paket lain.'
+    ? copy.thisPackageIsUnavailableChooseAnotherPackage
     : !verified
-      ? `Lengkapi ${incompleteFields.join(' dan ')} untuk menambahkan ke keranjang.`
+      ? formatCopy(copy.checkBeforeAddingToYourCart, { field: incompleteFields.join(', ') })
       : ''
 
   async function add() {
@@ -146,9 +149,9 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     })
       await awaitCartPersistence()
       if(getCartSyncStatus().state==='error')
-        throw Error(getCartSyncStatus().message || 'Keranjang gagal disimpan di server.')
+        throw Error(getCartSyncStatus().message || copy.weCouldnTSaveYourCart)
       setNotice('added')
-    } catch (e) {setNotice('');window.alert(e.message||'Keranjang belum tersimpan. Coba lagi.')}
+    } catch (e) {setNotice('');window.alert(copy.yourCartWasnTSavedPleaseTry)}
     finally {setSaving(false)}
   }
 
@@ -157,10 +160,10 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     return <div className="product-detail-shell"><Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} />
       <main className="product-detail-page pdp-data-state" aria-busy={loading}>
         <div className="product-detail-container pdp-data-state__content" role={loading ? 'status' : 'alert'}>
-          <h1>{loading ? 'Memuat produk dan harga…' : 'Produk belum bisa dimuat'}</h1>
-          <p>{loading ? 'Harga dan paket akan ditampilkan setelah diverifikasi dari katalog Zetruv.' : catalogError || 'Produk ini belum tersedia di katalog.'}</p>
+          <h1>{loading ? copy.loadingProductAndPricing : copy.productCouldnTBeLoaded}</h1>
+          <p>{loading ? copy.pricingAndPackagesWillAppearAfterWe : catalogError || copy.thisProductIsCurrentlyUnavailableInThe}</p>
           {loading ? <div className="pdp-data-state__skeleton" aria-hidden="true"><span /><span /><span /></div>
-            : <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>Coba lagi</button><a href="/search">Kembali ke katalog</a></div>}
+            : <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>{copy.tryAgain3}</button><a href="/search">{copy.backToCatalog}</a></div>}
         </div>
       </main>
     </div>
@@ -185,14 +188,14 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
 
         <div className="product-detail-container product-detail-layout">
           <section className="product-selection-panel">
-            <div className="product-selection-heading"><h2>Pilih Item</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || 'Top Up'}</button></div></div>
+            <div className="product-selection-heading"><h2>{copy.chooseAnItem}</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || copy.topUp}</button></div></div>
             {selectionWarning && <p className="pdp-variant-warning" role="status">{selectionWarning}</p>}
-            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />Flash Sale</span>}</button>)}</div>
+            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}</button>)}</div>
 
-            <section className="product-reviews"><h2>Ulasan Produk</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>394 Ulasan</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>Ulasan Terakhir</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>2 hari lalu</span></div><Stars small/><p>{text}</p></article>)}</div></section>
+            <section className="product-reviews"><h2>{copy.productReviews}</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>{copy.label394Reviews}</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>{copy.latestReviews}</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>{copy.label2DaysAgo}</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>
 
-          <aside className="product-order-panel pdp-order-sidebar" aria-label="Data akun dan ringkasan pesanan">
+          <aside className="product-order-panel pdp-order-sidebar" aria-label={copy.accountInformationAndOrderSummary}>
             <div className="pdp-account-block">
               <label htmlFor="pdp-user-id">
                 {firstLabel}
@@ -226,14 +229,14 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
                 </label>
               )}
               <p className="pdp-account-help">
-                {firstField?.helpText || 'Masukkan data akun tujuan sesuai profil game.'}
+                {firstField?.helpText || copy.enterTheDetailsShownInYourGame}
                 {showSecond && secondField?.helpText ? ` ${secondField.helpText}` : ''}
-                {' '}Pastikan data benar sebelum melanjutkan.
+                {' '}{copy.checkTheDetailsBeforeContinuing}
               </p>
             </div>
 
             <section className="pdp-sidebar-summary" aria-labelledby="pdp-order-summary-title">
-              <h2 id="pdp-order-summary-title">Ringkasan Pesanan</h2>
+              <h2 id="pdp-order-summary-title">{copy.orderSummary}</h2>
               <div className="pdp-sidebar-item">
                 <span className="pdp-sidebar-item__art" aria-hidden="true">
                   <TopUpCurrencyIcon slug={slug} variant={selected} index={product.variants.findIndex((item) => item.id === selected.id)} />
@@ -246,12 +249,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
               </div>
 
               <div className="pdp-sidebar-pricing">
-                <div><span>Subtotal</span><strong>{rupiah(subtotal)}</strong></div>
-                <div><span>Biaya layanan</span><strong>{rupiah(serviceFee)}</strong></div>
-                <div><span>Diskon</span><strong className={discount > 0 ? 'pdp-sidebar-discount' : ''}>{discount > 0 ? `−${rupiah(discount)}` : rupiah(0)}</strong></div>
+                <div><span>{copy.subtotal}</span><strong>{rupiah(subtotal)}</strong></div>
+                <div><span>{copy.serviceFee}</span><strong>{rupiah(serviceFee)}</strong></div>
+                <div><span>{copy.discount}</span><strong className={discount > 0 ? 'pdp-sidebar-discount' : ''}>{discount > 0 ? `−${rupiah(discount)}` : rupiah(0)}</strong></div>
               </div>
               <div className="pdp-sidebar-total">
-                <span>Total Pembayaran</span>
+                <span>{copy.paymentTotal2}</span>
                 <strong>{rupiah(total)}</strong>
               </div>
             </section>
@@ -259,7 +262,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
             <div className="pdp-sidebar-action">
               <button className="pdp-sidebar-add" type="button" disabled={!canPurchase} onClick={add}>
                 <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />
-                <span>Tambah ke Keranjang</span>
+                <span>{copy.addToCart}</span>
               </button>
               {ctaHint && <p className="pdp-sidebar-cta-hint" role="status">{ctaHint}</p>}
             </div>
@@ -268,12 +271,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
               <div className="pdp-sidebar-feedback" role="status" aria-live="polite">
                 <div className="pdp-sidebar-feedback__heading">
                   <CheckCircle2 size={19} aria-hidden="true" />
-                  <strong>Berhasil ditambahkan!</strong>
+                  <strong>{copy.addedToCart}</strong>
                 </div>
-                <p>{selected.name} sudah masuk keranjang.</p>
+                <p>{selected.name} {copy.wasAddedToYourCart}</p>
                 <div className="pdp-sidebar-feedback__actions">
-                  <a href="/search">Lanjut Belanja</a>
-                  <a href="/cart">Lihat Keranjang <ArrowRight size={15} aria-hidden="true" /></a>
+                  <a href="/search">{copy.continueShopping}</a>
+                  <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
                 </div>
               </div>
             )}

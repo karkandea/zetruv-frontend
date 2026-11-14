@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { assets } from '../data/assets'
 
 const kindPresentation = {
@@ -10,8 +11,9 @@ const kindPresentation = {
 }
 
 export default function ServiceCategories({ items = [] }) {
+  const copy = useStorefrontCopy()
   return (
-    <section className="service-categories service-categories--homepage-final" id="product" aria-label="Product categories">
+    <section className="service-categories service-categories--homepage-final" id="product" aria-label={copy.productCategories}>
       <div className="service-categories__inner">
         {items.map((item) => {
           const presentation = kindPresentation[item.kind]
@@ -22,10 +24,10 @@ export default function ServiceCategories({ items = [] }) {
               <img className="service-category__image" src={item.image || presentation.image} alt="" decoding="async" />
             </span>
             <strong>{item.label}</strong>
-            <small>{item.kind === 'Merchandise' ? 'Physical Product' : 'Digital Product'}</small>
+            <small>{item.kind === 'Merchandise' ? copy.physicalProduct : copy.digitalProduct}</small>
           </a>
         })}
-        {items.length === 0 && <p role="status">Kategori belum tersedia saat ini.</p>}
+        {items.length === 0 && <p role="status">{copy.categoriesAreCurrentlyUnavailable}</p>}
       </div>
     </section>
   )

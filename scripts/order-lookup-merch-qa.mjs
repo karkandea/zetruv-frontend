@@ -21,6 +21,7 @@ try {
     ['mobile', { width: 390, height: 844 }],
   ]) {
     const ctx = await browser.newContext({ viewport })
+    await ctx.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const page = await ctx.newPage()
     let requests = []
 
@@ -62,7 +63,7 @@ try {
     assert.equal(requests.length, 3)
     assert.equal(requests[2].customerEmail, 'synthetic@example.test')
     assert.equal(requests[2].customerPhone, null)
-    await page.getByRole('button', { name: /Cek pesanan lain/ }).click()
+    await page.getByRole('button', { name: /Cek Pesanan Lain/ }).click()
     assert.equal(await page.getByText('Synthetic QA Voucher').count(), 0)
 
     // A legacy query alias must not reveal seeded order details either.
@@ -88,14 +89,14 @@ try {
     await page.goto(site + '/merchandise/zetruv-gaming-jersey')
     await page.getByRole('heading', { name: 'Zetruv Gaming Jersey' }).waitFor()
     await page.locator('.physical-size-options').getByRole('button', { name: /L · Rp269.000/ }).click()
-    await page.getByRole('button', { name: 'Simpan Draft Keranjang' }).click()
+    await page.getByRole('button', { name: 'Simpan Draf Keranjang' }).click()
     await page.getByRole('status').getByText(/disimpan ke keranjang/).waitFor()
     assert.equal(await page.locator('.nav-cart-count').first().innerText(), '1')
     await page.getByRole('button', { name: 'Lihat Keranjang' }).click()
     await page.waitForURL('**/cart?flow=physical')
     await page.getByText('Varian L').waitFor()
     await page.getByRole('button', { name: 'Masuk untuk Checkout' }).waitFor()
-    assert.equal(await page.getByText('Checkout merchandise belum aktif').count(), 1)
+    assert.equal(await page.getByText('Checkout Merchandise Belum Aktif').count(), 1)
     const physical = await page.evaluate(() => JSON.parse(sessionStorage.getItem('zetruv-physical-cart-v1') || 'null'))
     assert.equal(physical.size, 'L')
     assert.equal(physical.price, 269000)
@@ -111,12 +112,12 @@ try {
       }),
     }))
     await page.getByRole('button', { name: 'Masuk untuk Checkout' }).click()
-    const login = page.getByRole('dialog', { name: 'Login' })
+    const login = page.getByRole('dialog', { name: 'Masuk' })
     await login.locator('input[name="email"]').fill('synthetic@example.test')
     await login.locator('input[name="password"]').fill('synthetic-only-not-a-credential')
-    await login.getByRole('button', { name: 'Login', exact: true }).click()
+    await login.getByRole('button', { name: 'Masuk', exact: true }).click()
     await page.waitForURL('**/checkout?flow=physical')
-    await page.getByText('Belum bisa diproses').waitFor()
+    await page.getByText('Belum Bisa Diproses').waitFor()
     assert.ok(await page.evaluate(() => Boolean(sessionStorage.getItem('zetruv-physical-cart-v1'))))
 
     // Narrow mobile navigation remains interactive, no sample order or fake invoice.
