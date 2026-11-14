@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { assets } from '../data/assets'
@@ -8,6 +9,7 @@ import { submitSupportReport } from '../services/supportService'
 const initialForm = { name: '', phone: '', description: '' }
 
 export default function SupportChat({ open: controlledOpen, onOpenChange } = {}) {
+  const copy = useStorefrontCopy()
   const [internalOpen, setInternalOpen] = useState(false)
   const open = controlledOpen ?? internalOpen
   const [form, setForm] = useState(initialForm)
@@ -47,16 +49,16 @@ export default function SupportChat({ open: controlledOpen, onOpenChange } = {})
               }}>
                 <ArrowLeft size={20} aria-hidden="true" />
               </button>
-              <button type="button" className="icon-button" aria-label="Expand">↗</button>
+              <button type="button" className="icon-button" aria-label={copy.expand}>↗</button>
             </div>
             <form className="support-form" onSubmit={handleSubmit}>
-              <h2 id="support-title">Formulir Laporan</h2>
-              <label>Nama<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nama lengkap anda" required /></label>
-              <label>No Telepon<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Nomor Telepon/ Whatsapp Anda" required /></label>
-              <label>Deskripsi Masalah<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Berikan penjelasan terhadap kendala yang Anda hadapi" required /></label>
-              {status === 'success' && <p className="form-status success">Laporan tersimpan. Backend bisa disambungkan lewat supportService.</p>}
-              {status === 'error' && <p className="form-status error">Gagal mengirim laporan.</p>}
-              <button className="support-submit" disabled={status === 'loading'} type="submit">{status === 'loading' ? 'Mengirim…' : 'Kirim'}</button>
+              <h2 id="support-title">{copy.reportAnIssue}</h2>
+              <label>{copy.name}<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={copy.yourFullName} required /></label>
+              <label>{copy.phoneNumber}<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={copy.yourPhoneOrWhatsappNumber} required /></label>
+              <label>{copy.describeTheIssue}<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={copy.tellUsWhatHappened} required /></label>
+              {status === 'success' && <p className="form-status success">{copy.yourReportWasSaved}</p>}
+              {status === 'error' && <p className="form-status error">{copy.couldnTSendTheReport}</p>}
+              <button className="support-submit" disabled={status === 'loading'} type="submit">{status === 'loading' ? copy.sending : copy.send}</button>
             </form>
           </aside>
         </div>

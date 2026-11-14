@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from './hooks/useStorefrontCopy'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -24,12 +25,12 @@ import {
 } from './pages/GameAccountPages'
 
 function AccountOrderUnavailablePage() {
+  const copy = useStorefrontCopy()
   return <div className="account-page"><Navbar variant="account" homepageMobileMenu />
     <main className="account-layout" style={{ display: 'block' }}>
       <section className="account-main" style={{ marginInline: 'auto', maxWidth: 720, padding: '40px 24px', textAlign: 'center' }}>
-        <h1>Detail pesanan belum tersedia</h1>
-        <p>Buka Pesanan Saya untuk melihat status pembayaran dan pemrosesan.</p>
-        <a href="/account/orders" className="account-btn account-btn--primary">Pesanan Saya</a>
+        <h1>{copy.orderDetailsUnavailable}</h1>
+        <a href="/account/orders" className="account-btn account-btn--primary">{copy.myOrders}</a>
       </section>
     </main>
   </div>

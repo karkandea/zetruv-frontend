@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 function sortedFields(fields = []) {
   return [...fields].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.label.localeCompare(b.label))
 }
@@ -33,6 +35,7 @@ export function inputPayloadLabel(fields, payload = {}) {
 }
 
 export default function DynamicProductFields({ fields = [], values = {}, onChange, className = 'checkout-fields', disabled = false }) {
+  const copy = useStorefrontCopy()
   const ordered = sortedFields(fields)
   if (!ordered.length) return null
 
@@ -49,7 +52,7 @@ export default function DynamicProductFields({ fields = [], values = {}, onChang
     return <label key={field.id || field.key}>
       <span>{field.label}{field.isRequired ? ' *' : ''}</span>
       {field.type === 'Select'
-        ? <select {...common}><option value="">Pilih {field.label}</option>{(field.options || []).map((option) => <option value={option} key={option}>{option}</option>)}</select>
+        ? <select {...common}><option value="">{formatCopy(copy.select2, { field: field.label })}</option>{(field.options || []).map((option) => <option value={option} key={option}>{option}</option>)}</select>
         : <input {...common} type={type} autoComplete={field.isSensitive ? 'new-password' : 'off'} />}
       {field.helpText && <small>{field.helpText}</small>}
     </label>

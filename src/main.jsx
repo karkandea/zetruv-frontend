@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { readNavbarLanguage } from './services/navbarLanguage'
 import './styles/global.css'
 import './styles/redesign-a.css'
 import './styles/redesign-b.css'
@@ -17,6 +18,9 @@ import './styles/flash-sale-adaptive.css'
 import './styles/navbar-search-dropdown.css'
 import './styles/homepage-responsive.css'
 import './styles/navbar-account.css'
+
+document.documentElement.lang = readNavbarLanguage()
+window.addEventListener('storage', () => { document.documentElement.lang = readNavbarLanguage() })
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

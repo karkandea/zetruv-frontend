@@ -10,6 +10,7 @@ export function setNavbarLanguage(code) {
   } catch {
     // The current page still gets the selection when storage is unavailable.
   }
+  document.documentElement.lang = language
   window.dispatchEvent(new CustomEvent(languageChangeEvent, { detail: language }))
 }
 

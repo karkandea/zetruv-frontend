@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, Package, RefreshCw } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
+import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { activateCustomerCart, restoreCustomerSession, setCustomerSession } from '../services/customerCartSync'
+import { formatCopy } from '../services/storefrontCopy'
 import { AccountShell, PageHeader, useCustomerSession } from './AccountPages'
 import { dateTime, money, OrderStatusDetails, orderStatusLabel, paymentStatusLabel } from './SharedOrderStatusPage'
 import '../styles/customer-orders.css'
@@ -29,6 +32,7 @@ function OrderMessage({ title, description, children, loading }) {
 }
 
 export default function CustomerOrdersPage({ orderId }) {
+  const copy = useStorefrontCopy()
   const session = useCustomerSession()
   const [restoring, setRestoring] = useState(true)
   const [authMode, setAuthMode] = useState(null)
@@ -48,18 +52,18 @@ export default function CustomerOrdersPage({ orderId }) {
     activateCustomerCart().catch(() => {})
   }
 
-  const login = <button type="button" className="account-btn account-btn--primary" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>Masuk</button>
-  const guestLink = <a className="customer-orders-guest" href={guestLookupUrl}>Cek pesanan sebagai tamu <ArrowRight size={15} aria-hidden="true" /></a>
+  const login = <button type="button" className="account-btn account-btn--primary" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>{copy.login}</button>
+  const guestLink = <a className="customer-orders-guest" href={guestLookupUrl}>{copy.checkGuestOrder} <ArrowRight size={15} aria-hidden="true" /></a>
 
   return <AccountShell active="orders">
-    {orderId && <a className="customer-orders-back" href={query.get('group') === 'history' ? '/account/orders?group=history' : '/account/orders'}><ArrowLeft size={16} aria-hidden="true" /> Pesanan Saya</a>}
-    <PageHeader title={orderId ? 'Detail Pesanan' : 'Pesanan Saya'} />
+    {orderId && <a className="customer-orders-back" href={group === 'history' ? '/account/orders?group=history' : '/account/orders'}><ArrowLeft size={16} aria-hidden="true" /> {copy.myOrders}</a>}
+    <PageHeader title={orderId ? copy.customerOrderDetailTitle : copy.myOrders} />
     {session?.accessToken ? (
       <CustomerOrdersContent key={session.accessToken} token={session.accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />
     ) : restoring ? (
-      <OrderMessage title="Memuat pesanan…" loading />
+      <OrderMessage title={copy.loadingOrders} loading />
     ) : (
-      <OrderMessage title="Masuk untuk melihat pesanan" description="Lihat status pembayaran, pemrosesan produk, dan riwayat pembelian dari akunmu.">
+      <OrderMessage title={copy.logInToViewOrders} description={copy.accountOrdersIntro}>
         {login}
         {guestLink}
       </OrderMessage>
@@ -70,6 +74,7 @@ export default function CustomerOrdersPage({ orderId }) {
 }
 
 function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
+  const copy = useStorefrontCopy()
   const [offset, setOffset] = useState(0)
   const [revision, setRevision] = useState(0)
   const [result, setResult] = useState(null)
@@ -91,73 +96,76 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
   const error = current?.error
   let body
   if ((orderId && !uuid.test(orderId)) || error?.status === 404) {
-    body = <OrderMessage title="Pesanan tidak ditemukan" description="Buka daftar pesanan untuk melihat pesanan yang tersedia di akunmu." />
+    body = <OrderMessage title={copy.customerOrderNotFound} description={copy.seeAvailableOrders} />
   } else if (error?.status === 401 || error?.status === 403) {
-    body = <OrderMessage title="Sesi login sudah berakhir">{login}</OrderMessage>
+    body = <OrderMessage title={copy.yourSessionHasEnded}>{login}</OrderMessage>
   } else if (error) {
-    body = <OrderMessage title="Pesanan belum bisa dimuat" description="Periksa koneksi lalu coba lagi.">
-      <button type="button" className="account-btn account-btn--primary" onClick={refresh}>Coba Lagi</button>
+    body = <OrderMessage title={copy.ordersLoadError} description={copy.retryOrdersDescription}>
+      <button type="button" className="account-btn account-btn--primary" onClick={refresh}>{copy.tryAgain}</button>
     </OrderMessage>
   } else if (!current) {
-    body = <OrderMessage title="Memuat pesanan…" loading />
+    body = <OrderMessage title={copy.loadingOrders} loading />
   } else if (orderId) {
     body = <OrderStatusDetails order={current.data} onRefresh={refresh}
       itemAction={item => current.data.paymentState === 'Paid' && item.kind === 'GameVoucher' &&
         item.fulfillmentStatus === 'Completed' && <VoucherCodes orderId={orderId} itemId={item.id} token={token} />} />
   } else if (!current.data.items.length) {
-    body = <OrderMessage title={offset ? 'Tidak ada pesanan di halaman ini' : group === 'history' ? 'Belum ada riwayat pesanan' : 'Belum ada pesanan aktif'}>
-      {offset === 0 && group === 'active' && <a className="account-btn account-btn--primary" href="/search">Jelajahi Produk</a>}
+    body = <OrderMessage title={offset ? copy.noOrdersOnThisPage : group === 'history' ? copy.noPastOrders : copy.noActiveOrders}>
+      {offset === 0 && group === 'active' && <a className="account-btn account-btn--primary" href="/search">{copy.browseProducts}</a>}
     </OrderMessage>
   } else {
-    body = <ul className="customer-orders-list" aria-label={group === 'history' ? 'Riwayat pesanan' : 'Pesanan aktif'}>
+    body = <ul className="customer-orders-list" aria-label={group === 'history' ? copy.pastOrders : copy.activeOrders}>
       {current.data.items.map(order => <li key={order.id}><OrderCard order={order} group={group} /></li>)}
     </ul>
   }
 
   return <>
     {!orderId && <div className="customer-orders-toolbar">
-      <nav aria-label="Filter pesanan" className="customer-orders-tabs">
-        <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>Sedang Berjalan</a>
-        <a href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>Riwayat</a>
+      <nav aria-label={copy.orderFilters} className="customer-orders-tabs">
+        <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>{copy.activeOrders}</a>
+        <a href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>{copy.pastOrders}</a>
       </nav>
-      <button type="button" className="account-btn account-btn--outline" onClick={refresh}><RefreshCw size={15} aria-hidden="true" /> Perbarui</button>
+      <button type="button" className="account-btn account-btn--outline" onClick={refresh}><RefreshCw size={15} aria-hidden="true" /> {copy.refreshOrders}</button>
     </div>}
     {body}
-    {!orderId && (offset > 0 || current?.data?.hasMore) && <nav className="customer-orders-pagination" aria-label="Halaman daftar pesanan">
-      <button type="button" className="account-btn account-btn--outline" disabled={offset === 0} onClick={() => setOffset(value => value - pageSize)}>Sebelumnya</button>
-      <span>Halaman {offset / pageSize + 1}</span>
-      <button type="button" className="account-btn account-btn--outline" disabled={!current?.data?.hasMore} onClick={() => setOffset(value => value + pageSize)}>Berikutnya</button>
+    {!orderId && (offset > 0 || current?.data?.hasMore) && <nav className="customer-orders-pagination" aria-label={copy.orderPages}>
+      <button type="button" className="account-btn account-btn--outline" disabled={offset === 0} onClick={() => setOffset(value => value - pageSize)}>{copy.previous}</button>
+      <span>{copy.page} {offset / pageSize + 1}</span>
+      <button type="button" className="account-btn account-btn--outline" disabled={!current?.data?.hasMore} onClick={() => setOffset(value => value + pageSize)}>{copy.next}</button>
     </nav>}
   </>
 }
 
 function OrderCard({ order, group }) {
+  const copy = useStorefrontCopy()
+  const language = useNavbarLanguage()
   const item = order.firstItem
   return <article className="customer-order-card">
     <div className="customer-order-card__header">
       <h2>{order.orderNumber}</h2>
-      <span>{dateTime(order.createdAt)}</span>
+      <span>{dateTime(order.createdAt, language)}</span>
     </div>
     <div className="customer-order-card__item">
       {item?.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" loading="lazy" /> : <span className="customer-order-card__image"><Package size={23} aria-hidden="true" /></span>}
       <div>
-        <strong>{item?.productName || 'Pesanan Zetruv'}</strong>
-        <span>{[item?.variantName, `${order.itemCount} item`].filter(Boolean).join(' · ')}</span>
+        <strong>{item?.productName || copy.zetruvProduct}</strong>
+        <span>{[item?.variantName, `${order.itemCount} ${order.itemCount === 1 ? copy.singleOrderItem : copy.items}`].filter(Boolean).join(' · ')}</span>
       </div>
     </div>
     <div className="customer-order-card__statuses">
-      <span>Pesanan · <strong>{orderStatusLabel(order.status)}</strong></span>
-      <span>Pembayaran · <strong>{paymentStatusLabel(order)}</strong></span>
-      {order.hasFulfillmentIssue && <span className="customer-order-card__issue">Ada kendala pemrosesan</span>}
+      <span>{copy.orderStatus} · <strong>{orderStatusLabel(order.status, copy)}</strong></span>
+      <span>{copy.payment2} · <strong>{paymentStatusLabel(order, copy)}</strong></span>
+      {order.hasFulfillmentIssue && <span className="customer-order-card__issue">{copy.orderFulfillmentProblem}</span>}
     </div>
     <div className="customer-order-card__footer">
       <strong>{money(order.grandTotal, order.currency)}</strong>
-      <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'history' ? '?group=history' : ''}`} aria-label={`Lihat detail ${order.orderNumber}`}>Lihat Detail <ArrowRight size={15} aria-hidden="true" /></a>
+      <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'history' ? '?group=history' : ''}`} aria-label={formatCopy(copy.orderDetailLink, { number: order.orderNumber })}>{copy.viewDetails} <ArrowRight size={15} aria-hidden="true" /></a>
     </div>
   </article>
 }
 
 function VoucherCodes({ orderId, itemId, token }) {
+  const copy = useStorefrontCopy()
   const [codes, setCodes] = useState([])
   const [state, setState] = useState('idle')
 
@@ -173,10 +181,10 @@ function VoucherCodes({ orderId, itemId, token }) {
   }
 
   return <div className="customer-order-voucher">
-    {state === 'ready' ? <ul aria-label="Kode voucher">{codes.map(code => <li key={code}><code>{code}</code></li>)}</ul> :
+    {state === 'ready' ? <ul aria-label={copy.voucherCodes}>{codes.map(code => <li key={code}><code>{code}</code></li>)}</ul> :
       <button type="button" className="account-btn account-btn--outline" disabled={state === 'loading'} onClick={reveal}>
-        {state === 'loading' ? 'Memuat kode…' : 'Tampilkan Kode Voucher'}
+        {state === 'loading' ? copy.loadingVoucherCodes : copy.revealVoucherCodes}
       </button>}
-    {state === 'error' && <p role="alert">Kode belum bisa ditampilkan. Coba lagi atau hubungi bantuan Zetruv.</p>}
+    {state === 'error' && <p role="alert">{copy.voucherCodesLoadError}</p>}
   </div>
 }

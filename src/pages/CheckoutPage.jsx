@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -14,7 +16,7 @@ import {
   createVerifiedCheckoutOrder, recoverVerifiedCheckoutOrder, startOrderPayment, getOrderPaymentStatus,
 } from '../services/checkoutGatewayService'
 import { checkoutAssets } from '../data/checkoutAssets'
-import { checkoutActionHint, viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { checkoutActionHint, viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import { storePaymentContext } from '../services/paymentSession'
 import { readCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
@@ -26,22 +28,24 @@ import '../styles/digital-account-verification.css'
 
 const rupiah = (v = 0) => `Rp${new Intl.NumberFormat('id-ID').format(Number(v) || 0)}`
 // Backend readiness is authoritative; no independent storefront permission flag.
-const paymentDisplay = [
-  {code: 'QRIS', name:'QRIS', description:'Bayar dengan scan QR', icon:checkoutAssets.qris},
-  {code: 'BCA_VA', name:'Virtual Account', description:'Transfer bank', icon:checkoutAssets.virtualAccount},
-  {code: 'GOPAY', name:'E-Wallet', description:'Bayar lewat e-wallet', icon:checkoutAssets.ewallet},
+const paymentDisplay = (copy) => [
+  {code: 'QRIS', name:'QRIS', description:copy.payByScanningTheQrCode, icon:checkoutAssets.qris},
+  {code: 'BCA_VA', name:copy.virtualAccount, description:copy.bankTransfer, icon:checkoutAssets.virtualAccount},
+  {code: 'GOPAY', name:'E-Wallet', description:copy.payWithADigitalWallet, icon:checkoutAssets.ewallet},
 ]
-const methodLabel = (item) => item.productKind === 'Joki' ? 'Joki Game' : ({
-  AUTO_ID:'Top Up Via ID', MANUAL_LOGIN:'Top Up Via Login',
-  VOUCHER_CODE:'Voucher Game', JOKI_MANUAL:'Joki Game',
-}[item.fulfillmentMethod] || item.productKind || 'Produk Digital')
+class CheckoutError extends Error {}
 
-const renderLoginField = (field, value, onChange, visible, toggle, disabled, error) => (
+const methodLabel = (item, copy) => item.productKind === 'Joki' ? copy.gameBoosting : ({
+  AUTO_ID:copy.topUpById, MANUAL_LOGIN:copy.topUpByLogin,
+  VOUCHER_CODE:copy.gameVouchers, JOKI_MANUAL:copy.gameBoosting,
+}[item.fulfillmentMethod] || (item.productKind === 'GameAccount' ? copy.gameAccount : copy.digitalProduct))
+
+const renderLoginField = (field, value, onChange, visible, toggle, disabled, error, copy) => (
   <div className="checkout-account-field" key={field.key}>
-    <label htmlFor={`checkout-${field.key}-${field.formId}`}>{field.label}{field.required ? ' *' : ' (opsional)'}</label>
+    <label htmlFor={`checkout-${field.key}-${field.formId}`}>{field.label}{field.required ? ' *' : ` (${copy.optional})`}</label>
     {field.type === 'Select' ? (
       <select id={`checkout-${field.key}-${field.formId}`} value={value || ''} disabled={disabled} onChange={e => onChange(e.target.value)}>
-        <option value="">Pilih {field.label}</option>
+        <option value="">{formatCopy(copy.select2, { field: field.label })}</option>
         {field.options.map(option => <option key={option} value={option}>{option}</option>)}
       </select>
     ) : (
@@ -56,14 +60,14 @@ const renderLoginField = (field, value, onChange, visible, toggle, disabled, err
           disabled={disabled} aria-invalid={Boolean(error)}
           onChange={e => onChange(e.target.value)} />
         {field.type === 'Password' && (
-          <button type="button" disabled={disabled} aria-label={visible ? 'Sembunyikan password' : 'Lihat password'} onClick={toggle}>
+          <button type="button" disabled={disabled} aria-label={visible ? copy.hidePassword : copy.showPassword} onClick={toggle}>
             {visible ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>
     )}
     {error ? <small className="checkout-field-error" role="alert">{error}</small>
-      : field.helpText && field.type !== 'Password' ? <small className="checkout-field-help">Isi sesuai data akun game.</small> : null}
+      : field.helpText && field.type !== 'Password' ? <small className="checkout-field-help">{field.helpText}</small> : null}
   </div>
 )
 
@@ -72,6 +76,7 @@ function CheckoutProduct({
   productProblem, showErrors, credentialAllowed, serviceStatus, onRemove,
   idValidation, onVerifyId, verifyingId,
 }) {
+  const copy = useStorefrontCopy()
   const [edit, setEdit] = useState(false)
   const [idValues, setIdValues] = useState({userId:item.accountFields?.userId || '',zone:item.accountFields?.zone || ''})
   const [passwordVisible, setPasswordVisible] = useState({})
@@ -79,7 +84,7 @@ function CheckoutProduct({
   const isId = item.fulfillmentMethod === 'AUTO_ID'
   const fields = checkoutFields(product, isLogin ? 'LoginCredential' : 'AccountValidation')
   const effectiveValues = values || {}
-  const validation = validateCheckoutAccount(fields, isId ? idValues : effectiveValues)
+  const validation = validateCheckoutAccount(fields, isId ? idValues : effectiveValues, copy)
   const sibling = options?.find(v => v.cartKey === sharingWith)
   const quantity = Math.max(1, Number(item.quantity) || 1)
   const lineTotal = quantity * Number(item.unitPrice || 0)
@@ -90,20 +95,20 @@ function CheckoutProduct({
         <img className="digital-checkout-item__thumb" src={item.thumbnailUrl || fallback} alt=""
           onError={e => { if(e.currentTarget.dataset.fail !== '1'){e.currentTarget.dataset.fail='1';e.currentTarget.src=fallback} }} />
         <div className="checkout-product__identity">
-          <span className="digital-product-method">{methodLabel(item)}</span>
+          <span className="digital-product-method">{methodLabel(item, copy)}</span>
           <strong>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</strong>
           <span>{item.variantName}</span>
-          <small>Harga satuan {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
+          <small>{copy.unitPrice2} {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
         </div>
-        <strong className="checkout-product__price">{rupiah(lineTotal)}<small>Subtotal {quantity > 1 ? `(${quantity} item)` : ''}</small></strong>
+        <strong className="checkout-product__price">{rupiah(lineTotal)}<small>{copy.subtotal} {quantity > 1 ? `(${quantity} item)` : ''}</small></strong>
       </div>
 
       {isId && (
         <div className="checkout-product__destination">
           <div className="checkout-product__destination-head">
-            <strong>Akun tujuan top-up</strong>
+            <strong>{copy.topUpDestinationAccount}</strong>
             <button type="button" onClick={() => {setIdValues({userId:item.accountFields?.userId||'',zone:item.accountFields?.zone||''});setEdit(x=>!x)}}>
-              <Pencil size={15} aria-hidden="true"/> {edit ? 'Batal' : 'Edit akun'}
+              <Pencil size={15} aria-hidden="true"/> {edit ? copy.cancel : copy.editAccount}
             </button>
           </div>
           {edit ? (
@@ -115,22 +120,22 @@ function CheckoutProduct({
                     inputMode={f.type === 'Number' ? 'numeric' : 'text'}
                     onChange={e => setIdValues(v=>({...v,[f.slot]:e.target.value}))} />
                 </label>
-                {(showErrors || idValues[f.slot]) && validateCheckoutField(f,idValues[f.slot]) &&
-                  <small className="checkout-field-error">{validateCheckoutField(f,idValues[f.slot])}</small>}
+                {(showErrors || idValues[f.slot]) && validateCheckoutField(f,idValues[f.slot],copy) &&
+                  <small className="checkout-field-error">{validateCheckoutField(f,idValues[f.slot],copy)}</small>}
               </div>)}
               <button type="button" className="checkout-product__save" disabled={Boolean(validation)}
-                onClick={()=>{onIdSave(item,idValues,fields);setEdit(false)}}>Simpan Data Akun</button>
+                onClick={()=>{onIdSave(item,idValues,fields);setEdit(false)}}>{copy.saveAccountDetails}</button>
             </div>
           ) : (<>
             <p>{fields.map(f=>`${f.label}: ${item.accountFields?.[f.slot] || '—'}`).join(' · ')}</p>
             {product?.requiresGameAccountValidation && (
               <div className="checkout-product__verify">
                 {idValidation?.validationId && Date.parse(idValidation.expiresAt)>Date.now()
-                  ? <span className="checkout-product__verified"><CheckCircle2 size={15}/> Akun tujuan terverifikasi</span>
+                  ? <span className="checkout-product__verified"><CheckCircle2 size={15}/> {copy.destinationAccountVerified}</span>
                   : <button type="button" disabled={verifyingId || !product}
                       onClick={()=>onVerifyId(item,fields)}>
                       {verifyingId ? <LoaderCircle className="checkout-spinner" size={15}/> : <CheckCircle2 size={15}/>}
-                      {verifyingId ? 'Memeriksa akun...' : 'Verifikasi akun tujuan'}
+                      {verifyingId ? copy.checkingAccount : copy.verifyDestinationAccount}
                     </button>}
               </div>
             )}
@@ -141,19 +146,19 @@ function CheckoutProduct({
       {isLogin && (
         <div className="checkout-product__account">
           <div className="checkout-product__account-title">
-            <strong>Akun game untuk paket ini</strong>
-            <span>Berbeda dari login akun Zetruv</span>
+            <strong>{copy.gameAccountForThisPackage}</strong>
+            <span>{copy.useYourGameAccountDetailsHere}</span>
           </div>
           {!serviceStatus?.available ? (
             <div className="checkout-service-unavailable" role="status">
               <div className="checkout-service-unavailable__heading">
                 <AlertCircle size={18} aria-hidden="true" />
-                <strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>
+                <strong>{copy.serviceTemporarilyUnavailable}</strong>
               </div>
-              <p>Top Up via Login untuk game ini belum bisa diproses. Hapus paket ini untuk melanjutkan dengan produk lainnya.</p>
+              <p>{copy.topUpByLoginIsUnavailableFor}</p>
               <div className="checkout-service-unavailable__actions">
-                <button type="button" onClick={() => onRemove(item)}><X size={15} aria-hidden="true" /> Hapus produk ini</button>
-                <a href="/search">Cari produk lain <ArrowRight size={14} aria-hidden="true" /></a>
+                <button type="button" onClick={() => onRemove(item)}><X size={15} aria-hidden="true" /> {copy.removeThisProduct}</button>
+                <a href="/search">{copy.browseOtherProducts2} <ArrowRight size={14} aria-hidden="true" /></a>
               </div>
             </div>
           ) : <>
@@ -161,25 +166,25 @@ function CheckoutProduct({
             <label className="checkout-product__share">
               <input type="checkbox" checked={Boolean(sibling)}
                 onChange={e => onShare(item.cartKey,e.target.checked ? options[0].cartKey : '')} />
-              Gunakan akun game yang sama dengan {options[0].variantName}
+              {copy.useTheSameGameAccountAs} {options[0].variantName}
             </label>
           )}
           {sibling ? (
-            <p className="checkout-product__shared">Menggunakan form akun dari {sibling.variantName} di atas.</p>
+            <p className="checkout-product__shared">{copy.usingAccountDetailsFrom} {sibling.variantName} {copy.above}</p>
           ) : <>
             {!credentialAllowed && (
               <p className="checkout-product__security"><ShieldAlert size={15} aria-hidden="true"/>
-                Pengumpulan kredensial game belum diaktifkan karena persetujuan penyedia game belum terverifikasi. Jangan masukkan password atau OTP.
+                {copy.gameLoginDetailsCanTBeCollected}
               </p>
             )}
             <div className="checkout-product__fields">
               {fields.length ? fields.map(f => {
-                const error = (showErrors || Object.values(effectiveValues).some(v => String(v || '').length > 0)) ? validateCheckoutField(f,effectiveValues[f.slot]) : ''
+                const error = (showErrors || Object.values(effectiveValues).some(v => String(v || '').length > 0)) ? validateCheckoutField(f,effectiveValues[f.slot],copy) : ''
                 return renderLoginField({...f,formId:item.cartKey},effectiveValues[f.slot],
                   v=>onValue(item.cartKey,f.slot,v),Boolean(passwordVisible[f.key]),
                   ()=>setPasswordVisible(old=>({...old,[f.key]:!old[f.key]})),
-                  !credentialAllowed,error)
-              }) : <p className="checkout-field-error">Aturan pengisian akun belum tersedia.</p>}
+                  !credentialAllowed,error,copy)
+              }) : <p className="checkout-field-error">{copy.accountRequirementsAreCurrentlyUnavailable}</p>}
             </div>
           </>}
           </>}
@@ -192,30 +197,32 @@ function CheckoutProduct({
 }
 
 function CustomerLoginDialog({ onClose, onSuccess }) {
+  const copy = useStorefrontCopy()
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   return <div className="checkout-auth-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
-    <form className="checkout-auth-modal" role="dialog" aria-modal="true" aria-label="Masuk ke Zetruv"
+    <form className="checkout-auth-modal" role="dialog" aria-modal="true" aria-label={copy.logInToZetruv}
       onSubmit={async e=>{
         e.preventDefault();if(busy)return;setBusy(true);setError('')
         try { const response=await authenticateCheckoutCustomer(email,password)
-          if(!response?.accessToken)throw Error('Sesi login tidak diterima.')
+          if(!response?.accessToken)throw Error(copy.weCouldnTStartYourSession2)
           onSuccess(response)
-        } catch(e){setError(e.status===401?'Email atau password akun Zetruv tidak cocok.':'Belum berhasil masuk. Silakan coba lagi.')} finally{setBusy(false);setPassword('')}
+        } catch(e){setError(e.status===401?copy.yourZetruvEmailOrPasswordIsIncorrect2:copy.weCouldnTLogYouInPlease)} finally{setBusy(false);setPassword('')}
       }}>
-      <div className="checkout-auth-modal__head"><strong>Login akun Zetruv</strong><button type="button" aria-label="Tutup" onClick={onClose}><X size={18}/></button></div>
-      <p>Gunakan akun Zetruv yang sudah diverifikasi. Ini berbeda dari akun game untuk top-up.</p>
-      <label>Email Zetruv<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
-      <label>Password Zetruv<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+      <div className="checkout-auth-modal__head"><strong>{copy.logInToYourZetruvAccount}</strong><button type="button" aria-label={copy.close} onClick={onClose}><X size={18}/></button></div>
+      <p>{copy.logInWithYourVerifiedZetruvAccount}</p>
+      <label>{copy.zetruvEmail}<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
+      <label>{copy.zetruvPassword}<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
       {error && <p role="alert" className="checkout-field-error">{error}</p>}
-      <button type="submit" disabled={busy}>{busy ? 'Memverifikasi...' : 'Masuk & Lanjutkan'}</button>
+      <button type="submit" disabled={busy}>{busy ? copy.verifying : copy.loginAndContinue}</button>
     </form>
   </div>
 }
 
 export default function CheckoutPage() {
+  const copy = useStorefrontCopy()
   const [items,setItems]=useState(readCart)
   const [catalog,setCatalog]=useState({})
   const [serviceReadiness,setServiceReadiness]=useState({})
@@ -302,7 +309,7 @@ export default function CheckoutPage() {
   useEffect(()=>{refreshMethods()},[refreshMethods])
 
   const phoneNormalized=normalizeIndonesianWhatsApp(phone)
-  const {changes,problems}=useMemo(()=>currentCatalogDifferences(items,catalog),[items,catalog])
+  const {changes,problems}=useMemo(()=>currentCatalogDifferences(items,catalog,copy),[items,catalog,copy])
   const linePricing=useMemo(()=>getDigitalPricing(items),[items])
   const voucherDiscount=Number(voucher?.discountAmount || 0)
   const selectedPaymentOption=readiness?.availableMethods?.find(option=>option.code===method)
@@ -317,52 +324,52 @@ export default function CheckoutPage() {
 
   const checkoutIssues=useMemo(()=>{
     const result=[]
-    if(!items.length)result.push('Keranjang masih kosong.')
+    if(!items.length)result.push(copy.yourCartIsEmpty)
     if(customer && cartSync.state!=='synced')
-      result.push('Keranjang akun belum tersinkron. Periksa keranjang sebelum membayar.')
-    if(!phoneNormalized)result.push('Masukkan nomor WhatsApp Indonesia yang valid.')
-    if(catalogState!=='ready')result.push('Katalog produk belum berhasil diverifikasi.')
+      result.push(copy.yourAccountCartHasnTSyncedReview)
+    if(!phoneNormalized)result.push(copy.enterAValidIndonesianWhatsappNumber)
+    if(catalogState!=='ready')result.push(copy.theProductCatalogCouldnTBeVerified)
     if(problems.length)result.push(problems[0].message)
-    if(changes.length)result.push('Harga produk berubah. Konfirmasi harga terbaru sebelum melanjutkan.')
+    if(changes.length)result.push(copy.aProductPriceChangedConfirmTheLatest)
     for(const item of items){
       const product=catalog[item.productSlug]
       if(item.fulfillmentMethod==='AUTO_ID'){
         const fields=checkoutFields(product,'AccountValidation')
-        const message=validateCheckoutAccount(fields,item.accountFields)
+        const message=validateCheckoutAccount(fields,item.accountFields,copy)
         if(message)result.push(`${item.gameName||item.productName}: ${message}`)
         if(!product?.requiresGameAccountValidation)
-          result.push(`${item.gameName||item.productName}: verifikasi tujuan belum disiapkan.`)
+          result.push(`${item.gameName||item.productName}: ${copy.destinationVerificationIsnTSetUpYet}`)
         else if(!idValidations[item.cartKey]?.validationId ||
           Date.parse(idValidations[item.cartKey]?.expiresAt||'')<=Date.now())
-          result.push(`${item.gameName||item.productName}: verifikasi akun tujuan sebelum membayar.`)
+          result.push(`${item.gameName||item.productName}: ${copy.verifyTheDestinationAccountBeforePaying}`)
       }
       if(item.fulfillmentMethod==='MANUAL_LOGIN'){
         if(!viaLoginServiceStatus(product,item,serviceReadiness[item.productSlug]).available){
-          result.push(`${item.gameName||item.productName}: layanan sementara belum tersedia.`)
+          result.push(`${item.gameName||item.productName}: ${copy.thisServiceIsTemporarilyUnavailable}`)
         }else{
           const fields=checkoutFields(product,'LoginCredential')
           const key=matchingAccountSource(items,item,sharing)
-          const message=validateCheckoutAccount(fields,values[key])
+          const message=validateCheckoutAccount(fields,values[key],copy)
           if(message)result.push(`${item.gameName||item.productName}: ${message}`)
-          if(!allowedCredentials)result.push('Informasi akun game belum dapat dimasukkan.')
+          if(!allowedCredentials)result.push(copy.gameAccountInformationCanTBeEntered)
         }
       }
-      if(item.requiresGameAccountValidation)result.push(`${item.productName}: verifikasi akun server diperlukan.`)
+      if(item.requiresGameAccountValidation)result.push(`${item.productName}: ${copy.accountVerificationIsRequired}`)
     }
-    if(voucherState==='checking')result.push('Voucher sedang diverifikasi.')
-    if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push('Metode pembayaran sedang tidak tersedia.')
+    if(voucherState==='checking')result.push(copy.checkingTheVoucher)
+    if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push(copy.paymentMethodsAreCurrentlyUnavailable)
     if(import.meta.env.MODE==='dev' && readiness?.canAcceptLivePayments && !readiness?.isSandbox)
-      result.push('DEV hanya boleh memakai metode pembayaran sandbox.')
-    if(!methodEnabled)result.push('Pilih metode pembayaran yang tersedia.')
+      result.push(copy.onlySandboxPaymentMethodsAreAvailableIn)
+    if(!methodEnabled)result.push(copy.chooseAnAvailablePaymentMethod)
     // Payment-options currently declares channel availability but contains
     // no authoritative channel fee. Never enable a payable method with an
     // undisclosed potential surcharge.
     if(methodEnabled && readiness?.canAcceptLivePayments && paymentFee==null)
-      result.push('Biaya pembayaran belum dapat dipastikan.')
-    if(total<=0)result.push('Total pembayaran harus lebih dari Rp0.')
+      result.push(copy.thePaymentFeeCouldnTBeConfirmed)
+    if(total<=0)result.push(copy.thePaymentTotalMustBeGreaterThan)
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
-      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync])
+      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync,copy])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
@@ -372,11 +379,11 @@ export default function CheckoutPage() {
     const fields=checkoutFields(catalog[item.productSlug],kind)
     const sharedKey=matchingAccountSource(items,item,sharing)
     const reason=validateCheckoutAccount(fields,
-      kind==='AccountValidation'?item.accountFields:values[sharedKey])
+      kind==='AccountValidation'?item.accountFields:values[sharedKey],copy)
     if(reason)return {cartKey:item.cartKey,message:`${item.gameName||item.productName}: ${reason}`}
     if(kind==='AccountValidation' && catalog[item.productSlug]?.requiresGameAccountValidation &&
       !idValidations[item.cartKey]?.validationId)
-      return {cartKey:item.cartKey,message:`Verifikasi akun tujuan ${item.gameName||item.productName} sebelum melanjutkan.`}
+      return {cartKey:item.cartKey,message:formatCopy(copy.verifyTheDestinationAccountForBeforeContinuing, { product: item.gameName || item.productName })}
     return null
   }).find(Boolean)
   const guidance=checkoutActionHint({
@@ -387,7 +394,8 @@ export default function CheckoutPage() {
     methodsReady:Boolean(readiness?.canAcceptLivePayments),
     selectedMethodValid:methodEnabled,
     priceChanged:changes.length>0,
-  })
+  }, copy)
+  const displayMethods = paymentDisplay(copy)
   const showLiveMethods=readiness?.availableMethods?.length>0
 
   const applyVoucher=async()=>{
@@ -396,20 +404,20 @@ export default function CheckoutPage() {
     setVoucherState('checking');setVoucherMessage('');setVoucher(null)
     try{
       const preview=await previewCheckoutVoucher({code,items,phone:phoneNormalized,email:customer?.email})
-      if(!preview?.discountAmount || Number(preview.discountAmount)<=0)throw Error('Voucher tidak berlaku untuk produk ini.')
+      if(!preview?.discountAmount || Number(preview.discountAmount)<=0)throw Error(copy.thisVoucherDoesnTApplyToThis)
       setVoucher({code:preview.code || code,discountAmount:Number(preview.discountAmount)})
       setVoucherState('applied')
-      setVoucherMessage(`Voucher diterapkan: −${rupiah(preview.discountAmount)}.`)
+      setVoucherMessage(formatCopy(copy.voucherApplied, { amount: rupiah(preview.discountAmount) }))
     }catch(e){
-      const reason=String(e.message||'Voucher belum dapat diperiksa.')
+      const reason=String(copy.theVoucherCouldnTBeChecked)
       const lower=reason.toLowerCase()
       setVoucherState(lower.includes('expir')?'expired':
         lower.includes('eligib')||lower.includes('minimum')?'not-applicable':
         lower.includes('invalid')||lower.includes('inactive')?'invalid':'error')
-      setVoucherMessage(lower.includes('expir')?'Masa berlaku voucher sudah habis.':
-        lower.includes('eligib')||lower.includes('minimum')?'Voucher tidak berlaku untuk pesanan ini.':
-        lower.includes('invalid')||lower.includes('inactive')?'Kode voucher tidak valid atau tidak aktif.':
-        'Voucher belum dapat diperiksa. Silakan coba lagi.')
+      setVoucherMessage(lower.includes('expir')?copy.thisVoucherHasExpired:
+        lower.includes('eligib')||lower.includes('minimum')?copy.thisVoucherDoesnTApplyToThis2:
+        lower.includes('invalid')||lower.includes('inactive')?copy.theVoucherCodeIsInvalidOrInactive:
+        copy.weCouldnTCheckTheVoucherPlease)
     }
   }
   const confirmPriceChange=()=>{
@@ -434,13 +442,13 @@ export default function CheckoutPage() {
     try{
       const product=catalog[item.productSlug]
       const fields=checkoutFields(product,'AccountValidation')
-      const validationError=validateCheckoutAccount(fields,item.accountFields)
+      const validationError=validateCheckoutAccount(fields,item.accountFields,copy)
       if(validationError)throw new Error(validationError)
       const payload=Object.fromEntries(fields.map(f=>[f.key,String(item.accountFields?.[f.slot]||'').trim()]))
       const res=await verifyTopUpIdDestination(product.id,payload)
-      if(!res?.validationId || res.status!=='Verified')throw new Error('Akun belum berhasil diverifikasi.')
+      if(!res?.validationId || res.status!=='Verified')throw new Error(copy.theAccountCouldnTBeVerified)
       setIdValidations(prev=>({...prev,[item.cartKey]:{validationId:res.validationId,expiresAt:res.expiresAt}}))
-    }catch(e){setError(e.message||'Gagal memverifikasi akun tujuan.')}finally{setVerifyingId(null)}
+    }catch(e){setError(copy.weCouldnTVerifyTheDestinationAccount)}finally{setVerifyingId(null)}
   }
   const saveId=(item,values,fields)=>{
     updateCartAccount(item.cartKey,values,{first:fields[0]?.label})
@@ -455,20 +463,20 @@ export default function CheckoutPage() {
       // created while the method or item price has changed.
       const freshMethods=await refreshMethods()
       const freshCatalog=await refreshCatalog()
-      if(!freshMethods || !paymentSelectionAllowed(freshMethods,method))throw Error('Metode pembayaran tidak tersedia lagi.')
-      if(import.meta.env.MODE==='dev' && !freshMethods.isSandbox)throw Error('DEV hanya boleh memakai payment gateway sandbox.')
-      if(!freshCatalog)throw Error('Gagal memverifikasi katalog.')
-      const fresh=currentCatalogDifferences(items,freshCatalog)
-      if(fresh.changes.length || fresh.problems.length)throw Error('Harga atau ketersediaan berubah. Periksa perubahan sebelum membayar.')
+      if(!freshMethods || !paymentSelectionAllowed(freshMethods,method))throw new CheckoutError(copy.thisPaymentMethodIsNoLongerAvailable)
+      if(import.meta.env.MODE==='dev' && !freshMethods.isSandbox)throw new CheckoutError(copy.onlySandboxGatewaysCanBeUsedIn)
+      if(!freshCatalog)throw new CheckoutError(copy.weCouldnTVerifyTheCatalog)
+      const fresh=currentCatalogDifferences(items,freshCatalog,copy)
+      if(fresh.changes.length || fresh.problems.length)throw new CheckoutError(copy.pricingOrAvailabilityChangedReviewTheChanges)
       if(voucher){
         const preview=await previewCheckoutVoucher({code:voucher.code,items,phone:phoneNormalized,email:verifiedCustomer?.email})
         if(Number(preview?.discountAmount)!==voucher.discountAmount){
           setVoucherState('error')
           setVoucher(null)
-          throw Error('Nilai voucher berubah. Terapkan ulang dan konfirmasi total.')
+          throw new CheckoutError(copy.theVoucherAmountChangedApplyItAgain)
         }
       }
-      if(!valid)throw Error('Lengkapi semua data pesanan terlebih dahulu.')
+      if(!valid)throw new CheckoutError(copy.completeAllOrderDetailsFirst)
       const payload={
         customerName:verifiedCustomer?.name || null,
         customerEmail:verifiedCustomer?.email || null,
@@ -493,7 +501,7 @@ export default function CheckoutPage() {
         attempt.current={fingerprint,key:window.crypto.randomUUID(),body:payload}
       }
       if(pendingAttempt && pendingAttempt.key!==attempt.current.key)
-        throw Error('Selesaikan pemulihan order sebelumnya sebelum membuat order lain.')
+        throw new CheckoutError(copy.recoverYourPreviousOrderBeforePlacingA)
       // Persist only opaque UUID and selected method, never credentials or body.
       setPendingAttempt(preserveCheckoutAttempt(attempt.current.key, method))
       const created=order || await createVerifiedCheckoutOrder(attempt.current.body,token,attempt.current.key)
@@ -523,16 +531,16 @@ export default function CheckoutPage() {
         // Server price is authoritative. Never silently accept it or reuse an old order quote.
         await refreshCatalog()
         setError(updates.length
-          ? `${priceChangeExplanation(updates[0])} Periksa perubahan dan setujui harga terbaru sebelum membayar.`
-          : 'Harga berubah di server. Periksa perubahan harga dan setujui sebelum membayar.')
-      } else setError(e.message||'Pembayaran belum bisa dimulai. Silakan coba lagi.')
+          ? `${priceChangeExplanation(updates[0], copy)} ${copy.reviewTheChangesAndAcceptTheLatest}`
+          : copy.pricingChangedReviewAndAcceptTheNew)
+      } else setError(e instanceof CheckoutError ? e.message : copy.weCouldnTStartThePaymentPlease)
       if([400,409,422].includes(e.status)&&!order){clearCheckoutAttempt();setPendingAttempt(null)}
       setPaymentState('error')
     }finally{processingRef.current=false;setProcessing(false)}
   }
   const handlePay=()=>{
     if(pendingAttempt && (!attempt.current || pendingAttempt.key!==attempt.current.key)){
-      setError('Checkout lama belum pasti. Pulihkan order terlebih dahulu.');return
+      setError(copy.thePreviousCheckoutHasnTBeenConfirmed);return
     }
     setFormTouched(true)
     if(!valid||processingRef.current)return
@@ -550,8 +558,8 @@ export default function CheckoutPage() {
       window.location.assign('/payment')
     }catch(e){
       if(e.status===404){
-        setError('Order belum ditemukan atau masih diproses. Pastikan akun Zetruv sama, lalu coba pulihkan lagi. Jangan mulai checkout baru; hubungi support jika status tetap tidak pasti.')
-      }else setError('Belum bisa memastikan order lama. Jangan membuat pembayaran baru; coba pulihkan lagi.')
+        setError(copy.theOrderWasnTFoundOrIs)
+      }else setError(copy.weCouldnTConfirmThePreviousOrder)
     }finally{setProcessing(false)}
   }
   const checkPayment=async()=>{
@@ -561,7 +569,7 @@ export default function CheckoutPage() {
       const state=await getOrderPaymentStatus(order)
       setPayment(state)
       setPaymentState(String(state.state||'pending').toLowerCase())
-    }catch(e){setError(e.message||'Status pembayaran tidak dapat diperiksa.')}
+    }catch(e){setError(copy.weCouldnTCheckThePaymentStatus)}
     finally{setProcessing(false)}
   }
 
@@ -569,20 +577,20 @@ export default function CheckoutPage() {
     <Navbar variant="default"/>
     <main className="digital-checkout-page digital-container">
       <header className="digital-checkout-heading">
-        <h1>Checkout Digital</h1><p>Periksa detail akun tujuan, metode pembayaran, dan harga.</p>
+        <h1>{copy.digitalCheckout}</h1><p>{copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
       </header>
       {pendingAttempt && <section role="alert" className="checkout-price-change" style={{marginBottom:20}}>
-        <AlertCircle size={20}/><div><strong>Checkout sebelumnya belum terkonfirmasi</strong>
-          <p>Browser mungkin ter-refresh sebelum respons order diterima. Jangan membuat order baru sampai diperiksa.</p>
+        <AlertCircle size={20}/><div><strong>{copy.previousCheckoutIsUnconfirmed}</strong>
+          <p>{copy.thePageMayHaveReloadedBeforeThe}</p>
           <button type="button" disabled={processing} onClick={()=>{
             if(customer?.accessToken)recoverInterruptedOrder(customer.accessToken)
             else {setAuthPurpose('recover');setAuthDialog(true)}
-          }}>{processing?'Memeriksa...':'Pulihkan order sebelumnya'}</button>
-          <a href="/order-status">Cek pesanan / hubungi support</a>
+          }}>{processing?'Memeriksa...':copy.recoverPreviousOrder}</button>
+          <a href="/order-status">{copy.checkOrderOrContactSupport}</a>
         </div></section>}
       <div className="digital-checkout-layout">
         <section className="digital-checkout-order">
-          <h2>Ringkasan Pesanan</h2>
+          <h2>{copy.orderSummary}</h2>
           <div className="digital-checkout-items">
             {items.length ? items.map(item=>{
               const earlier=allCreds.filter(other=>other.productId===item.productId &&
@@ -597,106 +605,107 @@ export default function CheckoutPage() {
                 onVerifyId={verifyId} verifyingId={verifyingId===item.cartKey}
                 idValidation={idValidations[item.cartKey]}
                 serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug])} onRemove={removeBlockedItem}
-                productProblem={issue} priceProblem={price ? priceChangeExplanation(price) : ''}/>
-            }) : <div className="digital-checkout-empty">Keranjang kosong. <a href="/search">Pilih produk</a></div>}
+                productProblem={issue} priceProblem={price ? priceChangeExplanation(price, copy) : ''}/>
+            }) : <div className="digital-checkout-empty">{copy.yourCartIsEmpty2} <a href="/search">{copy.chooseAProduct}</a></div>}
           </div>
           {changes.length>0 && <div className="checkout-price-change" role="alert">
             <AlertCircle size={17} aria-hidden="true"/>
-            <div><strong>Perubahan harga perlu persetujuan</strong>{changes.map((change) => <p key={change.key}>{priceChangeExplanation(change)}</p>)}<p>Harga baru belum diterapkan ke keranjang. Periksa dan setujui sebelum melanjutkan pembayaran.</p>
-              <button type="button" onClick={confirmPriceChange}>Setujui harga terbaru</button>
+            <div><strong>{copy.priceChangesNeedApproval}</strong>{changes.map((change) => <p key={change.key}>{priceChangeExplanation(change, copy)}</p>)}<p>{copy.theNewPricesHavenTBeenApplied}</p>
+              <button type="button" onClick={confirmPriceChange}>{copy.acceptNewPrices}</button>
             </div>
           </div>}
           <div className="digital-contact-block">
-            <h3>Informasi Kontak</h3>
-            <label htmlFor="checkout-phone">Nomor WhatsApp *
+            <h3>{copy.contactInformation}</h3>
+            <label htmlFor="checkout-phone">{copy.whatsappNumber}
               <input id="checkout-phone" type="tel" autoComplete="tel" inputMode="tel"
-                placeholder="08xxxxxxxxxx atau +62xxxxxxxxxx" value={phone}
+                placeholder={copy.label08xxxxxxxxxxOr62xxxxxxxxxx} value={phone}
                 aria-invalid={phoneTouched && !phoneNormalized}
                 onBlur={()=>setPhoneTouched(true)}
                 onChange={e=>{setPhone(e.target.value);setVoucher(null);setVoucherState('idle')}}/>
             </label>
             {(phoneTouched || formTouched) && !phoneNormalized
-              ? <small className="checkout-field-error">Gunakan nomor HP Indonesia valid, contoh 081234567890.</small>
-              : <small>Nomor ini digunakan untuk informasi pesanan. {phoneNormalized && `Format: ${phoneNormalized}`}</small>}
+              ? <small className="checkout-field-error">{copy.useAValidIndonesianPhoneNumberFor}</small>
+              : <small>{copy.weLlUseThisNumberForOrder} {phoneNormalized && `Format: ${phoneNormalized}`}</small>}
           </div>
           <div className="digital-voucher">
-            <label htmlFor="checkout-voucher">Kode Voucher</label>
+            <label htmlFor="checkout-voucher">{copy.voucherCode}</label>
             <div><input id="checkout-voucher" value={voucherInput} maxLength={32}
-              placeholder="Masukkan kode voucher"
+              placeholder={copy.enterVoucherCode}
               onChange={e=>{setVoucherInput(e.target.value);setVoucher(null);setVoucherState('idle');setVoucherMessage('')}}/>
               <button type="button" disabled={!voucherInput.trim()||voucherState==='checking'||!items.length}
-                onClick={applyVoucher}>{voucherState==='checking'?'Memeriksa...':'Gunakan'}</button></div>
+                onClick={applyVoucher}>{voucherState==='checking'?copy.checking:copy.apply}</button></div>
             {voucherState==='applied' ?
               <p className="checkout-voucher-applied" role="status"><CheckCircle2 size={15}/>{voucherMessage}
-                <button type="button" onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>Hapus</button></p>
+                <button type="button" onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>{copy.remove}</button></p>
               : <small className={['invalid','expired','not-applicable','error'].includes(voucherState)?'checkout-field-error':''} role="status">
-                {voucherMessage||'Periksa kode voucher terlebih dahulu. Ini belum memulai pembayaran.'}</small>}
+                {voucherMessage||copy.checkTheVoucherCodeBeforeStartingPayment}</small>}
           </div>
         </section>
         <aside className="digital-payment-panel">
-          <h2>Metode Pembayaran</h2>
-          {methodsState==='loading' && <p className="checkout-gateway-state"><LoaderCircle className="checkout-spinner" size={16}/>Memeriksa metode pembayaran...</p>}
+          <h2>{copy.paymentMethod}</h2>
+          {methodsState==='loading' && <p className="checkout-gateway-state"><LoaderCircle className="checkout-spinner" size={16}/>{copy.checkingPaymentMethods}</p>}
           <div className="digital-payment-methods">
             {(showLiveMethods ? readiness.availableMethods.map(m=>({
-              ...paymentDisplay.find(x=>x.code===m.code),...m,
-              name:m.name||paymentDisplay.find(x=>x.code===m.code)?.name||m.code,
-              icon:paymentDisplay.find(x=>x.code===m.code)?.icon||checkoutAssets.qris,
-            })) : paymentDisplay).map(m=>{
+              ...displayMethods.find(x=>x.code===m.code),...m,
+              name:displayMethods.find(x=>x.code===m.code)?.name||m.name||m.code,
+              description:displayMethods.find(x=>x.code===m.code)?.description||m.description,
+              icon:displayMethods.find(x=>x.code===m.code)?.icon||checkoutAssets.qris,
+            })) : displayMethods).map(m=>{
               const enabled=paymentSelectionAllowed(readiness,m.code)
               return <button key={m.code} type="button" disabled={!enabled}
                 className={method===m.code?'is-active':''} aria-pressed={method===m.code}
                 onClick={()=>{setMethod(m.code);setError('')}}>
                 <i><img src={m.icon} alt=""/></i>
-                <span><strong>{m.name}</strong><small>{enabled?m.description||'Metode tersedia':'Sedang tidak tersedia'}</small></span>
+                <span><strong>{m.name}</strong><small>{enabled?m.description||copy.paymentMethodAvailable:copy.currentlyUnavailable}</small></span>
                 <b aria-hidden="true"/>
               </button>
             })}
           </div>
           {readiness?.isSandbox && <p className="checkout-gateway-state" role="status">
-            <Info size={16}/>Mode pengujian: transaksi ini tidak menggunakan uang asli.
+            <Info size={16}/>{copy.testModeThisTransactionUsesNoReal}
           </p>}
-          {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">Metode pembayaran belum bisa dimuat. <button type="button" onClick={refreshMethods}>Coba lagi</button></p>
+          {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">{copy.weCouldnTLoadPaymentMethods} <button type="button" onClick={refreshMethods}>{copy.tryAgain3}</button></p>
             : methodsState==='ready' && !readiness?.canAcceptLivePayments?
-              <p className="checkout-gateway-state" role="status"><Info size={16}/>Metode pembayaran sedang tidak tersedia. Silakan coba kembali nanti.</p>:null}
+              <p className="checkout-gateway-state" role="status"><Info size={16}/>{copy.paymentMethodsAreUnavailablePleaseTryAgain}</p>:null}
           <div className="digital-checkout-prices">
-            <div><span>Subtotal produk</span><strong>{rupiah(linePricing.subtotal)}</strong></div>
-            <div><span>Diskon produk</span><strong>−{rupiah(linePricing.discount)}</strong></div>
-            {voucher && <div className="is-discount"><span>Voucher {voucher.code}</span><strong>−{rupiah(voucherDiscount)}</strong></div>}
-            <div><span>Biaya layanan <Info size={13} title="Biaya layanan akan ditampilkan setelah tersedia."/></span><strong>—</strong></div>
-            <div><span>Biaya pembayaran <Info size={13} title="Besaran biaya mengikuti metode yang tersedia."/></span>
+            <div><span>{copy.productSubtotal}</span><strong>{rupiah(linePricing.subtotal)}</strong></div>
+            <div><span>{copy.productDiscount}</span><strong>−{rupiah(linePricing.discount)}</strong></div>
+            {voucher && <div className="is-discount"><span>{copy.voucher} {voucher.code}</span><strong>−{rupiah(voucherDiscount)}</strong></div>}
+            <div><span>{copy.serviceFee} <Info size={13} title={copy.theServiceFeeWillAppearWhenAvailable}/></span><strong>—</strong></div>
+            <div><span>{copy.paymentFee} <Info size={13} title={copy.theFeeDependsOnThePaymentMethod}/></span>
               <strong>{paymentFee==null?'—':rupiah(paymentFee)}</strong></div>
           </div>
           <hr/>
-          <div className="digital-checkout-total"><span>Estimasi Total</span><strong>{rupiah(total)}</strong></div>
-          <p className="checkout-fee-note">Total akhir akan ditampilkan setelah metode pembayaran tersedia.</p>
+          <div className="digital-checkout-total"><span>{copy.estimatedTotal}</span><strong>{rupiah(total)}</strong></div>
+          <p className="checkout-fee-note">{copy.theFinalTotalWillAppearOnceA}</p>
           {error && <p role="alert" className="digital-checkout-error">{error}</p>}
           <button className="digital-pay-button" type="button" disabled={!valid||processing||Boolean(pendingAttempt && (!attempt.current || pendingAttempt.key!==attempt.current.key))}
-            onClick={handlePay}>{processing?<><LoaderCircle className="checkout-spinner" size={16}/>Memproses...</>:'Bayar Sekarang'}</button>
+            onClick={handlePay}>{processing?<><LoaderCircle className="checkout-spinner" size={16}/>{copy.processing2}</>:copy.payNow}</button>
           {!valid && guidance && <div className="checkout-blockers" role="status" aria-live="polite">
-            <strong>Belum bisa melanjutkan</strong>
+            <strong>{copy.unableToContinue}</strong>
             <span>{guidance.message}</span>
             {guidance.type==='service' && <div className="checkout-blockers__actions">
               <button type="button" onClick={()=>{
                 const blocked=blockedLoginItems.find(item=>item.cartKey===guidance.cartKey)
                 if(blocked)removeBlockedItem(blocked)
-              }}>Hapus paket tidak tersedia</button>
-              <a href="/search">Cari produk lain</a>
+              }}>{copy.removeUnavailablePackages}</button>
+              <a href="/search">{copy.browseOtherProducts2}</a>
             </div>}
             {['account','phone'].includes(guidance.type) &&
               <button type="button" className="checkout-blockers__jump" onClick={jumpToIssue}>
-                Perbaiki data <ArrowRight size={13} aria-hidden="true" />
+                {copy.correctDetails} <ArrowRight size={13} aria-hidden="true" />
               </button>}
             {guidance.type==='price' &&
               <button type="button" className="checkout-blockers__jump"
                 onClick={()=>document.querySelector('.checkout-price-change')?.scrollIntoView({behavior:'smooth',block:'center'})}>
-                Lihat perubahan harga <ArrowRight size={13} aria-hidden="true" />
+                {copy.reviewPriceChanges} <ArrowRight size={13} aria-hidden="true" />
               </button>}
           </div>}
           {order && paymentState!=='idle' && <div className="checkout-payment-status" role="status">
-            <strong>Status: {paymentState==='paid'?'Pembayaran terkonfirmasi':paymentState==='pending'?'Menunggu pembayaran':paymentState==='starting'?'Menghubungi provider':paymentState}</strong>
-            <p>Nomor pesanan: {order.orderNumber}. Jangan melakukan pembayaran ulang sebelum memeriksa status.</p>
-            {payment?.paymentUrl && paymentState==='pending' && <a href={payment.paymentUrl} target="_blank" rel="noopener noreferrer">Buka instruksi pembayaran <ArrowRight size={14}/></a>}
-            <button type="button" disabled={processing} onClick={checkPayment}><RefreshCw size={14}/> Periksa status</button>
+            <strong>{copy.status} {paymentState==='paid'?copy.paymentConfirmed:paymentState==='pending'?copy.awaitingPayment:paymentState==='starting'?copy.contactingThePaymentProvider:paymentState}</strong>
+            <p>{copy.orderNumber2} {order.orderNumber}{copy.checkTheStatusBeforePayingAgain}</p>
+            {payment?.paymentUrl && paymentState==='pending' && <a href={payment.paymentUrl} target="_blank" rel="noopener noreferrer">{copy.openPaymentInstructions} <ArrowRight size={14}/></a>}
+            <button type="button" disabled={processing} onClick={checkPayment}><RefreshCw size={14}/> {copy.checkStatus}</button>
           </div>}
         </aside>
       </div>
@@ -710,7 +719,7 @@ export default function CheckoutPage() {
         // No automatic payment on login; the user reconfirms pricing/targets.
         if(authPurpose==='recover')recoverInterruptedOrder(result.accessToken)
         else {
-          setError('Login berhasil. Keranjang akun sedang disinkronkan; periksa item dan harga, kemudian klik Bayar lagi.')
+          setError(copy.youReLoggedInOnceYourCart)
           activateCustomerCart().catch(()=>{})
         }
       }}/>}

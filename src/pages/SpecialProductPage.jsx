@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { searchAssets } from '../data/searchAssets'
@@ -63,16 +64,17 @@ const VOUCHERS = {
 }
 
 function ProductState({ state, retry, joki = false }) {
+  const copy = useStorefrontCopy()
   const loading = state === 'loading'
   const failed = state === 'error'
   return <div className="special-product-shell"><Navbar />
     <main className="special-product-page special-product-state" aria-busy={loading}>
       <div role={failed ? 'alert' : 'status'}>
-        <h1>{loading ? 'Memuat produk…' : failed ? 'Produk belum bisa dimuat' : 'Produk tidak ditemukan'}</h1>
-        {state === 'not-found' && <p>Katalog produk ini belum tersedia.</p>}
+        <h1>{loading ? copy.loadingProduct : failed ? copy.productCouldnTBeLoaded : copy.productNotFound}</h1>
+        {state === 'not-found' && <p>{copy.thisProductIsUnavailableInTheCatalog}</p>}
       </div>
-      {failed && <button type="button" className="special-secondary" onClick={retry}>Coba lagi</button>}
-      {!loading && <a href={joki ? '/search?kind=Joki' : '/search'}>{joki ? 'Kembali ke Joki Game' : 'Kembali ke katalog'}</a>}
+      {failed && <button type="button" className="special-secondary" onClick={retry}>{copy.tryAgain}</button>}
+      {!loading && <a href={joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>}
     </main>
   </div>
 }
@@ -110,6 +112,7 @@ function isPurchasable(variant) {
 }
 
 function SpecialProduct({ product, slug, joki = false }) {
+  const copy = useStorefrontCopy()
   const variants = product.variants || []
   const available = variants.filter((variant) => !joki || (product.isAvailable && isPurchasable(variant)))
   const [selectedId, setSelectedId] = useState(available[0]?.id || '')
@@ -152,7 +155,7 @@ function SpecialProduct({ product, slug, joki = false }) {
     setError('')
     try {
       if (joki && readCustomerSession() && getCartSyncStatus().state !== 'synced') {
-        throw Error('Keranjang akun belum tersinkron. Periksa keranjang lalu coba lagi.')
+        throw Error('cartNotSynced')
       }
       const alreadyAdded = joki && readCart().some((item) => item.variantId === entry.variantId)
       if (!alreadyAdded) addCartItem(entry)
@@ -162,9 +165,9 @@ function SpecialProduct({ product, slug, joki = false }) {
         if (sync.state === 'error' || sync.state === 'conflict') throw Error(sync.message)
       }
       if (goToCart) window.location.href = '/cart'
-      else setNotice(alreadyAdded ? 'Paket ini sudah ada di keranjang.' : 'Produk ditambahkan ke keranjang.')
+      else setNotice(alreadyAdded ? 'packageAlreadyInCart' : 'theProductWasAddedToYourCart')
     } catch (failure) {
-      setError(failure.message || 'Gagal menambahkan paket. Silakan coba lagi.')
+      setError(failure.message === 'cartNotSynced' ? 'cartNotSynced' : 'weCouldnTAddThisPackagePlease')
     } finally {
       addGuard.current = false
       setSaving(false)
@@ -181,10 +184,10 @@ function SpecialProduct({ product, slug, joki = false }) {
           <div className="special-product-hero__content">
             <div className="special-product-hero__visual"><img src={image} alt="" /></div>
             <div className="special-product-hero__copy">
-              <span>{joki ? 'JOKI GAME' : product.badge}</span>
+              <span>{joki ? copy.gameBoosting : copy.gameVouchers}</span>
               <h1>{product.name}</h1>
               {joki ? (jokiMeta && <p>{jokiMeta}</p>)
-                : <p>{publisher} · 4.9 ★ · Proses aman melalui Zetruv</p>}
+                : <p>{publisher} {copy.label49SecureCheckoutWithZetruv}</p>}
               {description && <small>{description}</small>}
             </div>
           </div>
@@ -192,37 +195,37 @@ function SpecialProduct({ product, slug, joki = false }) {
 
         <div className="special-product-layout">
           <section className="special-product-packages">
-            <h2>{joki ? 'Pilih Paket Joki' : 'Pilih Nominal Voucher'}</h2>
-            <p>{joki ? 'Layanan diproses manual setelah pembayaran terkonfirmasi.' : 'Kode digital dikirim setelah pembayaran berhasil.'}</p>
-            {!selected && <p role="status">Belum ada paket yang tersedia.</p>}
+            <h2>{joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
+            <p>{joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>
+            {!selected && <p role="status">{copy.thereAreNoPackagesToChooseFrom}</p>}
             <div className="special-product-grid">
               {variants.map((item) => (
                 <button className={selected?.id === item.id ? 'is-active' : ''} type="button"
                   disabled={!available.includes(item)} aria-pressed={selected?.id === item.id}
                   onClick={() => { setSelectedId(item.id); setQuantity(1); setNotice(''); setError('') }} key={item.id}>
                   <strong>{item.name}</strong>
-                  <span>{available.includes(item) ? rupiah(packagePrice(item)) : 'Tidak tersedia'}</span>
+                  <span>{available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
                 </button>
               ))}
             </div>
-            {!joki && <div className="special-product-note"><b>i</b><span>Pastikan region voucher sesuai dengan akun yang akan digunakan.</span></div>}
+            {!joki && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
           </section>
 
           {entry && <aside className="special-product-summary">
-            <h2>Ringkasan</h2>
+            <h2>{copy.summary}</h2>
             <div className="special-product-selected">
               <div><strong>{selected.name}</strong><span>{rupiah(entry.unitPrice)} / item</span></div>
               {!joki && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
             </div>
-            <div className="special-summary-row"><span>Subtotal</span><strong>{rupiah(pricing.subtotal)}</strong></div>
-            {pricing.discount > 0 && <div className="special-summary-row"><span>Diskon</span><strong>−{rupiah(pricing.discount)}</strong></div>}
-            {!joki && <div className="special-summary-row"><span>Biaya layanan</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
+            <div className="special-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
+            {pricing.discount > 0 && <div className="special-summary-row"><span>{copy.discount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}
+            {!joki && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
             <hr />
-            <div className="special-summary-total"><span>Total</span><strong>{rupiah(pricing.total + voucherServiceFee)}</strong></div>
-            {notice && <p role="status" className="special-product-success">{notice}</p>}
-            {error && <p role="alert">{error}</p>}
-            <button className="special-secondary" type="button" disabled={saving} onClick={() => add(false)}>Tambah ke Keranjang</button>
-            <button className="special-primary" type="button" disabled={saving} onClick={() => add(true)}>Tambah &amp; Lihat Keranjang</button>
+            <div className="special-summary-total"><span>{copy.total}</span><strong>{rupiah(pricing.total + voucherServiceFee)}</strong></div>
+            {notice && <p role="status" className="special-product-success">{copy[notice]}</p>}
+            {error && <p role="alert">{copy[error]}</p>}
+            <button className="special-secondary" type="button" disabled={saving} onClick={() => add(false)}>{copy.addToCart}</button>
+            <button className="special-primary" type="button" disabled={saving} onClick={() => add(true)}>{copy.addAndViewCart}</button>
           </aside>}
         </div>
       </main>

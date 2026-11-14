@@ -28,14 +28,14 @@ test('homepage renders real Game Account cards and truthful empty state', async 
     assert.match(html, /Starlight: Tidak/)
     assert.doesNotMatch(html, /Hidden detail/)
     assert.match(html, /MMR: 6\.200/)
-    assert.match(html, /TIDAK TERSEDIA/)
-    assert.match(html, /Harga belum tersedia/)
+    assert.match(html, /UNAVAILABLE/)
+    assert.match(html, /Price unavailable/)
     assert.match(html, /game-accounts\/mobile-legends\/real-ml/)
     assert.match(html, /game-accounts\/dota-2\/real-dota/)
     assert.doesNotMatch(html, /account-3|Mythical Glory|Global Region/)
     const empty = renderToStaticMarkup(createElement(GameAccounts, { items: [] }))
-    assert.match(empty, /Belum ada akun game/)
-    assert.doesNotMatch(empty, /TERSEDIA/)
+    assert.match(empty, /There are no game accounts to show yet/)
+    assert.doesNotMatch(empty, /AVAILABLE/)
   } finally {
     await vite.close()
   }

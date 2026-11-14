@@ -24,6 +24,7 @@ try {
     ['mobile', { width: 390, height: 844 }],
   ]) {
     const ctx = await browser.newContext({ viewport })
+    await ctx.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const page = await ctx.newPage()
     let requests = []
     let account = null
@@ -79,12 +80,12 @@ try {
     })
 
     await page.goto(site + '/order-status?view=invoice', { waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'Masuk untuk melihat pesanan' }).waitFor()
+    await page.getByRole('heading', { name: 'Masuk untuk Melihat Pesanan' }).waitFor()
     assert.equal(await page.locator('#sos-order-number').count(), 0, 'guest lookup is a separate flow')
     assert.equal(await page.getByText('#ZTR-260906-1842').count(), 0, 'demo order must be absent')
     assert.equal(await page.getByText('PAID', { exact: true }).count(), 0, 'payment never pre-populated')
     assert.equal(requests.length, 0, 'no automatic lookup or PII request')
-    await page.getByRole('link', { name: /Cek pesanan sebagai tamu/ }).click()
+    await page.getByRole('link', { name: /Cek Pesanan Sebagai Tamu/ }).click()
     await page.getByRole('heading', { name: 'Cek Pesanan Tamu' }).waitFor()
     await page.locator('#sos-order-number').fill('NO-MATCH')
     await page.locator('#sos-contact').fill('synthetic@example.test')
@@ -105,12 +106,12 @@ try {
     assert.equal(requests.length, 3)
     assert.equal(requests[2].customerEmail, 'synthetic@example.test')
     assert.equal(requests[2].customerPhone, null)
-    await page.getByRole('button', { name: /Cek pesanan lain/ }).click()
+    await page.getByRole('button', { name: /Cek Pesanan Lain/ }).click()
     assert.equal(await page.getByText('Synthetic QA Voucher').count(), 0)
 
     // A legacy query alias must not reveal seeded order details either.
     await page.goto(site + '/order-status?flow=account&view=completed')
-    await page.getByRole('heading', { name: 'Masuk untuk melihat pesanan' }).waitFor()
+    await page.getByRole('heading', { name: 'Masuk untuk Melihat Pesanan' }).waitFor()
     assert.equal(await page.getByText('Z3truv!Ancient#2026').count(), 0)
 
     // Merchandise catalog-backed draft cart: variants and price are provided
@@ -131,14 +132,14 @@ try {
     await page.goto(site + '/merchandise/zetruv-gaming-jersey')
     await page.getByRole('heading', { name: 'Zetruv Gaming Jersey' }).waitFor()
     await page.locator('.physical-size-options').getByRole('button', { name: /L · Rp269.000/ }).click()
-    await page.getByRole('button', { name: 'Simpan Draft Keranjang' }).click()
+    await page.getByRole('button', { name: 'Simpan Draf Keranjang' }).click()
     await page.getByRole('status').getByText(/disimpan ke keranjang/).waitFor()
     assert.equal(await page.locator('.nav-cart-count').first().innerText(), '1')
     await page.getByRole('button', { name: 'Lihat Keranjang' }).click()
     await page.waitForURL('**/cart?flow=physical')
     await page.getByText('Varian L').waitFor()
     await page.getByRole('button', { name: 'Masuk untuk Checkout' }).waitFor()
-    assert.equal(await page.getByText('Checkout merchandise belum aktif').count(), 1)
+    assert.equal(await page.getByText('Checkout Merchandise Belum Aktif').count(), 1)
     const physical = await page.evaluate(() => JSON.parse(sessionStorage.getItem('zetruv-physical-cart-v1') || 'null'))
     assert.equal(physical.size, 'L')
     assert.equal(physical.price, 269000)
@@ -151,31 +152,31 @@ try {
       return route.fulfill({ json: account })
     })
     await page.getByRole('button', { name: 'Masuk untuk Checkout' }).click()
-    const login = page.getByRole('dialog', { name: 'Login' })
+    const login = page.getByRole('dialog', { name: 'Masuk' })
     await login.locator('input[name="email"]').fill('synthetic@example.test')
     await login.locator('input[name="password"]').fill('synthetic-only-not-a-credential')
-    await login.getByRole('button', { name: 'Login', exact: true }).click()
+    await login.getByRole('button', { name: 'Masuk', exact: true }).click()
     await page.waitForURL('**/checkout?flow=physical')
-    await page.getByText('Belum bisa diproses').waitFor()
+    await page.getByText('Belum Bisa Diproses').waitFor()
     assert.ok(await page.evaluate(() => Boolean(sessionStorage.getItem('zetruv-physical-cart-v1'))))
 
     // Authenticated history restores across page loads and never falls back to guest tracking.
     await page.goto(site + '/order-status')
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
-    await page.getByText('Sesi pembayaran kedaluwarsa', { exact: true }).waitFor()
+    await page.getByText('Sesi Pembayaran Kedaluwarsa', { exact: true }).waitFor()
     assert.equal(await page.locator('#sos-order-number').count(), 0)
     const orderOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     assert.ok(orderOverflow <= 2, device + ' order page horizontal overflow: ' + orderOverflow)
     listFailure = true
     await page.getByRole('button', { name: 'Perbarui', exact: true }).click()
-    await page.getByRole('heading', { name: 'Pesanan belum bisa dimuat' }).waitFor()
+    await page.getByRole('heading', { name: 'Pesanan Belum Bisa Dimuat' }).waitFor()
     assert.equal(await page.getByRole('heading', { name: fakeOrder.orderNumber }).count(), 0)
     listFailure = false
     await page.getByRole('button', { name: 'Coba Lagi' }).click()
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
     history = true
     await page.getByRole('button', { name: 'Perbarui', exact: true }).click()
-    await page.getByRole('heading', { name: 'Belum ada pesanan aktif' }).waitFor()
+    await page.getByRole('heading', { name: 'Belum Ada Pesanan Aktif' }).waitFor()
     await page.getByRole('link', { name: 'Riwayat', exact: true }).click()
     await page.getByRole('link', { name: 'Lihat detail ' + fakeOrder.orderNumber }).click()
     await page.getByRole('heading', { name: 'Detail Pesanan' }).waitFor()
@@ -186,8 +187,8 @@ try {
     assert.equal(revealRequests, 1)
     assert.equal(requests.length, 3, 'account flow must not use guest lookup')
     await page.route(`**/api/v1/me/orders/${fakeOrder.orderId}`, route => route.fulfill({ status: 404, json: {} }))
-    await page.getByRole('button', { name: 'Perbarui status' }).click()
-    await page.getByRole('heading', { name: 'Pesanan tidak ditemukan' }).waitFor()
+    await page.getByRole('button', { name: 'Perbarui Status' }).click()
+    await page.getByRole('heading', { name: 'Pesanan Tidak Ditemukan' }).waitFor()
     assert.equal(await page.getByText('SYNTHETIC-VOUCHER-QA').count(), 0)
     console.log('PASS:', device, 'guest lookup, authenticated active/history and detail, voucher reveal, retry, unavailable order, merchandise regression')
     await ctx.close()

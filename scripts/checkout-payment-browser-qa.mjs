@@ -54,6 +54,7 @@ try {
     ['desktop',{width:1440,height:900}],['mobile',{width:390,height:844}],
   ]) {
     const ctx=await browser.newContext({viewport})
+    await ctx.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const page=await ctx.newPage()
     let orderPosts=0,paymentPosts=0,paymentGets=0
     let remotePayment='Pending', methodsAvailable=true
@@ -111,7 +112,7 @@ try {
     })
     // Payment deep-link without server-issued order context must remain harmless.
     await page.goto(origin+'/payment',{waitUntil:'domcontentloaded'})
-    await page.getByRole('heading',{name:'Tidak ada sesi pembayaran'}).waitFor()
+    await page.getByRole('heading',{name:'Tidak Ada Sesi Pembayaran'}).waitFor()
     assert.equal(paymentGets,0)
     await page.goto(origin+'/checkout',{waitUntil:'domcontentloaded'})
     await page.getByRole('heading',{name:'Checkout Digital'}).waitFor()
@@ -134,18 +135,18 @@ try {
     await page.getByRole('button',{name:'QRIS',exact:false}).first().click()
     await page.getByRole('button',{name:'Bayar Sekarang'}).click()
     await page.waitForURL('**/payment',{timeout:20000})
-    await page.getByRole('heading',{name:'Menunggu pembayaran'}).waitFor({timeout:15000})
+    await page.getByRole('heading',{name:'Menunggu Pembayaran'}).waitFor({timeout:15000})
     assert.equal(orderPosts,1,'only one backend order should be created')
     assert.equal(paymentPosts,1,'only one payment session should be created')
     assert.ok(paymentGets>=1)
-    assert.equal(await page.getByRole('heading',{name:'Pembayaran terkonfirmasi'}).count(),0)
+    assert.equal(await page.getByRole('heading',{name:'Pembayaran Terkonfirmasi'}).count(),0)
     await page.reload()
-    await page.getByRole('heading',{name:'Menunggu pembayaran'}).waitFor()
+    await page.getByRole('heading',{name:'Menunggu Pembayaran'}).waitFor()
     assert.equal(orderPosts,1,'refresh never creates a second order')
     assert.equal(paymentPosts,1,'refresh never creates a second payment')
     remotePayment='Paid'
-    await page.getByRole('button',{name:'Periksa status'}).click()
-    await page.getByRole('heading',{name:'Pembayaran terkonfirmasi'}).waitFor()
+    await page.getByRole('button',{name:'Periksa Status'}).click()
+    await page.getByRole('heading',{name:'Pembayaran Terkonfirmasi'}).waitFor()
     assert.equal(orderPosts,1)
     assert.equal(paymentPosts,1)
     const info=await page.evaluate(()=>JSON.stringify({

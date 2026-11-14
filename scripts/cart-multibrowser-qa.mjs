@@ -33,6 +33,7 @@ function backendFor(request){
 }
 async function context(device){
   const ctx=await browser.newContext({viewport:{width:1440,height:900}})
+  await ctx.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
   let currentAuth
   await ctx.route('**/api/v1/**',async route=>{
     const req=route.request()
@@ -91,11 +92,11 @@ async function context(device){
   return ctx
 }
 async function login(page,email){
-  await page.getByRole('button',{name:'Login',exact:true}).first().click()
-  const dialog=page.getByRole('dialog',{name:'Login'})
+  await page.getByRole('button',{name:'Masuk',exact:true}).first().click()
+  const dialog=page.getByRole('dialog',{name:'Masuk'})
   await dialog.locator('input[name="email"]').fill(email)
   await dialog.locator('input[name="password"]').fill('synthetic-password')
-  await dialog.getByRole('button',{name:'Login',exact:true}).click()
+  await dialog.getByRole('button',{name:'Masuk',exact:true}).click()
   await page.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:20000})
 }
 const qa=[]
@@ -124,13 +125,13 @@ try{
   assert.equal(users.alice.items[0].quantity,3,'stale PUT must not overwrite A')
   assert.ok(conflicts>=1)
   b.once('dialog',d=>d.accept())
-  await b.getByRole('button',{name:'Gunakan versi server'}).click()
+  await b.getByRole('button',{name:'Gunakan Keranjang Tersimpan'}).click()
   await b.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:12000})
   assert.equal(await b.locator('.digital-qty output').first().textContent(),'3')
   qa.push({scenario:'concurrent two-browser 409 and explicit server choice',status:'PASS'})
   // Account switch in same browser must never expose Alice's cart to Bob.
-  await a.getByRole('button',{name:'Account menu'}).click()
-  await a.getByRole('button',{name:'Logout',exact:true}).click()
+  await a.getByRole('button',{name:'Menu akun'}).click()
+  await a.getByRole('button',{name:'Keluar',exact:true}).click()
   await login(a,'bob@example.test')
   await a.getByText('Bob Only Voucher').first().waitFor({timeout:12000})
   assert.equal(await a.getByText('Alice Credits').count(),0)

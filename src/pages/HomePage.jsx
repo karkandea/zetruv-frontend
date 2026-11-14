@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
@@ -27,9 +28,10 @@ const emptyHomepage = {
 }
 
 export default function HomePage() {
+  const copy = useStorefrontCopy()
   const [data, setData] = useState(emptyHomepage)
   const [session, setSession] = useState(readCustomerSession)
-  const [error, setError] = useState('')
+  const [hasError, setHasError] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -50,10 +52,10 @@ export default function HomePage() {
       : getHomepageData()
     request
       .then((result) => {
-        if (active) { setData({ ...emptyHomepage, ...result }); setError(''); setLoading(false) }
+        if (active) { setData({ ...emptyHomepage, ...result }); setHasError(false); setLoading(false) }
       })
       .catch((error) => {
-        if (active) { setError('Konten beranda belum bisa dimuat. Coba muat ulang halaman.'); setLoading(false) }
+        if (active) { setHasError(true); setLoading(false) }
         console.error('Homepage API unavailable.', error)
       })
     return () => { active = false }
@@ -67,8 +69,8 @@ export default function HomePage() {
         onAuthenticated={() => setSession(readCustomerSession())}
       />
       <main>
-        {error && <p role="alert" style={{ textAlign: 'center', padding: 16 }}>{error}</p>}
-        {loading ? <p role="status" style={{ padding: 48, textAlign: 'center' }}>Memuat beranda Zetruv…</p> : <>
+        {hasError && <p role="alert" style={{ textAlign: 'center', padding: 16 }}>{copy.weCouldnTLoadTheHomepagePlease}</p>}
+        {loading ? <p role="status" style={{ padding: 48, textAlign: 'center' }}>{copy.loadingTheZetruvHomepage}</p> : <>
         <Hero items={data.heroes} />
         <ServiceCategories items={data.serviceCategories} />
         <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} />

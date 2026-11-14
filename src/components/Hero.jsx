@@ -1,13 +1,17 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { assets } from '../data/assets'
 import TrustStrip from './TrustStrip'
 
-const emptyBanner = {
-  id: 'no-active-banner', theme: 'welcome', title: 'Jelajahi produk Zetruv',
-  description: 'Belum ada banner promosi aktif. Lihat katalog untuk menemukan produk yang tersedia.',
-  artwork: assets.homepageHeroArtwork,
-  actions: [{ label: 'Jelajahi Produk', href: '/search' }],
+function emptyBanner(copy) {
+  return {
+    id: 'no-active-banner', theme: 'welcome', title: copy.exploreZetruvProducts,
+    description: copy.thereAreNoActivePromotionsBrowseThe,
+    artwork: assets.homepageHeroArtwork,
+    actions: [{ label: copy.browseProducts, href: '/search' }],
+  }
 }
 
 export function mapCmsHeroes(items = []) {
@@ -22,8 +26,9 @@ export function mapCmsHeroes(items = []) {
 }
 
 export default function Hero({ items = [] }) {
+  const copy = useStorefrontCopy()
   const cmsBanners = mapCmsHeroes(items)
-  const banners = cmsBanners.length ? cmsBanners : [emptyBanner]
+  const banners = cmsBanners.length ? cmsBanners : [emptyBanner(copy)]
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const [hasFocus, setHasFocus] = useState(false)
@@ -75,8 +80,8 @@ export default function Hero({ items = [] }) {
       <div
         className="homepage-hero-card"
         role="region"
-        aria-roledescription="carousel"
-        aria-label="Banner promosi Zetruv"
+        aria-roledescription={copy.carousel}
+        aria-label={copy.zetruvPromotions}
         tabIndex={0}
         onKeyDown={onCarouselKeyDown}
         onMouseEnter={() => setIsHovered(true)}
@@ -98,8 +103,8 @@ export default function Hero({ items = [] }) {
               className={`homepage-hero-card__slide homepage-hero-card__slide--${banner.theme}`}
               key={banner.id}
               role="group"
-              aria-roledescription="slide"
-              aria-label={`${index + 1} dari ${banners.length}`}
+              aria-roledescription={copy.slide}
+              aria-label={formatCopy(copy.of, { current: index + 1, total: banners.length })}
               aria-hidden={index !== visibleIndex}
             >
               {banner.artwork && (
@@ -140,8 +145,8 @@ export default function Hero({ items = [] }) {
           ))}
         </div>
 
-        {banners.length > 1 && <div className="homepage-hero-card__controls" aria-label="Navigasi banner">
-          <button className="homepage-hero-card__arrow" type="button" onClick={() => move(-1)} aria-label="Banner sebelumnya">
+        {banners.length > 1 && <div className="homepage-hero-card__controls" aria-label={copy.bannerNavigation}>
+          <button className="homepage-hero-card__arrow" type="button" onClick={() => move(-1)} aria-label={copy.previousBanner}>
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <div className="homepage-hero-card__dots">
@@ -150,13 +155,13 @@ export default function Hero({ items = [] }) {
                 className={`homepage-hero-card__dot${index === visibleIndex ? ' is-active' : ''}`}
                 key={banner.id}
                 type="button"
-                aria-label={`Tampilkan banner ${index + 1}: ${banner.eyebrow || 'Beranda'}`}
+                aria-label={formatCopy(copy.showBanner, { number: index + 1, title: banner.eyebrow || banner.title })}
                 aria-pressed={index === visibleIndex}
                 onClick={() => setActiveIndex(index)}
               />
             ))}
           </div>
-          <button className="homepage-hero-card__arrow" type="button" onClick={() => move(1)} aria-label="Banner berikutnya">
+          <button className="homepage-hero-card__arrow" type="button" onClick={() => move(1)} aria-label={copy.nextBanner}>
             <ChevronRight size={18} aria-hidden="true" />
           </button>
         </div>}

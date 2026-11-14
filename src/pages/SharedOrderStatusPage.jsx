@@ -1,43 +1,35 @@
+import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useRef, useState } from 'react'
 import { ArrowRight, ClipboardList, CircleAlert, Mail, PackageSearch, RefreshCw } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import '../styles/shared-order-status.css'
 
-const ORDER_STATUS = ['Menunggu proses', 'Diproses', 'Selesai', 'Dibatalkan']
-const PAYMENT_STATUS = ['Belum dibayar', 'Dibayar', 'Gagal', 'Dikembalikan']
-const FULFILLMENT_STATUS = ['Menunggu', 'Diproses', 'Selesai', 'Gagal', 'Dibatalkan']
-const PAYMENT_STATES = {
-  NotStarted: 'Belum dibayar',
-  Pending: 'Menunggu pembayaran',
-  Paid: 'Dibayar',
-  Failed: 'Pembayaran gagal',
-  Expired: 'Sesi pembayaran kedaluwarsa',
-  Refunded: 'Dana dikembalikan',
-  Cancelled: 'Dibatalkan',
-}
-const SHIPMENT_STATES = {
-  Pending: 'Menunggu pengiriman',
-  ReadyToShip: 'Siap dikirim',
-  Shipped: 'Sedang dikirim',
-  Delivered: 'Sudah diterima',
-  Cancelled: 'Dibatalkan',
+const ORDER_STATES = ['pending', 'processing', 'completed', 'cancelled']
+const PAYMENT_STATES = ['pending', 'paid', 'failed', 'refunded']
+const FULFILLMENT_STATES = ['pending', 'processing', 'completed', 'failed', 'cancelled']
+
+function stateKey(value, states) {
+  return typeof value === 'number' ? states[value] : String(value || '').trim().toLowerCase()
 }
 
-function enumLabel(value, labels, fallback) {
-  if (typeof value === 'number') return labels[value] || fallback
-  const text = String(value || '').trim().toLowerCase()
-  if (labels === PAYMENT_STATUS) return ({ pending: 'Belum dibayar', paid: 'Dibayar', failed: 'Gagal', refunded: 'Dikembalikan' })[text] || fallback
-  if (labels === FULFILLMENT_STATUS) return ({ pending: 'Menunggu', processing: 'Diproses', completed: 'Selesai', failed: 'Gagal', cancelled: 'Dibatalkan' })[text] || fallback
-  return ({ pending: 'Menunggu proses', processing: 'Diproses', completed: 'Selesai', cancelled: 'Dibatalkan' })[text] || fallback
+function stateLabel(state, copy, pending) {
+  return { pending, processing: copy.processing, completed: copy.completed, cancelled: copy.cancelled,
+    paid: copy.paid, failed: copy.failed, refunded: copy.refunded }[state] || copy.unknown
 }
 
-export function orderStatusLabel(status) {
-  return enumLabel(status, ORDER_STATUS, 'Belum diketahui')
+export function orderStatusLabel(status, copy) {
+  return stateLabel(stateKey(status, ORDER_STATES), copy, copy.awaitingProcessing)
 }
 
-export function paymentStatusLabel(order) {
-  return PAYMENT_STATES[order.paymentState] || enumLabel(order.paymentStatus, PAYMENT_STATUS, 'Belum diketahui')
+export function paymentStatusLabel(order, copy) {
+  const attempt = {
+    NotStarted: copy.unpaid, Pending: copy.awaitingPayment, Paid: copy.paid,
+    Failed: copy.paymentFailed, Expired: copy.orderPaymentAttemptExpired,
+    Refunded: copy.refunded, Cancelled: copy.cancelled,
+  }
+  return attempt[order.paymentState] || stateLabel(stateKey(order.paymentStatus, PAYMENT_STATES), copy, copy.unpaid)
 }
 
 export function money(amount, currency = 'IDR') {
@@ -46,42 +38,48 @@ export function money(amount, currency = 'IDR') {
   return currency === 'IDR' ? 'Rp' + new Intl.NumberFormat('id-ID').format(value) : new Intl.NumberFormat('id-ID', { style: 'currency', currency }).format(value)
 }
 
-export function dateTime(value) {
+export function dateTime(value, language) {
   if (!value) return '—'
   const timestamp = new Date(value)
   if (Number.isNaN(timestamp.getTime())) return '—'
-  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(timestamp) + ' WIB'
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(timestamp) + ' WIB'
 }
 
 export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
-  const payment = paymentStatusLabel(order)
-  const status = orderStatusLabel(order.status)
-  const isPaid = order.paymentState === 'Paid' || order.paymentStatus === 'Paid' || order.paymentStatus === 1
-  const isComplete = status === 'Selesai'
-  return <section className="sos-lookup-result" aria-label="Hasil cek pesanan">
+  const language = useNavbarLanguage()
+  const copy = useStorefrontCopy()
+  const payment = paymentStatusLabel(order, copy)
+  const status = orderStatusLabel(order.status, copy)
+  const isPaid = order.paymentState === 'Paid' || stateKey(order.paymentStatus, PAYMENT_STATES) === 'paid'
+  const isComplete = stateKey(order.status, ORDER_STATES) === 'completed'
+  const shipmentStatus = {
+    Pending: copy.orderShipmentPending, ReadyToShip: copy.orderShipmentReady,
+    Shipped: copy.orderShipmentShipped, Delivered: copy.orderShipmentDelivered, Cancelled: copy.cancelled,
+  }[order.shipment?.status]
+  return <section className="sos-lookup-result" aria-label={copy.orderLookupResult}>
     <header className="sos-lookup-result__header">
       <div>
         <h2>{order.orderNumber}</h2>
-        <p>Dibuat pada {dateTime(order.createdAt)}</p>
+        <p>{copy.createdOn} {dateTime(order.createdAt, language)}</p>
       </div>
-      {onReset && <button type="button" className="sos-lookup-secondary" onClick={onReset}><RefreshCw size={16} aria-hidden="true" /> Cek pesanan lain</button>}
-      {onRefresh && <button type="button" className="sos-lookup-secondary" onClick={onRefresh}><RefreshCw size={16} aria-hidden="true" /> Perbarui status</button>}
+      {onReset && <button type="button" className="sos-lookup-secondary" onClick={onReset}><RefreshCw size={16} aria-hidden="true" /> {copy.checkAnotherOrder}</button>}
+      {onRefresh && <button type="button" className="sos-lookup-secondary" onClick={onRefresh}><RefreshCw size={16} aria-hidden="true" /> {copy.refreshOrderStatus}</button>}
     </header>
     <div className="sos-lookup-statuses">
-      <div><span>Status Pesanan</span><strong className={isComplete ? 'is-success' : ''}>{status}</strong></div>
-      <div><span>Pembayaran</span><strong className={isPaid ? 'is-success' : ''}>{payment}</strong></div>
-      <div><span>Total Pembayaran</span><strong>{money(order.grandTotal, order.currency)}</strong></div>
+      <div><span>{copy.orderStatus}</span><strong className={isComplete ? 'is-success' : ''}>{status}</strong></div>
+      <div><span>{copy.payment2}</span><strong className={isPaid ? 'is-success' : ''}>{payment}</strong></div>
+      <div><span>{copy.paymentTotal2}</span><strong>{money(order.grandTotal, order.currency)}</strong></div>
     </div>
-    {order.hasFulfillmentIssue && <p className="sos-lookup-warning" role="status"><CircleAlert size={17} aria-hidden="true" /> Ada kendala pemrosesan pada salah satu item. Silakan hubungi bantuan Zetruv dengan nomor pesanan di atas.</p>}
+    {order.hasFulfillmentIssue && <p className="sos-lookup-warning" role="status"><CircleAlert size={17} aria-hidden="true" /> {copy.weHadTroubleProcessingAnItemContact}</p>}
     <div className="sos-lookup-items">
-      <h3>Produk ({order.items?.length || 0})</h3>
+      <h3>{copy.products}{order.items?.length || 0})</h3>
       {(order.items || []).map((item, index) => (
         <article className="sos-lookup-item" key={item.id || index}>
           {item.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" loading="lazy" /> : <span className="sos-lookup-item__fallback"><PackageSearch size={24} aria-hidden="true" /></span>}
           <div className="sos-lookup-item__copy">
             <strong>{item.productName}</strong>
-            <span>{item.variantName || item.gameName || 'Produk Zetruv'} · {Number(item.quantity) || 1} item</span>
-            <small>{enumLabel(item.fulfillmentStatus, FULFILLMENT_STATUS, 'Belum diketahui')}</small>
+            <span>{item.variantName || item.gameName || copy.zetruvProduct} · {Number(item.quantity) || 1} {copy.items}</span>
+            <small>{stateLabel(stateKey(item.fulfillmentStatus, FULFILLMENT_STATES), copy, copy.pending)}</small>
             {item.target && <div className="sos-lookup-target">
               {item.target.accountDisplayName && <span>{item.target.accountDisplayName}</span>}
               {Object.entries(item.target.fields || {}).map(([key, value]) => (
@@ -95,21 +93,22 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
       ))}
     </div>
     <div className="sos-lookup-summary">
-      <div><span>Subtotal</span><strong>{money(order.subtotal, order.currency)}</strong></div>
-      {Number(order.discountAmount) > 0 && <div><span>Diskon</span><strong>-{money(order.discountAmount, order.currency)}</strong></div>}
-      {Number(order.shippingAmount) > 0 && <div><span>Pengiriman</span><strong>{money(order.shippingAmount, order.currency)}</strong></div>}
-      <div className="sos-lookup-summary__total"><span>Total</span><strong>{money(order.grandTotal, order.currency)}</strong></div>
+      <div><span>{copy.subtotal}</span><strong>{money(order.subtotal, order.currency)}</strong></div>
+      {Number(order.discountAmount) > 0 && <div><span>{copy.discount}</span><strong>-{money(order.discountAmount, order.currency)}</strong></div>}
+      {Number(order.shippingAmount) > 0 && <div><span>{copy.shipping}</span><strong>{money(order.shippingAmount, order.currency)}</strong></div>}
+      <div className="sos-lookup-summary__total"><span>{copy.total}</span><strong>{money(order.grandTotal, order.currency)}</strong></div>
     </div>
     {order.shipment && <section className="sos-lookup-shipment">
-      <h3>Informasi pengiriman</h3>
-      {SHIPMENT_STATES[order.shipment.status] && <p>{SHIPMENT_STATES[order.shipment.status]}</p>}
-      <p>{order.shipment.provider || 'Kurir'} {order.shipment.serviceName || ''}</p>
-      <p>{order.shipment.trackingNumber ? 'Nomor resi: ' + order.shipment.trackingNumber : 'Nomor resi belum tersedia'}</p>
+      <h3>{copy.shippingInformation}</h3>
+      {shipmentStatus && <p>{shipmentStatus}</p>}
+      <p>{order.shipment.provider || copy.courier} {order.shipment.serviceName || ''}</p>
+      <p>{order.shipment.trackingNumber ? copy.trackingNumber + order.shipment.trackingNumber : copy.trackingNumberIsUnavailable}</p>
     </section>}
   </section>
 }
 
 export default function SharedOrderStatusPage() {
+  const copy = useStorefrontCopy()
   const [number, setNumber] = useState('')
   const [method, setMethod] = useState('email')
   const [contact, setContact] = useState('')
@@ -131,7 +130,7 @@ export default function SharedOrderStatusPage() {
     const orderNumber = number.trim().replace(/^#/, '')
     const detail = contact.trim()
     if (!orderNumber || !detail) {
-      setError('Isi nomor pesanan dan email atau nomor HP yang digunakan saat checkout.')
+      setError('enterTheOrderNumberAndTheEmail')
       return
     }
     const id = ++requestId.current
@@ -148,7 +147,7 @@ export default function SharedOrderStatusPage() {
         }),
       })
       if (id !== requestId.current) return
-      if (!result?.orderNumber) throw new Error('Informasi pesanan belum tersedia.')
+      if (!result?.orderNumber) throw new Error(copy.orderInformationIsUnavailable)
       // The lookup can include a short-lived payment access grant; it is not needed
       // to display status and must not be persisted or exposed in the UI.
       const { orderAccessToken: unusedToken, orderAccessTokenExpiresAt: unusedExpiry, ...safeOrder } = result
@@ -156,10 +155,10 @@ export default function SharedOrderStatusPage() {
     } catch (issue) {
       if (id !== requestId.current) return
       setError(issue?.status === 404
-        ? 'Pesanan tidak ditemukan. Pastikan nomor pesanan dan kontak sesuai dengan yang dipakai saat checkout.'
+        ? 'orderNotFoundCheckTheOrderNumber'
         : issue?.status === 429
-          ? 'Terlalu banyak percobaan. Coba lagi beberapa saat.'
-          : 'Belum bisa mengambil status pesanan. Periksa koneksi lalu coba lagi.')
+          ? 'tooManyAttemptsTryAgainInA'
+          : 'weCouldnTGetTheOrderStatus')
     } finally {
       if (id === requestId.current) setLoading(false)
     }
@@ -170,34 +169,34 @@ export default function SharedOrderStatusPage() {
     <main className="sos-lookup-page">
       <div className="sos-lookup-intro">
         <span className="sos-lookup-intro__icon"><ClipboardList size={28} aria-hidden="true" /></span>
-        <h1>Cek Pesanan Tamu</h1>
-        <p>Untuk pembelian tanpa login, masukkan nomor pesanan dan kontak yang kamu pakai saat checkout.</p>
+        <h1>{copy.guestOrderHeading}</h1>
+        <p>{copy.guestOrderInstructions}</p>
       </div>
 
       <form className="sos-lookup-form" onSubmit={handleLookup}>
-        <label htmlFor="sos-order-number">Nomor Pesanan</label>
+        <label htmlFor="sos-order-number">{copy.orderNumber}</label>
         <input id="sos-order-number" name="orderNumber" type="text" autoComplete="off" maxLength={41}
-          placeholder="Contoh format: ZTR-..." required value={number}
+          placeholder={copy.exampleZtr} required value={number}
           onChange={e => { setNumber(e.target.value); clearResult() }} />
         <fieldset className="sos-lookup-contact-method">
-          <legend>Verifikasi dengan</legend>
-          <label><input type="radio" name="method" value="email" checked={method === 'email'} onChange={() => { setMethod('email'); setContact(''); clearResult() }} /> Email</label>
-          <label><input type="radio" name="method" value="phone" checked={method === 'phone'} onChange={() => { setMethod('phone'); setContact(''); clearResult() }} /> Nomor HP</label>
+          <legend>{copy.verifyUsing}</legend>
+          <label><input type="radio" name="method" value="email" checked={method === 'email'} onChange={() => { setMethod('email'); setContact(''); clearResult() }} /> {copy.email}</label>
+          <label><input type="radio" name="method" value="phone" checked={method === 'phone'} onChange={() => { setMethod('phone'); setContact(''); clearResult() }} /> {copy.phoneNumber2}</label>
         </fieldset>
-        <label htmlFor="sos-contact">{method === 'email' ? 'Email saat Checkout' : 'Nomor HP saat Checkout'}</label>
+        <label htmlFor="sos-contact">{method === 'email' ? copy.checkoutEmailAddress : copy.checkoutPhoneNumber}</label>
         <input id="sos-contact" name="contact" type={method === 'email' ? 'email' : 'tel'} autoComplete={method === 'email' ? 'email' : 'tel'}
           placeholder={method === 'email' ? 'nama@email.com' : '08xxxxxxxxxx'} required value={contact}
           onChange={e => { setContact(e.target.value); clearResult() }} />
-        {error && <p className="sos-lookup-error" role="alert"><CircleAlert size={17} aria-hidden="true" /> {error}</p>}
+        {error && <p className="sos-lookup-error" role="alert"><CircleAlert size={17} aria-hidden="true" /> {copy[error]}</p>}
         <button className="sos-lookup-submit" type="submit" disabled={loading}>
-          {loading ? 'Memeriksa pesanan…' : 'Cek Status Pesanan'}
+          {loading ? copy.checkingYourOrder : copy.checkOrderStatus}
           {!loading && <ArrowRight size={18} aria-hidden="true" />}
         </button>
-        <p className="sos-lookup-note"><Mail size={15} aria-hidden="true" /> Gunakan kontak yang sama dengan saat transaksi. Kami tidak akan menampilkan pesanan hanya dari nomor pesanan.</p>
+        <p className="sos-lookup-note"><Mail size={15} aria-hidden="true" /> {copy.useTheEmailAddressOrPhoneNumber}</p>
       </form>
       {order && <OrderStatusDetails order={order} onReset={() => { clearResult(); setNumber(''); setContact(''); document.getElementById('sos-order-number')?.focus() }} />}
-      <div className="sos-lookup-help"><a href="/order-status">Lihat Pesanan dari Akun <ArrowRight size={15} aria-hidden="true" /></a></div>
-      {!order && !loading && <div className="sos-lookup-help"><strong>Belum punya pesanan?</strong><span>Pilih produk dulu, lalu lanjutkan checkout.</span><a href="/search">Jelajahi Produk <ArrowRight size={15} aria-hidden="true" /></a></div>}
+      <div className="sos-lookup-help"><a href="/order-status">{copy.myOrders} <ArrowRight size={15} aria-hidden="true" /></a></div>
+      {!order && !loading && <div className="sos-lookup-help"><strong>{copy.noOrderYet}</strong><span>{copy.chooseAProductAndContinueToCheckout}</span><a href="/search">{copy.browseProducts} <ArrowRight size={15} aria-hidden="true" /></a></div>}
     </main>
   </div>
 }

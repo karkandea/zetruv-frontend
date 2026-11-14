@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
@@ -92,6 +93,7 @@ function PhysicalButton({ children, tone = 'primary', onClick, href, disabled = 
 }
 
 function ProductCard({ product }) {
+  const copy = useStorefrontCopy()
   const favoriteId = `merchandise:${product.slug}`
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
@@ -121,6 +123,7 @@ function ProductCard({ product }) {
 }
 
 export function PhysicalCatalogPage() {
+  const copy = useStorefrontCopy()
   const [category, setCategory] = useState('All')
   const [sort, setSort] = useState('Sort: Newest')
 
@@ -132,12 +135,12 @@ export function PhysicalCatalogPage() {
   }, [category, sort])
 
   const categories = [
-    ['Top Up Games Via ID', searchAssets.categoryPlayerId, '/search'],
-    ['Top Up Games Via Login', searchAssets.categoryLogin, '/search?kind=TopUpLogin'],
-    ['Voucher Game', searchAssets.categoryItems, '/search?kind=GameVoucher'],
-    ['Joki Game', searchAssets.categoryJoki, '/search?kind=Joki'],
-    ['Game Accounts', searchAssets.categoryAccounts, '/game-accounts'],
-    ['Merchandise', searchAssets.categoryMerchandise, '/merchandise'],
+    [copy.gameTopUpById, searchAssets.categoryPlayerId, '/search'],
+    [copy.gameTopUpByLogin, searchAssets.categoryLogin, '/search?kind=TopUpLogin'],
+    [copy.gameVouchers, searchAssets.categoryItems, '/search?kind=GameVoucher'],
+    [copy.gameBoosting, searchAssets.categoryJoki, '/search?kind=Joki'],
+    [copy.gameAccounts2, searchAssets.categoryAccounts, '/game-accounts'],
+    [copy.merchandise, searchAssets.categoryMerchandise, '/merchandise'],
   ]
 
   return (
@@ -146,7 +149,7 @@ export function PhysicalCatalogPage() {
       <main className="physical-catalog">
         <div className="physical-catalog-layout">
           <aside className="physical-catalog-sidebar">
-            <h2>Categories</h2>
+            <h2>{copy.categories2}</h2>
             <nav>
               {categories.map(([label, icon, href]) => (
                 <a className={label === 'Merchandise' ? 'is-active' : ''} href={href} key={label}>
@@ -157,18 +160,18 @@ export function PhysicalCatalogPage() {
               ))}
             </nav>
             <a className="physical-catalog-help" href="/order-status">
-              <strong>Need Help?</strong>
-              <span>Chat with our support team.</span>
+              <strong>{copy.needHelp}</strong>
+              <span>{copy.chatWithOurSupportTeam}</span>
             </a>
           </aside>
 
           <section className="physical-catalog-content">
             <header className="physical-catalog__heading">
               <div>
-                <h1>Merchandise</h1>
+                <h1>{copy.merchandise}</h1>
                 <p>Jerseys and fan gear for every match day.</p>
               </div>
-              <span>{PRODUCTS.length} products</span>
+              <span>{PRODUCTS.length} {copy.products2}</span>
             </header>
 
             <div className="physical-catalog__toolbar">
@@ -210,6 +213,7 @@ const jerseyGallery = [
 ]
 
 function JerseyProductPage() {
+  const copy = useStorefrontCopy()
   const [color, setColor] = useState('Black')
   const [size, setSize] = useState('')
   const [qty, setQty] = useState(1)
@@ -238,7 +242,7 @@ function JerseyProductPage() {
     <div className="physical-shell">
       <Navbar />
       <main className="physical-pdp">
-        <div className="physical-breadcrumb">Merchandise <span>/</span> Jersey <span>/</span> Zetruv Gaming Jersey</div>
+        <div className="physical-breadcrumb">{copy.merchandise} <span>/</span> Jersey <span>/</span> Zetruv Gaming Jersey</div>
         <div className="physical-pdp__main">
           <section className="physical-gallery">
             <div className="physical-gallery__thumbs">
@@ -305,19 +309,19 @@ function JerseyProductPage() {
                   image: jerseyCard,
                   code: 'JRSY',
                 }))}
-              ><span>{saved ? '♥' : '♡'}</span> {saved ? 'Tersimpan' : 'Favorit'}</button>
+              ><span>{saved ? '♥' : '♡'}</span> {saved ? 'Tersimpan' : copy.favorites}</button>
             </div>
 
             <div className="physical-shipping-estimate" role="note"><strong>Ongkir & estimasi belum tersedia</strong><span>Biaya dan waktu kirim harus dihitung berdasarkan alamat dan layanan logistik yang terverifikasi. Belum ada estimasi resmi untuk ditampilkan.</span></div>
             {added && <p className="physical-add-confirmation" role="status">✓ Zetruv Gaming Jersey · ukuran {size} · {qty} item berhasil dimasukkan ke keranjang.</p>}
-            <PhysicalButton className="physical-add-cart" onClick={added ? () => { window.location.href = '/cart?flow=physical' } : addToCart} disabled={!size}>{added ? 'Lihat Keranjang' : size ? 'Tambah ke Keranjang' : 'Pilih Ukuran Dulu'}</PhysicalButton>
+            <PhysicalButton className="physical-add-cart" onClick={added ? () => { window.location.href = '/cart?flow=physical' } : addToCart} disabled={!size}>{added ? copy.viewCart : size ? copy.addToCart : 'Pilih Ukuran Dulu'}</PhysicalButton>
           </section>
         </div>
 
         <div className="physical-product-info">
           <section><strong>Description</strong><p>Lightweight dry-fit fabric designed for everyday wear.</p></section>
           <section id="size-guide"><strong>Panduan ukuran</strong><p>Pilih ukuran S, M, L, atau XL di atas. Tabel ukuran resmi (lingkar dada dan panjang baju) belum tersedia, jadi jangan mengandalkan perkiraan. Konfirmasi ukuran dengan admin sebelum membeli.</p></section>
-          <section><strong>Shipping</strong><p>Ships from Zetruv’s origin address via supported RajaOngkir services.</p></section>
+          <section><strong>{copy.shipping2}</strong><p>Ships from Zetruv’s origin address via supported RajaOngkir services.</p></section>
         </div>
       </main>
     </div>
@@ -331,6 +335,7 @@ export function PhysicalProductPage({ slug = 'zetruv-gaming-jersey' }) {
 }
 
 function PhysicalAccessoryProductPage({ slug }) {
+  const copy = useStorefrontCopy()
   const product = PRODUCTS.find((item) => item.slug === slug)
   const [qty, setQty] = useState(1)
   const [size, setSize] = useState('')
@@ -341,7 +346,7 @@ function PhysicalAccessoryProductPage({ slug }) {
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
   if (!product) {
-    return <div className="physical-shell"><Navbar /><main className="physical-pdp"><h1>Produk tidak ditemukan</h1><a href="/merchandise">Kembali ke Merchandise</a></main></div>
+    return <div className="physical-shell"><Navbar /><main className="physical-pdp"><h1>{copy.productNotFound}</h1><a href="/merchandise">{copy.backToMerchandise}</a></main></div>
   }
 
   const isJersey = product.category === 'Jersey'
@@ -369,7 +374,7 @@ function PhysicalAccessoryProductPage({ slug }) {
   return <div className="physical-shell">
     <Navbar />
     <main className="physical-pdp">
-      <div className="physical-breadcrumb"><a href="/merchandise">Merchandise</a> <span>/</span> {product.category} <span>/</span> {product.name}</div>
+      <div className="physical-breadcrumb"><a href="/merchandise">{copy.merchandise}</a> <span>/</span> {product.category} <span>/</span> {product.name}</div>
       <div className="physical-pdp__main">
         <section className="physical-gallery">
           <div className="physical-gallery__thumbs">
@@ -417,20 +422,21 @@ function PhysicalAccessoryProductPage({ slug }) {
           <div className="physical-shipping-estimate" role="note"><strong>Ongkir belum dihitung</strong><span>Biaya dan estimasi kirim hanya dapat ditentukan dari layanan logistik yang aktif dan alamat pengiriman.</span></div>
           {added && <p className="physical-add-confirmation" role="status">✓ {product.name} · {selectedSize} · {qty} item berhasil dimasukkan ke keranjang.</p>}
           <PhysicalButton className="physical-add-cart" onClick={added ? () => { window.location.href = '/cart?flow=physical' } : addToCart} disabled={isJersey && !size}>
-            {added ? 'Lihat Keranjang' : isJersey && !size ? 'Pilih Ukuran Dulu' : 'Tambah ke Keranjang'}
+            {added ? copy.viewCart : isJersey && !size ? 'Pilih Ukuran Dulu' : copy.addToCart}
           </PhysicalButton>
         </section>
       </div>
       <div className="physical-product-info">
         <section><strong>Description</strong><p>{product.name} · {product.meta}</p></section>
         <section id="size-guide"><strong>{isJersey ? 'Panduan ukuran' : 'Detail produk'}</strong><p>{isJersey ? 'Tabel ukuran resmi belum tersedia. Konfirmasikan lingkar dada dan panjang baju dengan admin sebelum membeli.' : `${product.category} · ${product.meta}.`}</p></section>
-        <section><strong>Shipping</strong><p>Shipping rates appear at checkout.</p></section>
+        <section><strong>{copy.shipping2}</strong><p>Shipping rates appear at checkout.</p></section>
       </div>
     </main>
   </div>
 }
 
 export function PhysicalCartPage() {
+  const copy = useStorefrontCopy()
   const [item, setItem] = useState(() => readPhysicalCart())
   const [authMode, setAuthMode] = useState(null)
 
@@ -454,10 +460,10 @@ export function PhysicalCartPage() {
       <Navbar />
       <main className="physical-cart">
         <header className="physical-cart__heading">
-          <div><h1>Merchandise Cart</h1><p>{item ? '1 physical item' : '0 physical items'}</p></div>
-          <a href="/merchandise">Continue shopping</a>
+          <div><h1>{copy.merchandiseCart}</h1><p>{item ? copy.label1PhysicalItem : copy.label0PhysicalItems}</p></div>
+          <a href="/merchandise">{copy.continueShopping2}</a>
         </header>
-        <div className="physical-cart-notice"><strong>INFO</strong><span>Digital products and merchandise cannot be combined in one cart or transaction.</span></div>
+        <div className="physical-cart-notice"><strong>INFO</strong><span>{copy.digitalProductsAndMerchandiseUseSeparateCarts}</span></div>
 
         <div className="physical-cart-layout">
           <div className="physical-cart-left">
@@ -465,11 +471,11 @@ export function PhysicalCartPage() {
               <article className="physical-cart-item">
                 <img src={item.image || jerseyCard} alt="" />
                 <div className="physical-cart-item__copy">
-                  <span className="physical-badge">{item.category?.toUpperCase() || 'MERCHANDISE'}</span>
+                  <span className="physical-badge">{item.category?.toUpperCase() || copy.merchandise2}</span>
                   <h2>{item.name}</h2>
-                  <p>{item.color ? `${item.color} · ` : ''}{item.size === 'One Size' ? 'One Size' : `Varian ${item.size}`}</p>
-                  <span className="physical-cart-stock-note">Ketersediaan final belum diverifikasi</span>
-                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>Edit variant</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>Remove</button></div>
+                  <p>{item.color ? `${item.color} · ` : ''}{item.size === 'One Size' ? copy.oneSize : `${copy.option} ${item.size}`}</p>
+                  <span className="physical-cart-stock-note">{copy.availabilityHasnTBeenConfirmed}</span>
+                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>{copy.editOption}</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>{copy.remove3}</button></div>
                 </div>
                 <div className="physical-cart-item__price">
                   <strong>{rupiah(item.price)}</strong>
@@ -477,24 +483,24 @@ export function PhysicalCartPage() {
                 </div>
               </article>
             ) : (
-              <div className="physical-cart-empty"><strong>Your merchandise cart is empty</strong><a href="/merchandise">Continue shopping</a></div>
+              <div className="physical-cart-empty"><strong>{copy.yourMerchandiseCartIsEmpty}</strong><a href="/merchandise">{copy.continueShopping2}</a></div>
             )}
 
             <div className="physical-cart-assurance">
-              <strong>Shipping is calculated at checkout</strong>
-              <p>Ongkir, estimasi pengiriman, dan checkout merchandise belum terhubung ke API transaksi. Barang yang tersimpan saat ini hanya keranjang lokal.</p>
-              <p>You can still update quantity or variant before checkout.</p>
+              <strong>{copy.shippingAtCheckout}</strong>
+              <p>{copy.shippingFeesDeliveryEstimatesAndMerchandiseCheckout}</p>
+              <p>{copy.youCanUpdateQuantityAndOptionsIn}</p>
             </div>
           </div>
 
           <aside className="physical-cart-summary">
-            <h2>Order Summary</h2>
-            <div><span>Subtotal</span><strong>{rupiah(item ? item.price * item.qty : 0)}</strong></div>
-            <div><span>Shipping</span><span>Calculated at checkout</span></div>
+            <h2>{copy.orderSummary2}</h2>
+            <div><span>{copy.subtotal}</span><strong>{rupiah(item ? item.price * item.qty : 0)}</strong></div>
+            <div><span>{copy.shipping2}</span><span>{copy.calculatedAtCheckout}</span></div>
             <hr />
-            <div className="physical-cart-summary__total"><strong>Estimated total</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
-            <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? 'Lanjut ke Checkout' : 'Masuk untuk Checkout'}</PhysicalButton>
-            <div className="physical-login-note"><strong>Checkout merchandise belum aktif</strong><span>{readCustomerSession() ? 'Kamu sudah login. Biaya kirim dan pembayaran belum bisa diproses.' : 'Login menggunakan akun Zetruv bisa dilakukan, tetapi checkout dan pembayaran merchandise belum tersedia.'}</span></div>
+            <div className="physical-cart-summary__total"><strong>{copy.estimatedTotal2}</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
+            <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}</PhysicalButton>
+            <div className="physical-login-note"><strong>{copy.merchandiseCheckoutIsUnavailable}</strong><span>{readCustomerSession() ? copy.youReLoggedInShippingAndPayment : copy.youCanLogInToYourZetruv}</span></div>
           </aside>
         </div>
       </main>
@@ -504,33 +510,37 @@ export function PhysicalCartPage() {
 }
 
 function PhysicalFlowUnavailable({ title, description }) {
+  const copy = useStorefrontCopy()
   const item = readPhysicalCart()
   return <div className="physical-shell">
     <Navbar variant="account" />
     <main className="physical-checkout">
       <header><h1>{title}</h1><p>{description}</p></header>
       <section className="physical-flow-unavailable" role="status">
-        <strong>Belum bisa diproses</strong>
-        <p>Pengiriman, voucher, dan pembayaran merchandise belum terhubung ke layanan transaksi yang memvalidasi alamat, ongkir, stok, dan pembayaran. Tidak ada pesanan atau tagihan yang dibuat.</p>
+        <strong>{copy.unableToProceed}</strong>
+        <p>{copy.merchandiseShippingVouchersAndPaymentsAreCurrently}</p>
         {item && <div className="physical-flow-unavailable__item">
           <img src={item.image || jerseyCard} alt="" />
-          <div><strong>{item.name}</strong><span>{item.color} · {item.size} · {item.qty} item</span><span>Subtotal keranjang: {rupiah(item.price * item.qty)} (belum termasuk ongkir)</span></div>
+          <div><strong>{item.name}</strong><span>{item.color} · {item.size} · {item.qty} {copy.items}</span><span>{copy.cartSubtotal} {rupiah(item.price * item.qty)} {copy.shippingNotIncluded}</span></div>
         </div>}
-        <a className="physical-btn" href={item ? '/cart?flow=physical' : '/merchandise'}>{item ? 'Kembali ke Keranjang' : 'Lihat Merchandise'}</a>
-        <a className="physical-btn physical-btn--outline" href="/order-status">Cek Pesanan Digital</a>
+        <a className="physical-btn" href={item ? '/cart?flow=physical' : '/merchandise'}>{item ? copy.backToCart : copy.browseMerchandise}</a>
+        <a className="physical-btn physical-btn--outline" href="/order-status">{copy.checkDigitalOrder}</a>
       </section>
     </main>
   </div>
 }
 
 export function PhysicalCheckoutPage() {
-  return <PhysicalFlowUnavailable title="Checkout Merchandise" description="Checkout akan tersedia setelah alamat dan tarif pengiriman resmi terintegrasi." />
+  const copy = useStorefrontCopy()
+  return <PhysicalFlowUnavailable title={copy.merchandiseCheckout} description={copy.checkoutWillBeAvailableOnceShippingAddresses} />
 }
 
 export function PhysicalPaymentPage() {
-  return <PhysicalFlowUnavailable title="Pembayaran Merchandise" description="Status pembayaran hanya dapat dikonfirmasi dari transaksi backend yang valid." />
+  const copy = useStorefrontCopy()
+  return <PhysicalFlowUnavailable title={copy.merchandisePayment} description={copy.paymentStatusIsAvailableForVerifiedTransactions} />
 }
 
 export function PhysicalOrderTrackingPage() {
-  return <PhysicalFlowUnavailable title="Lacak Merchandise" description="Nomor resi dan status pengiriman akan berasal dari pesanan yang benar-benar diproses." />
+  const copy = useStorefrontCopy()
+  return <PhysicalFlowUnavailable title={copy.trackMerchandise} description={copy.trackingNumbersAndShippingStatusWillAppear} />
 }
