@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, CircleCheck, Heart, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
+import { CircleCheck, Heart, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
 import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
@@ -14,7 +14,7 @@ const navItems = [
   { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: Heart },
 ]
 
-function useCustomerSession() {
+export function useCustomerSession() {
   const [session, setSession] = useState(readCustomerSession)
   useEffect(() => {
     const update = () => setSession(readCustomerSession())
@@ -24,7 +24,7 @@ function useCustomerSession() {
   return session
 }
 
-function AccountShell({ active, customer: profileCustomer, children }) {
+export function AccountShell({ active, customer: profileCustomer, children }) {
   const sessionCustomer = useCustomerSession()?.customer
   return (
     <div className="account-page">
@@ -64,7 +64,7 @@ function AccountSidebar({ active, customer }) {
   )
 }
 
-function PageHeader({ title, description, id }) {
+export function PageHeader({ title, description, id }) {
   return (
     <div className="account-heading" id={id} tabIndex={id ? -1 : undefined}>
       <h1>{title}</h1>
@@ -143,21 +143,6 @@ export function AccountEditProfilePage() {
   return <AccountShell active="account">
     <PageHeader title="Ubah Profil" description="Pengaturan profil belum dapat disimpan saat ini." />
     <div className="orders-figma-empty"><strong>Pengubahan profil belum tersedia</strong><p>Data profil tetap mengikuti akun terverifikasi, tanpa perubahan semu.</p><a className="account-btn account-btn--outline" href="/account">Kembali ke Akun Saya</a></div>
-  </AccountShell>
-}
-
-export function AccountOrdersPage() {
-  const customer = useCustomerSession()?.customer
-  return <AccountShell active="orders">
-    <PageHeader title="Pesanan Saya" />
-    <section className="account-orders-empty" aria-labelledby="account-orders-empty-title">
-      <img src="/assets/account/orders-empty.svg" alt="" width="132" height="129" />
-      <h2 id="account-orders-empty-title">{customer ? 'Riwayat pesanan belum tersedia' : 'Masuk untuk melihat pesanan'}</h2>
-      <p>{customer
-        ? 'Kamu masih bisa cek status pesanan menggunakan kode pesanan.'
-        : 'Punya kode pesanan? Kamu bisa langsung cek statusnya.'}</p>
-      <a className="account-btn account-btn--primary" href="/order-status">Cek Pesanan <ArrowUpRight size={16} aria-hidden="true" /></a>
-    </section>
   </AccountShell>
 }
 

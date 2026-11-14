@@ -205,7 +205,7 @@ export default function PaymentPage() {
                   onClick={() => refreshStatus()}><RefreshCw size={16} /> {refreshing ? 'Memeriksa...' : 'Periksa status'}</button>
                 {mayInitiatePayment(payment) && <button type="button" disabled={retrying || refreshing}
                   onClick={retryPayment}>{retrying ? 'Menghubungi provider...' : state === 'NotStarted' ? 'Mulai pembayaran' : 'Coba bayar lagi'}</button>}
-                {state === 'Paid' && <a href="/order-status">Lihat status pesanan</a>}
+                {state === 'Paid' && <a href={`/account/orders/${context.orderId}`}>Lihat status pesanan</a>}
               </div>
             </>}
         </section>

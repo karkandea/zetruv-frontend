@@ -11,7 +11,8 @@ import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
 import { PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
 import { LivePhysicalCatalogPage, LivePhysicalProductPage } from './pages/LivePhysicalPages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
-import { AccountOverviewPage, AccountEditProfilePage, AccountOrdersPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
+import { AccountOverviewPage, AccountEditProfilePage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
+import CustomerOrdersPage from './pages/CustomerOrdersPage'
 import Navbar from './components/Navbar'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
@@ -27,8 +28,8 @@ function AccountOrderUnavailablePage() {
     <main className="account-layout" style={{ display: 'block' }}>
       <section className="account-main" style={{ marginInline: 'auto', maxWidth: 720, padding: '40px 24px', textAlign: 'center' }}>
         <h1>Detail pesanan belum tersedia</h1>
-        <p>Detail pesanan tidak boleh berasal dari data contoh. Untuk informasi pesanan yang valid, gunakan kode pesanan pada halaman Cek Pesanan.</p>
-        <a href="/order-status" className="account-btn account-btn--primary">Cek Pesanan</a>
+        <p>Buka Pesanan Saya untuk melihat status pembayaran dan pemrosesan.</p>
+        <a href="/account/orders" className="account-btn account-btn--primary">Pesanan Saya</a>
       </section>
     </main>
   </div>
@@ -52,9 +53,9 @@ export default function App() {
   const accountOrderUpdateMatch = path.match(/^\/account\/orders\/([^/]+)\/update-login$/)
   if (accountOrderUpdateMatch) return <AccountOrderUnavailablePage />
   const accountOrderDetailMatch = path.match(/^\/account\/orders\/([^/]+)$/)
-  if (accountOrderDetailMatch) return <AccountOrderUnavailablePage />
+  if (accountOrderDetailMatch) return <CustomerOrdersPage orderId={accountOrderDetailMatch[1]} />
 
-  if (path === '/account/orders') return <AccountOrdersPage />
+  if (path === '/account/orders') return <CustomerOrdersPage />
   if (path === '/account/addresses/add') return <AccountAddressFormPage mode="add" />
   if (path === '/account/addresses/edit') return <AccountAddressFormPage mode="edit" />
   if (path === '/account/addresses' || path === '/account/address') return <AccountAddressesPage />
@@ -66,7 +67,6 @@ export default function App() {
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />
   if (path === '/checkout' && flow === 'account') return <GameAccountCheckoutPage />
   if (path === '/payment' && flow === 'account') return <GameAccountPaymentPage />
-  if ((path === '/order-status' || path === '/track-order') && flow === 'account') return <SharedOrderStatusPage />
 
   if (path === '/merchandise') return <LivePhysicalCatalogPage />
   const physicalProductMatch = path.match(/^\/merchandise\/([^/]+)$/)
@@ -79,8 +79,9 @@ export default function App() {
   if (path === '/cart') return <CartPage />
   if (path === '/checkout') return <CheckoutPage />
   if (path === '/payment') return <PaymentPage />
-  if (path === '/order-status') return <SharedOrderStatusPage initialView="detail" />
-  if (path === '/track-order') return <SharedOrderStatusPage initialView="history" />
+  if (path === '/order-status' || path === '/track-order') {
+    return params.get('guest') === '1' ? <SharedOrderStatusPage /> : <CustomerOrdersPage />
+  }
 
   const accountDetailMatch = path.match(/^\/game-accounts\/([^/]+)\/([^/]+)$/)
   if (accountDetailMatch) {
