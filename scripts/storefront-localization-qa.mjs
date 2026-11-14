@@ -18,13 +18,14 @@ if (local) await context.route('**/api/v1/**', async route => {
  if (path === '/articles') json = { items:[cmsArticle], totalPages:1 }
  if (path === '/catalog/categories') json = [{ id:'category1', kind:'TopUpGame', name:'Kategori Katalog CMS' }]
  if (path === '/catalog/products') json = { items:[], totalPages:1 }
+ if (path === '/auth/session') return route.fulfill({ status: 401, json: {} })
  if (path === '/orders/lookup') json = {orderNumber:'ZTR-TEST-123',status:'Completed',paymentStatus:'Paid',items:[{productName:'Nama Produk CMS', fulfillmentStatus:'Processing', lineTotal:10000, quantity:1}],grandTotal:10000}
  await route.fulfill({json})
 })
 const locales = {
- en: ['English EN','Popular Games','Browse Categories','Articles & Guides','Digital Cart','Digital Checkout','No Payment Session','Check Order','Report an Issue','Forgot Password?','Explore Zetruv products','Paid','Merchandise Cart','Log In to Continue'],
- id: ['Bahasa Indonesia ID','Game Populer','Jelajahi Kategori','Artikel & Panduan','Keranjang Digital','Checkout Digital','Tidak Ada Sesi Pembayaran','Cek Pesanan','Laporkan Kendala','Lupa Kata Sandi?','Jelajahi produk Zetruv','Dibayar','Keranjang Merchandise','Masuk untuk Melanjutkan Checkout'],
- ms: ['Bahasa Melayu MY','Permainan Popular','Terokai Kategori','Artikel & Panduan','Troli Digital','Pembayaran Digital','Tiada Sesi Pembayaran','Semak Pesanan','Laporkan Masalah','Lupa Kata Laluan?','Terokai produk Zetruv','Dibayar','Troli Barangan','Log Masuk untuk Meneruskan'],
+ en: ['English EN','Popular Games','Browse Categories','Articles & Guides','Digital Cart','Digital Checkout','No Payment Session','Check a Guest Order','Report an Issue','Forgot Password?','Explore Zetruv products','Paid','Merchandise Cart','Log In to Continue','My Orders','Log In to View Orders'],
+ id: ['Bahasa Indonesia ID','Game Populer','Jelajahi Kategori','Artikel & Panduan','Keranjang Digital','Checkout Digital','Tidak Ada Sesi Pembayaran','Cek Pesanan Tamu','Laporkan Kendala','Lupa Kata Sandi?','Jelajahi produk Zetruv','Dibayar','Keranjang Merchandise','Masuk untuk Melanjutkan Checkout','Pesanan Saya','Masuk untuk Melihat Pesanan'],
+ ms: ['Bahasa Melayu MY','Permainan Popular','Terokai Kategori','Artikel & Panduan','Troli Digital','Pembayaran Digital','Tiada Sesi Pembayaran','Semak Pesanan Tetamu','Laporkan Masalah','Lupa Kata Laluan?','Terokai produk Zetruv','Dibayar','Troli Barangan','Log Masuk untuk Meneruskan','Pesanan Saya','Log Masuk untuk Melihat Pesanan'],
 }
 const waitHeading = (name, scope = page) => scope.getByRole('heading', {name, exact:true}).first().waitFor({timeout:12000})
 for (const [language, a] of Object.entries(locales)) {
@@ -46,13 +47,17 @@ for (const [language, a] of Object.entries(locales)) {
  await page.locator('.auth-actions button').first().click()
  await page.getByRole('dialog').getByRole('button',{name:a[9],exact:true}).click()
  await waitHeading(a[9], page.getByRole('dialog'))
- for (const [path, heading] of [['/search',a[2]],['/articles',a[3]],['/cart',a[4]],['/checkout',a[5]],['/payment',a[6]],['/order-status',a[7]],['/cart?flow=physical',a[12]],['/cart?flow=account',a[4]],['/checkout?flow=account',a[13]]]) {
+ for (const [path, heading] of [['/search',a[2]],['/articles',a[3]],['/cart',a[4]],['/checkout',a[5]],['/payment',a[6]],['/order-status',a[14]],['/order-status?guest=1',a[7]],['/cart?flow=physical',a[12]],['/cart?flow=account',a[4]],['/checkout?flow=account',a[13]]]) {
   await page.goto(base + path,{waitUntil:'domcontentloaded'})
   await waitHeading(heading)
   assert.equal(await page.locator('html').getAttribute('lang'),language,path)
   if (local && path === '/articles') await waitHeading(cmsArticle.title)
   if (local && path === '/search') await page.getByText('Kategori Katalog CMS',{exact:true}).first().waitFor()
   if (local && path === '/order-status') {
+   await waitHeading(a[15])
+   assert.equal(await page.locator('#sos-order-number').count(),0)
+  }
+  if (local && path === '/order-status?guest=1') {
    await page.locator('#sos-order-number').fill('ZTR-TEST-123')
    await page.locator('#sos-contact').fill('qa@example.com')
    await page.locator('.sos-lookup-submit').click()

@@ -1,7 +1,7 @@
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useRef, useState } from 'react'
-import { ArrowRight, ClipboardList, CircleAlert, Mail, PackageSearch, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ArrowRight, ClipboardList, CircleAlert, Mail, PackageSearch, RefreshCw } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import '../styles/shared-order-status.css'
@@ -19,36 +19,51 @@ function stateLabel(state, copy, pending) {
     paid: copy.paid, failed: copy.failed, refunded: copy.refunded }[state] || copy.unknown
 }
 
-function money(amount, currency = 'IDR') {
+export function orderStatusLabel(status, copy) {
+  return stateLabel(stateKey(status, ORDER_STATES), copy, copy.awaitingProcessing)
+}
+
+export function paymentStatusLabel(order, copy) {
+  const attempt = {
+    NotStarted: copy.unpaid, Pending: copy.awaitingPayment, Paid: copy.paid,
+    Failed: copy.paymentFailed, Expired: copy.orderPaymentAttemptExpired,
+    Refunded: copy.refunded, Cancelled: copy.cancelled,
+  }
+  return attempt[order.paymentState] || stateLabel(stateKey(order.paymentStatus, PAYMENT_STATES), copy, copy.unpaid)
+}
+
+export function money(amount, currency = 'IDR') {
   const value = Number(amount)
   if (!Number.isFinite(value)) return '—'
   return currency === 'IDR' ? 'Rp' + new Intl.NumberFormat('id-ID').format(value) : new Intl.NumberFormat('id-ID', { style: 'currency', currency }).format(value)
 }
 
-function dateTime(value, language) {
+export function dateTime(value, language) {
   if (!value) return '—'
   const timestamp = new Date(value)
   if (Number.isNaN(timestamp.getTime())) return '—'
   return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(timestamp) + ' WIB'
 }
 
-function OrderLookupResult({ order, onReset }) {
+export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
   const language = useNavbarLanguage()
   const copy = useStorefrontCopy()
-  const paymentState = stateKey(order.paymentStatus, PAYMENT_STATES)
-  const payment = stateLabel(paymentState, copy, copy.unpaid)
-  const orderState = stateKey(order.status, ORDER_STATES)
-  const status = stateLabel(orderState, copy, copy.awaitingProcessing)
-  const isPaid = paymentState === 'paid'
-  const isComplete = orderState === 'completed'
+  const payment = paymentStatusLabel(order, copy)
+  const status = orderStatusLabel(order.status, copy)
+  const isPaid = order.paymentState === 'Paid' || stateKey(order.paymentStatus, PAYMENT_STATES) === 'paid'
+  const isComplete = stateKey(order.status, ORDER_STATES) === 'completed'
+  const shipmentStatus = {
+    Pending: copy.orderShipmentPending, ReadyToShip: copy.orderShipmentReady,
+    Shipped: copy.orderShipmentShipped, Delivered: copy.orderShipmentDelivered, Cancelled: copy.cancelled,
+  }[order.shipment?.status]
   return <section className="sos-lookup-result" aria-label={copy.orderLookupResult}>
     <header className="sos-lookup-result__header">
       <div>
-        <span className="sos-lookup-eyebrow">{copy.verifiedOrder}</span>
         <h2>{order.orderNumber}</h2>
         <p>{copy.createdOn} {dateTime(order.createdAt, language)}</p>
       </div>
-      <button type="button" className="sos-lookup-secondary" onClick={onReset}><RefreshCw size={16} aria-hidden="true" /> {copy.checkAnotherOrder}</button>
+      {onReset && <button type="button" className="sos-lookup-secondary" onClick={onReset}><RefreshCw size={16} aria-hidden="true" /> {copy.checkAnotherOrder}</button>}
+      {onRefresh && <button type="button" className="sos-lookup-secondary" onClick={onRefresh}><RefreshCw size={16} aria-hidden="true" /> {copy.refreshOrderStatus}</button>}
     </header>
     <div className="sos-lookup-statuses">
       <div><span>{copy.orderStatus}</span><strong className={isComplete ? 'is-success' : ''}>{status}</strong></div>
@@ -59,9 +74,20 @@ function OrderLookupResult({ order, onReset }) {
     <div className="sos-lookup-items">
       <h3>{copy.products}{order.items?.length || 0})</h3>
       {(order.items || []).map((item, index) => (
-        <article className="sos-lookup-item" key={String(item.productSlug || item.productName) + '-' + index}>
+        <article className="sos-lookup-item" key={item.id || index}>
           {item.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" loading="lazy" /> : <span className="sos-lookup-item__fallback"><PackageSearch size={24} aria-hidden="true" /></span>}
-          <div className="sos-lookup-item__copy"><strong>{item.productName}</strong><span>{item.variantName || item.gameName || copy.zetruvProduct} · {Number(item.quantity) || 1} {copy.items}</span><small>{stateLabel(stateKey(item.fulfillmentStatus, FULFILLMENT_STATES), copy, copy.pending)}</small></div>
+          <div className="sos-lookup-item__copy">
+            <strong>{item.productName}</strong>
+            <span>{item.variantName || item.gameName || copy.zetruvProduct} · {Number(item.quantity) || 1} {copy.items}</span>
+            <small>{stateLabel(stateKey(item.fulfillmentStatus, FULFILLMENT_STATES), copy, copy.pending)}</small>
+            {item.target && <div className="sos-lookup-target">
+              {item.target.accountDisplayName && <span>{item.target.accountDisplayName}</span>}
+              {Object.entries(item.target.fields || {}).map(([key, value]) => (
+                <small key={key}>{key.replaceAll('_', ' ')} · {value}</small>
+              ))}
+            </div>}
+            {itemAction?.(item)}
+          </div>
           <strong>{money(item.lineTotal, order.currency)}</strong>
         </article>
       ))}
@@ -74,10 +100,10 @@ function OrderLookupResult({ order, onReset }) {
     </div>
     {order.shipment && <section className="sos-lookup-shipment">
       <h3>{copy.shippingInformation}</h3>
+      {shipmentStatus && <p>{shipmentStatus}</p>}
       <p>{order.shipment.provider || copy.courier} {order.shipment.serviceName || ''}</p>
       <p>{order.shipment.trackingNumber ? copy.trackingNumber + order.shipment.trackingNumber : copy.trackingNumberIsUnavailable}</p>
     </section>}
-    <p className="sos-lookup-security"><ShieldCheck size={15} aria-hidden="true" /> {copy.orderAndPaymentStatusAreConfirmedBy}</p>
   </section>
 }
 
@@ -139,12 +165,12 @@ export default function SharedOrderStatusPage() {
   }
 
   return <div className="sos-shell">
-    <Navbar variant="account" />
+    <Navbar variant="account" homepageMobileMenu />
     <main className="sos-lookup-page">
       <div className="sos-lookup-intro">
         <span className="sos-lookup-intro__icon"><ClipboardList size={28} aria-hidden="true" /></span>
-        <h1>{copy.checkOrder}</h1>
-        <p>{copy.enterYourOrderNumberAndCheckoutContact}</p>
+        <h1>{copy.guestOrderHeading}</h1>
+        <p>{copy.guestOrderInstructions}</p>
       </div>
 
       <form className="sos-lookup-form" onSubmit={handleLookup}>
@@ -168,7 +194,8 @@ export default function SharedOrderStatusPage() {
         </button>
         <p className="sos-lookup-note"><Mail size={15} aria-hidden="true" /> {copy.useTheEmailAddressOrPhoneNumber}</p>
       </form>
-      {order && <OrderLookupResult order={order} onReset={() => { clearResult(); setNumber(''); setContact(''); document.getElementById('sos-order-number')?.focus() }} />}
+      {order && <OrderStatusDetails order={order} onReset={() => { clearResult(); setNumber(''); setContact(''); document.getElementById('sos-order-number')?.focus() }} />}
+      <div className="sos-lookup-help"><a href="/order-status">{copy.myOrders} <ArrowRight size={15} aria-hidden="true" /></a></div>
       {!order && !loading && <div className="sos-lookup-help"><strong>{copy.noOrderYet}</strong><span>{copy.chooseAProductAndContinueToCheckout}</span><a href="/search">{copy.browseProducts} <ArrowRight size={15} aria-hidden="true" /></a></div>}
     </main>
   </div>

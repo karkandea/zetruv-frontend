@@ -207,7 +207,7 @@ export default function PaymentPage() {
                   onClick={() => refreshStatus()}><RefreshCw size={16} /> {refreshing ? 'Memeriksa...' : copy.checkStatus}</button>
                 {mayInitiatePayment(payment) && <button type="button" disabled={retrying || refreshing}
                   onClick={retryPayment}>{retrying ? copy.contactingThePaymentProvider2 : state === 'NotStarted' ? copy.startPayment : copy.tryPayingAgain}</button>}
-                {state === 'Paid' && <a href="/order-status">{copy.viewOrderStatus}</a>}
+                {state === 'Paid' && <a href={`/account/orders/${context.orderId}`}>{copy.viewOrderStatus}</a>}
               </div>
             </>}
         </section>
