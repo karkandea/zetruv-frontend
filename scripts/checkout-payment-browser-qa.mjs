@@ -45,7 +45,7 @@ const payment = state => ({
 })
 const json = (route, status, data) => route.fulfill({
   status,contentType:'application/json',
-  headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'},
+  headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Credentials':'true'},
   body:JSON.stringify(data),
 })
 
@@ -68,9 +68,13 @@ try {
     await page.route('**/api/v1/**',async route=>{
       const req=route.request(),url=new URL(req.url()),path=url.pathname
       if(req.method()==='OPTIONS')return route.fulfill({
-        status:204,headers:{'Access-Control-Allow-Origin':'*',
-        'Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS'},
+        status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Credentials':'true',
+        'Access-Control-Allow-Headers':'authorization, content-type, idempotency-key, x-order-access-token',
+        'Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS'},
       })
+      if(path.endsWith('/auth/session')&&req.method()==='GET')
+        return json(route,200,{accessToken,expiresAt:'2099-01-01T00:00:00Z',
+          customer:{name:'QA Test',email:'checkout@example.test'}})
       if(path.endsWith('/catalog/products/qa-voucher')&&req.method()==='GET')
         return json(route,200,product)
       if(path.endsWith('/checkout/payment-options')&&req.method()==='GET')

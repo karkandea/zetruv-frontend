@@ -102,6 +102,9 @@ export function restoreCustomerSession({ external = false } = {}) {
 
   const version = sessionVersion
   const existing = readCustomerSession()
+  if (existing && !isAuthenticatedCart() && status.state !== 'error') {
+    void activateCustomerCart({ mergeGuest: false }).catch(() => {})
+  }
   const operation = (async () => {
     let response
     try {
@@ -131,7 +134,7 @@ export function restoreCustomerSession({ external = false } = {}) {
       applyCustomerSession(response)
     }
     // Only a sign-in or explicit cart action merges the shared guest draft.
-    if (readCustomerSession() && !isAuthenticatedCart() && status.state !== 'error') {
+    if (response?.accessToken && !isAuthenticatedCart() && status.state !== 'error') {
       await activateCustomerCart({ mergeGuest: false }).catch(() => {})
     }
   })()
