@@ -1,4 +1,4 @@
-// Navbar localization only. Use standard BCP 47 language codes (ms for Malay).
+// Storefront controls use standard BCP 47 language codes (ms for Malay).
 export const NAVBAR_LANGUAGE_STORAGE_KEY = 'zetruv-navbar-language'
 
 export const NAVBAR_LANGUAGES = Object.freeze([
@@ -28,6 +28,7 @@ export const NAVBAR_COPY = {
     transaction: 'Check Transaction', trackOrder: 'Track Order', leaderboard: 'Leaderboard',
     cart: 'Cart', digitalCart: 'Digital Cart', physicalCart: 'Physical Cart',
     login: 'Login', register: 'Register', logout: 'Logout', language: 'Change language',
+    help: 'Help', back: 'Back',
     products: {},
   },
   id: {
@@ -37,6 +38,7 @@ export const NAVBAR_COPY = {
     transaction: 'Cek Transaksi', trackOrder: 'Lacak Pesanan', leaderboard: 'Peringkat',
     cart: 'Keranjang', digitalCart: 'Keranjang Digital', physicalCart: 'Keranjang Fisik',
     login: 'Masuk', register: 'Daftar', logout: 'Keluar', language: 'Pilih bahasa',
+    help: 'Bantuan', back: 'Kembali',
     products: {
       'Browse All Categories': 'Lihat Semua Kategori',
       'Top Up Via ID': 'Top Up via ID',
@@ -54,6 +56,7 @@ export const NAVBAR_COPY = {
     transaction: 'Semak Transaksi', trackOrder: 'Jejak Pesanan', leaderboard: 'Kedudukan',
     cart: 'Troli', digitalCart: 'Troli Digital', physicalCart: 'Troli Fizikal',
     login: 'Log Masuk', register: 'Daftar', logout: 'Log Keluar', language: 'Pilih bahasa',
+    help: 'Bantuan', back: 'Kembali',
     products: {
       'Browse All Categories': 'Lihat Semua Kategori',
       'Top Up Via ID': 'Tambah Nilai melalui ID',

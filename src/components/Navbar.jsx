@@ -3,7 +3,8 @@ import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
 import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
-import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
+import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
+import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { readPendingRegistration } from '../services/registrationVerification'
@@ -34,7 +35,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const [isHomepageDrawerOpen, setIsHomepageDrawerOpen] = useState(false)
   const [isHomepageProductsOpen, setIsHomepageProductsOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
-  const [language, setLanguage] = useState(readNavbarLanguage)
+  const language = useNavbarLanguage()
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [verifiedSession,setVerifiedSession]=useState(readCustomerSession)
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
@@ -86,16 +87,6 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const transactionLabel = isCatalog ? t.trackOrder : t.transaction
 
   useEffect(() => onCartChange(setCartItems), [])
-  useEffect(() => {
-    // Keep the selected navbar language in sync across open tabs.
-    const onStorage = (event) => {
-      if (event.key === NAVBAR_LANGUAGE_STORAGE_KEY) {
-        setLanguage(normalizeNavbarLanguage(event.newValue))
-      }
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
   useEffect(()=>{
     // Every browser/device reads the server cart after a verified login.
     if(readCustomerSession())activateCustomerCart().catch(()=>{})
@@ -171,14 +162,8 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   }
 
   function selectLanguage(code) {
-    const selected = normalizeNavbarLanguage(code)
-    setLanguage(selected)
+    setNavbarLanguage(code)
     setIsLanguageOpen(false)
-    try {
-      window.localStorage.setItem(NAVBAR_LANGUAGE_STORAGE_KEY, selected)
-    } catch {
-      // Keep the choice active for this page if browser storage is unavailable.
-    }
     languageButtonRef.current?.focus()
   }
 
@@ -309,12 +294,18 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" data-open={isHomepageDrawerOpen} inert={!isHomepageDrawerOpen}>
         <nav className="navbar__mobile-links" aria-label="Navigasi Zetruv mobile">
           <a className={activeNav === 'home' ? 'is-current' : ''} href="/" onClick={() => selectNav('home')}><Home size={18} aria-hidden="true" />{t.home}</a>
-          <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>
-            <Gamepad2 size={18} aria-hidden="true" />{productLabel}<ChevronDown className={isHomepageProductsOpen ? 'is-rotated' : ''} size={17} aria-hidden="true" />
-          </button>
-          {isHomepageProductsOpen && <div id="zetruv-homepage-products" className="navbar__mobile-submenu">
-            {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{t.products[link.label] || link.label}</a>)}
-          </div>}
+          <div className="navbar__mobile-product">
+            <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>
+              <Gamepad2 size={18} aria-hidden="true" />{productLabel}<ChevronDown size={17} aria-hidden="true" />
+            </button>
+            <div id="zetruv-homepage-products" className="navbar__mobile-submenu" data-open={isHomepageProductsOpen} inert={!isHomepageProductsOpen}>
+              <div className="navbar__mobile-submenu-clip">
+                <div className="navbar__mobile-submenu-links">
+                  {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{t.products[link.label] || link.label}</a>)}
+                </div>
+              </div>
+            </div>
+          </div>
           <a href="/articles" onClick={() => selectNav('article')}><Newspaper size={18} aria-hidden="true" />{articleLabel}</a>
           <a href="/order-status" onClick={() => selectNav('transaction')}><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
           <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>

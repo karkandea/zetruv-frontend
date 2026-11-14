@@ -182,7 +182,7 @@
     gap: 2px;
   }
 
-  .navbar--homepage-mobile .navbar__mobile-links > :is(a, button) {
+  .navbar--homepage-mobile :is(.navbar__mobile-links > a, .navbar__mobile-product > button) {
     width: 100%;
     min-height: 44px;
     display: flex;
@@ -199,21 +199,41 @@
     cursor: pointer;
   }
 
-  .navbar--homepage-mobile .navbar__mobile-links > :is(a, button):hover,
+  .navbar--homepage-mobile :is(.navbar__mobile-links > a, .navbar__mobile-product > button):hover,
   .navbar--homepage-mobile .navbar__mobile-links > .is-current {
     background: rgba(255,255,255,.12);
   }
 
-  .navbar--homepage-mobile .navbar__mobile-links > button svg:last-child {
+  .navbar--homepage-mobile .navbar__mobile-product > button svg:last-child {
     margin-left: auto;
     transition: transform .2s ease;
   }
 
-  .navbar--homepage-mobile .navbar__mobile-links > button svg.is-rotated {
+  .navbar--homepage-mobile .navbar__mobile-product > button[aria-expanded='true'] svg:last-child {
     transform: rotate(180deg);
   }
 
   .navbar--homepage-mobile .navbar__mobile-submenu {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows .22s ease, opacity .18s ease, visibility 0s .22s;
+  }
+
+  .navbar--homepage-mobile .navbar__mobile-submenu[data-open='true'] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .navbar--homepage-mobile .navbar__mobile-submenu-clip {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .navbar--homepage-mobile .navbar__mobile-submenu-links {
     margin: 0 0 4px 31px;
     padding: 4px 0 4px 12px;
     border-left: 1px solid rgba(160,178,255,.42);
@@ -719,22 +739,18 @@
     top: auto;
     right: 14px;
     bottom: 14px;
-    width: 48px;
+    width: auto;
     height: 48px;
     min-width: 48px;
     min-height: 48px;
     justify-content: center;
-    padding: 0;
+    padding: 0 14px 0 10px;
   }
 
   .site-shell--homepage-final > .contact-fab img {
     width: 30px;
     height: 30px;
     flex-basis: 30px;
-  }
-
-  .site-shell--homepage-final > .contact-fab span {
-    display: none;
   }
 }
 
@@ -757,7 +773,8 @@
 @media (prefers-reduced-motion: reduce) {
   .navbar--homepage-mobile .navbar__hamburger-icon span,
   .navbar--homepage-mobile .navbar__mobile-drawer,
-  .navbar--homepage-mobile .navbar__mobile-links > button svg:last-child {
+  .navbar--homepage-mobile .navbar__mobile-submenu,
+  .navbar--homepage-mobile .navbar__mobile-product > button svg:last-child {
     transition: none;
   }
 }

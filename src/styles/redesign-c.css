@@ -5,6 +5,7 @@
 .chat-panel { width: min(405px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 20px; border-radius: 24px; background: #e2e8f0; }
 .chat-panel__top { display: flex; justify-content: space-between; margin-bottom: 12px; }
 .icon-button { width: 36px; height: 36px; color: var(--navy); background: transparent; font-size: 28px; cursor: pointer; }
+.chat-panel__back { display: grid; place-items: center; padding: 0; border-radius: 8px; }
 .support-form { display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 24px; background: #f8fafc; font-family: Helvetica, Arial, sans-serif; }
 .support-form h2 { margin: 0 0 14px; color: #333; font-size: 34px; letter-spacing: -1.36px; }
 .support-form label { display: flex; flex-direction: column; gap: 8px; font-size: 18px; font-weight: 700; }
@@ -116,7 +117,7 @@
   .footer__links { flex-direction: column; gap: 28px; }
   .footer__support-payment { width: 100%; }
   .footer__two-columns { gap: 46px; }
-  .contact-fab { top: 455px; height: 38px; padding-inline: 11px; font-size: 10px; }
+  .contact-fab { top: 455px; width: auto; height: 38px; padding-inline: 11px; font-size: 12px; }
   .chat-backdrop { padding: 10px; }
   .chat-panel { padding: 14px; }
   .support-form h2 { font-size: 28px; }

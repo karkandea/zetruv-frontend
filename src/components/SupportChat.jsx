@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { assets } from '../data/assets'
+import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
+import { NAVBAR_COPY } from '../services/navbarLanguage'
 import { submitSupportReport } from '../services/supportService'
 
 const initialForm = { name: '', phone: '', description: '' }
@@ -9,6 +12,8 @@ export default function SupportChat({ open: controlledOpen, onOpenChange } = {})
   const open = controlledOpen ?? internalOpen
   const [form, setForm] = useState(initialForm)
   const [status, setStatus] = useState('idle')
+  const { help, back } = NAVBAR_COPY[useNavbarLanguage()]
+  const launcherRef = useRef(null)
 
   function setOpen(nextOpen) {
     if (controlledOpen === undefined) setInternalOpen(nextOpen)
@@ -29,14 +34,19 @@ export default function SupportChat({ open: controlledOpen, onOpenChange } = {})
 
   return (
     <>
-      <button className="contact-fab" type="button" aria-label="Hubungi admin Zetruv" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        <img src={assets.chat} alt="" /> <span>Contact our team</span>
+      <button className="contact-fab" ref={launcherRef} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <img src={assets.chat} alt="" /> <span>{help}</span>
       </button>
       {open && (
         <div className="chat-backdrop" role="presentation" onMouseDown={() => setOpen(false)}>
           <aside className="chat-panel" role="dialog" aria-modal="true" aria-labelledby="support-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="chat-panel__top">
-              <button type="button" className="icon-button" onClick={() => setOpen(false)} aria-label="Back">←</button>
+              <button type="button" className="icon-button chat-panel__back" aria-label={back} onClick={() => {
+                setOpen(false)
+                launcherRef.current?.focus()
+              }}>
+                <ArrowLeft size={20} aria-hidden="true" />
+              </button>
               <button type="button" className="icon-button" aria-label="Expand">↗</button>
             </div>
             <form className="support-form" onSubmit={handleSubmit}>
