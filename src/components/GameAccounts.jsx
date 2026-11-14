@@ -10,7 +10,10 @@ export default function GameAccounts({ items = [] }) {
           <h2 id="homepage-accounts-title">Akun Game Pilihan</h2>
           <p>Detail akun sesuai game, langsung dari listing yang tersedia.</p>
         </div>
-        <a href="/search?kind=GameAccount">Lihat Semua Akun Game</a>
+        <a href="/search?kind=GameAccount">
+          <span className="homepage-accounts__desktop-label">Lihat Semua Akun Game</span>
+          <span className="homepage-accounts__mobile-label">Lihat Semua</span>
+        </a>
       </div>
       {cards.length === 0
         ? <div className="homepage-accounts__empty">Belum ada akun game yang ditampilkan saat ini.</div>

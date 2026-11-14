@@ -3,7 +3,10 @@ export default function JockeyGames({ items = [] }) {
 
   return (
     <section className="jockey-section" id="jockey" aria-labelledby="jockey-title">
-      <h2 id="jockey-title">Joki Game</h2>
+      <header className="jockey-section__header">
+        <h2 id="jockey-title">Joki Game</h2>
+        <a className="yellow-button jockey-section__mobile-link" href="/search?kind=Joki">Lihat Semua</a>
+      </header>
       <div className="jockey-grid">
         {displayItems.slice(0, 10).map((game) => (
           <a className="jockey-card" href={`/product/joki/${encodeURIComponent(game.slug)}`} key={game.id}>

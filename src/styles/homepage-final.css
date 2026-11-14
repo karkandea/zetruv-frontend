@@ -325,7 +325,7 @@
   margin: 100px auto 0;
 }
 
-.site-shell--homepage-final .jockey-section > h2 {
+.site-shell--homepage-final .jockey-section__header > h2 {
   height: 53px;
   margin-bottom: 18px;
 }

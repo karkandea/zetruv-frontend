@@ -30,7 +30,7 @@ export default function SupportChat({ open: controlledOpen, onOpenChange } = {})
   return (
     <>
       <button className="contact-fab" type="button" aria-label="Hubungi admin Zetruv" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        <img src={assets.chat} alt="" /> Contact our team
+        <img src={assets.chat} alt="" /> <span>Contact our team</span>
       </button>
       {open && (
         <div className="chat-backdrop" role="presentation" onMouseDown={() => setOpen(false)}>

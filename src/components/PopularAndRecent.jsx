@@ -47,7 +47,7 @@ export default function PopularAndRecent({ popular = [], recent = [], featured =
         </div>
       </div>
 
-      <div className="popular-recent__column">
+      <div className={`popular-recent__column${authenticated || showFeatured ? '' : ' popular-recent__column--sign-in-prompt'}`}>
         <header className="compact-heading">
           <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>{showFeatured ? 'Featured Items' : 'Terakhir Dibeli'}</h2></div>
         </header>

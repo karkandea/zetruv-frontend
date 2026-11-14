@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
-import { ChevronDown, ClipboardList, Gamepad2, Globe2, Home, LogIn, LogOut, Menu, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus, X } from 'lucide-react'
+import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Menu, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus, X } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
@@ -317,9 +317,12 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.physicalCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
           {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />Akun Saya</a>}
         </nav>
-        <div className="navbar__mobile-language" aria-label={t.language}>
-          <Globe2 size={18} aria-hidden="true" />
-          {NAVBAR_LANGUAGES.map((option) => <button key={option.code} type="button" aria-label={`${t.language}: ${option.name}`} aria-pressed={language === option.code} onClick={() => selectLanguage(option.code)}>{option.badge}</button>)}
+        <div className="navbar__mobile-language" role="group" aria-label={t.language}>
+          {NAVBAR_LANGUAGES.map((option) => (
+            <button key={option.code} type="button" aria-label={`${t.language}: ${option.name}`} aria-pressed={language === option.code} onClick={() => selectLanguage(option.code)}>
+              <img src={assets[option.flag]} alt="" />
+            </button>
+          ))}
         </div>
         <div className="navbar__mobile-auth">
           {verifiedSession ? <button type="button" onClick={() => { logoutCustomer(); setVerifiedSession(null); setIsHomepageDrawerOpen(false) }}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
