@@ -1,3 +1,5 @@
+import { formatCopy } from '../services/storefrontCopy'
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import { ArrowLeft } from 'lucide-react'
@@ -5,9 +7,9 @@ import { authenticateCheckoutCustomer } from '../services/checkoutGatewayService
 import { apiRequest } from '../api/httpClient'
 import { clearPendingRegistration, readPendingRegistration, savePendingRegistration, validCustomerEmail } from '../services/registrationVerification'
 
-function maskEmail(email) {
+function maskEmail(email, fallback) {
   const value = String(email || '').trim()
-  if (!value.includes('@')) return 'alamat email yang kamu masukkan'
+  if (!value.includes('@')) return fallback
 
   const [local, domain] = value.split('@')
   const shown = (local || '').slice(0, 4)
@@ -15,6 +17,7 @@ function maskEmail(email) {
 }
 
 export default function AuthModal({ mode = 'login', onModeChange, onClose, onAuthenticated, resetToken = '' }) {
+  const copy = useStorefrontCopy()
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [authBusy,setAuthBusy] = useState(false)
   const [authError,setAuthError] = useState('')
@@ -45,8 +48,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   const isForgotSuccess = mode === 'forgot-success'
   const isForgotFlow = isForgotRequest || isForgotCheck || isForgotNew || isForgotSuccess
 
-  const maskedResetEmail = useMemo(() => maskEmail(resetEmail), [resetEmail])
-  const maskedRegisterEmail = useMemo(() => maskEmail(registerEmail), [registerEmail])
+  const maskedResetEmail = useMemo(() => maskEmail(resetEmail, copy.theEmailAddressYouEntered), [resetEmail, copy])
+  const maskedRegisterEmail = useMemo(() => maskEmail(registerEmail, copy.theEmailAddressYouEntered), [registerEmail, copy])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -107,7 +110,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         onModeChange?.('register-verify')
       }else{
         const response=await authenticateCheckoutCustomer(email,password)
-        if(!response?.accessToken)throw Error('Autentikasi server tidak berhasil.')
+        if(!response?.accessToken)throw Error(copy.weCouldnTVerifyYourSignIn)
         clearPendingRegistration()
         onAuthenticated?.(response)
         onClose?.()
@@ -118,11 +121,11 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         setRegisterEmail(submittedEmail)
         setRegistrationToken(pending?.email.toLowerCase() === submittedEmail.toLowerCase() ? pending.token : '')
         setResendSeconds(0)
-        setRegisterError('Email belum diverifikasi. Kirim ulang tautan verifikasi bila diperlukan.')
+        setRegisterError('yourEmailIsUnverifiedRequestANew')
         onModeChange?.('register-verify')
       } else {
-        setAuthError(e.status===401?'Email atau password Zetruv salah.':
-          e.message||'Belum dapat terhubung ke server.')
+        setAuthError(e.status===401?'yourZetruvEmailOrPasswordIsIncorrect':
+          'weCouldnTConnectToTheServer')
       }
     }
     finally{setAuthBusy(false)}
@@ -132,7 +135,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     if (registerBusy) return
     const email = registerEmail.trim()
     if (!validCustomerEmail(email)) {
-      setRegisterError('Masukkan alamat email yang valid untuk menerima tautan verifikasi.')
+      setRegisterError('enterAValidEmailAddressToReceive')
       return
     }
     setRegisterBusy(true)
@@ -144,7 +147,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
       setResendSeconds(Number(result?.resendAfterSeconds) || 45)
       onModeChange?.('register-verify')
     } catch (error) {
-      setRegisterError(error?.message || 'Email verifikasi belum terkirim. Coba lagi.')
+      setRegisterError('weCouldnTSendAVerificationEmail')
     } finally {
       setRegisterBusy(false)
     }
@@ -155,11 +158,11 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     if (registerBusy) return
     const newEmail = editedEmail.trim()
     if (!validCustomerEmail(newEmail)) {
-      setRegisterError('Masukkan alamat email yang valid.')
+      setRegisterError('enterAValidEmailAddress')
       return
     }
     if (!registrationToken) {
-      setRegisterError('Sesi edit email sudah habis. Gunakan kirim ulang verifikasi ke email awal.')
+      setRegisterError('yourEmailEditingSessionExpiredResendThe')
       return
     }
     setRegisterBusy(true)
@@ -178,7 +181,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         setRegistrationToken('')
         clearPendingRegistration()
       }
-      setRegisterError(error?.message || 'Email belum dapat diubah. Coba lagi.')
+      setRegisterError('weCouldnTUpdateYourEmailPlease')
     } finally {
       setRegisterBusy(false)
     }
@@ -188,7 +191,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     if (resetBusy) return
     const email = resetEmail.trim()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
-      setResetError('Masukkan alamat email yang valid untuk menerima tautan reset.')
+      setResetError('enterAValidEmailAddressToReceive2')
       return
     }
     setResetBusy(true)
@@ -200,7 +203,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
       setResendSeconds(Number(result?.resendAfterSeconds) || 45)
       onModeChange?.('forgot-check')
     } catch (error) {
-      setResetError(error?.message || 'Permintaan reset belum terkirim. Coba lagi.')
+      setResetError('weCouldnTSendYourResetRequest')
     } finally {
       setResetBusy(false)
     }
@@ -215,15 +218,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
     event.preventDefault()
     if (resetBusy) return
     if (!resetToken) {
-      setResetError('Buka tautan reset dari email untuk mengubah password.')
+      setResetError('openTheResetLinkInYourEmail')
       return
     }
     if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-      setResetError('Password minimal 8 karakter, berisi huruf besar dan angka.')
+      setResetError('useAtLeast8CharactersIncludingAn')
       return
     }
     if (newPassword !== confirmPassword) {
-      setResetError('Konfirmasi password belum sama.')
+      setResetError('thePasswordsDonTMatch')
       return
     }
     setResetBusy(true)
@@ -238,7 +241,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
       setConfirmPassword('')
       onModeChange?.('forgot-success')
     } catch (error) {
-      setResetError(error?.message || 'Password belum berubah. Coba minta tautan baru.')
+      setResetError(error.status === 410 || /expir/i.test(error.message || '')
+        ? 'resetLinkExpired' : 'weCouldnTChangeYourPasswordRequest')
     } finally {
       setResetBusy(false)
     }
@@ -257,16 +261,16 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         role="dialog"
         aria-modal="true"
         aria-label={
-          isRegisterVerify ? 'Verify your email'
-            : isRegisterVerified ? 'Email verified'
-              : isRegisterExpired ? 'Verification link expired'
-                : isRegisterEdit ? 'Edit registration email'
-                : isForgotRequest ? 'Forgot password'
-                  : isForgotCheck ? 'Check your email'
-                    : isForgotNew ? 'Create a new password'
-                      : isForgotSuccess ? 'Password updated'
-                        : isRegister ? 'Register'
-                          : 'Login'
+          isRegisterVerify ? copy.verifyYourEmail
+            : isRegisterVerified ? copy.emailVerified
+              : isRegisterExpired ? copy.verificationLinkExpired
+                : isRegisterEdit ? copy.editRegistrationEmail
+                : isForgotRequest ? copy.forgotPassword
+                  : isForgotCheck ? copy.checkYourEmail
+                    : isForgotNew ? copy.createANewPassword
+                      : isForgotSuccess ? copy.passwordUpdated
+                        : isRegister ? copy.register2
+                          : copy.logIn2
         }
         tabIndex={-1}
         ref={dialogRef}
@@ -284,9 +288,9 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-register-heading auth-register-heading--verify">
-              <h2>Verify your email</h2>
+              <h2>{copy.verifyYourEmail}</h2>
               <p>
-                {registerEmail ? `We sent a verification link to ${maskedRegisterEmail}. Open the email and click Verify email to activate your account.` : 'Enter your registered email to request a verification link.'}
+                {registerEmail ? formatCopy(copy.weSentAVerificationLinkToOpen, { email: maskedRegisterEmail }) : copy.enterYourRegisteredEmailToRequestA}
               </p>
             </div>
 
@@ -295,23 +299,23 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                 setEditedEmail(registerEmail)
                 setRegisterError('')
                 onModeChange?.('register-edit')
-              }}>Edit email address</button>
+              }}>{copy.editEmailAddress}</button>
             ) : (
               <input className="auth-input auth-register-email-input" type="email" value={registerEmail}
                 onChange={(event) => setRegisterEmail(event.target.value)}
-                placeholder="Registered email" autoComplete="email" maxLength={320} aria-label="Registered email" />
+                placeholder={copy.registeredEmail} autoComplete="email" maxLength={320} aria-label={copy.registeredEmail} />
             )}
 
-            {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
+            {registerError && <p className="auth-reset-error" role="alert">{copy[registerError]}</p>}
 
             <div className="auth-register-resend">
-              <span>Didn’t get it?</span>
+              <span>{copy.didnTGetIt}</span>
               <button type="button" disabled={registerBusy || resendSeconds > 0} onClick={handleResend}>
-                {registerBusy ? 'Sending...' : resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
+                {registerBusy ? copy.sending2 : resendSeconds > 0 ? formatCopy(copy.resendIn00, { seconds: String(resendSeconds).padStart(2, '0') }) : copy.resendNow}
               </button>
             </div>
 
-            <p className="auth-register-note">Verification links expire after 24 hours.</p>
+            <p className="auth-register-note">{copy.verificationLinksExpireAfter24Hours}</p>
           </div>
         )}
 
@@ -321,21 +325,21 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               <img src={assets.authRegisterVerify} alt="" />
             </div>
             <div className="auth-register-heading">
-              <h2>Edit email address</h2>
-              <p>We’ll send a new verification link to the updated email address. Your old link will stop working.</p>
+              <h2>{copy.editEmailAddress}</h2>
+              <p>{copy.weLlSendANewVerificationLink}</p>
             </div>
             <form className="auth-register-edit-form" onSubmit={handleChangeRegistrationEmail}>
-              <input className="auth-input" type="email" name="newEmail" placeholder="New email address"
+              <input className="auth-input" type="email" name="newEmail" placeholder={copy.newEmailAddress}
                 autoComplete="email" required maxLength={320} value={editedEmail}
                 onChange={(event) => setEditedEmail(event.target.value)} />
-              {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
+              {registerError && <p className="auth-reset-error" role="alert">{copy[registerError]}</p>}
               <button className="auth-submit auth-register-primary" type="submit" disabled={registerBusy}>
-                {registerBusy ? 'Updating...' : 'Save and send verification'}
+                {registerBusy ? 'Updating...' : copy.saveAndSendVerification}
               </button>
               <button className="auth-secondary" type="button" onClick={() => {
                 setRegisterError('')
                 onModeChange?.('register-verify')
-              }}>Back to verification</button>
+              }}>{copy.backToVerification}</button>
             </form>
           </div>
         )}
@@ -347,15 +351,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-register-heading auth-register-heading--verified">
-              <h2>Email verified</h2>
-              <p>Your email has been verified successfully. Your Zetruv account is ready.</p>
+              <h2>{copy.emailVerified}</h2>
+              <p>{copy.yourEmailHasBeenVerifiedSuccessfullyYour}</p>
             </div>
 
             <button className="auth-submit auth-register-primary" type="button" onClick={() => onModeChange?.('login')}>
-              Continue to login
+              {copy.continueToLogin}
             </button>
 
-            <p className="auth-register-ready">Your account is now verified and ready to use.</p>
+            <p className="auth-register-ready">{copy.yourAccountIsNowVerifiedAndReady}</p>
           </div>
         )}
 
@@ -366,14 +370,14 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-register-heading auth-register-heading--expired">
-              <h2>Verification link expired</h2>
-              <p>This link is no longer valid. Request a new verification email to finish setting up your account.</p>
+              <h2>{copy.verificationLinkExpired}</h2>
+              <p>{copy.thisLinkIsNoLongerValidRequest}</p>
             </div>
 
             <input className="auth-input auth-register-email-input" type="email" value={registerEmail}
               onChange={(event) => setRegisterEmail(event.target.value)}
-              placeholder="Registered email" autoComplete="email" maxLength={320} aria-label="Registered email" />
-            {registerError && <p className="auth-reset-error" role="alert">{registerError}</p>}
+              placeholder={copy.registeredEmail} autoComplete="email" maxLength={320} aria-label={copy.registeredEmail} />
+            {registerError && <p className="auth-reset-error" role="alert">{copy[registerError]}</p>}
             <div className="auth-register-actions">
               <button
                 className="auth-submit auth-register-primary"
@@ -381,15 +385,15 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                 disabled={registerBusy}
                 onClick={() => void requestVerificationEmail()}
               >
-                {registerBusy ? 'Sending...' : 'Send new verification email'}
+                {registerBusy ? copy.sending2 : copy.sendNewVerificationEmail}
               </button>
               <button className="auth-secondary" type="button" onClick={() => onModeChange?.('login')}>
-                Back to login
+                {copy.backToLogin}
               </button>
             </div>
 
             <p className="auth-register-note auth-register-note--expired">
-              For security, only the most recent verification link will work.
+              {copy.forSecurityOnlyTheMostRecentVerification}
             </p>
           </div>
         )}
@@ -398,12 +402,12 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
           <div className="auth-modal__content auth-modal__content--forgot">
             <button className="auth-back-login" type="button" onClick={() => onModeChange?.('login')}>
               <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
-              <span>Back to login</span>
+              <span>{copy.backToLogin}</span>
             </button>
 
             <div className="auth-forgot-heading">
-              <h2>Forgot password?</h2>
-              <p>Enter the email associated with your account. We’ll send you a secure link to reset your password.</p>
+              <h2>{copy.forgotPassword2}</h2>
+              <p>{copy.enterTheEmailAssociatedWithYourAccount}</p>
             </div>
 
             <form className="auth-reset-form" onSubmit={handleResetRequest}>
@@ -411,19 +415,19 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                 className="auth-input auth-reset-email"
                 type="email"
                 name="reset-email"
-                placeholder="Email"
+                placeholder={copy.email}
                 autoComplete="email"
                 required
                 maxLength={320}
                 value={resetEmail}
                 onChange={(event) => setResetEmail(event.target.value)}
               />
-              {resetError && <p className="auth-reset-error" role="alert">{resetError}</p>}
-              <button className="auth-submit auth-reset-submit" type="submit" disabled={resetBusy}>{resetBusy ? 'Mengirim...' : 'Send reset link'}</button>
+              {resetError && <p className="auth-reset-error" role="alert">{copy[resetError]}</p>}
+              <button className="auth-submit auth-reset-submit" type="submit" disabled={resetBusy}>{resetBusy ? copy.sending3 : copy.sendResetLink}</button>
             </form>
 
             <p className="auth-security-note">
-              For security, we’ll show the same confirmation whether or not an account exists for that email.
+              {copy.forSecurityThisConfirmationLooksTheSame}
             </p>
           </div>
         )}
@@ -435,23 +439,23 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-state-heading auth-state-heading--check">
-              <h2>Check your email</h2>
+              <h2>{copy.checkYourEmail}</h2>
               <p>
-                If an account exists for {maskedResetEmail}, a password reset link is on the way. The link expires in 15 minutes.
+                {formatCopy(copy.ifAnAccountExistsForAPassword, { email: maskedResetEmail })}
               </p>
             </div>
 
             <div className="auth-check-actions">
-              <p className="auth-email-hint">Buka kotak masuk email kamu, lalu klik tautan reset. Zetruv tidak akan meminta password melalui email.</p>
+              <p className="auth-email-hint">{copy.openYourInboxAndClickTheReset}</p>
               <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>
-                Use another email
+                {copy.useAnotherEmail}
               </button>
             </div>
 
             <div className="auth-resend">
-              <span>Didn’t get the email?</span>
+              <span>{copy.didnTGetTheEmail}</span>
               <button type="button" disabled={resetBusy || resendSeconds > 0} onClick={handleResend}>
-                {resetBusy ? 'Sending...' : resendSeconds > 0 ? `Resend in 00:${String(resendSeconds).padStart(2, '0')}` : 'Resend now'}
+                {resetBusy ? copy.sending2 : resendSeconds > 0 ? formatCopy(copy.resendIn00, { seconds: String(resendSeconds).padStart(2, '0') }) : copy.resendNow}
               </button>
             </div>
           </div>
@@ -460,8 +464,8 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
         {isForgotNew && (
           <div className="auth-modal__content auth-modal__content--new-password">
             <div className="auth-new-heading">
-              <h2>Create a new password</h2>
-              <p>Choose a password you haven’t used before.</p>
+              <h2>{copy.createANewPassword}</h2>
+              <p>{copy.chooseAPasswordYouHavenTUsed}</p>
             </div>
 
             <form className="auth-new-form" onSubmit={handleResetPassword}>
@@ -470,7 +474,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   <input
                     type={passwordVisible ? 'text' : 'password'}
                     name="new-password"
-                    placeholder="New password"
+                    placeholder={copy.newPassword}
                     autoComplete="new-password"
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
@@ -478,7 +482,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   <button
                     className="auth-password__toggle"
                     type="button"
-                    aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                    aria-label={passwordVisible ? copy.hidePassword : copy.showPassword}
                     onClick={() => setPasswordVisible((visible) => !visible)}
                   >
                     <img src={assets.authEye} alt="" />
@@ -489,7 +493,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   <input
                     type={confirmPasswordVisible ? 'text' : 'password'}
                     name="confirm-new-password"
-                    placeholder="Confirm new password"
+                    placeholder={copy.confirmNewPassword}
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
@@ -497,7 +501,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   <button
                     className="auth-password__toggle"
                     type="button"
-                    aria-label={confirmPasswordVisible ? 'Hide password' : 'Show password'}
+                    aria-label={confirmPasswordVisible ? copy.hidePassword : copy.showPassword}
                     onClick={() => setConfirmPasswordVisible((visible) => !visible)}
                   >
                     <img src={assets.authEye} alt="" />
@@ -506,16 +510,16 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
               </div>
 
               <div className="auth-requirements">
-                <p>Password must include:</p>
-                <div className={`auth-requirement${newPassword.length >= 8 ? ' is-complete' : ''}`}><span>{newPassword.length >= 8 ? '✓' : '•'}</span><strong>At least 8 characters</strong></div>
-                <div className={`auth-requirement${/[A-Z]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[A-Z]/.test(newPassword) ? '✓' : '•'}</span><strong>1 uppercase letter</strong></div>
-                <div className={`auth-requirement${/[0-9]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[0-9]/.test(newPassword) ? '✓' : '•'}</span><strong>1 number</strong></div>
+                <p>{copy.passwordRequirements}</p>
+                <div className={`auth-requirement${newPassword.length >= 8 ? ' is-complete' : ''}`}><span>{newPassword.length >= 8 ? '✓' : '•'}</span><strong>{copy.atLeast8Characters}</strong></div>
+                <div className={`auth-requirement${/[A-Z]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[A-Z]/.test(newPassword) ? '✓' : '•'}</span><strong>{copy.label1UppercaseLetter}</strong></div>
+                <div className={`auth-requirement${/[0-9]/.test(newPassword) ? ' is-complete' : ''}`}><span>{/[0-9]/.test(newPassword) ? '✓' : '•'}</span><strong>{copy.label1Number}</strong></div>
               </div>
 
-              {!resetToken && <p className="auth-reset-error" role="alert">Tautan reset tidak ditemukan. Minta tautan baru lewat Lupa Password.</p>}
-              {resetError && <p className="auth-reset-error" role="alert">{resetError}</p>}
-              <button className="auth-submit auth-reset-password" type="submit" disabled={resetBusy || !resetToken}>{resetBusy ? 'Menyimpan...' : 'Reset password'}</button>
-              {!resetToken && <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>Minta tautan reset</button>}
+              {!resetToken && <p className="auth-reset-error" role="alert">{copy.theResetLinkIsMissingRequestA}</p>}
+              {resetError && <p className="auth-reset-error" role="alert">{copy[resetError]}</p>}
+              <button className="auth-submit auth-reset-password" type="submit" disabled={resetBusy || !resetToken}>{resetBusy ? copy.saving : copy.resetPassword}</button>
+              {!resetToken && <button className="auth-secondary" type="button" onClick={() => onModeChange?.('forgot')}>{copy.requestResetLink}</button>}
             </form>
           </div>
         )}
@@ -527,22 +531,22 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
             </div>
 
             <div className="auth-state-heading auth-state-heading--success">
-              <h2>Password updated</h2>
-              <p>Your password has been changed successfully. You can now sign in with your new password.</p>
+              <h2>{copy.passwordUpdated}</h2>
+              <p>{copy.yourPasswordHasBeenChangedSuccessfullyYou}</p>
             </div>
 
             <button className="auth-submit auth-success-login" type="button" onClick={() => onModeChange?.('login')}>
-              Back to login
+              {copy.backToLogin}
             </button>
 
-            <p className="auth-success-tip">Tip: keep your password unique to Zetruv.</p>
+            <p className="auth-success-tip">{copy.useAPasswordThatSUniqueTo}</p>
           </div>
         )}
 
         {!isForgotFlow && !isRegisterFlow && (
           <div className="auth-modal__content">
             <div className="auth-modal__content-inner">
-              <div className="auth-tabs" role="tablist" aria-label="Authentication">
+              <div className="auth-tabs" role="tablist" aria-label={copy.authentication}>
                 <button
                   className={`auth-tab${!isRegister ? ' active' : ''}`}
                   type="button"
@@ -550,7 +554,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   aria-selected={!isRegister}
                   onClick={() => onModeChange?.('login')}
                 >
-                  Login
+                  {copy.logIn2}
                 </button>
                 <button
                   className={`auth-tab${isRegister ? ' active' : ''}`}
@@ -559,19 +563,19 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                   aria-selected={isRegister}
                   onClick={() => onModeChange?.('register')}
                 >
-                  Register
+                  {copy.register2}
                 </button>
               </div>
 
               <div className="auth-heading">
-                <h2>{isRegister ? 'Register' : 'Login'}</h2>
-                <p>{isRegister ? 'Create your account and start the adventure' : 'Please login to your account and start the adventure'}</p>
+                <h2>{isRegister ? copy.register2 : copy.logIn2}</h2>
+                <p>{isRegister ? copy.createYourAccountAndStartTheAdventure : copy.logInToStartTheAdventure}</p>
               </div>
 
               <form className="auth-form" onSubmit={handleAuthSubmit}>
-                {authError && <p role="alert" className="auth-error">{authError}</p>}
+                {authError && <p role="alert" className="auth-error">{copy[authError]}</p>}
                 {isRegister && (
-                  <input className="auth-input" type="text" name="name" placeholder="Name" autoComplete="name" maxLength={120} required />
+                  <input className="auth-input" type="text" name="name" placeholder={copy.name2} autoComplete="name" maxLength={120} required />
                 )}
 
                 {isRegister ? (
@@ -579,7 +583,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                     className="auth-input"
                     type="email"
                     name="email"
-                    placeholder="Email"
+                    placeholder={copy.email}
                     autoComplete="email"
                     required
                     maxLength={320}
@@ -587,7 +591,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                     onChange={(event) => setRegisterEmail(event.target.value)}
                   />
                 ) : (
-                  <input className="auth-input" type="email" name="email" placeholder="Email" autoComplete="email" required maxLength={320} />
+                  <input className="auth-input" type="email" name="email" placeholder={copy.email} autoComplete="email" required maxLength={320} />
                 )}
 
                 <div className="auth-password-group">
@@ -595,14 +599,14 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                     <input
                       type={passwordVisible ? 'text' : 'password'}
                       name="password"
-                      placeholder="Password"
+                      placeholder={copy.password}
                       autoComplete={isRegister ? 'new-password' : 'current-password'}
                       required
                     />
                     <button
                       className="auth-password__toggle"
                       type="button"
-                      aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                      aria-label={passwordVisible ? copy.hidePassword : copy.showPassword}
                       onClick={() => setPasswordVisible((visible) => !visible)}
                     >
                       <img src={assets.authEye} alt="" />
@@ -615,12 +619,12 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
                       type="button"
                       onClick={() => onModeChange?.('forgot')}
                     >
-                      Forget password?
+                      {copy.forgotPassword3}
                     </button>
                   )}
                 </div>
 
-                <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy?'Memproses...':isRegister?'Register':'Login'}</button>
+                <button className="auth-submit" type="submit" disabled={authBusy}>{authBusy?copy.processing2:isRegister?copy.register2:copy.logIn2}</button>
               </form>
             </div>
           </div>

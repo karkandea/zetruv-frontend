@@ -1,3 +1,5 @@
+import { formatCopy, storefrontCopy } from './storefrontCopy.js'
+
 const clean = (value) => String(value ?? '').trim()
 
 /** Only backend-provided account-validation fields are accepted. */
@@ -26,30 +28,30 @@ export function isCartCatalogPending(item, catalogProducts = {}, catalogErrors =
     !Object.prototype.hasOwnProperty.call(catalogErrors, slug)
 }
 
-export function checkCartDestination(item, requirements) {
+export function checkCartDestination(item, requirements, copy = storefrontCopy.id) {
   if (item.fulfillmentMethod !== 'AUTO_ID') return { valid: true, message: '' }
   if (!Array.isArray(requirements) || requirements.length === 0) {
-    return { valid: false, message: 'Data akun belum dapat diverifikasi. Muat ulang katalog untuk melanjutkan.' }
+    return { valid: false, message: copy.accountDetailsCouldnTBeVerifiedReload }
   }
   for (const field of requirements) {
     const value = clean(item.accountFields?.[field.slot])
-    if (field.required && !value) return { valid: false, message: `Lengkapi ${field.label}.` }
-    if (value.length > field.maxLength) return { valid: false, message: `${field.label} maksimal ${field.maxLength} karakter.` }
+    if (field.required && !value) return { valid: false, message: formatCopy(copy.enter, { field: field.label }) }
+    if (value.length > field.maxLength) return { valid: false, message: formatCopy(copy.mustHaveNoMoreThanCharacters, { field: field.label, max: field.maxLength }) }
     if (field.type === 'Number' && value && !/^\d+$/.test(value)) {
-      return { valid: false, message: `${field.label} harus berupa angka.` }
+      return { valid: false, message: formatCopy(copy.mustContainOnlyNumbers, { field: field.label }) }
     }
   }
   return { valid: true, message: '' }
 }
 
-export function getCartItemProblem(item, requirementMap) {
-  if (!item?.variantId) return 'Varian produk tidak valid.'
-  if (!Number.isFinite(Number(item.unitPrice)) || Number(item.unitPrice) <= 0) return 'Harga produk tidak valid.'
+export function getCartItemProblem(item, requirementMap, copy = storefrontCopy.id) {
+  if (!item?.variantId) return copy.theProductOptionIsInvalid
+  if (!Number.isFinite(Number(item.unitPrice)) || Number(item.unitPrice) <= 0) return copy.theProductPriceIsInvalid
   const qty = Number(item.quantity)
   if (!Number.isInteger(qty) || qty < 1 || qty > 99 ||
       (item.maxQuantity != null && qty > Number(item.maxQuantity))) {
-    return 'Jumlah produk melebihi batas yang diizinkan.'
+    return copy.theQuantityExceedsTheAllowedLimit
   }
   const productRequirements = requirementMap?.[item.productSlug]
-  return checkCartDestination(item, productRequirements).message
+  return checkCartDestination(item, productRequirements, copy).message
 }

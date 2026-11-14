@@ -41,6 +41,7 @@ try {
     ['desktop', { width: 1440, height: 900 }], ['mobile', { width: 390, height: 844 }],
   ]) {
     const context = await browser.newContext({ viewport })
+    await context.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     await context.route('**/api/v1/homepage', (route) => json(route, homepage))
     await context.route('**/api/v1/articles/categories', (route) => json(route, [article.category]))
     await context.route('**/api/v1/articles/synthetic-qa-guide', (route) => json(route, article))
@@ -78,8 +79,8 @@ try {
     await page.goto(`${site}/merchandise/synthetic-qa-jersey`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'Synthetic QA Jersey' }).waitFor()
     await page.getByText('Rp119.000').first().waitFor()
-    await page.getByRole('button', { name: 'Simpan Draft Keranjang' }).click()
-    await page.getByText(/Draft Synthetic QA Jersey/).waitFor()
+    await page.getByRole('button', { name: 'Simpan Draf Keranjang' }).click()
+    await page.getByText(/Draf Synthetic QA Jersey/).waitFor()
     const physicalCart = await page.evaluate(() => JSON.parse(sessionStorage.getItem('zetruv-physical-cart-v1') || 'null'))
     assert.equal(physicalCart.variantId, 'variant-qa')
     assert.equal(physicalCart.price, 119000)

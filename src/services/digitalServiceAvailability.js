@@ -1,3 +1,5 @@
+import { storefrontCopy } from './storefrontCopy.js'
+
 /** Service readiness is not the same as an active SKU in the catalog.
  * Manual-login top-ups may only be sold when both the provider authorization
  * and secure fulfillment capability are explicitly confirmed. The current
@@ -23,21 +25,21 @@ export function viaLoginServiceStatus(product, item = {}, readiness) {
 
 export function checkoutActionHint({ items = [], blocked = [], phoneValid, phoneTouched,
   formTouched, accountProblem, catalogProblem, methodLoading, methodsReady,
-  selectedMethodValid, priceChanged }) {
+  selectedMethodValid, priceChanged }, copy = storefrontCopy.id) {
   // Persistent operational blockers are allowed before field interaction.
   if (blocked.length) return {
-    message: `${blocked[0].gameName || blocked[0].productName}: layanan sementara belum tersedia.`,
+    message: `${blocked[0].gameName || blocked[0].productName}: ${copy.thisServiceIsTemporarilyUnavailable.charAt(0).toLowerCase() + copy.thisServiceIsTemporarilyUnavailable.slice(1)}`,
     type: 'service', cartKey: blocked[0].cartKey, action: 'Hapus produk',
   }
   if (!methodLoading && !methodsReady) return {
-    message: 'Metode pembayaran sedang tidak tersedia. Coba kembali nanti.',
+    message: copy.checkoutPaymentMethodsUnavailable,
     type: 'payment',
   }
-  if (!items.length) return { message: 'Keranjang masih kosong.', type: 'cart' }
-  if (catalogProblem) return { message: 'Sebagian produk perlu diperiksa kembali.', type: 'cart' }
-  if (priceChanged) return { message: 'Harga berubah. Setujui harga terbaru pada daftar produk.', type: 'price' }
+  if (!items.length) return { message: copy.yourCartIsEmpty, type: 'cart' }
+  if (catalogProblem) return { message: copy.checkoutReviewProducts, type: 'cart' }
+  if (priceChanged) return { message: copy.checkoutAcceptLatestPrices, type: 'price' }
   if ((phoneTouched || formTouched) && !phoneValid) return {
-    message: 'Lengkapi nomor WhatsApp yang valid untuk melanjutkan.',
+    message: copy.checkoutPhoneRequired,
     type: 'phone', target: 'checkout-phone',
   }
   if (formTouched && accountProblem) return {
@@ -46,7 +48,7 @@ export function checkoutActionHint({ items = [], blocked = [], phoneValid, phone
     cartKey: accountProblem.cartKey,
   }
   if (!methodLoading && methodsReady && !selectedMethodValid && formTouched) return {
-    message: 'Pilih metode pembayaran yang tersedia.', type: 'payment',
+    message: copy.chooseAnAvailablePaymentMethod, type: 'payment',
   }
   return null
 }

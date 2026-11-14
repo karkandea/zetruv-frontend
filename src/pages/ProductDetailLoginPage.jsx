@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -9,7 +10,7 @@ import { selectLinkedVariant } from '../services/flashSaleFlow'
 import { addCartItem, awaitCartPersistence, supportsCartQuantity, cartItemLimit } from '../services/cartService' 
 import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
-import { viaLoginServiceStatus, VIA_LOGIN_UNAVAILABLE_LABEL } from '../services/digitalServiceAvailability'
+import { viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
 import '../styles/product-detail-login.css'
 import '../styles/product-detail-login-improvements.css'
@@ -71,6 +72,7 @@ function VariantImage({ src, fallback, alt = '' }) {
 }
 
 export default function ProductDetailLoginPage({ slug = 'genshin-impact', initialVariantId = '' }) {
+  const copy = useStorefrontCopy()
   const [product, setProduct] = useState(null)
   const [serviceReadiness, setServiceReadiness] = useState(null)
   const [selectedId, setSelectedId] = useState('')
@@ -97,16 +99,16 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       .then(async (data) => {
         if (!active) return
         if (data.kind !== 'TopUpLogin' || data.fulfillmentMethod !== 'MANUAL_LOGIN') {
-          throw new Error('Produk ini bukan Top Up via Login.')
+          throw new Error(copy.thisProductDoesNotSupportTopUp)
         }
         if (!Array.isArray(data.variants) || data.variants.length === 0) {
-          throw new Error('Belum ada paket tersedia di katalog.')
+          throw new Error(copy.noPackagesAreAvailableInTheCatalog)
         }
         setProduct(data)
         const selection = selectLinkedVariant(data.variants, initialVariantId)
         setSelectedId((selection.variant && selection.variant.isAvailable ? selection.variant : firstAvailableVariant(data))?.id || '')
-        if (selection.invalidSelection) setSelectionWarning('Varian dari Flash Sale tidak tersedia lagi. Pilih paket lain sebelum membeli.')
-        else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning('Flash Sale untuk paket ini sudah berakhir. Harga yang tampil adalah harga katalog terbaru.')
+        if (selection.invalidSelection) setSelectionWarning(copy.thisFlashSaleOptionIsNoLonger2)
+        else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning(copy.theFlashSaleForThisPackageHas)
         try {
           const readiness = await getManualLoginReadiness(data.id)
           if (!active) return
@@ -119,7 +121,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       })
       .catch((reason) => {
         if (!active) return
-        setError(reason?.message || 'Katalog belum bisa dimuat.')
+        setError(copy.weCouldnTLoadTheCatalog)
         setStatus('error')
       })
     return () => { active = false }
@@ -186,10 +188,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         maxQuantity: limit,
       })
       await awaitCartPersistence()
-      if(getCartSyncStatus().state==='error')throw Error('Cart server belum tersimpan.')
+      if(getCartSyncStatus().state==='error')throw Error(copy.yourCartCouldnTBeSaved)
       setNotice(true)
     } catch {
-      setError('Gagal menambahkan paket. Silakan coba lagi.')
+      setError(copy.weCouldnTAddThisPackagePlease)
     } finally {
       addGuard.current = false
       setIsAdding(false)
@@ -203,15 +205,15 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         {status === 'loading' && (
           <section className="login-product-loading" role="status">
             <LoaderCircle size={22} className="login-product-spin" aria-hidden="true" />
-            Memuat paket dari katalog...
+            {copy.loadingPackagesFromTheCatalog}
           </section>
         )}
         {status === 'error' && (
           <section className="login-product-loading" role="alert">
             <CircleAlert size={23} aria-hidden="true" />
-            <strong>Produk tidak dapat dimuat</strong>
+            <strong>{copy.productCouldnTBeLoaded2}</strong>
             <p>{error}</p>
-            <button type="button" onClick={() => setReloadCount((n) => n + 1)}>Coba Lagi</button>
+            <button type="button" onClick={() => setReloadCount((n) => n + 1)}>{copy.tryAgain2}</button>
           </section>
         )}
         {status === 'ready' && product && (
@@ -230,18 +232,18 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                   <VariantImage src={cover.cover} fallback={genericGameImage} alt={product.game?.name || product.name} />
                 </div>
                 <div className="login-product-hero__copy">
-                  <span className="login-product-service-badge">Top Up via Login</span>
+                  <span className="login-product-service-badge">{copy.topUpByLogin2}</span>
                   <div className="login-product-title-block">
                     <h1>{product.game?.name || product.name}</h1>
                     <div className="login-product-rating-line">
-                      <strong>{product.game?.publisher || 'Top Up Game'}</strong>
+                      <strong>{product.game?.publisher || copy.gameTopUp}</strong>
                       {rating > 0 && reviewCount > 0
                         ? <span className="login-product-rating-group">
                             <Star size={15} fill="#fed218" color="#fed218" aria-hidden="true" />
                             <b>{rating.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</b>
-                            <em>({reviewCount.toLocaleString('id-ID')} ulasan)</em>
+                            <em>({reviewCount.toLocaleString('id-ID')} {copy.reviews2}</em>
                           </span>
-                        : <span className="login-product-unrated">Belum ada ulasan</span>}
+                        : <span className="login-product-unrated">{copy.noReviewsYet}</span>}
                     </div>
                   </div>
                   <ProductBenefits className="login-product-benefits" />
@@ -252,8 +254,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
             <div className="login-product-body">
               <div className="login-product-container login-product-layout">
                 <section className="login-package-panel" aria-labelledby="login-packages-heading">
-                  <h2 id="login-packages-heading">Pilih Paket</h2>
-                  <p className="login-package-description">Pilih paket untuk akun game kamu.</p>
+                  <h2 id="login-packages-heading">{copy.chooseAPackage}</h2>
+                  <p className="login-package-description">{copy.chooseAPackageForYourGameAccount}</p>
                   {selectionWarning && <p className="login-variant-warning" role="status"><CircleAlert size={16} aria-hidden="true" />{selectionWarning}</p>}
                   <div className="login-package-grid">
                     {product.variants.map((variant, index) => {
@@ -272,7 +274,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                           <span className="login-package-card__copy">
                             <strong>{variant.name}</strong>
                             <small>{rupiah(variant.effectivePrice ?? variant.price)}{variant.isOnSale && Number(variant.price) > Number(variant.effectivePrice) && <del className="login-variant-old-price">{rupiah(variant.price)}</del>}</small>
-                            {!purchasable && <em>Tidak tersedia</em>}
+                            {!purchasable && <em>{copy.unavailable2}</em>}
                           </span>
                         </button>
                       )
@@ -281,17 +283,17 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                   <div className={`login-product-info-banner${!serviceStatus.available ? ' login-product-info-banner--unavailable' : ''}`} role={!serviceStatus.available ? 'status' : undefined}>
                     {!serviceStatus.available ? <CircleAlert size={17} aria-hidden="true" /> : <Info size={17} aria-hidden="true" />}
                     <div>
-                      {!serviceStatus.available && <strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>}
+                      {!serviceStatus.available && <strong>{copy.serviceTemporarilyUnavailable}</strong>}
                       <p>{serviceStatus.available
-                        ? 'Data akun game akan diminta saat checkout untuk memproses pesanan.'
-                        : serviceStatus.reason}</p>
-                      {!serviceStatus.available && <a href="/search">Cari layanan lain <ArrowRight size={13} aria-hidden="true" /></a>}
+                        ? copy.weLlAskForYourGameAccount
+                        : copy.topUpByLoginIsUnavailableFor2}</p>
+                      {!serviceStatus.available && <a href="/search">{copy.browseOtherServices} <ArrowRight size={13} aria-hidden="true" /></a>}
                     </div>
                   </div>
                 </section>
 
-                <aside className="login-product-summary" aria-label="Ringkasan paket">
-                  <h2>Ringkasan</h2>
+                <aside className="login-product-summary" aria-label={copy.packageSummary}>
+                  <h2>{copy.summary}</h2>
                   {selected ? (
                     <>
                       <div className="login-selected-package">
@@ -302,52 +304,52 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       </div>
                       {quantityCapable && (
                         <div className="login-quantity-row">
-                          <span>Jumlah</span>
-                          <div className="login-quantity-stepper" role="group" aria-label="Jumlah paket">
-                            <button type="button" aria-label="Kurangi jumlah" disabled={quantity <= 1}
+                          <span>{copy.quantity}</span>
+                          <div className="login-quantity-stepper" role="group" aria-label={copy.packageQuantity}>
+                            <button type="button" aria-label={copy.decreaseQuantity} disabled={quantity <= 1}
                               onClick={() => { setQuantity((n) => Math.max(1, n - 1)); setNotice(false) }}>
                               <Minus size={16} aria-hidden="true" />
                             </button>
-                            <output aria-label="Jumlah">{quantity}</output>
-                            <button type="button" aria-label="Tambah jumlah" disabled={quantity >= limit}
+                            <output aria-label={copy.quantity}>{quantity}</output>
+                            <button type="button" aria-label={copy.increaseQuantity} disabled={quantity >= limit}
                               onClick={() => { setQuantity((n) => Math.min(limit, n + 1)); setNotice(false) }}>
                               <Plus size={16} aria-hidden="true" />
                             </button>
                           </div>
                         </div>
                       )}
-                      <div className="login-summary-row"><span>Subtotal</span><strong>{rupiah(pricing.subtotal)}</strong></div>
-                      <div className="login-summary-row"><span>Biaya layanan</span><strong>{rupiah(pricing.serviceFee)}</strong></div>
+                      <div className="login-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
+                      <div className="login-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(pricing.serviceFee)}</strong></div>
                       {pricing.discount > 0 && (
-                        <div className="login-summary-row login-summary-row--discount"><span>Diskon produk</span><strong>−{rupiah(pricing.discount)}</strong></div>
+                        <div className="login-summary-row login-summary-row--discount"><span>{copy.productDiscount}</span><strong>−{rupiah(pricing.discount)}</strong></div>
                       )}
                       <div className="login-summary-divider" />
-                      <div className="login-summary-total"><span>Total pembayaran</span><strong>{rupiah(pricing.total)}</strong></div>
+                      <div className="login-summary-total"><span>{copy.paymentTotal}</span><strong>{rupiah(pricing.total)}</strong></div>
                     </>
-                  ) : <p className="login-product-summary__hint">Belum ada paket yang tersedia untuk dipilih.</p>}
+                  ) : <p className="login-product-summary__hint">{copy.thereAreNoPackagesToChooseFrom}</p>}
                   <div className="login-product-actions">
                     <button type="button" className="login-product-add" disabled={!canAdd}
                       onClick={addToCart}>
                       {isAdding ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
                         : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
-                      <span>{isAdding ? 'Menambahkan...' : 'Tambah ke Keranjang'}</span>
+                      <span>{isAdding ? 'Menambahkan...' : copy.addToCart}</span>
                     </button>
                     {!serviceStatus.available && <p className="login-product-summary__unavailable" role="status">
                       <CircleAlert size={17} aria-hidden="true" />
-                      <span><strong>{VIA_LOGIN_UNAVAILABLE_LABEL}</strong>
-                        Pembelian paket ini belum dibuka. <a href="/search">Lihat produk lain</a>.</span>
+                      <span><strong>{copy.serviceTemporarilyUnavailable}</strong>
+                        {copy.thisPackageIsnTAvailableForPurchase} <a href="/search">{copy.browseOtherProducts}</a>.</span>
                     </p>}
-                    {!selected && serviceStatus.available && <p className="login-product-summary__hint">Pilih paket yang tersedia terlebih dahulu.</p>}
-                    {selected && !available && <p className="login-product-summary__hint">Paket sedang tidak tersedia.</p>}
+                    {!selected && serviceStatus.available && <p className="login-product-summary__hint">{copy.chooseAnAvailablePackageFirst}</p>}
+                    {selected && !available && <p className="login-product-summary__hint">{copy.thisPackageIsCurrentlyUnavailable}</p>}
                   </div>
 
                   {notice && (
                     <div className="login-product-feedback" role="status" aria-live="polite">
-                      <div><CheckCircle2 size={19} aria-hidden="true" /><strong>Berhasil ditambahkan!</strong></div>
-                      <p>{selected?.name} sudah masuk keranjang.</p>
-                      <nav aria-label="Langkah selanjutnya">
-                        <a href="/search">Lanjut Belanja</a>
-                        <a href="/cart">Lihat Keranjang <ArrowRight size={15} aria-hidden="true" /></a>
+                      <div><CheckCircle2 size={19} aria-hidden="true" /><strong>{copy.addedToCart}</strong></div>
+                      <p>{selected?.name} {copy.wasAddedToYourCart}</p>
+                      <nav aria-label={copy.nextSteps}>
+                        <a href="/search">{copy.continueShopping}</a>
+                        <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
                       </nav>
                     </div>
                   )}

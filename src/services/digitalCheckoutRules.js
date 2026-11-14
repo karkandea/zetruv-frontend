@@ -1,3 +1,5 @@
+import { formatCopy, storefrontCopy } from './storefrontCopy.js'
+
 const forbiddenCredential = /(^|[_\s-])(otp|2fa|mfa|recovery|verification|security.code|backup.code)([_\s-]|$)/i
 const trim = (v) => String(v ?? '').trim()
 
@@ -30,27 +32,27 @@ export function checkoutFields(product, scope) {
     }))
 }
 
-export function validateCheckoutField(field, raw) {
-  if (field.prohibited) return 'Kode OTP, 2FA, dan pemulihan tidak boleh diminta.'
+export function validateCheckoutField(field, raw, copy = storefrontCopy.id) {
+  if (field.prohibited) return copy.prohibitedCredential
   const value = trim(raw)
-  if (!value) return field.required ? `Lengkapi ${field.label}.` : ''
-  if (value.length > field.maxLength) return `${field.label} maksimal ${field.maxLength} karakter.`
-  if (field.type === 'Number' && !/^\d+$/.test(value)) return `${field.label} harus berupa angka.`
+  if (!value) return field.required ? formatCopy(copy.enter, { field: field.label }) : ''
+  if (value.length > field.maxLength) return formatCopy(copy.mustHaveNoMoreThanCharacters, { field: field.label, max: field.maxLength })
+  if (field.type === 'Number' && !/^\d+$/.test(value)) return formatCopy(copy.mustContainOnlyNumbers, { field: field.label })
   if (field.type === 'Select' && field.options.length && !field.options.includes(value)) {
-    return `Pilih ${field.label} dari daftar tersedia.`
+    return formatCopy(copy.chooseFieldOption, { field: field.label })
   }
   // A 'Text' field may explicitly accept username OR email; never enforce
   // email syntax on it without a distinct backend Email schema type.
   if (field.type === 'Email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-    return 'Format email tidak valid.'
+    return copy.invalidEmail
   }
   return ''
 }
 
-export function validateCheckoutAccount(fields, values) {
-  if (!fields?.length) return 'Definisi field akun belum tersedia dari katalog.'
+export function validateCheckoutAccount(fields, values, copy = storefrontCopy.id) {
+  if (!fields?.length) return copy.accountSchemaUnavailable
   for (const field of fields) {
-    const message = validateCheckoutField(field, values?.[field.slot])
+    const message = validateCheckoutField(field, values?.[field.slot], copy)
     if (message) return message
   }
   return ''
@@ -66,21 +68,21 @@ export function matchingAccountSource(items, item, shares) {
   return source.cartKey
 }
 
-export function currentCatalogDifferences(items, catalogBySlug) {
+export function currentCatalogDifferences(items, catalogBySlug, copy = storefrontCopy.id) {
   const changes = []
   const problems = []
   for (const item of items) {
     const product = catalogBySlug?.[item.productSlug]
-    if (!product) { problems.push({key:item.cartKey,message:'Produk belum terverifikasi dari katalog.'}); continue }
+    if (!product) { problems.push({key:item.cartKey,message:copy.unverifiedProduct}); continue }
     const variant = product.variants?.find(v => v.id === item.variantId)
     if (!product.isAvailable || !variant || !variant.isAvailable ||
         (variant.stockQuantity != null && Number(variant.stockQuantity) < Number(item.quantity || 1))) {
-      problems.push({key:item.cartKey,message:`${item.variantName} sedang tidak tersedia atau stok tidak cukup.`})
+      problems.push({key:item.cartKey,message:formatCopy(copy.variantStockUnavailable, { variant: item.variantName })})
       continue
     }
     const price = Number(variant.effectivePrice ?? variant.price)
     if (!Number.isFinite(price) || price <= 0) {
-      problems.push({key:item.cartKey,message:`Harga ${item.variantName} belum valid.`})
+      problems.push({key:item.cartKey,message:formatCopy(copy.invalidVariantPrice, { variant: item.variantName })})
       continue
     }
     if (price !== Number(item.unitPrice)) {
@@ -92,16 +94,17 @@ export function currentCatalogDifferences(items, catalogBySlug) {
 }
 
 /** Describe repricing before the customer explicitly accepts a new quote. */
-export function priceChangeExplanation(change) {
-  const name = String(change.variantName || 'produk')
+export function priceChangeExplanation(change, copy = storefrontCopy.id) {
+  const name = String(change.variantName || copy.product.toLowerCase())
   const oldPrice = Number(change.oldPrice)
   const newPrice = Number(change.newPrice)
   const regularPrice = Number(change.regularPrice)
   const money = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
+  const prices = { name, oldPrice: money(oldPrice), newPrice: money(newPrice) }
   if (Number.isFinite(regularPrice) && oldPrice < regularPrice && newPrice === regularPrice && newPrice > oldPrice) {
-    return `Harga promo ${name} telah berakhir. Harga berubah dari ${money(oldPrice)} menjadi ${money(newPrice)}.`
+    return formatCopy(copy.promoPriceChanged, prices)
   }
-  return `Harga ${name} berubah dari ${money(oldPrice)} menjadi ${money(newPrice)}.`
+  return formatCopy(copy.priceChanged, prices)
 }
 
 export function paymentSelectionAllowed(readiness, code) {

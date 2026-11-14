@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -94,18 +95,19 @@ function dummyAccountFor(gameSlug, accountSlug) {
 }
 
 const catalogSidebarLinks = [
-  { label: 'Top Up Games Via ID', href: '/search', icon: searchAssets.categoryPlayerId },
-  { label: 'Top Up Games Via Login', href: '/search?kind=TopUpLogin', icon: searchAssets.categoryLogin },
-  { label: 'Voucher Game', href: '/search?kind=GameVoucher', icon: searchAssets.categoryItems },
-  { label: 'Joki Game', href: '/search?kind=Joki', icon: searchAssets.categoryJoki || searchAssets.categoryItems },
-  { label: 'Game Accounts', href: '/game-accounts', icon: searchAssets.categoryAccounts },
-  { label: 'Merchandise', href: '/merchandise', icon: searchAssets.categoryMerchandise },
+  { label: 'gameTopUpById', href: '/search', icon: searchAssets.categoryPlayerId },
+  { label: 'gameTopUpByLogin', href: '/search?kind=TopUpLogin', icon: searchAssets.categoryLogin },
+  { label: 'gameVouchers', href: '/search?kind=GameVoucher', icon: searchAssets.categoryItems },
+  { label: 'gameBoosting', href: '/search?kind=Joki', icon: searchAssets.categoryJoki || searchAssets.categoryItems },
+  { label: 'gameAccounts', href: '/game-accounts', icon: searchAssets.categoryAccounts },
+  { label: 'merchandise', href: '/merchandise', icon: searchAssets.categoryMerchandise },
 ]
 
 function GameAccountSidebar() {
+  const copy = useStorefrontCopy()
   return (
-    <aside className="ga-catalog-sidebar" aria-label="Kategori produk">
-      <h2>Categories</h2>
+    <aside className="ga-catalog-sidebar" aria-label={copy.productCategories2}>
+      <h2>{copy.categories2}</h2>
       <nav>
         {catalogSidebarLinks.map((link) => <a
           className={link.href === '/game-accounts' ? 'is-active' : ''}
@@ -114,11 +116,11 @@ function GameAccountSidebar() {
           key={link.href}
         >
           <span className="ga-catalog-sidebar__icon"><img src={link.icon} alt="" /></span>
-          <span>{link.label}</span>
+          <span>{copy[link.label]}</span>
           {link.href === '/game-accounts' && <i aria-hidden="true" />}
         </a>)}
       </nav>
-      <a className="ga-catalog-sidebar__help" href="/order-status"><strong>Need Help?</strong><span>Check your order or contact support.</span></a>
+      <a className="ga-catalog-sidebar__help" href="/order-status"><strong>{copy.needHelp}</strong><span>{copy.checkYourOrderOrContactSupport}</span></a>
     </aside>
   )
 }
@@ -128,12 +130,14 @@ function StateMessage({ children }) {
 }
 
 function GameArtwork({ image, name, className = '' }) {
+  const copy = useStorefrontCopy()
   return image
     ? <img className={className} src={image} alt={name} loading="lazy" decoding="async" />
-    : <div className={`ga-live-placeholder ${className}`} aria-label={name}>Akun Game</div>
+    : <div className={`ga-live-placeholder ${className}`} aria-label={name}>{copy.gameAccounts}</div>
 }
 
 export function GameAccountsPage() {
+  const copy = useStorefrontCopy()
   const [games, setGames] = useState([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
@@ -160,25 +164,26 @@ export function GameAccountsPage() {
   )
   return <div className="ga-shell"><Navbar /><main className="ga-picker ga-container">
     <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
-    <p className="ga-breadcrumb"><a href="/">Beranda</a><span>/</span><span>Akun Game</span></p>
-    <h1>Akun Game</h1><p className="ga-lead">Pilih game untuk melihat listing akun yang ada.</p>
+    <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><span>{copy.gameAccounts}</span></p>
+    <h1>{copy.gameAccounts}</h1><p className="ga-lead">{copy.chooseAGameToSeeAvailableAccount}</p>
     <form className="ga-search-row" onSubmit={(event) => event.preventDefault()}>
-      <label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari game..." aria-label="Cari game" /></label>
-      <button type="submit">Cari</button>
+      <label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchGames} aria-label={copy.searchGames2} /></label>
+      <button type="submit">{copy.search3}</button>
     </form>
-    <h2>Daftar Game</h2>
-    {loading ? <StateMessage>Memuat game…</StateMessage> : error ? <StateMessage>{error}</StateMessage>
-      : visibleGames.length === 0 ? <StateMessage>Game tidak ditemukan.</StateMessage>
+    <h2>{copy.games}</h2>
+    {loading ? <StateMessage>{copy.loadingGames}</StateMessage> : error ? <StateMessage>{error}</StateMessage>
+      : visibleGames.length === 0 ? <StateMessage>{copy.noGamesFound}</StateMessage>
       : <div className="ga-game-grid">{visibleGames.map((game) =>
         <a className="ga-game-card ga-live-game-link" key={game.id} href={`/game-accounts/${encodeURIComponent(game.slug)}`}>
           <GameArtwork image={game.imageUrl} name={game.name} />
-          <span><strong>{game.name}</strong><small>{game.publisher || 'Game Account'}</small></span>
+          <span><strong>{game.name}</strong><small>{game.publisher || copy.gameAccount}</small></span>
           <ChevronRight size={20} />
         </a>)}</div>}
   </div></div></main></div>
 }
 
 export function GameAccountListingPage({ gameSlug }) {
+  const copy = useStorefrontCopy()
   const [game, setGame] = useState(null)
   const [products, setProducts] = useState([])
   const [query, setQuery] = useState('')
@@ -247,53 +252,54 @@ export function GameAccountListingPage({ gameSlug }) {
   }
   return <div className="ga-shell"><Navbar /><main className="ga-list-page ga-container">
     <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
-    <p className="ga-breadcrumb"><a href="/">Beranda</a><span>/</span><a href="/game-accounts">Akun Game</a><span>/</span><span>{game?.name || gameSlug}</span></p>
+    <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><a href="/game-accounts">{copy.gameAccounts}</a><span>/</span><span>{game?.name || gameSlug}</span></p>
     <header className="ga-list-head">
       <GameArtwork image={game?.imageUrl} name={game?.name || gameSlug} />
-      <div><h1>Akun {game?.name || gameSlug}</h1><p>Informasi akun berasal dari listing yang disimpan admin.</p></div>
+      <div><h1>{copy.account} {game?.name || gameSlug}</h1><p>{copy.accountInformationComesFromTheListing}</p></div>
       <div className="ga-stock-tabs">
-        {[[ 'all', 'Semua' ], [ 'available', 'Tersedia' ], [ 'unavailable', 'Tidak tersedia' ]].map(([value, label]) =>
+        {[[ 'all', copy.all ], [ 'available', copy.available2 ], [ 'unavailable', copy.unavailable2 ]].map(([value, label]) =>
           <button key={value} type="button" className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}
       </div>
     </header>
     <form className="ga-list-tools" onSubmit={search}>
-      <label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama akun..." aria-label="Cari akun" /></label>
-      <button type="submit">Cari</button>
-      <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Urutkan halaman ini">
-        <option value="default">Urutan katalog</option>
-        <option value="low">Harga terendah (halaman ini)</option>
-        <option value="high">Harga tertinggi (halaman ini)</option>
+      <label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchAccountNames} aria-label={copy.searchAccounts} /></label>
+      <button type="submit">{copy.search3}</button>
+      <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortCurrentPage}>
+        <option value="default">{copy.catalogOrder}</option>
+        <option value="low">{copy.lowestPriceThisPage}</option>
+        <option value="high">{copy.highestPriceThisPage}</option>
       </select>
     </form>
-    {loading ? <StateMessage>Memuat listing…</StateMessage> : error ? <StateMessage>{error}</StateMessage>
-      : visible.length === 0 ? <StateMessage>Belum ada akun untuk filter ini.</StateMessage>
+    {loading ? <StateMessage>{copy.loadingListings}</StateMessage> : error ? <StateMessage>{error}</StateMessage>
+      : visible.length === 0 ? <StateMessage>{copy.noAccountsMatchTheseFilters}</StateMessage>
       : <div className="ga-account-grid ga-live-grid">{visible.map((item) => {
         const attributes = getAccountAttributes(item.accountDetails, { cardOnly: true, limit: 3 })
         return <article className={`ga-account-card ga-live-card${item.isAvailable ? '' : ' sold'}`} key={item.id}>
           <div className="ga-account-art">
             <GameArtwork image={item.thumbnailUrl} name={item.name} />
-            <span className={item.isAvailable ? 'available' : 'sold-out'}>{item.isAvailable ? 'TERSEDIA' : 'TIDAK TERSEDIA'}</span>
+            <span className={item.isAvailable ? 'available' : 'sold-out'}>{item.isAvailable ? copy.available : copy.unavailable}</span>
           </div>
           <div className="ga-account-copy">
-            <h2>{item.name}</h2><p>{item.gameName || game?.name || 'Akun game'}</p>
+            <h2>{item.name}</h2><p>{item.gameName || game?.name || copy.gameAccount2}</p>
             <div className="ga-tags ga-live-tags">{attributes.map((field) =>
               <span key={field.key} title={`${field.label}: ${field.value}`}>{field.label}: {field.value}</span>)}</div>
             <div className="ga-account-price-row">
-              <strong>{accountPrice(item.minPrice) || 'Harga belum tersedia'}</strong>
-              <a href={accountProductHref(item)}>Lihat Detail</a>
+              <strong>{accountPrice(item.minPrice) || copy.priceUnavailable}</strong>
+              <a href={accountProductHref(item)}>{copy.viewDetails}</a>
             </div>
           </div>
         </article>
       })}</div>}
     <div className="ga-live-pagination">
-      <span>Menampilkan halaman {page} dari {totalPages} · {totalItems} listing</span>
-      <button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Sebelumnya</button>
-      <button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Berikutnya</button>
+      <span>{copy.showingPage} {page} {copy.of2} {totalPages} · {totalItems} {copy.listings}</span>
+      <button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>{copy.previous}</button>
+      <button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>{copy.next}</button>
     </div>
   </div></div></main></div>
 }
 
 export function GameAccountDetailPage({ gameSlug, accountSlug }) {
+  const copy = useStorefrontCopy()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -303,7 +309,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
     getCatalogProduct(accountSlug).then((data) => {
       if (!active) return
       if (data.kind !== 'GameAccount' || (data.game?.slug && gameSlug !== 'account' && data.game.slug !== gameSlug))
-        throw new Error('Listing akun tidak ditemukan.')
+        throw new Error(copy.accountListingNotFound)
       setProduct(data)
     }).catch((err) => {
       if (!active) return
@@ -312,7 +318,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
         setProduct(fallback)
         setError('')
       } else {
-        setError(err.message || 'Detail akun tidak dapat dimuat.')
+        setError(copy.weCouldnTLoadTheAccountDetails)
       }
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
@@ -339,14 +345,14 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
       game: {
         slug: product.game?.slug || gameSlug,
         name: product.game?.name || product.gameName || gameSlug,
-        publisher: product.game?.publisher || 'Game Account',
+        publisher: product.game?.publisher || copy.gameAccount,
       },
     })
     window.location.href = '/cart?flow=account'
   }
 
   return <div className="ga-shell"><Navbar />
-    {loading || error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{loading ? 'Memuat detail akun…' : error || 'Listing tidak ditemukan.'}</StateMessage></main>
+    {loading || error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{loading ? copy.loadingAccountDetails : error || copy.listingNotFound}</StateMessage></main>
       : <main className="ga-detail-page">
         <section className="ga-detail-hero ga-live-hero">
           {product.images?.[0]?.url && <img className="ga-detail-hero-bg" src={product.images[0].url} alt="" />}
@@ -354,38 +360,38 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
           <div className="ga-detail-hero-content">
             <div className="ga-hero-thumb"><GameArtwork image={product.thumbnailUrl || product.game?.imageUrl} name={product.name} /></div>
             <div className="ga-detail-hero-copy"><h1>{product.name}</h1>
-              <div className="ga-hero-rating"><span>{product.game?.name || 'Game Account'}</span>
+              <div className="ga-hero-rating"><span>{product.game?.name || copy.gameAccount}</span>
                 {product.rating != null && product.reviewCount > 0 &&
-                  <small>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} ulasan</small>}
+                  <small>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} {copy.reviews}</small>}
               </div>
-              <div className="ga-hero-badges"><span>{available ? 'Akun tersedia' : 'Akun tidak tersedia'}</span>
-                {product.soldQuantity > 0 && <span>{product.soldQuantity} terjual</span>}</div>
+              <div className="ga-hero-badges"><span>{available ? copy.accountAvailable : copy.accountUnavailable}</span>
+                {product.soldQuantity > 0 && <span>{product.soldQuantity} {copy.sold}</span>}</div>
             </div>
           </div>
         </section>
         <div className="ga-detail-layout">
           <section className="ga-detail-card ga-live-detail">
-            <h2>Detail Akun</h2>
+            <h2>{copy.accountDetails2}</h2>
             {product.description && <p className="ga-live-description">{product.description}</p>}
             {attributes.length > 0 ? <dl className="ga-detail-specs ga-live-specs">
               {attributes.map((field) => <div key={field.key}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}
-            </dl> : <StateMessage>Detail akun belum diisi oleh admin.</StateMessage>}
-            {product.images?.length > 0 && <div className="ga-live-gallery" aria-label="Foto listing">
+            </dl> : <StateMessage>{copy.accountDetailsAreUnavailable2}</StateMessage>}
+            {product.images?.length > 0 && <div className="ga-live-gallery" aria-label={copy.listingPhoto}>
               {product.images.map((image) => <img key={image.id} src={image.url} alt={image.altText || product.name} loading="lazy" />)}
             </div>}
-            <div className="ga-live-reviews"><h2>Ulasan Produk</h2>
+            <div className="ga-live-reviews"><h2>{copy.productReviews}</h2>
               {product.rating != null && product.reviewCount > 0
-                ? <p>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} ulasan terverifikasi</p>
-                : <p>Belum ada ulasan terverifikasi.</p>}</div>
+                ? <p>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} {copy.verifiedReviews}</p>
+                : <p>{copy.thereAreNoVerifiedReviewsYet}</p>}</div>
           </section>
-          <aside className="ga-purchase-card ga-live-purchase"><h2>Produk</h2>
+          <aside className="ga-purchase-card ga-live-purchase"><h2>{copy.product}</h2>
             <div className="ga-selected-account"><strong>{product.name}</strong>
-              <span>{accountPrice(price) || 'Harga belum tersedia'}</span>
-              <small>{available ? 'Tersedia · 1 akun unik' : 'Tidak tersedia'}</small></div>
-            <p className="ga-live-note">Detail dan harga ditampilkan dari katalog. Total akhir serta ketersediaan dikonfirmasi saat checkout.</p>
-            <button type="button" className="ga-primary-cta" disabled={!available} onClick={addAccountToCart}>{available ? "Beli Sekarang" : "Akun tidak tersedia"}</button>
+              <span>{accountPrice(price) || copy.priceUnavailable}</span>
+              <small>{available ? copy.available1UniqueAccount : copy.unavailable2}</small></div>
+            <p className="ga-live-note">{copy.detailsAndPricingComeFromTheCatalog}</p>
+            <button type="button" className="ga-primary-cta" disabled={!available} onClick={addAccountToCart}>{available ? copy.buyNow : copy.accountUnavailable}</button>
             <a className="ga-live-back" href={product.game?.slug
-              ? `/game-accounts/${encodeURIComponent(product.game.slug)}` : '/game-accounts'}>Kembali ke daftar akun</a>
+              ? `/game-accounts/${encodeURIComponent(product.game.slug)}` : '/game-accounts'}>{copy.backToAccountListings}</a>
           </aside>
         </div>
       </main>}

@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import SupportChat from '../components/SupportChat'
@@ -68,24 +69,25 @@ function RankingCard({ title, items, className = '' }) {
 }
 
 export default function LeaderboardPage() {
+  const copy = useStorefrontCopy()
   return (
     <div className="leaderboard-shell">
       <Navbar variant="leaderboard" />
 
       <main className="leaderboard-main">
-        <section className="leaderboard-podium" aria-label="Top three Zetruv users">
+        <section className="leaderboard-podium" aria-label={copy.topThreeZetruvUsers}>
           {podium.map((entry) => <PodiumCard entry={entry} key={entry.place} />)}
         </section>
 
         <section className="leaderboard-board">
           <div className="leaderboard-board__intro">
-            <h1>Top 10 Most Purchased Items on Zetruv</h1>
-            <p>Here is a list of the 10 most purchased items by our customers. This data is taken from our system and is regularly updated.</p>
+            <h1>{copy.top10MostPurchasedItemsOnZetruv}</h1>
+            <p>{copy.the10MostPurchasedItemsOnZetruv}</p>
           </div>
 
           <div className="leaderboard-board__lists">
-            <RankingCard title="Top 10 User This Week" items={weeklyUsers} className="leaderboard-ranking-card--weekly" />
-            <RankingCard title="Top 10 User This Month" items={monthlyUsers} className="leaderboard-ranking-card--monthly" />
+            <RankingCard title={copy.top10UsersThisWeek} items={weeklyUsers} className="leaderboard-ranking-card--weekly" />
+            <RankingCard title={copy.top10UsersThisMonth} items={monthlyUsers} className="leaderboard-ranking-card--monthly" />
           </div>
         </section>
       </main>

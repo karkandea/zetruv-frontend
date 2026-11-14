@@ -1,3 +1,4 @@
+import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, Bookmark, CircleCheck, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -8,10 +9,10 @@ import { readFavorites, setFavorite, subscribeFavorites } from '../services/favo
 import '../styles/account.css'
 
 const navItems = [
-  { key: 'account', label: 'Akun Saya', href: '/account', icon: UserRound },
-  { key: 'orders', label: 'Pesanan Saya', href: '/account/orders', icon: ReceiptText },
-  { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: MapPin },
-  { key: 'favorites', label: 'Bookmark', href: '/account/favorites', icon: Bookmark },
+  { key: 'account', label: 'myAccount', href: '/account', icon: UserRound },
+  { key: 'orders', label: 'myOrders', href: '/account/orders', icon: ReceiptText },
+  { key: 'addresses', label: 'addresses', href: '/account/addresses', icon: MapPin },
+  { key: 'favorites', label: 'bookmark', href: '/account/favorites', icon: Bookmark },
 ]
 
 function useCustomerSession() {
@@ -38,8 +39,9 @@ function AccountShell({ active, customer: profileCustomer, children }) {
 }
 
 function AccountSidebar({ active, customer }) {
-  const name = customer?.name || 'Pengunjung'
-  const email = customer?.email || 'Belum masuk'
+  const copy = useStorefrontCopy()
+  const name = customer?.name || copy.visitor
+  const email = customer?.email || copy.signedOut
   return (
     <aside className="account-sidebar">
       <div className="account-sidebar__profile">
@@ -52,11 +54,11 @@ function AccountSidebar({ active, customer }) {
         </div>
       </div>
       <div className="account-sidebar__rule" />
-      <nav className="account-sidebar__nav" aria-label="Navigasi akun">
+      <nav className="account-sidebar__nav" aria-label={copy.accountNavigation}>
         {navItems.map(({ key, label, href, icon: Icon }) => (
           <a aria-current={key === active ? 'page' : undefined} href={href} key={key}>
             <Icon size={19} aria-hidden="true" />
-            <span>{label}</span>
+            <span>{copy[label]}</span>
           </a>
         ))}
       </nav>
@@ -83,6 +85,7 @@ function InfoRow({ label, value }) {
 }
 
 export function AccountOverviewPage() {
+  const copy = useStorefrontCopy()
   const accessToken = useCustomerSession()?.accessToken
   const [profile, setProfile] = useState(null)
   const state = !accessToken ? 'guest' : profile?.token === accessToken ? profile.state : 'loading'
@@ -106,12 +109,12 @@ export function AccountOverviewPage() {
 
   return (
     <AccountShell active="account" customer={customer}>
-      <PageHeader id="account-settings" title="Akun Saya" description="Informasi akun yang digunakan untuk transaksi Zetruv." />
+      <PageHeader id="account-settings" title={copy.myAccount} description={copy.accountDetailsUsedForYourZetruvPurchases} />
       {state !== 'ready' ? (
         <div className="orders-figma-empty" role="status">
-          <strong>{state === 'loading' ? 'Memuat profil…' : state === 'guest' ? 'Silakan masuk ke akun' : state === 'expired' ? 'Sesi login sudah berakhir' : 'Profil belum bisa dimuat'}</strong>
-          <p>{state === 'error' ? 'Periksa koneksi dan coba muat ulang halaman.' : 'Informasi profil hanya ditampilkan setelah diverifikasi oleh backend.'}</p>
-          <a className="account-btn account-btn--primary" href={state === 'error' ? '/account' : '/'}>{state === 'error' ? 'Coba Lagi' : 'Ke Beranda'}</a>
+          <strong>{state === 'loading' ? copy.loadingProfile : state === 'guest' ? copy.logInToYourAccount : state === 'expired' ? copy.yourSessionHasEnded : copy.profileCouldnTBeLoaded}</strong>
+          <p>{state === 'error' ? copy.checkYourConnectionAndReloadThePage : copy.logInWithAVerifiedAccountTo}</p>
+          <a className="account-btn account-btn--primary" href={state === 'error' ? '/account' : '/'}>{state === 'error' ? copy.tryAgain2 : copy.backToHome2}</a>
         </div>
       ) : (
         <>
@@ -119,19 +122,19 @@ export function AccountOverviewPage() {
             <div className="profile-overview__identity">
               <span className="account-avatar account-avatar--large">{String(customer.name || 'A').slice(0,1).toUpperCase()}</span>
               <div>
-                <h2 id="account-profile-title">{customer.name || 'Pengguna Zetruv'}</h2>
+                <h2 id="account-profile-title">{customer.name || copy.zetruvCustomer}</h2>
                 <span className="account-profile-status" data-verified={Boolean(customer.emailVerified)}>
                   {customer.emailVerified && <CircleCheck size={15} aria-hidden="true" />}
-                  {customer.emailVerified ? 'Email terverifikasi' : 'Email belum terverifikasi'}
+                  {customer.emailVerified ? copy.emailVerified : copy.emailUnverified}
                 </span>
               </div>
             </div>
             <dl className="account-info-grid">
-              <InfoRow label="Nama lengkap" value={customer.name || '—'} />
-              <InfoRow label="Email" value={customer.email || '—'} />
-              <InfoRow label="Nomor HP" value="Belum tersedia" />
+              <InfoRow label={copy.fullName} value={customer.name || '—'} />
+              <InfoRow label={copy.email} value={customer.email || '—'} />
+              <InfoRow label={copy.phoneNumber2} value={copy.notAvailableYet} />
             </dl>
-            <div className="account-note"><Info size={18} aria-hidden="true" /><span>Pengubahan profil dan penambahan nomor HP belum tersedia.</span></div>
+            <div className="account-note"><Info size={18} aria-hidden="true" /><span>{copy.profileOrPhoneEditingUnavailable}</span></div>
           </section>
         </>
       )}
@@ -140,49 +143,54 @@ export function AccountOverviewPage() {
 }
 
 export function AccountEditProfilePage() {
+  const copy = useStorefrontCopy()
   return <AccountShell active="account">
-    <PageHeader title="Ubah Profil" description="Pengaturan profil belum dapat disimpan saat ini." />
-    <div className="orders-figma-empty"><strong>Pengubahan profil belum tersedia</strong><p>Data profil tetap mengikuti akun terverifikasi, tanpa perubahan semu.</p><a className="account-btn account-btn--outline" href="/account">Kembali ke Akun Saya</a></div>
+    <PageHeader title={copy.editProfile} description={copy.profileSettingsCanTBeSavedRight} />
+    <div className="orders-figma-empty"><strong>{copy.profileEditingIsUnavailable}</strong><p>{copy.yourProfileShowsDetailsFromYourVerified}</p><a className="account-btn account-btn--outline" href="/account">{copy.backToMyAccount}</a></div>
   </AccountShell>
 }
 
 export function AccountOrdersPage() {
+  const copy = useStorefrontCopy()
   const customer = useCustomerSession()?.customer
   return <AccountShell active="orders">
-    <PageHeader title="Pesanan Saya" />
+    <PageHeader title={copy.myOrders} />
     <section className="account-orders-empty" aria-labelledby="account-orders-empty-title">
       <img src="/assets/account/orders-empty.svg" alt="" width="132" height="129" />
-      <h2 id="account-orders-empty-title">{customer ? 'Riwayat pesanan belum tersedia' : 'Masuk untuk melihat pesanan'}</h2>
+      <h2 id="account-orders-empty-title">{customer ? copy.orderHistoryIsUnavailable : copy.logInToViewOrders}</h2>
       <p>{customer
-        ? 'Kamu masih bisa cek status pesanan menggunakan kode pesanan.'
-        : 'Punya kode pesanan? Kamu bisa langsung cek statusnya.'}</p>
-      <a className="account-btn account-btn--primary" href="/order-status">Cek Pesanan <ArrowUpRight size={16} aria-hidden="true" /></a>
+        ? copy.useYourOrderNumberToCheckAn
+        : copy.checkStatusWithOrderNumber}</p>
+      <a className="account-btn account-btn--primary" href="/order-status">{copy.checkOrder} <ArrowUpRight size={16} aria-hidden="true" /></a>
     </section>
   </AccountShell>
 }
 
 export function AccountAddressFormPage() {
+  const copy = useStorefrontCopy()
   return <AccountShell active="addresses">
-    <PageHeader title="Alamat Pengiriman" description="Alamat untuk pengiriman merchandise." />
-    <div className="orders-figma-empty"><strong>Penyimpanan alamat belum tersedia</strong><p>Belum ada layanan alamat akun yang terhubung. Formulir tidak ditampilkan agar tidak memberi kesan alamat berhasil tersimpan.</p><a className="account-btn account-btn--outline" href="/account/addresses">Kembali ke Alamat</a></div>
+    <PageHeader title={copy.shippingAddress} description={copy.addressForMerchandiseDelivery} />
+    <div className="orders-figma-empty"><strong>{copy.addressSavingIsUnavailable}</strong><p>{copy.savingAShippingAddressIsCurrentlyUnavailable}</p><a className="account-btn account-btn--outline" href="/account/addresses">{copy.backToAddresses}</a></div>
   </AccountShell>
 }
 
 export function AccountAddressesPage() {
+  const copy = useStorefrontCopy()
   const customer = useCustomerSession()?.customer
   return <AccountShell active="addresses">
-    <PageHeader title="Alamat" description="Kelola alamat pengiriman merchandise." />
+    <PageHeader title={copy.addresses} description={copy.manageYourShippingAddressesForMerchandise} />
     <div className="orders-figma-empty" role="status">
-      <strong>{customer ? 'Alamat tersimpan belum tersedia' : 'Masuk untuk melihat alamat'}</strong>
+      <strong>{customer ? copy.savedAddressesAreUnavailable : copy.logInToViewAddresses}</strong>
       <p>{customer
-        ? 'Belum ada layanan penyimpanan alamat akun. Kami tidak menampilkan contoh alamat sebagai data pribadimu.'
-        : 'Login terlebih dahulu untuk melihat alamat pengiriman.'}</p>
-      <a className="account-btn account-btn--outline" href="/merchandise">Lihat Merchandise</a>
+        ? copy.savingAddressesToYourAccountIsCurrently
+        : copy.logInToViewShippingAddresses}</p>
+      <a className="account-btn account-btn--outline" href="/merchandise">{copy.browseMerchandise}</a>
     </div>
   </AccountShell>
 }
 
 export function AccountFavoritesPage() {
+  const copy = useStorefrontCopy()
   const [favorites, setFavorites] = useState(readFavorites)
 
   useEffect(() => subscribeFavorites(setFavorites), [])
@@ -190,8 +198,8 @@ export function AccountFavoritesPage() {
   return (
     <AccountShell active="favorites">
       <PageHeader
-        title="Favorit"
-        description={favorites.length ? 'Produk yang kamu simpan untuk dibuka kembali dengan cepat.' : 'Produk yang kamu simpan akan muncul di sini.'}
+        title={copy.favorites}
+        description={favorites.length ? copy.quicklyFindTheProductsYouVeSaved : copy.productsYouSaveWillAppearHere}
       />
       <div className="favorite-grid">
         {favorites.map((item) => (
@@ -206,18 +214,18 @@ export function AccountFavoritesPage() {
                 type="button"
                 onClick={() => setFavorites(setFavorite(item, false))}
               >
-                Hapus Favorit
+                {copy.removeFromFavorites2}
               </button>
-              <a className="account-btn account-btn--primary" href={item.href}>Lihat Produk</a>
+              <a className="account-btn account-btn--primary" href={item.href}>{copy.viewProducts}</a>
             </div>
           </article>
         ))}
         {favorites.length === 0 && (
           <div className="favorite-empty">
             <span className="favorite-empty__icon"><img src={accountIcons.heart} alt="" /></span>
-            <strong>Belum ada produk favorit</strong>
-            <p>Simpan produk yang kamu suka supaya mudah ditemukan lagi.</p>
-            <a className="account-btn account-btn--primary favorite-empty__button" href="/search">Jelajahi Produk</a>
+            <strong>{copy.noFavoriteProductsYet}</strong>
+            <p>{copy.saveTheProductsYouLikeSoYou}</p>
+            <a className="account-btn account-btn--primary favorite-empty__button" href="/search">{copy.browseProducts}</a>
           </div>
         )}
       </div>

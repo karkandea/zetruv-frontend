@@ -28,6 +28,7 @@ const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] }
 try {
   for (const [index, viewport] of [{ width: 1440, height: 900 }, { width: 390, height: 844 }].entries()) {
     const context = await browser.newContext({ viewport })
+    await context.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const page = await context.newPage()
     const product = products[index]
     const variant = product.variants[1]
@@ -92,7 +93,7 @@ try {
 
     await page.goto(`${site}/search?kind=Joki`)
     await page.getByRole('link', { name: `Lihat ${product.name}` }).click()
-    await page.getByRole('heading', { name: 'Produk belum bisa dimuat' }).waitFor()
+    await page.getByRole('heading', { name: 'Produk Belum Bisa Dimuat' }).waitFor()
     await page.getByRole('button', { name: 'Coba lagi' }).click()
     await page.getByRole('heading', { name: product.name }).waitFor()
     const packageButton = page.getByRole('button', { name: variant.name, exact: false })
@@ -101,7 +102,7 @@ try {
     await page.locator('.special-summary-total').getByText(amount).waitFor()
     await page.getByRole('button', { name: 'Tambah ke Keranjang' }).click()
     await page.getByText('Produk ditambahkan ke keranjang.').waitFor()
-    await page.getByRole('button', { name: 'Tambah & Lihat Keranjang' }).click()
+    await page.getByRole('button', { name: 'Tambah dan Lihat Keranjang' }).click()
     await page.getByRole('heading', { name: product.name }).waitFor()
     assert.equal(cartWrites, 1, 'opening the cart again should keep one copy of the package')
     await page.getByRole('button', { name: 'Lanjut ke Checkout' }).click()
@@ -111,15 +112,15 @@ try {
     await page.locator('#checkout-phone').fill('081234567890')
     await page.getByRole('button', { name: /QRIS/ }).first().click()
     await page.getByRole('button', { name: 'Bayar Sekarang' }).click()
-    await page.getByText('Synthetic QA order request').waitFor()
+    await page.getByRole('alert').getByText('Pembayaran belum bisa dimulai. Silakan coba lagi.').waitFor()
     assert.equal(orderRequests, 1)
 
     await page.goto(`${site}/product/joki/joki-unavailable`)
-    await page.getByText('Belum ada paket yang tersedia.').waitFor()
+    await page.getByText('Belum ada paket yang tersedia untuk dipilih.').waitFor()
     assert.equal(await page.getByRole('button', { name: /Tambah.*Keranjang/ }).count(), 0)
     for (const slug of ['wrong-kind', 'joki-missing']) {
       await page.goto(`${site}/product/joki/${slug}`)
-      await page.getByRole('heading', { name: 'Produk tidak ditemukan' }).waitFor()
+      await page.getByRole('heading', { name: 'Produk Tidak Ditemukan' }).waitFor()
       assert.equal(await page.getByRole('link', { name: 'Kembali ke Joki Game' }).getAttribute('href'), '/search?kind=Joki')
     }
     assert.deepEqual(errors, [])
