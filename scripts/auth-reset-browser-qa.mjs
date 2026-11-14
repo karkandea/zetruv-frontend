@@ -52,6 +52,7 @@ try {
       return json(route, 404, { message: 'Unrelated synthetic API unavailable' })
     })
     await page.goto(origin + '/', { waitUntil: 'domcontentloaded' })
+    if (name === 'mobile') await page.getByRole('button', { name: 'Buka menu navigasi' }).click()
     await page.getByRole('button', { name: 'Login', exact: true }).first().click()
     const dialog = page.getByRole('dialog', { name: 'Login' })
     await dialog.waitFor()

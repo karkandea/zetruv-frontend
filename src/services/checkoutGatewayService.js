@@ -19,7 +19,7 @@ export const previewCheckoutVoucher = ({ code, items, phone, email }, signal) =>
 
 export const authenticateCheckoutCustomer = (email, password) =>
   apiRequest('/auth/login', {
-    method: 'POST', body: JSON.stringify({ email, password }),
+    method: 'POST', credentials: 'include', body: JSON.stringify({ email, password }),
   })
 
 export const createVerifiedCheckoutOrder = (body, accessToken, idempotencyKey) =>

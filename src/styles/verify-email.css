@@ -1,4 +1,5 @@
 .verify-email-page { min-height: 100vh; background: #f6f8fc; }
+.verify-email-page > .navbar { position: sticky; inset: 0 0 auto; }
 .verify-email-main { display: flex; justify-content: center; align-items: flex-start; min-height: 55vh; padding: 76px 20px 100px; }
 .verify-email-card { width: min(100%, 480px); padding: 40px 36px; background: #fff; border: 1px solid #e4e9f4; border-radius: 20px; box-shadow: 0 12px 40px rgb(0 25 85 / 6%); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
 .verify-email-card h1 { color: #101648; font: 700 26px/1.35 'Poppins', sans-serif; margin: 0; }

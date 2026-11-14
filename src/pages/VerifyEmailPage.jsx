@@ -9,6 +9,7 @@ export default function VerifyEmailPage() {
   const tokenRef = useRef(new URLSearchParams(window.location.search).get('token') || '')
   const started = useRef(false)
   const [status, setStatus] = useState(tokenRef.current ? 'verifying' : 'invalid')
+  const verifyingLink = useRef(Boolean(tokenRef.current))
   const [message, setMessage] = useState(tokenRef.current ? '' : 'Tautan verifikasi tidak memiliki token. Minta tautan baru di bawah.')
   const [email, setEmail] = useState(() => readPendingRegistration()?.email || '')
   const [resendBusy, setResendBusy] = useState(false)
@@ -22,7 +23,7 @@ export default function VerifyEmailPage() {
     setMessage('')
     try {
       const response = await apiRequest('/auth/verify-email', {
-        method: 'POST', body: JSON.stringify({ token: tokenRef.current }),
+        method: 'POST', credentials: 'include', body: JSON.stringify({ token: tokenRef.current }),
       })
       if (!response?.accessToken) throw Error('Sesi login tidak diterima dari server.')
       setCustomerSession(response)
@@ -76,7 +77,7 @@ export default function VerifyEmailPage() {
   }
 
   return <div className="verify-email-page">
-    <Navbar />
+    <Navbar restoreSession={!verifyingLink.current || status === 'verified'} />
     <main className="verify-email-main">
       <section className="verify-email-card" aria-live="polite">
         {status === 'verifying' && <>
@@ -91,7 +92,7 @@ export default function VerifyEmailPage() {
           {cartWarning && <p className="verify-email-warning" role="status">{cartWarning}</p>}
           <div className="verify-email-actions">
             <a href="/account" className="auth-submit verify-email-button">Go to My Account</a>
-            <a href="/cart" className="auth-secondary verify-email-button">View Cart</a>
+            <a href="/" className="auth-secondary verify-email-button">Back to Home</a>
           </div>
         </>}
         {status !== 'verified' && status !== 'verifying' && <>

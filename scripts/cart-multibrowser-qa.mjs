@@ -20,7 +20,7 @@ function makeLine(id,variantName,quantity){
 }
 const copy=x=>JSON.parse(JSON.stringify(x))
 const json=(route,status,obj)=>route.fulfill({status,contentType:'application/json',
-  headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'},
+  headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:4178','Access-Control-Allow-Credentials':'true','Access-Control-Allow-Headers':'authorization, content-type'},
   body:JSON.stringify(obj)})
 let holdStaleAliceB=false
 let staleSnapshot=null
@@ -33,19 +33,28 @@ function backendFor(request){
 }
 async function context(device){
   const ctx=await browser.newContext({viewport:{width:1440,height:900}})
+  let currentAuth
   await ctx.route('**/api/v1/**',async route=>{
     const req=route.request()
     const path=new URL(req.url()).pathname
     if(req.method()==='OPTIONS')return route.fulfill({status:204,headers:{
-      'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*',
-      'Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS'}})
+      'Access-Control-Allow-Origin':'http://127.0.0.1:4178','Access-Control-Allow-Credentials':'true','Access-Control-Allow-Headers':'authorization, content-type',
+      'Access-Control-Allow-Methods':'GET,POST,PUT,DELETE,OPTIONS'}})
     if(path.endsWith('/auth/login')&&req.method()==='POST'){
       authCalls++
       const body=JSON.parse(req.postData()||'{}')
       const who=body.email==='alice@example.test'?'alice':body.email==='bob@example.test'?'bob':null
       if(!who||body.password!=='synthetic-password')return json(route,401,{message:'invalid'})
-      return json(route,200,{accessToken:users[who].token,customer:{
-        email:body.email,name:who}})
+      currentAuth = {accessToken:users[who].token,expiresAt:'2099-01-01T00:00:00Z',
+        customer:{email:body.email,name:who}}
+      return json(route,200,currentAuth)
+    }
+    if(path.endsWith('/auth/session')){
+      if(req.method()==='DELETE'){
+        currentAuth = null
+        return route.fulfill({status:204})
+      }
+      return json(route,currentAuth?200:401,currentAuth||{})
     }
     if(path.endsWith('/me/cart')&&req.method()==='GET'){
       const user=backendFor(req)

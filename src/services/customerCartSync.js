@@ -9,6 +9,10 @@ import {
 import { serverLineToCart } from './serverCartMapper'
 
 const SESSION_KEY='zetruv-customer-session-v1'
+const SESSION_CHANGED_KEY='zetruv-customer-session-changed'
+const sessionRequest = (method, options = {}) => apiRequest('/auth/session', {
+  method, credentials: 'include', cache: 'no-store', ...options,
+})
 export const CUSTOMER_EVENT='zetruv-customer-auth-change'
 export const CART_SYNC_EVENT='zetruv-cart-sync-status'
 let boot=null
@@ -17,6 +21,8 @@ let writing=0
 let currentRevision=null
 let conflict=null // RAM only: never persist a private account cart to browser storage.
 let status={state:'guest',message:''}
+let sessionSync=null
+let sessionVersion=0
 
 function notify(state,message=''){
   status={state,message}
@@ -30,36 +36,133 @@ export function readCustomerSession(){
   try{
     const obj=JSON.parse(window.sessionStorage.getItem(SESSION_KEY)||'null')
     return obj?.version===1 && typeof obj.accessToken==='string' &&
-      obj.accessToken.length>30?obj:null
+      obj.accessToken.length>30 &&
+      (!obj.expiresAt || Date.parse(obj.expiresAt)>Date.now())?obj:null
   }catch{return null}
 }
 const activeToken=()=>readCustomerSession()?.accessToken||null
 export function setCustomerSession(response){
+  const value = applyCustomerSession(response)
+  announceSessionChange()
+  return value
+}
+
+function applyCustomerSession(response) {
   if(!response?.accessToken || typeof response.accessToken!=='string')
     throw Error('Sesi Zetruv belum terverifikasi.')
-  const value={version:1,accessToken:response.accessToken,customer:response.customer||null}
+  const value={version:1,accessToken:response.accessToken,expiresAt:response.expiresAt,
+    customer:response.customer||null}
   window.sessionStorage.setItem(SESSION_KEY,JSON.stringify(value))
+  resetSessionCart(true)
+  return value
+}
+
+function resetSessionCart(authenticated) {
+  sessionVersion++
   boot=null
   currentRevision=null
   conflict=null
   clearCartPriceQuotes()
   writing++ // Invalidate outstanding responses from the previous account.
   leaveAuthenticatedCart() // Never render another customer's lines while authenticating.
-  notify('loading')
-  window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:true}}))
-  return value
+  notify(authenticated ? 'loading' : 'guest')
+  window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated}}))
 }
-export function logoutCustomer(){
-  if(typeof window==='undefined')return
+
+function clearCustomerSession() {
   window.sessionStorage.removeItem(SESSION_KEY)
-  boot=null
-  currentRevision=null
-  conflict=null
-  clearCartPriceQuotes()
-  writing++
-  leaveAuthenticatedCart()
-  notify('guest')
-  window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT,{detail:{authenticated:false}}))
+  resetSessionCart(false)
+}
+
+function announceSessionChange() {
+  try {
+    // Other tabs ask the API for their session. The signal contains no credentials.
+    window.localStorage.setItem(SESSION_CHANGED_KEY, String(Math.random()))
+  } catch { /* Storage may be unavailable. New tabs still use the session cookie. */ }
+}
+
+function hasSharedSessionSignal() {
+  try { return Boolean(window.localStorage.getItem(SESSION_CHANGED_KEY)) }
+  catch { return false }
+}
+
+export async function logoutCustomer(){
+  await sessionRequest('DELETE')
+  clearCustomerSession()
+  announceSessionChange()
+}
+
+export function restoreCustomerSession({ external = false } = {}) {
+  if (external) {
+    // Invalidate this tab's private state and any earlier session read immediately.
+    clearCustomerSession()
+    sessionSync = null
+  }
+  if (sessionSync) return sessionSync
+
+  const version = sessionVersion
+  const existing = readCustomerSession()
+  if (existing && !isAuthenticatedCart() && status.state !== 'error') {
+    void activateCustomerCart({ mergeGuest: false }).catch(() => {})
+  }
+  const operation = (async () => {
+    let response
+    try {
+      response = await sessionRequest('GET')
+    } catch (error) {
+      if (error.status !== 401 || version !== sessionVersion) return
+
+      // Upgrade a still-valid tab session from before cookie support.
+      if (existing && !existing.expiresAt && !external &&
+          !hasSharedSessionSignal()) {
+        try {
+          await sessionRequest('PUT', { headers: auth(existing.accessToken) })
+        } catch (upgradeError) {
+          if (upgradeError.status !== 409) {
+            if (version === sessionVersion && upgradeError.status === 401) clearCustomerSession()
+            return
+          }
+        }
+        response = await sessionRequest('GET').catch(() => null)
+      } else {
+        if (window.sessionStorage.getItem(SESSION_KEY)) clearCustomerSession()
+        return
+      }
+    }
+    if (version !== sessionVersion) return
+    if (response?.accessToken && (response.accessToken !== existing?.accessToken || !existing.expiresAt)) {
+      applyCustomerSession(response)
+    }
+    // Only a sign-in or explicit cart action merges the shared guest draft.
+    if (response?.accessToken && !isAuthenticatedCart() && status.state !== 'error') {
+      await activateCustomerCart({ mergeGuest: false }).catch(() => {})
+    }
+  })()
+  const pending = operation.finally(() => {
+    if (sessionSync === pending) sessionSync = null
+  })
+  sessionSync = pending
+  return pending
+}
+
+export function watchCustomerSession({ restoreSession = true } = {}) {
+  const restore = () => {
+    if (restoreSession) void restoreCustomerSession()
+  }
+  const syncTabs = (event) => {
+    if (restoreSession && event.key === SESSION_CHANGED_KEY) {
+      void restoreCustomerSession({ external: true })
+    }
+  }
+  window.addEventListener('storage', syncTabs)
+  window.addEventListener('focus', restore)
+  window.addEventListener('pageshow', restore)
+  restore()
+  return () => {
+    window.removeEventListener('storage', syncTabs)
+    window.removeEventListener('focus', restore)
+    window.removeEventListener('pageshow', restore)
+  }
 }
 
 const auth=token=>({Authorization:'Bearer '+token})
@@ -231,7 +334,7 @@ export async function resolveCartConflict(choice){
     throw e
   }finally{resolving=false}
 }
-export async function activateCustomerCart(){
+export async function activateCustomerCart({ mergeGuest = true } = {}){
   const token=activeToken()
   if(!token){leaveAuthenticatedCart();notify('guest');return}
   // Never silently discard a pending local draft during a refresh.
@@ -239,7 +342,7 @@ export async function activateCustomerCart(){
   if(boot)return boot
   const operation=(async()=>{
     notify('loading')
-    const guest=readGuestCart()
+    const guest=mergeGuest ? readGuestCart() : []
     if(guest.length){
       await mergeServerCart(token,await toServerItems(guest))
       // Only this verified session may clear its own guest draft.
@@ -264,7 +367,7 @@ export async function refreshCustomerCart(){
   const token=activeToken()
   if(!token)return
   if(['saving','conflict','error'].includes(status.state))return
-  if(!isAuthenticatedCart())return activateCustomerCart()
+  if(!isAuthenticatedCart())return activateCustomerCart({ mergeGuest: false })
   try{adopt(await getServerCart(token),token)}
   catch(e){notify('error',e.message||'Gagal memuat cart server.')}
 }
