@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
-import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Menu, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus, X } from 'lucide-react'
+import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Newspaper, ShoppingBag, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES, NAVBAR_LANGUAGE_STORAGE_KEY, normalizeNavbarLanguage, readNavbarLanguage } from '../services/navbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
 import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
@@ -52,6 +52,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const cartMenuRef = useRef(null)
   const mobileMenuRef = useRef(null)
   const homepageDrawerRef = useRef(null)
+  const homepageMenuButtonRef = useRef(null)
   const resetToken = useRef(typeof window === 'undefined' ? '' : (window.location.pathname === '/auth/reset-password' ? new URLSearchParams(window.location.search).get('token') || '' : ''))
   const languageMenuRef = useRef(null)
   const languageButtonRef = useRef(null)
@@ -136,6 +137,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
+        if (event.target.closest?.('#zetruv-homepage-mobile-nav')) homepageMenuButtonRef.current?.focus()
         setIsProductOpen(false)
         setIsCartOpen(false)
         setIsLanguageOpen(false)
@@ -288,6 +290,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
         </div>
         {homepageMobileMenu && <button
           className="navbar__hamburger navbar-control"
+          ref={homepageMenuButtonRef}
           type="button"
           aria-label={isHomepageDrawerOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
           aria-controls="zetruv-homepage-mobile-nav"
@@ -298,10 +301,12 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             setIsCartOpen(false)
             setIsLanguageOpen(false)
           }}
-        >{isHomepageDrawerOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}</button>}
+        >
+          <span className="navbar__hamburger-icon" aria-hidden="true"><span /><span /><span /></span>
+        </button>}
       </div>
 
-      {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" hidden={!isHomepageDrawerOpen}>
+      {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" data-open={isHomepageDrawerOpen} inert={!isHomepageDrawerOpen}>
         <nav className="navbar__mobile-links" aria-label="Navigasi Zetruv mobile">
           <a className={activeNav === 'home' ? 'is-current' : ''} href="/" onClick={() => selectNav('home')}><Home size={18} aria-hidden="true" />{t.home}</a>
           <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>

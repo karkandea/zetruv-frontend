@@ -3,7 +3,7 @@
 .navbar__mobile-drawer,
 .jockey-section__mobile-link,
 .homepage-accounts__mobile-label,
-.homepage-accounts__dots {
+.homepage-slider-dots {
   display: none;
 }
 
@@ -112,7 +112,43 @@
     outline-offset: 3px;
   }
 
-  .navbar--homepage-mobile .navbar__mobile-drawer:not([hidden]) {
+  .navbar--homepage-mobile .navbar__hamburger-icon {
+    position: relative;
+    width: 20px;
+    height: 16px;
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger-icon span {
+    position: absolute;
+    inset: 7px 0 auto;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform .2s ease, opacity .15s ease;
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger-icon span:first-child {
+    transform: translateY(-6px);
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger-icon span:last-child {
+    transform: translateY(6px);
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger[aria-expanded='true'] .navbar__hamburger-icon span:first-child {
+    transform: rotate(45deg);
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger[aria-expanded='true'] .navbar__hamburger-icon span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(.3);
+  }
+
+  .navbar--homepage-mobile .navbar__hamburger[aria-expanded='true'] .navbar__hamburger-icon span:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .navbar--homepage-mobile .navbar__mobile-drawer {
     position: absolute;
     z-index: 150;
     top: 64px;
@@ -127,6 +163,17 @@
     background: #010154;
     box-shadow: 0 18px 35px rgba(1,1,45,.26);
     overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: transform .22s ease, opacity .18s ease, visibility 0s .22s;
+  }
+
+  .navbar--homepage-mobile .navbar__mobile-drawer[data-open='true'] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
   }
 
   .navbar--homepage-mobile .navbar__mobile-links {
@@ -372,13 +419,28 @@
 
 @media (max-width: 600px) {
   .site-shell--homepage-final .navbar--homepage-mobile .navbar__top {
+    --mobile-logo-width: clamp(68px, 19vw, 80px);
     width: calc(100% - 24px);
-    grid-template-columns: 48px minmax(0, 1fr) 44px;
+    grid-template-columns: var(--mobile-logo-width) minmax(0, 1fr) 44px;
     gap: 8px;
+  }
+
+  .site-shell--homepage-final .navbar--homepage-mobile .brand,
+  .site-shell--homepage-final .navbar--homepage-mobile .brand img {
+    width: 100%;
+    height: auto;
+  }
+
+  .site-shell--homepage-final .navbar--homepage-mobile .brand img {
+    object-fit: contain;
   }
 
   .navbar--homepage-mobile .navbar-searchbox {
     min-width: 0;
+  }
+
+  .site-shell--homepage-final .navbar--homepage-mobile .navbar-searchbox input::placeholder {
+    text-overflow: ellipsis;
   }
 
   .site-shell--homepage-final .hero.hero--homepage-final {
@@ -450,10 +512,53 @@
     display: none;
   }
 
-  .site-shell--homepage-final .mini-panel--popular,
   .site-shell--homepage-final .mini-panel--recent {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 20px 14px;
+  }
+
+  .site-shell--homepage-final .mini-panel--popular {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .site-shell--homepage-final .mini-panel--popular .mini-game {
+    flex-direction: row;
+    gap: 8px;
+    min-height: 64px;
+    padding: 8px;
+    border: 1px solid #dee0eb;
+    border-radius: 12px;
+    background: #fff;
+    color: #171721;
+    text-align: left;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+
+  .site-shell--homepage-final .mini-panel--popular .mini-game__image {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  .site-shell--homepage-final .mini-panel--popular .mini-game > span:last-child {
+    width: auto;
+    max-height: none;
+  }
+
+  .site-shell--homepage-final .mini-panel--popular [role='status'] {
+    grid-column: 1 / -1;
+    color: #666b80;
   }
 
   .site-shell--homepage-final .jockey-section__header {
@@ -486,8 +591,12 @@
     scrollbar-width: none;
   }
 
-  .site-shell--homepage-final :is(.jockey-card, .homepage-account-card) {
+  .site-shell--homepage-final :is(.jockey-card:nth-child(odd), .homepage-account-card) {
     scroll-snap-align: start;
+  }
+
+  .site-shell--homepage-final .jockey-card:last-child {
+    scroll-snap-align: end;
   }
 
   .site-shell--homepage-final .jockey-grid {
@@ -529,13 +638,20 @@
     display: inline;
   }
 
-  .site-shell--homepage-final .homepage-accounts__dots {
+  .site-shell--homepage-final .homepage-slider-dots {
     display: flex;
     justify-content: center;
+  }
+
+  .site-shell--homepage-final .homepage-accounts__dots {
     margin-top: -8px;
   }
 
-  .homepage-accounts__dots button {
+  .site-shell--homepage-final .jockey-section__dots {
+    margin-top: 10px;
+  }
+
+  .homepage-slider-dots button {
     width: 24px;
     height: 24px;
     display: grid;
@@ -546,7 +662,7 @@
     cursor: pointer;
   }
 
-  .homepage-accounts__dots button::before {
+  .homepage-slider-dots button::before {
     content: '';
     width: 8px;
     height: 7px;
@@ -554,12 +670,12 @@
     background: rgba(6, 5, 82, .35);
   }
 
-  .homepage-accounts__dots button[aria-current='true']::before {
+  .homepage-slider-dots button[aria-current='true']::before {
     width: 18px;
     background: #060552;
   }
 
-  .homepage-accounts__dots button:focus-visible {
+  .homepage-slider-dots button:focus-visible {
     outline: 2px solid #060552;
     border-radius: 99px;
   }
@@ -623,7 +739,7 @@
 }
 
 @media (max-width: 600px) and (prefers-reduced-motion: no-preference) {
-  .site-shell--homepage-final .homepage-accounts__row {
+  .site-shell--homepage-final :is(.jockey-grid, .homepage-accounts__row) {
     scroll-behavior: smooth;
   }
 }
@@ -639,6 +755,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .navbar--homepage-mobile .navbar__hamburger-icon span,
+  .navbar--homepage-mobile .navbar__mobile-drawer,
   .navbar--homepage-mobile .navbar__mobile-links > button svg:last-child {
     transition: none;
   }

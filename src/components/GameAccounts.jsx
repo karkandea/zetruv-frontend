@@ -1,27 +1,9 @@
-import { useRef, useState } from 'react'
 import { accountPrice, accountProductHref, getAccountAttributes } from '../services/gameAccountPresentation'
+import { useCarouselPages } from '../hooks/useCarouselPages'
 
 export default function GameAccounts({ items = [] }) {
   const cards = items.filter((item) => item?.id && item?.slug).slice(0, 3)
-  const rowRef = useRef(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-
-  function updateActiveCard(event) {
-    const row = event.currentTarget
-    const [first, second] = row.children
-    if (!second) return
-
-    const step = second.offsetLeft - first.offsetLeft
-    if (step > 0) {
-      const index = Math.round(row.scrollLeft / step)
-      setActiveIndex(Math.max(0, Math.min(index, cards.length - 1)))
-    }
-  }
-
-  function showCard(index) {
-    const row = rowRef.current
-    row.scrollTo({ left: row.children[index].offsetLeft - row.firstElementChild.offsetLeft })
-  }
+  const { rowRef, activePage, updateActivePage, showPage } = useCarouselPages(cards.length)
 
   return (
     <section className="homepage-accounts" id="game-accounts" aria-labelledby="homepage-accounts-title">
@@ -37,7 +19,7 @@ export default function GameAccounts({ items = [] }) {
       </div>
       {cards.length === 0
         ? <div className="homepage-accounts__empty">Belum ada akun game yang ditampilkan saat ini.</div>
-        : <div className="homepage-accounts__row" id="homepage-accounts-slides" ref={rowRef} onScroll={updateActiveCard}>
+        : <div className="homepage-accounts__row" id="homepage-accounts-slides" ref={rowRef} onScroll={updateActivePage}>
           {cards.map((account) => {
             const attributes = getAccountAttributes(account.accountDetails, { cardOnly: true, limit: 3 })
             const href = accountProductHref(account)
@@ -69,15 +51,15 @@ export default function GameAccounts({ items = [] }) {
           })}
         </div>}
       {cards.length > 1 && (
-        <div className="homepage-accounts__dots" role="group" aria-label="Pilih kartu akun game">
+        <div className="homepage-slider-dots homepage-accounts__dots" role="group" aria-label="Pilih kartu akun game">
           {cards.map((account, index) => (
             <button
               key={account.id}
               type="button"
               aria-label={`Tampilkan akun ${index + 1} dari ${cards.length}: ${account.name}`}
               aria-controls="homepage-accounts-slides"
-              aria-current={index === activeIndex ? 'true' : undefined}
-              onClick={() => showCard(index)}
+              aria-current={index === activePage ? 'true' : undefined}
+              onClick={() => showPage(index)}
             />
           ))}
         </div>
