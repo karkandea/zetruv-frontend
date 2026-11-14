@@ -31,7 +31,7 @@ const paymentDisplay = [
   {code: 'BCA_VA', name:'Virtual Account', description:'Transfer bank', icon:checkoutAssets.virtualAccount},
   {code: 'GOPAY', name:'E-Wallet', description:'Bayar lewat e-wallet', icon:checkoutAssets.ewallet},
 ]
-const methodLabel = (item) => ({
+const methodLabel = (item) => item.productKind === 'Joki' ? 'Joki Game' : ({
   AUTO_ID:'Top Up Via ID', MANUAL_LOGIN:'Top Up Via Login',
   VOUCHER_CODE:'Voucher Game', JOKI_MANUAL:'Joki Game',
 }[item.fulfillmentMethod] || item.productKind || 'Produk Digital')
@@ -91,7 +91,7 @@ function CheckoutProduct({
           onError={e => { if(e.currentTarget.dataset.fail !== '1'){e.currentTarget.dataset.fail='1';e.currentTarget.src=fallback} }} />
         <div className="checkout-product__identity">
           <span className="digital-product-method">{methodLabel(item)}</span>
-          <strong>{item.gameName || item.productName}</strong>
+          <strong>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</strong>
           <span>{item.variantName}</span>
           <small>Harga satuan {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CircleCheck, Heart, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
+import { Bookmark, CircleCheck, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
 import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
@@ -11,7 +11,7 @@ const navItems = [
   { key: 'account', label: 'Akun Saya', href: '/account', icon: UserRound },
   { key: 'orders', label: 'Pesanan Saya', href: '/account/orders', icon: ReceiptText },
   { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: MapPin },
-  { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: Heart },
+  { key: 'favorites', label: 'Bookmark', href: '/account/favorites', icon: Bookmark },
 ]
 
 export function useCustomerSession() {

@@ -35,7 +35,7 @@ const clean = (value) => String(value ?? '').trim()
 function itemContext(item) {
   if (item.fulfillmentMethod === 'MANUAL_LOGIN') return 'Informasi akun game diisi saat checkout jika layanan tersedia.'
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return 'Kode voucher dikirim setelah pembayaran berhasil.'
-  if (item.fulfillmentMethod === 'JOKI_MANUAL') return 'Detail layanan akan dilengkapi saat checkout.'
+  if (item.productKind === 'Joki') return 'Layanan diproses manual setelah pembayaran terkonfirmasi.'
   if (item.productKind === 'GameAccount') return 'Akun game akan diverifikasi sebelum pemrosesan.'
   return 'Produk digital'
 }
@@ -244,7 +244,7 @@ export default function CartPage() {
         )}
         <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
-          <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login/Joki baru dilengkapi saat checkout.</span>
+          <span>User ID dan Zona/Server adalah <strong>tujuan top-up</strong> yang dapat diedit di keranjang. Password dan OTP bukan data tujuan top-up dan jangan dimasukkan di sini. Kredensial untuk layanan Via Login baru dilengkapi saat checkout.</span>
         </div>
 
         <div className="digital-cart-layout">
@@ -281,8 +281,8 @@ export default function CartPage() {
                     <article className="digital-cart-item" key={item.cartKey}>
                       <CartThumbnail item={item} />
                       <div className="digital-cart-item__copy">
-                        <span className="digital-cart-item__badge">{methodLabel[item.fulfillmentMethod] || item.productKind || 'Digital Product'}</span>
-                        <h2>{item.gameName || item.productName}</h2>
+                        <span className="digital-cart-item__badge">{item.productKind === 'Joki' ? 'Joki Game' : methodLabel[item.fulfillmentMethod] || item.productKind || 'Digital Product'}</span>
+                        <h2>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</h2>
                         <strong className="digital-cart-item__variant">{item.variantName}</strong>
                         <span className="digital-cart-item__unit">Harga satuan: {rupiah(Number(item.unitPrice) || 0)}</span>
 
