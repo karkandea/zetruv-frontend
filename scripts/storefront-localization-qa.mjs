@@ -22,9 +22,9 @@ if (local) await context.route('**/api/v1/**', async route => {
  await route.fulfill({json})
 })
 const locales = {
- en: ['English EN','Popular Games','Browse Categories','Articles & Guides','Digital Cart','Digital Checkout','No Payment Session','Check Order','Report an Issue','Forgot Password?','Explore Zetruv products','Paid','Merchandise Cart'],
- id: ['Bahasa Indonesia ID','Game Populer','Jelajahi Kategori','Artikel & Panduan','Keranjang Digital','Checkout Digital','Tidak Ada Sesi Pembayaran','Cek Pesanan','Laporkan Kendala','Lupa Kata Sandi?','Jelajahi produk Zetruv','Dibayar','Keranjang Merchandise'],
- ms: ['Bahasa Melayu MY','Permainan Popular','Terokai Kategori','Artikel & Panduan','Troli Digital','Pembayaran Digital','Tiada Sesi Pembayaran','Semak Pesanan','Laporkan Masalah','Lupa Kata Laluan?','Terokai produk Zetruv','Dibayar','Troli Barangan'],
+ en: ['English EN','Popular Games','Browse Categories','Articles & Guides','Digital Cart','Digital Checkout','No Payment Session','Check Order','Report an Issue','Forgot Password?','Explore Zetruv products','Paid','Merchandise Cart','Log In to Continue'],
+ id: ['Bahasa Indonesia ID','Game Populer','Jelajahi Kategori','Artikel & Panduan','Keranjang Digital','Checkout Digital','Tidak Ada Sesi Pembayaran','Cek Pesanan','Laporkan Kendala','Lupa Kata Sandi?','Jelajahi produk Zetruv','Dibayar','Keranjang Merchandise','Masuk untuk Melanjutkan Checkout'],
+ ms: ['Bahasa Melayu MY','Permainan Popular','Terokai Kategori','Artikel & Panduan','Troli Digital','Pembayaran Digital','Tiada Sesi Pembayaran','Semak Pesanan','Laporkan Masalah','Lupa Kata Laluan?','Terokai produk Zetruv','Dibayar','Troli Barangan','Log Masuk untuk Meneruskan'],
 }
 const waitHeading = (name, scope = page) => scope.getByRole('heading', {name, exact:true}).first().waitFor({timeout:12000})
 for (const [language, a] of Object.entries(locales)) {
@@ -46,12 +46,12 @@ for (const [language, a] of Object.entries(locales)) {
  await page.locator('.auth-actions button').first().click()
  await page.getByRole('dialog').getByRole('button',{name:a[9],exact:true}).click()
  await waitHeading(a[9], page.getByRole('dialog'))
- for (const [path, heading] of [['/search',a[2]],['/articles',a[3]],['/cart',a[4]],['/checkout',a[5]],['/payment',a[6]],['/order-status',a[7]],['/cart?flow=physical',a[12]]]) {
+ for (const [path, heading] of [['/search',a[2]],['/articles',a[3]],['/cart',a[4]],['/checkout',a[5]],['/payment',a[6]],['/order-status',a[7]],['/cart?flow=physical',a[12]],['/cart?flow=account',a[4]],['/checkout?flow=account',a[13]]]) {
   await page.goto(base + path,{waitUntil:'domcontentloaded'})
   await waitHeading(heading)
   assert.equal(await page.locator('html').getAttribute('lang'),language,path)
   if (local && path === '/articles') await waitHeading(cmsArticle.title)
-  if (local && path === '/search') await page.getByText('Kategori Katalog CMS',{exact:true}).waitFor()
+  if (local && path === '/search') await page.getByText('Kategori Katalog CMS',{exact:true}).first().waitFor()
   if (local && path === '/order-status') {
    await page.locator('#sos-order-number').fill('ZTR-TEST-123')
    await page.locator('#sos-contact').fill('qa@example.com')
