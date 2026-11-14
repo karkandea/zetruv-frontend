@@ -88,8 +88,9 @@ try {
       version: 1, accessToken: 'synthetic-qa-jwt-token-more-than-30-characters', customer: { name: 'Stale Browser Name', email: 'stale@example.test' },
     })))
     await page.goto(`${site}/account`, { waitUntil: 'domcontentloaded' })
-    await page.getByText('Synthetic Customer').first().waitFor()
-    await page.getByText('qa@example.test').first().waitFor()
+    const profile = page.getByRole('region', { name: 'Synthetic Customer' })
+    await profile.getByRole('heading', { name: 'Synthetic Customer' }).waitFor()
+    await profile.getByText('qa@example.test', { exact: true }).waitFor()
     assert.equal(await page.locator('.account-layout').getByText('Stale Browser Name').count(), 0)
     assert.equal(await page.getByText('Stale Browser Name').isVisible(), false)
     assert.deepEqual(pageErrors, [])
