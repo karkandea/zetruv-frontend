@@ -129,6 +129,7 @@ try{
   assert.equal(await b.locator('.digital-qty output').first().textContent(),'3')
   qa.push({scenario:'concurrent two-browser 409 and explicit server choice',status:'PASS'})
   // Account switch in same browser must never expose Alice's cart to Bob.
+  await a.getByRole('button',{name:'Account menu'}).click()
   await a.getByRole('button',{name:'Logout',exact:true}).click()
   await login(a,'bob@example.test')
   await a.getByText('Bob Only Voucher').first().waitFor({timeout:12000})

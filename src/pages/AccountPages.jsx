@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ArrowUpRight, CircleCheck, Heart, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
 import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
@@ -7,10 +8,10 @@ import { readFavorites, setFavorite, subscribeFavorites } from '../services/favo
 import '../styles/account.css'
 
 const navItems = [
-  { key: 'account', label: 'Akun Saya', href: '/account', icon: accountIcons.account },
-  { key: 'orders', label: 'Pesanan Saya', href: '/account/orders', icon: accountIcons.orders },
-  { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: accountIcons.address },
-  { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: accountIcons.favorite },
+  { key: 'account', label: 'Akun Saya', href: '/account', icon: UserRound },
+  { key: 'orders', label: 'Pesanan Saya', href: '/account/orders', icon: ReceiptText },
+  { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: MapPin },
+  { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: Heart },
 ]
 
 function useCustomerSession() {
@@ -23,40 +24,39 @@ function useCustomerSession() {
   return session
 }
 
-function AccountShell({ active, children, tall = false }) {
+function AccountShell({ active, customer: profileCustomer, children }) {
+  const sessionCustomer = useCustomerSession()?.customer
   return (
     <div className="account-page">
-      <Navbar variant="account" />
-      <main className={`account-layout${tall ? ' account-layout--tall' : ''}`}>
-        <AccountSidebar active={active} tall={tall} />
+      <Navbar variant="account" homepageMobileMenu />
+      <main className="account-layout">
+        <AccountSidebar active={active} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />
         <section className="account-main">{children}</section>
       </main>
     </div>
   )
 }
 
-function AccountSidebar({ active, tall }) {
-  const customer = useCustomerSession()?.customer
+function AccountSidebar({ active, customer }) {
   const name = customer?.name || 'Pengunjung'
   const email = customer?.email || 'Belum masuk'
   return (
-    <aside className={`account-sidebar${tall ? ' account-sidebar--tall' : ''}`}>
+    <aside className="account-sidebar">
       <div className="account-sidebar__profile">
         <div className="account-sidebar__profile-top">
           <span className="account-avatar account-avatar--small">{name.slice(0, 1).toUpperCase()}</span>
           <div>
-            <strong>Akun Saya</strong>
-            <span>{email}</span>
+            <strong>{name}</strong>
+            <span title={email}>{email}</span>
           </div>
         </div>
-        <p>Kelola data akun dan transaksi</p>
       </div>
       <div className="account-sidebar__rule" />
       <nav className="account-sidebar__nav" aria-label="Navigasi akun">
-        {navItems.map((item) => (
-          <a className={item.key === active ? 'is-active' : ''} href={item.href} key={item.key}>
-            <span className="account-sidebar__icon"><img src={item.icon} alt="" /></span>
-            <span>{item.label}</span>
+        {navItems.map(({ key, label, href, icon: Icon }) => (
+          <a aria-current={key === active ? 'page' : undefined} href={href} key={key}>
+            <Icon size={19} aria-hidden="true" />
+            <span>{label}</span>
           </a>
         ))}
       </nav>
@@ -64,14 +64,11 @@ function AccountSidebar({ active, tall }) {
   )
 }
 
-function PageHeader({ title, description, action }) {
+function PageHeader({ title, description, id }) {
   return (
-    <div className="account-heading-row">
-      <div className="account-heading">
-        <h1>{title}</h1>
-        <p>{description}</p>
-      </div>
-      {action}
+    <div className="account-heading" id={id} tabIndex={id ? -1 : undefined}>
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
     </div>
   )
 }
@@ -79,8 +76,8 @@ function PageHeader({ title, description, action }) {
 function InfoRow({ label, value }) {
   return (
     <div className="account-info-row">
-      <span>{label}</span>
-      <strong>{value}</strong>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   )
 }
@@ -89,7 +86,7 @@ export function AccountOverviewPage() {
   const accessToken = useCustomerSession()?.accessToken
   const [profile, setProfile] = useState(null)
   const state = !accessToken ? 'guest' : profile?.token === accessToken ? profile.state : 'loading'
-  const customer = profile?.customer
+  const customer = state === 'ready' ? profile.customer : null
 
   useEffect(() => {
     if (!accessToken) { setProfile(null); return }
@@ -108,8 +105,8 @@ export function AccountOverviewPage() {
   }, [accessToken])
 
   return (
-    <AccountShell active="account">
-      <PageHeader title="Akun Saya" description="Informasi akun yang digunakan untuk transaksi Zetruv." />
+    <AccountShell active="account" customer={customer}>
+      <PageHeader id="account-settings" title="Akun Saya" description="Informasi akun yang digunakan untuk transaksi Zetruv." />
       {state !== 'ready' ? (
         <div className="orders-figma-empty" role="status">
           <strong>{state === 'loading' ? 'Memuat profil…' : state === 'guest' ? 'Silakan masuk ke akun' : state === 'expired' ? 'Sesi login sudah berakhir' : 'Profil belum bisa dimuat'}</strong>
@@ -118,20 +115,24 @@ export function AccountOverviewPage() {
         </div>
       ) : (
         <>
-          <section className="profile-overview">
+          <section className="account-info-card" aria-labelledby="account-profile-title">
             <div className="profile-overview__identity">
               <span className="account-avatar account-avatar--large">{String(customer.name || 'A').slice(0,1).toUpperCase()}</span>
-              <div><h2>{customer.name || 'Pengguna Zetruv'}</h2><p>{customer.email}</p><small>Informasi langsung dari backend akun Zetruv.</small></div>
+              <div>
+                <h2 id="account-profile-title">{customer.name || 'Pengguna Zetruv'}</h2>
+                <span className="account-profile-status" data-verified={Boolean(customer.emailVerified)}>
+                  {customer.emailVerified && <CircleCheck size={15} aria-hidden="true" />}
+                  {customer.emailVerified ? 'Email terverifikasi' : 'Email belum terverifikasi'}
+                </span>
+              </div>
             </div>
+            <dl className="account-info-grid">
+              <InfoRow label="Nama lengkap" value={customer.name || '—'} />
+              <InfoRow label="Email" value={customer.email || '—'} />
+              <InfoRow label="Nomor HP" value="Belum tersedia" />
+            </dl>
+            <div className="account-note"><Info size={18} aria-hidden="true" /><span>Pengubahan profil dan penambahan nomor HP belum tersedia.</span></div>
           </section>
-          <section className="account-info-card">
-            <h2>Informasi Akun</h2>
-            <InfoRow label="Nama" value={customer.name || '—'} />
-            <InfoRow label="Email" value={customer.email || '—'} />
-            <InfoRow label="Verifikasi Email" value={customer.emailVerified ? 'Terverifikasi' : 'Belum terverifikasi'} />
-            <InfoRow label="Nomor HP" value="Belum tersedia" />
-          </section>
-          <div className="account-note"><img src={accountIcons.info} alt="" /><span>Pengubahan profil serta penyimpanan nomor HP belum tersedia. Detail akun tidak dapat diubah dari halaman ini.</span></div>
         </>
       )}
     </AccountShell>
@@ -148,14 +149,15 @@ export function AccountEditProfilePage() {
 export function AccountOrdersPage() {
   const customer = useCustomerSession()?.customer
   return <AccountShell active="orders">
-    <PageHeader title="Pesanan Saya" description="Pantau pesanan yang tercatat di akun Zetruv." />
-    <div className="orders-figma-empty" role="status">
-      <strong>{customer ? 'Riwayat pesanan akun belum dapat ditampilkan' : 'Masuk untuk melihat pesanan'}</strong>
+    <PageHeader title="Pesanan Saya" />
+    <section className="account-orders-empty" aria-labelledby="account-orders-empty-title">
+      <img src="/assets/account/orders-empty.svg" alt="" width="132" height="129" />
+      <h2 id="account-orders-empty-title">{customer ? 'Riwayat pesanan belum tersedia' : 'Masuk untuk melihat pesanan'}</h2>
       <p>{customer
-        ? 'Daftar pesanan akun belum didukung oleh layanan saat ini. Tidak ada data contoh yang ditampilkan. Kamu masih bisa memeriksa pesanan menggunakan kode pesanan.'
-        : 'Login dulu untuk mengakses informasi pesanan pribadi.'}</p>
-      <a className="account-btn account-btn--primary" href="/order-status">Cek Pesanan</a>
-    </div>
+        ? 'Kamu masih bisa cek status pesanan menggunakan kode pesanan.'
+        : 'Punya kode pesanan? Kamu bisa langsung cek statusnya.'}</p>
+      <a className="account-btn account-btn--primary" href="/order-status">Cek Pesanan <ArrowUpRight size={16} aria-hidden="true" /></a>
+    </section>
   </AccountShell>
 }
 

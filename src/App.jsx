@@ -23,7 +23,7 @@ import {
 } from './pages/GameAccountPages'
 
 function AccountOrderUnavailablePage() {
-  return <div className="account-page"><Navbar variant="account" />
+  return <div className="account-page"><Navbar variant="account" homepageMobileMenu />
     <main className="account-layout" style={{ display: 'block' }}>
       <section className="account-main" style={{ marginInline: 'auto', maxWidth: 720, padding: '40px 24px', textAlign: 'center' }}>
         <h1>Detail pesanan belum tersedia</h1>

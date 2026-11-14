@@ -107,6 +107,7 @@ try{
     const secondTab = await ctx.newPage()
     await secondTab.goto(urls + '/cart')
     await secondTab.getByText('Keranjang tersimpan di akun Zetruv').waitFor()
+    await page.getByRole('button',{name:'Account menu'}).click()
     await page.getByRole('button',{name:'Logout',exact:true}).click()
     await secondTab.waitForFunction(() => !sessionStorage.getItem('zetruv-customer-session-v1'))
     await secondTab.close()
