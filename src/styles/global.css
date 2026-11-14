@@ -24,6 +24,7 @@ img { display: block; max-width: 100%; }
 .container { width: min(1100px, calc(100% - 40px)); margin-inline: auto; }
 
 .navbar { position: sticky; z-index: 50; top: 0; background: rgba(1,1,84,.96); color: white; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.12); }
+.navbar-logout-error { position: fixed; z-index: 81; inset: auto 16px 16px; width: fit-content; margin: 0 auto; padding: 12px 16px; border-radius: 12px; background: #fff4f4; color: #951b1b; font-size: 14px; box-shadow: 0 4px 16px #0002; }
 .navbar__top { display: grid; grid-template-columns: 90px 1fr auto; gap: 18px; align-items: center; padding-block: 12px; }
 .brand img { width: 72px; max-height: 28px; object-fit: contain; }
 .searchbox { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 18px; background: rgba(255,255,255,.18); border-radius: 60px; }

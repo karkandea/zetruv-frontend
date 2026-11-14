@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
-import { readCustomerSession } from '../services/customerCartSync'
+import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
 import { apiRequest } from '../api/httpClient'
 import { readFavorites, setFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/account.css'
@@ -12,6 +12,16 @@ const navItems = [
   { key: 'addresses', label: 'Alamat', href: '/account/addresses', icon: accountIcons.address },
   { key: 'favorites', label: 'Favorit', href: '/account/favorites', icon: accountIcons.favorite },
 ]
+
+function useCustomerSession() {
+  const [session, setSession] = useState(readCustomerSession)
+  useEffect(() => {
+    const update = () => setSession(readCustomerSession())
+    window.addEventListener(CUSTOMER_EVENT, update)
+    return () => window.removeEventListener(CUSTOMER_EVENT, update)
+  }, [])
+  return session
+}
 
 function AccountShell({ active, children, tall = false }) {
   return (
@@ -26,7 +36,7 @@ function AccountShell({ active, children, tall = false }) {
 }
 
 function AccountSidebar({ active, tall }) {
-  const customer = readCustomerSession()?.customer
+  const customer = useCustomerSession()?.customer
   const name = customer?.name || 'Pengunjung'
   const email = customer?.email || 'Belum masuk'
   return (
@@ -76,23 +86,26 @@ function InfoRow({ label, value }) {
 }
 
 export function AccountOverviewPage() {
-  const [customer, setCustomer] = useState(null)
-  const [state, setState] = useState('loading')
+  const accessToken = useCustomerSession()?.accessToken
+  const [profile, setProfile] = useState(null)
+  const state = !accessToken ? 'guest' : profile?.token === accessToken ? profile.state : 'loading'
+  const customer = profile?.customer
 
   useEffect(() => {
-    const session = readCustomerSession()
-    if (!session?.accessToken) { setState('guest'); return }
+    if (!accessToken) { setProfile(null); return }
     const controller = new AbortController()
     apiRequest('/auth/me', {
       cache: 'no-store', signal: controller.signal,
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     }).then((result) => {
-      if (!controller.signal.aborted) { setCustomer(result); setState('ready') }
+      if (!controller.signal.aborted) setProfile({ token: accessToken, state: 'ready', customer: result })
     }).catch((error) => {
-      if (!controller.signal.aborted) setState(error.status === 401 || error.status === 403 ? 'expired' : 'error')
+      if (!controller.signal.aborted) {
+        setProfile({ token: accessToken, state: error.status === 401 || error.status === 403 ? 'expired' : 'error' })
+      }
     })
     return () => controller.abort()
-  }, [])
+  }, [accessToken])
 
   return (
     <AccountShell active="account">
@@ -133,7 +146,7 @@ export function AccountEditProfilePage() {
 }
 
 export function AccountOrdersPage() {
-  const customer = readCustomerSession()?.customer
+  const customer = useCustomerSession()?.customer
   return <AccountShell active="orders">
     <PageHeader title="Pesanan Saya" description="Pantau pesanan yang tercatat di akun Zetruv." />
     <div className="orders-figma-empty" role="status">
@@ -154,7 +167,7 @@ export function AccountAddressFormPage() {
 }
 
 export function AccountAddressesPage() {
-  const customer = readCustomerSession()?.customer
+  const customer = useCustomerSession()?.customer
   return <AccountShell active="addresses">
     <PageHeader title="Alamat" description="Kelola alamat pengiriman merchandise." />
     <div className="orders-figma-empty" role="status">

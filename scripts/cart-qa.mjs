@@ -27,16 +27,32 @@ try{
     const ctx=await browser.newContext({viewport,deviceScaleFactor:1})
     if(device==='desktop') await ctx.addInitScript(item=>{
       // Only anonymous draft. No secrets, real account ID or real transaction.
-      if(!sessionStorage.getItem('qa-draft-seeded')){
+      if(!localStorage.getItem('qa-draft-seeded')){
         localStorage.setItem('zetruv-cart-v1',JSON.stringify([item]))
-        sessionStorage.setItem('qa-draft-seeded','1')
+        localStorage.setItem('qa-draft-seeded','1')
       }
     },guest)
-    await ctx.route('**/api/v1/auth/login',async route=>route.fulfill({
-      status:200,contentType:'application/json',
-      headers:{'Access-Control-Allow-Origin':'*'},
-      body:JSON.stringify({accessToken:jwt,customer:{name:'QA Tester',email:'qa@example.test'}}),
-    }))
+    let signedIn = false
+    const session = {
+      accessToken: jwt, expiresAt: '2099-01-01T00:00:00Z',
+      customer: {name: 'QA Tester', email: 'qa@example.test'},
+    }
+    await ctx.route('**/api/v1/auth/session', async route => {
+      if (route.request().method() === 'DELETE') {
+        signedIn = false
+        return route.fulfill({status: 204})
+      }
+      return route.fulfill({status: signedIn ? 200 : 401, json: signedIn ? session : {}})
+    })
+    await ctx.route('**/api/v1/auth/login', async route => {
+      signedIn = true
+      return route.fulfill({status: 200, json: session})
+    })
+    await ctx.route('**/api/v1/auth/verify-email', async route => {
+      assert.equal(route.request().postDataJSON().token, 'synthetic-verification-token')
+      signedIn = true
+      return route.fulfill({status: 200, json: session})
+    })
     await ctx.route('**/api/v1/me/cart/merge',async route=>{
       mergeCalls++
       const payload=JSON.parse(route.request().postData()||'{}')
@@ -51,20 +67,20 @@ try{
         stockQuantity:10,target:null,
       })
       await route.fulfill({status:200,contentType:'application/json',
-        headers:{'Access-Control-Allow-Origin':'*'},
+        headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:4178','Access-Control-Allow-Credentials':'true'},
         body:JSON.stringify({count:serverRows.length,revision:'rev-1'})})
     })
     await ctx.route('**/api/v1/me/cart',async route=>{
       if(route.request().method()!=='GET')return route.abort('blockedbyclient')
       sessionChecks++
       await route.fulfill({status:200,contentType:'application/json',
-        headers:{'Access-Control-Allow-Origin':'*'},
+        headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:4178','Access-Control-Allow-Credentials':'true'},
         body:JSON.stringify({items:serverRows,revision:'rev-1'})})
     })
     await ctx.route('**/api/v1/**',async route=>{
       if(route.request().method()==='OPTIONS')
         return route.fulfill({status:204,headers:{
-          'Access-Control-Allow-Origin':'*',
+          'Access-Control-Allow-Origin':'http://127.0.0.1:4178','Access-Control-Allow-Credentials':'true',
           'Access-Control-Allow-Headers':'authorization, content-type',
           'Access-Control-Allow-Methods':'GET, POST, PUT, DELETE, OPTIONS',
         }})
@@ -88,11 +104,29 @@ try{
     await page.reload()
     await page.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:20000})
     assert.ok(await page.getByText('Synthetic 10 Credits').count()>0)
+    const secondTab = await ctx.newPage()
+    await secondTab.goto(urls + '/cart')
+    await secondTab.getByText('Keranjang tersimpan di akun Zetruv').waitFor()
     await page.getByRole('button',{name:'Logout',exact:true}).click()
+    await secondTab.waitForFunction(() => !sessionStorage.getItem('zetruv-customer-session-v1'))
+    await secondTab.close()
     await page.getByText('Keranjang digital masih kosong').waitFor({timeout:12000})
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('zetruv-customer-session-v1')),null)
     await page.screenshot({path:output+'/logout-'+device+'-cart.png',fullPage:true})
-    report.push({device,mergeCalls,sessionChecks,afterReload:true,logoutIsolated:true})
+    await page.goto(urls + '/auth/verify-email?token=synthetic-verification-token')
+    await page.getByRole('heading', {name: 'Email verified!'}).waitFor()
+    const homeLink = page.getByRole('link', {name: 'Back to Home'})
+    assert.equal(await homeLink.getAttribute('href'), '/')
+    assert.equal(await page.getByRole('link', {name: 'Go to My Account'}).getAttribute('href'), '/account')
+    const navbar = await page.locator('.navbar').boundingBox()
+    const card = await page.locator('.verify-email-card').boundingBox()
+    assert.ok(card.y > navbar.y + navbar.height, device + ' verification card overlaps navbar')
+    assert.ok(card.x >= 0 && card.x + card.width <= viewport.width)
+    assert.equal(page.url(), urls + '/auth/verify-email')
+    const verifiedTab = await ctx.newPage()
+    await verifiedTab.goto(urls + '/cart')
+    await verifiedTab.getByText('Keranjang tersimpan di akun Zetruv').waitFor()
+    report.push({device,mergeCalls,sessionChecks,afterReload:true,logoutIsolated:true,verification:true})
     await ctx.close()
   }
   assert.equal(mergeCalls,1,'same guest draft re-login may not duplicate merge')

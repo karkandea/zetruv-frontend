@@ -130,7 +130,6 @@ export default function CartPage() {
   useEffect(()=>{
     const handler=event=>setCartSync(event.detail||getCartSyncStatus())
     window.addEventListener(CART_SYNC_EVENT,handler)
-    if(readCustomerSession())activateCustomerCart().catch(()=>{})
     return ()=>window.removeEventListener(CART_SYNC_EVENT,handler)
   },[])
   useEffect(() => () => { if (undoTimer.current) window.clearTimeout(undoTimer.current) }, [])

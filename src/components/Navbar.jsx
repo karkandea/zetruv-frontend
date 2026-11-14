@@ -6,7 +6,7 @@ import { ChevronDown, ClipboardList, Gamepad2, Home, LogIn, LogOut, Newspaper, S
 import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
 import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
-import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, CUSTOMER_EVENT } from '../services/customerCartSync'
+import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, watchCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { readPendingRegistration } from '../services/registrationVerification'
 
 const productLinks = [
@@ -29,7 +29,7 @@ function readPhysicalCartCount() {
   }
 }
 
-export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false }) {
+export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, restoreSession = true }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHomepageDrawerOpen, setIsHomepageDrawerOpen] = useState(false)
@@ -38,6 +38,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const language = useNavbarLanguage()
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [verifiedSession,setVerifiedSession]=useState(readCustomerSession)
+  const [logoutError, setLogoutError] = useState('')
   const [cartItems, setCartItems] = useState(() => typeof window === 'undefined' ? [] : readCart())
   const [physicalCartCount, setPhysicalCartCount] = useState(() => readPhysicalCartCount())
   const [authMode, setAuthMode] = useState(() => {
@@ -88,8 +89,6 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
 
   useEffect(() => onCartChange(setCartItems), [])
   useEffect(()=>{
-    // Every browser/device reads the server cart after a verified login.
-    if(readCustomerSession())activateCustomerCart().catch(()=>{})
     const refreshSession=()=>setVerifiedSession(readCustomerSession())
     const onFocus=()=>{if(readCustomerSession())refreshCustomerCart().catch(()=>{})}
     window.addEventListener(CUSTOMER_EVENT,refreshSession)
@@ -97,6 +96,8 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
     return ()=>{window.removeEventListener(CUSTOMER_EVENT,refreshSession)
       window.removeEventListener('focus',onFocus)}
   },[])
+
+  useEffect(() => watchCustomerSession({ restoreSession }), [restoreSession])
 
   useEffect(() => {
     const refreshPhysicalCart = () => setPhysicalCartCount(readPhysicalCartCount())
@@ -172,6 +173,16 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
     setVerifiedSession(readCustomerSession())
     activateCustomerCart().catch(()=>{}) // error is displayed on cart; guest draft retained.
     onAuthenticated?.(response)
+  }
+
+  async function handleLogout() {
+    setLogoutError('')
+    try {
+      await logoutCustomer()
+      setIsHomepageDrawerOpen(false)
+    } catch {
+      setLogoutError(t.logoutError)
+    }
   }
 
   function openRegistration() {
@@ -321,7 +332,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           ))}
         </div>
         <div className="navbar__mobile-auth">
-          {verifiedSession ? <button type="button" onClick={() => { logoutCustomer(); setVerifiedSession(null); setIsHomepageDrawerOpen(false) }}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
+          {verifiedSession ? <button type="button" onClick={handleLogout}><LogOut size={18} aria-hidden="true" />{t.logout}</button> : <>
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('login') }}><LogIn size={18} aria-hidden="true" />{t.login}</button>
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); openRegistration() }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
           </>}
@@ -403,11 +414,12 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </div>
           )}
           {verifiedSession && <div className="auth-actions"><button type="button" className="btn btn--outline navbar-control"
-            onClick={()=>{logoutCustomer();setVerifiedSession(null)}}>{t.logout}</button></div>}
+            onClick={handleLogout}>{t.logout}</button></div>}
         </div>
       </div>
       </header>
 
+      {logoutError && <p className="navbar-logout-error" role="alert">{logoutError}</p>}
       {authMode && (
         <AuthModal mode={authMode} resetToken={resetToken.current} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
       )}
