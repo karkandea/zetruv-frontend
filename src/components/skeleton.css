@@ -120,6 +120,7 @@
 .skeleton-content :is(.product-hero__copy, .login-product-hero__copy, .special-product-hero__copy, .ga-detail-hero-copy) > .skeleton-lines {
   width: min(240px, 60vw);
 }
+.digital-shell .digital-cart-item__checking { width: 100%; }
 .skeleton-content .checkout-product > .skeleton-lines { margin-block: 12px; }
 .skeleton-content .digital-payment-methods .skeleton-row {
   border: 1px solid #e0e3eb;
