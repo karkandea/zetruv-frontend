@@ -1,6 +1,7 @@
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { ChevronRight, RotateCcw, Search, X } from 'lucide-react'
 import { assets } from '../data/assets'
 import { getCatalogProducts } from '../services/catalogService'
@@ -72,9 +73,11 @@ function SearchSkeleton({ query, showSkeleton }) {
 
 export default function NavbarSearch({ placeholder, initialQuery = '' }) {
   const copy = useStorefrontCopy()
-  const popupId = useId()
+  const searchId = useId()
+  const popupId = `${searchId}-suggestions`
   const inputRef = useRef(null)
   const containerRef = useRef(null)
+  const triggerRef = useRef(null)
   const requestVersion = useRef(0)
   const [query, setQuery] = useState(initialQuery)
   const [isOpen, setIsOpen] = useState(false)
@@ -160,10 +163,11 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
       }
     }
     function onEscape(event) {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-        setActiveIndex(-1)
-      }
+      if (event.key !== 'Escape' || !containerRef.current?.contains(event.target)) return
+      event.preventDefault()
+      setIsOpen(false)
+      setActiveIndex(-1)
+      if (triggerRef.current?.getClientRects().length) triggerRef.current.focus()
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onEscape)
@@ -184,12 +188,6 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
   }
 
   function handleInputKey(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      setIsOpen(false)
-      setActiveIndex(-1)
-      return
-    }
     if (isOpen && showResults && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
       event.preventDefault()
       const delta = event.key === 'ArrowDown' ? 1 : -1
@@ -213,140 +211,166 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
     inputRef.current?.focus()
   }
 
+  function toggleMobileSearch() {
+    if (isOpen) {
+      setIsOpen(false)
+      setActiveIndex(-1)
+      return
+    }
+
+    // Reveal and focus during the same tap so mobile Safari opens the keyboard.
+    flushSync(() => setIsOpen(true))
+    inputRef.current?.focus()
+  }
+
   return (
-    <form
-      ref={containerRef}
-      className={`searchbox navbar-searchbox${isOpen ? ' navbar-searchbox--open' : ''}`}
-      role="search"
-      action="/search"
-      method="get"
-      autoComplete="off"
-      onSubmit={navigateToSearch}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
+    <div className="navbar-search" ref={containerRef}>
+      <button
+        ref={triggerRef}
+        className="navbar-search__trigger"
+        type="button"
+        aria-label={isOpen ? copy.closeSearch : copy.search}
+        aria-expanded={isOpen}
+        aria-controls={searchId}
+        onClick={toggleMobileSearch}
+      >
+        {isOpen ? <X size={21} aria-hidden="true" /> : <Search size={21} aria-hidden="true" />}
+      </button>
+      <form
+        id={searchId}
+        className={`searchbox navbar-searchbox${isOpen ? ' navbar-searchbox--open' : ''}`}
+        role="search"
+        action="/search"
+        method="get"
+        autoComplete="off"
+        onSubmit={navigateToSearch}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            inputRef.current?.focus()
+            setIsOpen(true)
+          }
+        }}
+      >
+        <img src={assets.search} alt="" onClick={() => {
           inputRef.current?.focus()
           setIsOpen(true)
-        }
-      }}
-    >
-      <img src={assets.search} alt="" onClick={() => {
-        inputRef.current?.focus()
-        setIsOpen(true)
-      }} />
-      <input
-        ref={inputRef}
-        type="search"
-        name="q"
-        value={query}
-        onChange={(event) => {
-          setQuery(event.target.value)
-          setActiveIndex(-1)
-          setIsOpen(true)
-        }}
-        onFocus={() => setIsOpen(true)}
-        onClick={() => setIsOpen(true)}
-        onKeyDown={handleInputKey}
-        placeholder={placeholder}
-        aria-label={copy.searchGamesVouchersOrProducts}
-        aria-autocomplete="list"
-        role="combobox"
-        aria-expanded={isOpen}
-        aria-controls={isOpen ? popupId : undefined}
-        aria-activedescendant={isOpen && showResults && activeIndex >= 0 ? `${popupId}-option-${activeIndex}` : undefined}
-        maxLength={100}
-        spellCheck={false}
-      />
-      {query.length > 0 && (
-        <button
-          className="navbar-searchbox__clear"
-          type="button"
-          aria-label={copy.clearSearch}
-          onClick={clearQuery}
-        >
-          <X size={18} aria-hidden="true" />
-        </button>
-      )}
-
-      {isOpen && (
-        <div
-          className={`navbar-search-dropdown navbar-search-dropdown--${resultState}`}
-          id={popupId}
-          aria-label={copy.searchSuggestions}
-          onMouseDown={(event) => {
-            // Keep input focus while clicking options or controls in the popup.
-            if (event.target.closest('a, button')) return
-            event.preventDefault()
+        }} />
+        <input
+          ref={inputRef}
+          type="search"
+          name="q"
+          enterKeyHint="search"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value)
+            setActiveIndex(-1)
+            setIsOpen(true)
           }}
-        >
-          {resultState === 'hint' && (
-            <div className="navbar-search-dropdown__hint" role="status">
-              <strong>{copy.search}</strong>
-              <p>{trimmed.length === 0
-                ? copy.typeAGameVoucherOrServiceTo
-                : copy.enterAtLeast3CharactersToSearch}</p>
-            </div>
-          )}
-          {resultState === 'loading' && <SearchSkeleton query={trimmed} showSkeleton={showSkeleton} />}
-          {resultState === 'results' && (
-            <>
-              <div className="navbar-search-dropdown__list" role="listbox" aria-label={copy.searchResults}>
-                {groups.best.length > 0 && (
-                  <div className="navbar-search-dropdown__group" role="group" aria-label={copy.bestMatch}>
-                    <h3>{copy.bestMatch}</h3>
-                    {groups.best.map((product, index) => (
-                      <ResultItem
-                        key={product.id}
-                        product={product}
-                        id={`${popupId}-option-${index}`}
-                        selected={activeIndex === index}
-                        onHover={() => setActiveIndex(index)}
-                        onSelect={() => setIsOpen(false)}
-                      />
-                    ))}
-                  </div>
-                )}
-                {groups.suggestions.length > 0 && (
-                  <div className="navbar-search-dropdown__group" role="group" aria-label={copy.suggestions}>
-                    <h3>{copy.suggestions}</h3>
-                    {groups.suggestions.map((product, index) => {
-                      const optionIndex = groups.best.length + index
-                      return <ResultItem
-                        key={product.id}
-                        product={product}
-                        id={`${popupId}-option-${optionIndex}`}
-                        selected={activeIndex === optionIndex}
-                        onHover={() => setActiveIndex(optionIndex)}
-                        onSelect={() => setIsOpen(false)}
-                      />
-                    })}
-                  </div>
-                )}
+          onFocus={() => setIsOpen(true)}
+          onClick={() => setIsOpen(true)}
+          onKeyDown={handleInputKey}
+          placeholder={placeholder}
+          aria-label={copy.searchGamesVouchersOrProducts}
+          aria-autocomplete="list"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={isOpen ? popupId : undefined}
+          aria-activedescendant={isOpen && showResults && activeIndex >= 0 ? `${popupId}-option-${activeIndex}` : undefined}
+          maxLength={100}
+          spellCheck={false}
+        />
+        {query.length > 0 && (
+          <button
+            className="navbar-searchbox__clear"
+            type="button"
+            aria-label={copy.clearSearch}
+            onClick={clearQuery}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        )}
+
+        {isOpen && (
+          <div
+            className={`navbar-search-dropdown navbar-search-dropdown--${resultState}`}
+            id={popupId}
+            aria-label={copy.searchSuggestions}
+            onMouseDown={(event) => {
+              // Keep input focus while clicking options or controls in the popup.
+              if (event.target.closest('a, button')) return
+              event.preventDefault()
+            }}
+          >
+            {resultState === 'hint' && (
+              <div className="navbar-search-dropdown__hint" role="status">
+                <strong>{copy.search}</strong>
+                <p>{trimmed.length === 0
+                  ? copy.typeAGameVoucherOrServiceTo
+                  : copy.enterAtLeast3CharactersToSearch}</p>
               </div>
-              <a className="navbar-search-dropdown__view-all" href={`/search?q=${encodeURIComponent(trimmed)}`}>
-                {copy.viewAllResults} <ChevronRight size={18} aria-hidden="true" />
-              </a>
-            </>
-          )}
-          {resultState === 'empty' && (
-            <div className="navbar-search-dropdown__empty" role="status">
-              <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
-              <strong>{copy.noResultsFound}</strong>
-              <p>{formatCopy(copy.weCouldnTFindTryAnotherGame, { query: trimmed })}</p>
-              <a href="/search">{copy.browseAllCategories}</a>
-            </div>
-          )}
-          {resultState === 'error' && (
-            <div className="navbar-search-dropdown__empty" role="alert">
-              <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
-              <strong>{copy.searchUnavailable}</strong>
-              <p>{copy.weCouldnTLoadResultsRightNow}</p>
-              <button type="button" className="navbar-search-dropdown__retry" onClick={() => setRetryIndex(value => value + 1)}>
-                <RotateCcw size={15} aria-hidden="true" /> {copy.tryAgain}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </form>
+            )}
+            {resultState === 'loading' && <SearchSkeleton query={trimmed} showSkeleton={showSkeleton} />}
+            {resultState === 'results' && (
+              <>
+                <div className="navbar-search-dropdown__list" role="listbox" aria-label={copy.searchResults}>
+                  {groups.best.length > 0 && (
+                    <div className="navbar-search-dropdown__group" role="group" aria-label={copy.bestMatch}>
+                      <h3>{copy.bestMatch}</h3>
+                      {groups.best.map((product, index) => (
+                        <ResultItem
+                          key={product.id}
+                          product={product}
+                          id={`${popupId}-option-${index}`}
+                          selected={activeIndex === index}
+                          onHover={() => setActiveIndex(index)}
+                          onSelect={() => setIsOpen(false)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {groups.suggestions.length > 0 && (
+                    <div className="navbar-search-dropdown__group" role="group" aria-label={copy.suggestions}>
+                      <h3>{copy.suggestions}</h3>
+                      {groups.suggestions.map((product, index) => {
+                        const optionIndex = groups.best.length + index
+                        return <ResultItem
+                          key={product.id}
+                          product={product}
+                          id={`${popupId}-option-${optionIndex}`}
+                          selected={activeIndex === optionIndex}
+                          onHover={() => setActiveIndex(optionIndex)}
+                          onSelect={() => setIsOpen(false)}
+                        />
+                      })}
+                    </div>
+                  )}
+                </div>
+                <a className="navbar-search-dropdown__view-all" href={`/search?q=${encodeURIComponent(trimmed)}`}>
+                  {copy.viewAllResults} <ChevronRight size={18} aria-hidden="true" />
+                </a>
+              </>
+            )}
+            {resultState === 'empty' && (
+              <div className="navbar-search-dropdown__empty" role="status">
+                <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
+                <strong>{copy.noResultsFound}</strong>
+                <p>{formatCopy(copy.weCouldnTFindTryAnotherGame, { query: trimmed })}</p>
+                <a href="/search">{copy.browseAllCategories}</a>
+              </div>
+            )}
+            {resultState === 'error' && (
+              <div className="navbar-search-dropdown__empty" role="alert">
+                <span className="navbar-search-dropdown__empty-icon"><Search size={25} aria-hidden="true" /></span>
+                <strong>{copy.searchUnavailable}</strong>
+                <p>{copy.weCouldnTLoadResultsRightNow}</p>
+                <button type="button" className="navbar-search-dropdown__retry" onClick={() => setRetryIndex(value => value + 1)}>
+                  <RotateCcw size={15} aria-hidden="true" /> {copy.tryAgain}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </form>
+    </div>
   )
 }
