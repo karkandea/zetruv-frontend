@@ -2,24 +2,16 @@ import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import BrowseMobileControls from '../components/BrowseMobileControls'
 import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
-import { Bookmark, IdCard, LogIn, Search, Shirt, Ticket, Trophy, UserRound } from 'lucide-react'
+import { Bookmark } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
 const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'Joki', 'GameAccount', 'GameVoucher', 'Merchandise']
-const CATEGORY_ICONS = {
-  TopUpGame: IdCard,
-  TopUpLogin: LogIn,
-  Joki: Trophy,
-  GameAccount: UserRound,
-  GameVoucher: Ticket,
-  Merchandise: Shirt,
-}
-
 const CATEGORY_PRESENTATION = {
   TopUpGame: {
     key: 'player-id',
@@ -355,24 +347,24 @@ export default function SearchPage({ mode = 'player-id' }) {
     setLetterFiltering(true)
   }
 
-  function handleCategory(category) {
-    if (category.kind === 'Merchandise') {
+  function handleCategory(kind) {
+    if (kind === 'Merchandise') {
       window.location.href = '/merchandise'
       return
     }
-    if (category.kind === 'GameAccount') {
+    if (kind === 'GameAccount') {
       window.location.href = '/game-accounts'
       return
     }
 
-    setActiveKind(category.kind)
+    setActiveKind(kind)
     setGlobalResults(false)
     setLetterFiltering(false)
     setCatalogError('')
     const url = new URL(window.location.href)
     url.pathname = '/search'
-    if (category.kind === 'TopUpGame' && query.trim().length < 3) url.searchParams.delete('kind')
-    else url.searchParams.set('kind', category.kind)
+    if (kind === 'TopUpGame' && query.trim().length < 3) url.searchParams.delete('kind')
+    else url.searchParams.set('kind', kind)
     if (query.trim().length < 3) url.searchParams.delete('q')
     window.history.pushState({}, '', `${url.pathname}${url.search}`)
   }
@@ -412,39 +404,32 @@ export default function SearchPage({ mode = 'player-id' }) {
           )}
 
           <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label={copy.browseZetruvCategories}>
-            {!isLoginMode && <form className="catalog-search catalog-search--mobile" onSubmit={handleSearch} role="search" aria-label={copy.searchTheCatalog}>
-              <Search size={19} aria-hidden="true" />
-              <input
-                type="search"
-                enterKeyHint="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={copy.searchGamesOrProducts}
-                aria-label={copy.searchGamesOrProducts}
+            {!isLoginMode && (
+              <BrowseMobileControls
+                activeKind={globalResults ? undefined : activeKind}
+                query={query}
+                onQueryChange={setQuery}
+                onSubmit={handleSearch}
+                onCategoryChange={handleCategory}
               />
-            </form>}
+            )}
             <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
               <h2>{isLoginMode ? copy.categories3 : copy.categories2}</h2>
               <div className="search-category-list">
-                {categoryDefinitions.map((category) => {
-                  const CategoryIcon = CATEGORY_ICONS[category.kind]
-                  return (
-                    <button
-                      type="button"
-                      key={category.kind}
-                      className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
-                      aria-pressed={category.kind === 'Merchandise' || category.kind === 'GameAccount'
-                        ? undefined : !globalResults && activeKind === category.kind}
-                      onClick={() => handleCategory(category)}
-                    >
-                      <span className="search-category__icon"><img src={category.icon} alt="" /></span>
-                      {!isLoginMode && <CategoryIcon className="browse-category-icon" size={20} aria-hidden="true" />}
-                      <span className={isLoginMode ? undefined : 'browse-category-label--desktop'}>{category.label}</span>
-                      {!isLoginMode && <span className="browse-category-label--mobile">{copy[CATEGORY_PRESENTATION[category.kind].loginLabel]}</span>}
-                      {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
-                    </button>
-                  )
-                })}
+                {categoryDefinitions.map((category) => (
+                  <button
+                    type="button"
+                    key={category.kind}
+                    className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
+                    aria-pressed={category.kind === 'Merchandise' || category.kind === 'GameAccount'
+                      ? undefined : !globalResults && activeKind === category.kind}
+                    onClick={() => handleCategory(category.kind)}
+                  >
+                    <span className="search-category__icon"><img src={category.icon} alt="" /></span>
+                    <span>{category.label}</span>
+                    {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
+                  </button>
+                ))}
               </div>
 
               <button className="search-help-card" type="button" onClick={() => setSupportOpen(true)}>

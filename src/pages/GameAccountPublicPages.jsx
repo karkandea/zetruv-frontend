@@ -2,6 +2,8 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import BrowseMobileControls from '../components/BrowseMobileControls'
+import SupportChat from '../components/SupportChat'
 import { saveGameAccountCart } from '../data/gameAccountCatalog'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogGames, getCatalogProduct, getCatalogProducts } from '../services/catalogService'
@@ -162,7 +164,16 @@ export function GameAccountsPage() {
     () => games.filter((game) => `${game.name} ${game.publisher || ''}`.toLowerCase().includes(query.trim().toLowerCase())),
     [games, query],
   )
-  return <div className="ga-shell"><Navbar /><main className="ga-picker ga-container">
+  return <div className="ga-shell browse-catalog-shell">
+    <Navbar homepageMobileMenu />
+    <main className="ga-picker ga-container browse-catalog-page">
+      <h1 className="browse-title--mobile">{copy.browse}</h1>
+      <BrowseMobileControls
+        activeKind="GameAccount"
+        query={query}
+        onQueryChange={setQuery}
+        onSubmit={event => event.preventDefault()}
+      />
     <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
     <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><span>{copy.gameAccounts}</span></p>
     <h1>{copy.gameAccounts}</h1><p className="ga-lead">{copy.chooseAGameToSeeAvailableAccount}</p>
@@ -170,7 +181,8 @@ export function GameAccountsPage() {
       <label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchGames} aria-label={copy.searchGames2} /></label>
       <button type="submit">{copy.search3}</button>
     </form>
-    <h2>{copy.games}</h2>
+    <h2 className="browse-title--desktop">{copy.games}</h2>
+    <h2 className="browse-list-title">{copy.gameAccounts}</h2>
     {loading ? <StateMessage>{copy.loadingGames}</StateMessage> : error ? <StateMessage>{error}</StateMessage>
       : visibleGames.length === 0 ? <StateMessage>{copy.noGamesFound}</StateMessage>
       : <div className="ga-game-grid">{visibleGames.map((game) =>
@@ -179,7 +191,7 @@ export function GameAccountsPage() {
           <span><strong>{game.name}</strong><small>{game.publisher || copy.gameAccount}</small></span>
           <ChevronRight size={20} />
         </a>)}</div>}
-  </div></div></main></div>
+  </div></div></main><SupportChat /></div>
 }
 
 export function GameAccountListingPage({ gameSlug }) {
