@@ -32,6 +32,13 @@ export function checkoutFields(product, scope) {
     }))
 }
 
+export function isTopUpDestinationAccepted(validation, fields) {
+  if (!validation?.validationId) return false
+  return fields.some((field) => field.key?.toLowerCase() === 'openid')
+    ? validation.status === 'FormatChecked'
+    : validation.status === 'Verified'
+}
+
 export function validateCheckoutField(field, raw, copy = storefrontCopy.id) {
   if (field.prohibited) return copy.prohibitedCredential
   const value = trim(raw)

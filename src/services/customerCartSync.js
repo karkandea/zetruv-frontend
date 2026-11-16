@@ -1,6 +1,7 @@
 import { apiRequest } from '../api/httpClient'
 import { getCatalogProduct } from './catalogService'
 import { verifyTopUpIdDestination } from './digitalPurchaseCapabilities'
+import { isTopUpDestinationAccepted } from './digitalCheckoutRules.js'
 import {
   readGuestCart, clearGuestCart, setAuthenticatedCart,
   leaveAuthenticatedCart, isAuthenticatedCart,
@@ -198,7 +199,7 @@ async function validatedTarget(item){
     if(value)payload[field.key]=value
   }
   const v=await verifyTopUpIdDestination(product.id,payload)
-  if(v.status!=='Verified'||!v.validationId)throw Error(item.productName+': tujuan belum terverifikasi.')
+  if(!isTopUpDestinationAccepted(v,definitions))throw Error(item.productName+': tujuan belum terverifikasi.')
   return v.validationId
 }
 
