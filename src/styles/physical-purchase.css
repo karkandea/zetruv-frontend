@@ -2048,6 +2048,7 @@
 
   .physical-cart-left,
   .physical-cart-item,
+  .physical-cart-empty,
   .physical-cart-assurance {
     width: 100%;
   }
@@ -2623,4 +2624,8 @@
 @media (max-width: 700px) {
   .physical-purchase-panel { min-height: 0; }
   .physical-pdp__main { min-height: 0; }
+}
+
+@media (max-width: 1024px) {
+  .physical-cart { padding-top: 88px; }
 }

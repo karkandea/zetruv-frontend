@@ -217,7 +217,7 @@ export default function CartPage() {
 
   return (
     <div className="digital-shell">
-      <Navbar />
+      <Navbar homepageMobileMenu />
       <main className="digital-cart-page digital-container">
         <header className="digital-page-heading">
           <div><h1>{copy.digitalCart}</h1><p>{copy.reviewYourProductsAndDestinationAccountsBefore}</p></div>
