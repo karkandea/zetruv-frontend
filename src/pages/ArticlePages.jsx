@@ -69,7 +69,7 @@ export function ArticlesPage() {
   const featured = useMemo(() => page === 1 && !category && !search ? articles[0] : null, [articles, page, category, search])
 
   return <div className="article-shell">
-    <Navbar variant="article" />
+    <Navbar variant="article" homepageMobileMenu />
     <main>
       <section className="article-index-header">
         <div className="article-index-header__inner">
@@ -167,7 +167,7 @@ export function ArticleDetailPage({ slug }) {
   const date = article?.publishedAt ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeZone: 'Asia/Jakarta' }).format(new Date(article.publishedAt)) : ''
 
   return <div className="article-shell">
-    <Navbar variant="article" />
+    <Navbar variant="article" homepageMobileMenu />
     <main>
       {state === 'loading' && <LoadingRegion label={copy.loadingArticles}>
         <section className="article-detail-header"><div className="article-detail-header__inner">

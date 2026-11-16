@@ -457,7 +457,7 @@ export function PhysicalCartPage() {
 
   return (
     <div className="physical-shell">
-      <Navbar />
+      <Navbar homepageMobileMenu />
       <main className="physical-cart">
         <header className="physical-cart__heading">
           <div><h1>{copy.merchandiseCart}</h1><p>{item ? copy.label1PhysicalItem : copy.label0PhysicalItems}</p></div>
