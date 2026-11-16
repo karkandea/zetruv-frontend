@@ -2,6 +2,9 @@ import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import BrowseMobileControls from '../components/BrowseMobileControls'
+import SupportChat from '../components/SupportChat'
+import { Bookmark, ImageOff } from 'lucide-react'
 import { getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import { searchAssets } from '../data/searchAssets'
@@ -24,7 +27,7 @@ function ProductCard({ product }) {
   return <article className="physical-product-card">
     <a className="physical-product-card__link" href={`/merchandise/${encodeURIComponent(product.slug)}`}>
       <div className="physical-product-card__image">
-        {product.thumbnailUrl ? <img src={product.thumbnailUrl} alt="" loading="lazy" /> : <span>{copy.photoUnavailable}</span>}
+        {product.thumbnailUrl ? <img src={product.thumbnailUrl} alt="" loading="lazy" /> : <ImageOff size={20} aria-label={copy.photoUnavailable} />}
       </div>
       <div className="physical-product-card__meta"><span className="physical-badge">{copy.merchandise2}</span><Availability available={product.isAvailable} /></div>
       <strong className="physical-product-card__name">{product.name}</strong>
@@ -32,13 +35,13 @@ function ProductCard({ product }) {
       <strong className="physical-product-card__price">{product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable}</strong>
     </a>
     <button type="button" className={`physical-product-card__favorite${saved ? ' is-saved' : ''}`}
-      aria-label={saved ? formatCopy(copy.removeFromFavorites, { product: product.name }) : formatCopy(copy.addToFavorites, { product: product.name })}
+      aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
       aria-pressed={saved}
       onClick={() => setSaved(toggleFavorite({
         id: favoriteId, name: product.name, type: 'Merchandise',
         price: product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable,
         href: `/merchandise/${product.slug}`, image: product.thumbnailUrl,
-      }))}>{saved ? '♥' : '♡'}</button>
+      }))}><Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" /></button>
   </article>
 }
 
@@ -47,6 +50,7 @@ export function LivePhysicalCatalogPage() {
   const [products, setProducts] = useState([])
   const [state, setState] = useState('loading')
   const [sort, setSort] = useState('newest')
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -57,10 +61,12 @@ export function LivePhysicalCatalogPage() {
   }, [])
 
   const visible = useMemo(() => {
-    if (sort === 'low') return [...products].sort((a, b) => (a.minPrice ?? Infinity) - (b.minPrice ?? Infinity))
-    if (sort === 'high') return [...products].sort((a, b) => (b.minPrice ?? -Infinity) - (a.minPrice ?? -Infinity))
-    return products
-  }, [products, sort])
+    const term = query.trim().toLowerCase()
+    const items = products.filter(product => product.name.toLowerCase().includes(term))
+    if (sort === 'low') return items.sort((a, b) => (a.minPrice ?? Infinity) - (b.minPrice ?? Infinity))
+    if (sort === 'high') return items.sort((a, b) => (b.minPrice ?? -Infinity) - (a.minPrice ?? -Infinity))
+    return items
+  }, [products, sort, query])
 
   const categories = [
     [copy.gameTopUpById, searchAssets.categoryPlayerId, '/search?kind=TopUpGame'],
@@ -71,9 +77,17 @@ export function LivePhysicalCatalogPage() {
     [copy.merchandise, searchAssets.categoryMerchandise, '/merchandise'],
   ]
 
-  return <div className="physical-shell">
-    <Navbar />
-    <main className="physical-catalog"><div className="physical-catalog-layout">
+  return <div className="physical-shell browse-catalog-shell">
+    <Navbar homepageMobileMenu />
+    <main className="physical-catalog browse-catalog-page">
+      <h1 className="browse-title--mobile">{copy.browse}</h1>
+      <BrowseMobileControls
+        activeKind="Merchandise"
+        query={query}
+        onQueryChange={setQuery}
+        onSubmit={event => event.preventDefault()}
+      />
+      <div className="physical-catalog-layout">
       <aside className="physical-catalog-sidebar">
         <h2>{copy.categories2}</h2><nav>{categories.map(([label, icon, href]) => <a className={href === '/merchandise' ? 'is-active' : ''} href={href} key={label}>
           <span><img src={icon} alt="" /></span><strong>{label}</strong>{href === '/merchandise' && <i aria-hidden="true" />}
@@ -83,6 +97,7 @@ export function LivePhysicalCatalogPage() {
         <header className="physical-catalog__heading"><div><h1>{copy.merchandise}</h1><p>{copy.physicalProductsListedInTheZetruvCatalog}</p></div><span>{products.length} {copy.products2}</span></header>
         <div className="physical-catalog__toolbar">
           <div className="physical-filter-pills"><span>{copy.allMerchandise}</span></div>
+          <h2 className="browse-list-title">{copy.merchandise}</h2>
           <label className="physical-sort"><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
             <option value="newest">{copy.catalogOrder}</option><option value="low">{copy.lowestPrice}</option><option value="high">{copy.highestPrice}</option>
           </select></label>
@@ -90,10 +105,13 @@ export function LivePhysicalCatalogPage() {
         <div className="physical-catalog__context"><strong>{copy.allProducts}</strong><span>•</span><span>{copy.pricingAndStockComeFromTheCatalog}</span></div>
         {state === 'loading' && <p role="status">{copy.loadingMerchandise}</p>}
         {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
-        {state === 'ready' && visible.length === 0 && <p role="status">{copy.noMerchandiseHasBeenPublishedInThe}</p>}
+        {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
+          ? copy.noProductsMatchYourSearch
+          : copy.noMerchandiseHasBeenPublishedInThe}</p>}
         <div className="physical-product-grid">{state === 'ready' && visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>
       </section>
     </div></main>
+    <SupportChat />
   </div>
 }
 
