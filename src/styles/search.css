@@ -748,9 +748,7 @@
   }
 
   .browse-catalog-page .physical-catalog-content .physical-product-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(204px, calc((100% - 46px) / 2));
+    display: flex;
     gap: 10px;
     width: 100%;
     min-height: 0;
@@ -761,6 +759,7 @@
   }
 
   .browse-catalog-page .physical-catalog-content .physical-product-card {
+    flex: 0 0 min(204px, calc((100% - 46px) / 2));
     width: auto;
     min-width: 0;
     height: auto;
