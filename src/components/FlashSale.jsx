@@ -1,3 +1,4 @@
+import { Bone, SkeletonItems, SkeletonLines } from './Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -51,7 +52,7 @@ export function FlashSaleItem({ item, interactive = true, tabIndex }) {
   )
 }
 
-export default function FlashSale({ items = [], countdown }) {
+export default function FlashSale({ items = [], countdown, loading = false }) {
   const copy = useStorefrontCopy()
   const [columns, setColumns] = useState(getColumns)
   const [currentPage, setCurrentPage] = useState(0)
@@ -85,7 +86,7 @@ export default function FlashSale({ items = [], countdown }) {
   const hasCarousel = pages.length > 1
   const safePage = Math.min(currentPage, Math.max(0, pages.length - 1))
 
-  if (products.length === 0) return null
+  if (!loading && products.length === 0) return null
 
   function changePage(delta) {
     setCurrentPage((page) => (Math.min(page, pages.length - 1) + delta + pages.length) % pages.length)
@@ -141,7 +142,12 @@ export default function FlashSale({ items = [], countdown }) {
             onTouchCancel={() => { touchStart.current = null }}
           >
             <div className="flash-carousel__track" style={{ transform: `translate3d(-${safePage * 100}%, 0, 0)` }}>
-              {pages.map((pageItems, pageIndex) => (
+              {loading ? <div className="flash-grid flash-grid--adaptive">
+                <SkeletonItems count={columns} className="sale-item">
+                  <div className="sale-item__image"><Bone variant="media" /></div>
+                  <div className="sale-item__body"><SkeletonLines /></div>
+                </SkeletonItems>
+              </div> : pages.map((pageItems, pageIndex) => (
                 <div
                   className="flash-grid flash-grid--adaptive"
                   key={`flash-page-${pageIndex}`}

@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
 import { Bookmark, CircleCheck, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
@@ -110,9 +111,18 @@ export function AccountOverviewPage() {
   return (
     <AccountShell active="account" customer={customer}>
       <PageHeader id="account-settings" title={copy.myAccount} description={copy.accountDetailsUsedForYourZetruvPurchases} />
-      {state !== 'ready' ? (
+      {state === 'loading' ? (
+        <LoadingRegion label={copy.loadingProfile}>
+          <section className="account-info-card">
+            <div className="profile-overview__identity"><Bone variant="circle" /><SkeletonLines /></div>
+            <div className="account-info-grid">
+              <SkeletonLines /><SkeletonLines /><SkeletonLines />
+            </div>
+          </section>
+        </LoadingRegion>
+      ) : state !== 'ready' ? (
         <div className="orders-figma-empty" role="status">
-          <strong>{state === 'loading' ? copy.loadingProfile : state === 'guest' ? copy.logInToYourAccount : state === 'expired' ? copy.yourSessionHasEnded : copy.profileCouldnTBeLoaded}</strong>
+          <strong>{state === 'guest' ? copy.logInToYourAccount : state === 'expired' ? copy.yourSessionHasEnded : copy.profileCouldnTBeLoaded}</strong>
           <p>{state === 'error' ? copy.checkYourConnectionAndReloadThePage : copy.logInWithAVerifiedAccountTo}</p>
           <a className="account-btn account-btn--primary" href={state === 'error' ? '/account' : '/'}>{state === 'error' ? copy.tryAgain2 : copy.backToHome2}</a>
         </div>

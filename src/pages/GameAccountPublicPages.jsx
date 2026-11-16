@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, ProductSkeleton, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
@@ -183,7 +184,11 @@ export function GameAccountsPage() {
     </form>
     <h2 className="browse-title--desktop">{copy.games}</h2>
     <h2 className="browse-list-title">{copy.gameAccounts}</h2>
-    {loading ? <StateMessage>{copy.loadingGames}</StateMessage> : error ? <StateMessage>{error}</StateMessage>
+    {loading ? <LoadingRegion label={copy.loadingGames}>
+      <div className="ga-game-grid">
+        <SkeletonItems className="ga-game-card"><Bone variant="thumb" className="ga-live-placeholder" /><SkeletonLines /></SkeletonItems>
+      </div>
+    </LoadingRegion> : error ? <StateMessage>{error}</StateMessage>
       : visibleGames.length === 0 ? <StateMessage>{copy.noGamesFound}</StateMessage>
       : <div className="ga-game-grid">{visibleGames.map((game) =>
         <a className="ga-game-card ga-live-game-link" key={game.id} href={`/game-accounts/${encodeURIComponent(game.slug)}`}>
@@ -282,7 +287,14 @@ export function GameAccountListingPage({ gameSlug }) {
         <option value="high">{copy.highestPriceThisPage}</option>
       </select>
     </form>
-    {loading ? <StateMessage>{copy.loadingListings}</StateMessage> : error ? <StateMessage>{error}</StateMessage>
+    {loading ? <LoadingRegion label={copy.loadingListings}>
+      <div className="ga-account-grid ga-live-grid">
+        <SkeletonItems className="ga-account-card ga-live-card">
+          <div className="ga-account-art"><Bone variant="media" /></div>
+          <div className="ga-account-copy"><SkeletonLines /></div>
+        </SkeletonItems>
+      </div>
+    </LoadingRegion> : error ? <StateMessage>{error}</StateMessage>
       : visible.length === 0 ? <StateMessage>{copy.noAccountsMatchTheseFilters}</StateMessage>
       : <div className="ga-account-grid ga-live-grid">{visible.map((item) => {
         const attributes = getAccountAttributes(item.accountDetails, { cardOnly: true, limit: 3 })
@@ -364,7 +376,11 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
   }
 
   return <div className="ga-shell"><Navbar />
-    {loading || error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{loading ? copy.loadingAccountDetails : error || copy.listingNotFound}</StateMessage></main>
+    {loading ? <main className="ga-detail-page">
+      <ProductSkeleton label={copy.loadingAccountDetails} hero="ga-detail-hero ga-live-hero"
+        heroContent="ga-detail-hero-content" cover="ga-hero-thumb" heroCopy="ga-detail-hero-copy"
+        layout="ga-detail-layout" panel="ga-detail-card ga-live-detail" aside="ga-purchase-card ga-live-purchase" />
+    </main> : error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{error || copy.listingNotFound}</StateMessage></main>
       : <main className="ga-detail-page">
         <section className="ga-detail-hero ga-live-hero">
           {product.images?.[0]?.url && <img className="ga-detail-hero-bg" src={product.images[0].url} alt="" />}

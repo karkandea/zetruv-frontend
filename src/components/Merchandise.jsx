@@ -1,10 +1,11 @@
+import { Bone, SkeletonItems, SkeletonLines } from './Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useRef } from 'react'
 import { assets } from '../data/assets'
 
 const rupiah = (value) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
 
-export default function Merchandise({ items = [] }) {
+export default function Merchandise({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const viewportRef = useRef(null)
   const displayItems = items.filter((item) => item?.slug && item?.id)
@@ -41,7 +42,10 @@ export default function Merchandise({ items = [] }) {
 
         <div className="merchandise__viewport" ref={viewportRef}>
           <div className="merchandise__track">
-            {displayItems.map((item) => (
+            {loading ? <SkeletonItems className="merch-card" count={4}>
+              <div className="merch-card__image"><Bone variant="media" /></div>
+              <div className="merch-card__body"><SkeletonLines /></div>
+            </SkeletonItems> : displayItems.map((item) => (
               <a className="merch-card" key={item.id} href={`/merchandise/${encodeURIComponent(item.slug)}`}>
                 <div className="merch-card__image">
                   <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.jersey }} />
@@ -60,7 +64,7 @@ export default function Merchandise({ items = [] }) {
                 </div>
               </a>
             ))}
-            {displayItems.length === 0 && <p role="status">{copy.thereIsNoMerchandiseInTheCatalog}</p>}
+            {!loading && displayItems.length === 0 && <p role="status">{copy.thereIsNoMerchandiseInTheCatalog}</p>}
           </div>
         </div>
 

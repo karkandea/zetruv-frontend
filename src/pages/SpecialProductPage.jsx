@@ -1,3 +1,4 @@
+import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar'
@@ -68,14 +69,19 @@ function ProductState({ state, retry, joki = false }) {
   const loading = state === 'loading'
   const failed = state === 'error'
   return <div className="special-product-shell"><Navbar />
-    <main className="special-product-page special-product-state" aria-busy={loading}>
+    {loading ? <main className="special-product-page">
+      <ProductSkeleton label={copy.loadingProduct} hero={`special-product-hero special-product-hero--${joki ? 'joki' : 'voucher'}`}
+        heroContent="special-product-hero__content" cover="special-product-hero__visual" heroCopy="special-product-hero__copy"
+        layout="special-product-layout" panel="special-product-packages"
+        grid="special-product-grid" card="skeleton-row" aside="special-product-summary" />
+    </main> : <main className="special-product-page special-product-state">
       <div role={failed ? 'alert' : 'status'}>
-        <h1>{loading ? copy.loadingProduct : failed ? copy.productCouldnTBeLoaded : copy.productNotFound}</h1>
+        <h1>{failed ? copy.productCouldnTBeLoaded : copy.productNotFound}</h1>
         {state === 'not-found' && <p>{copy.thisProductIsUnavailableInTheCatalog}</p>}
       </div>
       {failed && <button type="button" className="special-secondary" onClick={retry}>{copy.tryAgain}</button>}
-      {!loading && <a href={joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>}
-    </main>
+      <a href={joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>
+    </main>}
   </div>
 }
 

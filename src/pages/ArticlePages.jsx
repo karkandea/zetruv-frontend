@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
@@ -85,6 +86,13 @@ export function ArticlesPage() {
         </div>
       </section>
 
+      {state === 'loading' && !search && !category && <section className="article-featured-section">
+        <div className="article-section-inner">
+          <LoadingRegion label={copy.loadingArticles}>
+            <div className="article-featured-card"><Bone variant="media" /><SkeletonLines /></div>
+          </LoadingRegion>
+        </div>
+      </section>}
       {featured && state === 'ready' && <section className="article-featured-section">
         <div className="article-section-inner">
           <div className="article-section-heading"><span>{copy.latestArticle}</span><h2>{copy.startHere}</h2></div>
@@ -98,7 +106,13 @@ export function ArticlesPage() {
       <section className="article-latest-section">
         <div className="article-section-inner">
           <div className="article-section-heading"><span>{copy.articles}</span><h2>{copy.allStories}</h2></div>
-          {state === 'loading' && <p role="status">{copy.loadingArticles}</p>}
+          {state === 'loading' && <LoadingRegion label={copy.loadingArticles}>
+            <div className="article-grid">
+              <SkeletonItems className="article-list-card">
+                <Bone variant="media" /><div className="article-list-card__body"><SkeletonLines /></div>
+              </SkeletonItems>
+            </div>
+          </LoadingRegion>}
           {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheArticlesPlease}</p>}
           {state === 'ready' && articles.length === 0 && <p role="status">{copy.noPublishedArticlesMatchYourSearch}</p>}
           {state === 'ready' && <div className="article-grid">{articles.map((article) => <ArticleCard article={article} key={article.id} />)}</div>}
@@ -155,8 +169,18 @@ export function ArticleDetailPage({ slug }) {
   return <div className="article-shell">
     <Navbar variant="article" />
     <main>
-      {state !== 'ready' && <section className="article-latest-section"><div className="article-section-inner" role="status">
-        {state === 'loading' ? copy.loadingArticles : state === 'not-found' ? copy.theArticleWasNotFoundOrHas : copy.weCouldnTLoadTheArticlePlease}
+      {state === 'loading' && <LoadingRegion label={copy.loadingArticles}>
+        <section className="article-detail-header"><div className="article-detail-header__inner">
+          <Bone width="96px" height="24px" /><Bone width="75%" height="36px" /><SkeletonLines />
+        </div></section>
+        <section className="article-detail-hero"><Bone variant="media" /></section>
+        <section className="article-detail-body"><div className="article-reading-layout">
+          <aside className="article-share-rail"><Bone variant="circle" /></aside>
+          <article className="article-reading-column"><SkeletonItems count={4}><SkeletonLines /></SkeletonItems></article>
+        </div></section>
+      </LoadingRegion>}
+      {state !== 'ready' && state !== 'loading' && <section className="article-latest-section"><div className="article-section-inner" role="status">
+        {state === 'not-found' ? copy.theArticleWasNotFoundOrHas : copy.weCouldnTLoadTheArticlePlease}
         <p><a href="/articles">{copy.backToArticles}</a></p>
       </div></section>}
       {state === 'ready' && <>

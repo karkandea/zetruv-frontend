@@ -70,16 +70,17 @@ export default function HomePage() {
       />
       <main>
         {hasError && <p role="alert" style={{ textAlign: 'center', padding: 16 }}>{copy.weCouldnTLoadTheHomepagePlease}</p>}
-        {loading ? <p role="status" style={{ padding: 48, textAlign: 'center' }}>{copy.loadingTheZetruvHomepage}</p> : <>
-        <Hero items={data.heroes} />
-        <ServiceCategories items={data.serviceCategories} />
-        <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} />
-        <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} featured={data.flashSale} authenticated={Boolean(session)} />
-        <JockeyGames items={data.jockeyGames} />
-        <GameAccounts items={data.gameAccounts} />
-        <Merchandise items={data.merchandise} />
-        <LatestArticles items={data.latestArticles} />
-        </>}
+        {loading && <p className="skeleton-status" role="status">{copy.loadingTheZetruvHomepage}</p>}
+        <div className={loading ? 'skeleton-content' : undefined} inert={loading} aria-hidden={loading || undefined}>
+          <Hero items={data.heroes} loading={loading} />
+          <ServiceCategories items={data.serviceCategories} loading={loading} />
+          <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} loading={loading} />
+          <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} featured={data.flashSale} authenticated={Boolean(session)} loading={loading} />
+          <JockeyGames items={data.jockeyGames} loading={loading} />
+          <GameAccounts items={data.gameAccounts} loading={loading} />
+          <Merchandise items={data.merchandise} loading={loading} />
+          <LatestArticles items={data.latestArticles} loading={loading} />
+        </div>
       </main>
       <Footer />
       <SupportChat />

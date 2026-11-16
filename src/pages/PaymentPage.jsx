@@ -1,7 +1,8 @@
+import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react'
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import {
   getCheckoutPaymentOptions, getOrderPaymentStatus, startOrderPayment,
@@ -181,7 +182,13 @@ export default function PaymentPage() {
 
       <div className="payment-session-layout">
         <section className="payment-session-card payment-session-instructions" aria-live="polite">
-          {loading ? <div className="payment-session-loading"><LoaderCircle size={30} className="checkout-spinner" /><p>{copy.checkingTheLatestPaymentStatus}</p></div>
+          {loading ? <LoadingRegion label={copy.checkingTheLatestPaymentStatus}>
+            <div className="payment-session-status"><Bone variant="circle" /><SkeletonLines /></div>
+            {context.methodCode === 'QRIS' && <div className="payment-session-qr">
+              <Bone variant="control" width="240px" height="240px" />
+            </div>}
+            <div className="payment-session-actions"><Bone variant="control" width="150px" /></div>
+          </LoadingRegion>
             : <>
               <div className="payment-session-status">
                 {state === 'Paid' ? <CheckCircle2 size={28} className="is-paid" />

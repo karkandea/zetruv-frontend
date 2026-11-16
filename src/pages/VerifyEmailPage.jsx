@@ -1,6 +1,7 @@
+import { Bone, LoadingRegion } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, CircleAlert, LoaderCircle, MailCheck } from 'lucide-react'
+import { CheckCircle2, CircleAlert, MailCheck } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import { activateCustomerCart, setCustomerSession } from '../services/customerCartSync'
@@ -82,11 +83,12 @@ export default function VerifyEmailPage() {
     <Navbar restoreSession={!verifyingLink.current || status === 'verified'} />
     <main className="verify-email-main">
       <section className="verify-email-card" aria-live="polite">
-        {status === 'verifying' && <>
-          <LoaderCircle className="verify-email-icon verify-email-icon--loading" size={48} aria-hidden="true" />
-          <h1>{copy.verifyingYourEmail}</h1>
-          <p>{copy.justAMomentWeReActivatingYour}</p>
-        </>}
+        {status === 'verifying' && <LoadingRegion className="verify-email-skeleton" label={copy.verifyingYourEmail}>
+          <Bone variant="circle" />
+          <Bone width="62%" height="24px" />
+          <Bone width="80%" />
+          <Bone variant="control" width="60%" />
+        </LoadingRegion>}
         {status === 'verified' && <>
           <CheckCircle2 className="verify-email-icon verify-email-icon--success" size={48} aria-hidden="true" />
           <h1>{copy.emailVerified2}</h1>

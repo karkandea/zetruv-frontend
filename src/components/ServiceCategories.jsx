@@ -1,3 +1,4 @@
+import { Bone, SkeletonItems } from './Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { assets } from '../data/assets'
 
@@ -10,12 +11,16 @@ const kindPresentation = {
   GameAccount: { image: assets.homepageCategoryAccount, href: '/game-accounts' },
 }
 
-export default function ServiceCategories({ items = [] }) {
+export default function ServiceCategories({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   return (
     <section className="service-categories service-categories--homepage-final" id="product" aria-label={copy.productCategories}>
       <div className="service-categories__inner">
-        {items.map((item) => {
+        {loading ? <SkeletonItems className="service-category" count={6}>
+          <Bone variant="circle" className="service-category__icon" />
+          <strong><Bone width="75%" /></strong>
+          <small><Bone width="52%" /></small>
+        </SkeletonItems> : items.map((item) => {
           const presentation = kindPresentation[item.kind]
           if (!presentation) return null
           return <a className="service-category" href={presentation.href} key={item.id}>
@@ -27,7 +32,7 @@ export default function ServiceCategories({ items = [] }) {
             <small>{item.kind === 'Merchandise' ? copy.physicalProduct : copy.digitalProduct}</small>
           </a>
         })}
-        {items.length === 0 && <p role="status">{copy.categoriesAreCurrentlyUnavailable}</p>}
+        {!loading && items.length === 0 && <p role="status">{copy.categoriesAreCurrentlyUnavailable}</p>}
       </div>
     </section>
   )

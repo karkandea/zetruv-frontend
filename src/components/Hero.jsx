@@ -1,3 +1,4 @@
+import { Bone } from './Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
@@ -25,7 +26,7 @@ export function mapCmsHeroes(items = []) {
   }))
 }
 
-export default function Hero({ items = [] }) {
+export default function Hero({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const cmsBanners = mapCmsHeroes(items)
   const banners = cmsBanners.length ? cmsBanners : [emptyBanner(copy)]
@@ -82,7 +83,7 @@ export default function Hero({ items = [] }) {
         role="region"
         aria-roledescription={copy.carousel}
         aria-label={copy.zetruvPromotions}
-        tabIndex={0}
+        tabIndex={loading ? undefined : 0}
         onKeyDown={onCarouselKeyDown}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -98,7 +99,7 @@ export default function Hero({ items = [] }) {
           style={{ transform: `translateX(-${visibleIndex * 100}%)` }}
           aria-live="off"
         >
-          {banners.map((banner, index) => (
+          {loading ? <Bone /> : banners.map((banner, index) => (
             <article
               className={`homepage-hero-card__slide homepage-hero-card__slide--${banner.theme}`}
               key={banner.id}
@@ -145,7 +146,7 @@ export default function Hero({ items = [] }) {
           ))}
         </div>
 
-        {banners.length > 1 && <div className="homepage-hero-card__controls" aria-label={copy.bannerNavigation}>
+        {!loading && banners.length > 1 && <div className="homepage-hero-card__controls" aria-label={copy.bannerNavigation}>
           <button className="homepage-hero-card__arrow" type="button" onClick={() => move(-1)} aria-label={copy.previousBanner}>
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
