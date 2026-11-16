@@ -327,7 +327,7 @@
   background: #fff; border: 1px solid #dce1ee; border-radius: 10px;
   color: #595f70; cursor: pointer;
 }
-.search-game-card__favorite.is-saved { color: #c32346; border-color: #f2c5cd; }
+.search-game-card__favorite.is-saved { color: var(--navy); border-color: #b9c5fc; }
 .search-game-card__favorite:hover, .search-game-card__favorite:focus-visible { outline: 2px solid #a0b2ff; outline-offset: 1px; }
 .search-game-card.is-unavailable { opacity: .58; }
 
@@ -350,8 +350,13 @@
   outline-offset: 3px;
 }
 
-/* The mobile search is placed before category filters; desktop keeps its Figma layout. */
-.catalog-search--mobile { display: none; }
+.catalog-search--mobile,
+.browse-title--mobile,
+.browse-category-icon,
+.browse-category-label--mobile,
+.browse-list-title {
+  display: none;
+}
 
 @media (min-width: 901px) and (max-width: 1199px) {
   /* The Figma desktop catalog uses fixed 1152/904px widths. Reflow on tablets. */
@@ -440,140 +445,206 @@
 }
 
 @media (max-width: 900px) {
-  .search-page--browse .search-catalog--browse {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .search-page--browse .catalog-search--mobile {
-    width: calc(100% - 32px);
-    margin: 16px 16px 0;
-    display: grid;
-    flex: none;
-  }
-
-  .search-page--browse .search-catalog__content--browse .catalog-search--desktop {
-    display: none;
-  }
-
-  .search-page--browse .search-sidebar--browse {
-    min-height: 0;
-    border-bottom: 1px solid #e3e5f0;
-  }
-
-  .search-page--browse .search-catalog__content--browse {
-    min-height: 0;
-  }
-}
-
-@media (max-width: 650px) {
-  .search-site-shell .navbar--homepage-mobile .navbar__top {
-    width: calc(100% - 24px);
-    grid-template-columns: 48px minmax(0, 1fr) 44px;
-    gap: 8px;
-  }
-
   .search-page--browse {
     padding-top: 84px;
-    padding-bottom: 32px;
+    padding-bottom: 88px;
   }
 
   .search-page--browse .search-page__container {
-    width: calc(100% - 24px);
+    width: min(100% - 32px, 660px);
+  }
+
+  .search-page--browse .search-breadcrumb,
+  .search-page--browse .browse-title--desktop,
+  .search-page--browse .search-page__intro:not(.search-page__intro--results),
+  .search-page--browse .catalog-search--desktop,
+  .search-page--browse .search-sidebar h2,
+  .search-page--browse .search-help-card,
+  .search-page--browse .search-category__icon,
+  .search-page--browse .browse-category-label--desktop,
+  .search-page--browse .search-category > i,
+  .search-page--browse .search-section-heading--browse-more,
+  .search-page--browse .search-empty--state {
+    display: none;
   }
 
   .search-page--browse h1 {
-    font-size: 24px;
-    line-height: 34px;
+    margin: 0;
+    font-size: 26px;
+    line-height: 1.25;
   }
 
-  .search-page--browse .search-page__intro {
-    margin-top: 4px;
-    line-height: 18px;
+  .browse-title--mobile,
+  .browse-category-icon,
+  .browse-category-label--mobile,
+  .browse-list-title {
+    display: block;
   }
 
   .search-page--browse .search-catalog--browse {
-    margin-top: 16px;
+    display: grid;
+    gap: 12px;
+    min-height: 0;
+    margin-top: 14px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .search-page--browse .catalog-search--mobile {
-    height: 46px;
+    display: grid;
     min-height: 46px;
-    grid-template-columns: 18px minmax(0, 1fr) 76px;
-    gap: 8px;
-    padding: 5px 6px 5px 12px;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 10px;
+    padding: 0 12px;
+    color: #595f70;
   }
 
-  .search-page--browse .catalog-search--mobile button {
-    grid-column: auto;
-    width: 100%;
+  .catalog-search--mobile input {
+    font-size: 16px;
   }
 
-  .search-page--browse .search-sidebar--browse {
-    padding: 16px 16px 14px;
+  .catalog-search--mobile:focus-within {
+    outline: 2px solid #7189ee;
+    outline-offset: 2px;
   }
 
-  .search-page--browse .search-sidebar--browse h2 {
-    margin: 0 0 8px;
+  .search-page--browse .search-sidebar,
+  .search-page--browse .search-catalog__content {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   .search-page--browse .search-category-list {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .search-page--browse .search-category-list::-webkit-scrollbar {
-    display: none;
   }
 
   .search-page--browse .search-category {
-    width: 174px;
-    min-width: 174px;
-    flex: 0 0 174px;
-    height: 56px;
-    scroll-snap-align: start;
-    font-size: 11px;
-  }
-
-  .search-page--browse .search-help-card {
-    display: none;
-  }
-
-  .search-site-shell > .contact-fab {
-    right: 14px;
-    bottom: 14px;
-    width: auto;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
+    min-height: 64px;
+    height: auto;
+    flex-direction: column;
     justify-content: center;
-    padding: 0 14px 0 10px;
-    font-size: 12px;
+    gap: 5px;
+    padding: 7px 3px;
+    border: 1px solid #e0e3ef;
+    border-radius: 10px;
+    color: #303449;
+    background: #fff;
+    font-size: clamp(11px, 3vw, 13px);
+    line-height: 1.3;
+    text-align: center;
   }
 
-  .search-site-shell > .contact-fab img {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
+  .search-page--browse .search-category.active {
+    border-color: #9aa6e9;
+    color: var(--navy);
+    background: #edf0ff;
   }
 
-  .search-page--browse .search-catalog__content--browse {
-    padding: 12px 16px 20px;
+  .search-page--browse .search-category:focus-visible {
+    outline: 2px solid #7189ee;
+    outline-offset: 2px;
+  }
+
+  .browse-list-title {
+    margin: 8px 0 8px;
+    color: #1e1e1e;
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  .search-page--browse .search-query-state:not(:empty) {
+    min-height: 44px;
+    margin: 0;
+    padding: 12px 0;
+    border-top: 1px solid #e0e3ef;
+    font-size: 13px;
+    line-height: 20px;
   }
 
   .search-page--browse .search-game-grid {
-    gap: 12px;
-    margin-top: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin: 0;
+  }
+
+  .search-page--browse .search-game-grid--browse-primary {
+    border-top: 1px solid #e0e3ef;
   }
 
   .search-page--browse .search-game-card {
+    grid-template-columns: 46px minmax(0, 1fr) 44px;
+    gap: 10px;
+    width: 100%;
     min-width: 0;
+    min-height: 64px;
+    height: auto;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid #e0e3ef;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .search-page--browse .search-game-card > img {
+    width: 46px;
+    height: 46px;
+    border-radius: 9px;
+  }
+
+  .search-page--browse .search-game-card__copy strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .search-page--browse .search-game-card__copy small {
+    font-size: 12px;
+  }
+
+  .search-page--browse .search-game-card__favorite {
+    position: relative;
+    inset: auto;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    transform: none;
+  }
+
+  .search-site-shell:not(.search-site-shell--login) > .contact-fab {
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .search-site-shell:not(.search-site-shell--login) > .contact-fab img {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+  }
+
+  .search-site-shell:not(.search-site-shell--login) > .contact-fab span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

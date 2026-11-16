@@ -6,11 +6,19 @@ import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
-import { Heart } from 'lucide-react'
+import { Bookmark, IdCard, LogIn, Search, Shirt, Ticket, Trophy, UserRound } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
-const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'GameAccount', 'Merchandise']
+const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'Joki', 'GameAccount', 'GameVoucher', 'Merchandise']
+const CATEGORY_ICONS = {
+  TopUpGame: IdCard,
+  TopUpLogin: LogIn,
+  Joki: Trophy,
+  GameAccount: UserRound,
+  GameVoucher: Ticket,
+  Merchandise: Shirt,
+}
 
 const CATEGORY_PRESENTATION = {
   TopUpGame: {
@@ -168,14 +176,14 @@ function CatalogCard({ product, categoryLabel }) {
         {!available && <small>{copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
-        aria-label={saved ? formatCopy(copy.removeFromFavorites, { product: product.name }) : formatCopy(copy.addToFavorites, { product: product.name })}
+        aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
         aria-pressed={saved}
         onClick={() => setSaved(toggleFavorite({
           id: favoriteId, name: product.name, type: categoryLabel || product.kind,
           href: href || '/search', image: thumbnail,
           price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
         }))}>
-        <Heart size={17} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+        <Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
       </button>
     </article>
   )
@@ -314,6 +322,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
   const categoryLabel = globalResults ? copy.allCategories : activeCategory?.label || copy.catalog
+  const browseCategoryLabel = globalResults ? copy.allCategories : copy[CATEGORY_PRESENTATION[activeKind].loginLabel]
   // The API is the only source of listed products. Never show preview items as stock.
   const sourceProducts = products
   const effectiveLetter = letterFiltering ? activeLetter : ''
@@ -393,8 +402,10 @@ export default function SearchPage({ mode = 'player-id' }) {
           {!isLoginMode && (
             <>
               <p className="search-breadcrumb"><a href="/">{copy.home2}</a> {copy.categories}</p>
-              <h1>{globalResults ? copy.searchResults : copy.browseCategories}</h1>
-              <p className="search-page__intro">{globalResults
+              <h1>{globalResults ? copy.searchResults : (
+                <><span className="browse-title--desktop">{copy.browseCategories}</span><span className="browse-title--mobile">{copy.browse}</span></>
+              )}</h1>
+              <p className={`search-page__intro${globalResults ? ' search-page__intro--results' : ''}`}>{globalResults
                 ? formatCopy(copy.resultsForAcrossAllCategories, { query: submittedQuery })
                 : copy.findTheGameTopUpMethodOr}</p>
             </>
@@ -402,30 +413,38 @@ export default function SearchPage({ mode = 'player-id' }) {
 
           <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label={copy.browseZetruvCategories}>
             {!isLoginMode && <form className="catalog-search catalog-search--mobile" onSubmit={handleSearch} role="search" aria-label={copy.searchTheCatalog}>
-              <img src={searchAssets.searchIcon} alt="" />
+              <Search size={19} aria-hidden="true" />
               <input
+                type="search"
+                enterKeyHint="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={copy.searchGamesOrCategories}
-                aria-label={copy.searchGamesOrCategories}
+                placeholder={copy.searchGamesOrProducts}
+                aria-label={copy.searchGamesOrProducts}
               />
-              <button type="submit" disabled={queryTooShort}>{copy.search2}</button>
             </form>}
             <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
               <h2>{isLoginMode ? copy.categories3 : copy.categories2}</h2>
               <div className="search-category-list">
-                {categoryDefinitions.map((category) => (
-                  <button
-                    type="button"
-                    key={category.kind}
-                    className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
-                    onClick={() => handleCategory(category)}
-                  >
-                    <span className="search-category__icon"><img src={category.icon} alt="" /></span>
-                    <span>{category.label}</span>
-                    {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
-                  </button>
-                ))}
+                {categoryDefinitions.map((category) => {
+                  const CategoryIcon = CATEGORY_ICONS[category.kind]
+                  return (
+                    <button
+                      type="button"
+                      key={category.kind}
+                      className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
+                      aria-pressed={category.kind === 'Merchandise' || category.kind === 'GameAccount'
+                        ? undefined : !globalResults && activeKind === category.kind}
+                      onClick={() => handleCategory(category)}
+                    >
+                      <span className="search-category__icon"><img src={category.icon} alt="" /></span>
+                      {!isLoginMode && <CategoryIcon className="browse-category-icon" size={20} aria-hidden="true" />}
+                      <span className={isLoginMode ? undefined : 'browse-category-label--desktop'}>{category.label}</span>
+                      {!isLoginMode && <span className="browse-category-label--mobile">{copy[CATEGORY_PRESENTATION[category.kind].loginLabel]}</span>}
+                      {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
+                    </button>
+                  )
+                })}
               </div>
 
               <button className="search-help-card" type="button" onClick={() => setSupportOpen(true)}>
@@ -446,11 +465,15 @@ export default function SearchPage({ mode = 'player-id' }) {
                 <button type="submit" disabled={queryTooShort}>{isLoginMode ? copy.search3 : copy.search2}</button>
               </form>
 
+              {!isLoginMode && <h2 className="browse-list-title">{browseCategoryLabel}</h2>}
+
               <div className="search-query-state" aria-live="polite">
                 {searchState === 'min' && <span>{copy.typeAtLeast3CharactersToStart}</span>}
                 {searchState === 'loading' && <span>{copy.loadingResults}</span>}
                 {searchState === 'error' && <span>{copy.weCouldnTLoadTheLatestResults}</span>}
-                {searchState === 'empty' && <span>{formatCopy(copy.noResultsFoundForTryAnotherKeyword, { query: submittedQuery })}</span>}
+                {searchState === 'empty' && <span>{submittedQuery
+                  ? formatCopy(copy.noResultsFoundForTryAnotherKeyword, { query: submittedQuery })
+                  : copy.noProductsFoundInThisCategory}</span>}
               </div>
 
               {isLoginMode && (
