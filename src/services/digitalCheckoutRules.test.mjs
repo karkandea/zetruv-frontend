@@ -4,7 +4,7 @@ import {
   normalizeIndonesianWhatsApp, checkoutFields, validateCheckoutField,
   validateCheckoutAccount, matchingAccountSource, currentCatalogDifferences,
   paymentSelectionAllowed,
-  priceChangeExplanation,
+  priceChangeExplanation, isTopUpDestinationAccepted,
 } from './digitalCheckoutRules.js'
 
 const product = {id:'p1',slug:'genshin',isAvailable:true,kind:'TopUpLogin',
@@ -73,4 +73,14 @@ test('backend live gateway determines available selected methods',()=>{
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:false,availableMethods:[]},'QRIS'),false)
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:true,availableMethods:[{code:'QRIS'}]},'QRIS'),true)
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:true,availableMethods:[{code:'QRIS'}]},'GOPAY'),false)
+})
+
+test('CODM accepts an OpenID format check and keeps verification required for other games', () => {
+  const formatCheck = { status: 'FormatChecked', validationId: 'target-1' }
+  const verified = { status: 'Verified', validationId: 'target-2' }
+  assert.equal(isTopUpDestinationAccepted(formatCheck, [{ key: 'openid' }]), true)
+  assert.equal(isTopUpDestinationAccepted(verified, [{ key: 'openid' }]), false)
+  assert.equal(isTopUpDestinationAccepted(formatCheck, [{ key: 'userId' }]), false)
+  assert.equal(isTopUpDestinationAccepted(verified, [{ key: 'userId' }]), true)
+  assert.equal(isTopUpDestinationAccepted({ status: 'FormatChecked' }, [{ key: 'openid' }]), false)
 })

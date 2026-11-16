@@ -9,7 +9,7 @@ import { getDigitalPricing } from '../services/digitalCartPricing'
 import {
   checkoutFields, normalizeIndonesianWhatsApp, validateCheckoutAccount,
   validateCheckoutField, matchingAccountSource, currentCatalogDifferences, paymentSelectionAllowed,
-  priceChangeExplanation,
+  priceChangeExplanation, isTopUpDestinationAccepted,
 } from '../services/digitalCheckoutRules'
 import {
   getCheckoutPaymentOptions, previewCheckoutVoucher, authenticateCheckoutCustomer,
@@ -83,6 +83,7 @@ function CheckoutProduct({
   const isLogin = item.fulfillmentMethod === 'MANUAL_LOGIN'
   const isId = item.fulfillmentMethod === 'AUTO_ID'
   const fields = checkoutFields(product, isLogin ? 'LoginCredential' : 'AccountValidation')
+  const usesOpenId = isId && fields.some((field) => field.key?.toLowerCase() === 'openid')
   const effectiveValues = values || {}
   const validation = validateCheckoutAccount(fields, isId ? idValues : effectiveValues, copy)
   const sibling = options?.find(v => v.cartKey === sharingWith)
@@ -131,11 +132,12 @@ function CheckoutProduct({
             {product?.requiresGameAccountValidation && (
               <div className="checkout-product__verify">
                 {idValidation?.validationId && Date.parse(idValidation.expiresAt)>Date.now()
-                  ? <span className="checkout-product__verified"><CheckCircle2 size={15}/> {copy.destinationAccountVerified}</span>
+                  ? <span className="checkout-product__verified"><CheckCircle2 size={15}/> {usesOpenId ? copy.openIdFormatChecked : copy.destinationAccountVerified}</span>
                   : <button type="button" disabled={verifyingId || !product}
                       onClick={()=>onVerifyId(item,fields)}>
                       {verifyingId ? <LoaderCircle className="checkout-spinner" size={15}/> : <CheckCircle2 size={15}/>}
-                      {verifyingId ? copy.checkingAccount : copy.verifyDestinationAccount}
+                      {verifyingId ? (usesOpenId ? copy.checkingOpenIdFormat : copy.checkingAccount)
+                        : (usesOpenId ? copy.checkOpenIdFormat : copy.verifyDestinationAccount)}
                     </button>}
               </div>
             )}
@@ -341,7 +343,7 @@ export default function CheckoutPage() {
           result.push(`${item.gameName||item.productName}: ${copy.destinationVerificationIsnTSetUpYet}`)
         else if(!idValidations[item.cartKey]?.validationId ||
           Date.parse(idValidations[item.cartKey]?.expiresAt||'')<=Date.now())
-          result.push(`${item.gameName||item.productName}: ${copy.verifyTheDestinationAccountBeforePaying}`)
+          result.push(`${item.gameName||item.productName}: ${fields.some((field) => field.key === 'openid') ? copy.checkOpenIdBeforePaying : copy.verifyTheDestinationAccountBeforePaying}`)
       }
       if(item.fulfillmentMethod==='MANUAL_LOGIN'){
         if(!viaLoginServiceStatus(product,item,serviceReadiness[item.productSlug]).available){
@@ -354,7 +356,7 @@ export default function CheckoutPage() {
           if(!allowedCredentials)result.push(copy.gameAccountInformationCanTBeEntered)
         }
       }
-      if(item.requiresGameAccountValidation)result.push(`${item.productName}: ${copy.accountVerificationIsRequired}`)
+      if(item.fulfillmentMethod!=='AUTO_ID' && item.requiresGameAccountValidation)result.push(`${item.productName}: ${copy.accountVerificationIsRequired}`)
     }
     if(voucherState==='checking')result.push(copy.checkingTheVoucher)
     if(methodsState!=='ready' || !readiness?.canAcceptLivePayments)result.push(copy.paymentMethodsAreCurrentlyUnavailable)
@@ -381,9 +383,15 @@ export default function CheckoutPage() {
     const reason=validateCheckoutAccount(fields,
       kind==='AccountValidation'?item.accountFields:values[sharedKey],copy)
     if(reason)return {cartKey:item.cartKey,message:`${item.gameName||item.productName}: ${reason}`}
+    const destination = idValidations[item.cartKey]
     if(kind==='AccountValidation' && catalog[item.productSlug]?.requiresGameAccountValidation &&
-      !idValidations[item.cartKey]?.validationId)
-      return {cartKey:item.cartKey,message:formatCopy(copy.verifyTheDestinationAccountForBeforeContinuing, { product: item.gameName || item.productName })}
+      (!destination?.validationId || Date.parse(destination.expiresAt) <= Date.now())) {
+      const product = item.gameName || item.productName
+      const message = fields.some((field) => field.key === 'openid')
+        ? `${product}: ${copy.checkOpenIdBeforePaying}`
+        : formatCopy(copy.verifyTheDestinationAccountForBeforeContinuing, { product })
+      return {cartKey:item.cartKey,message}
+    }
     return null
   }).find(Boolean)
   const guidance=checkoutActionHint({
@@ -446,7 +454,7 @@ export default function CheckoutPage() {
       if(validationError)throw new Error(validationError)
       const payload=Object.fromEntries(fields.map(f=>[f.key,String(item.accountFields?.[f.slot]||'').trim()]))
       const res=await verifyTopUpIdDestination(product.id,payload)
-      if(!res?.validationId || res.status!=='Verified')throw new Error(copy.theAccountCouldnTBeVerified)
+      if(!isTopUpDestinationAccepted(res,fields))throw new Error(copy.theAccountCouldnTBeVerified)
       setIdValidations(prev=>({...prev,[item.cartKey]:{validationId:res.validationId,expiresAt:res.expiresAt}}))
     }catch(e){setError(copy.weCouldnTVerifyTheDestinationAccount)}finally{setVerifyingId(null)}
   }

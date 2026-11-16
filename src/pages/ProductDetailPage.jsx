@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
+import { searchAssets } from '../data/searchAssets'
 import { addCartItem, awaitCartPersistence } from '../services/cartService'
 import { getCartSyncStatus, readCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
@@ -113,7 +114,8 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
   const maxQuantity = selected?.stockQuantity === null || selected?.stockQuantity === undefined
     ? 99 : Math.max(1, Math.min(99, Number(selected.stockQuantity)))
   const canPurchase = !saving && Boolean(catalogStatus === 'ready' && selected?.isAvailable !== false && (selected?.stockQuantity == null || Number(selected.stockQuantity) > 0) && verified && Number.isFinite(unitPrice) && unitPrice > 0)
-  const gameArt = product?.thumbnailUrl || product?.game?.imageUrl || media.gameCover
+  const gameArt = product?.thumbnailUrl || product?.game?.imageUrl ||
+    (product?.game?.slug === 'call-of-duty-mobile' ? searchAssets.callOfDutyMobile : media.gameCover)
   const productName = product?.name || ''
   const incompleteFields = [
     ...(!validUserId ? [firstLabel] : []),
@@ -190,7 +192,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
           <section className="product-selection-panel">
             <div className="product-selection-heading"><h2>{copy.chooseAnItem}</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || copy.topUp}</button></div></div>
             {selectionWarning && <p className="pdp-variant-warning" role="status">{selectionWarning}</p>}
-            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}</button>)}</div>
+            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={product?.game?.slug || slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}</button>)}</div>
 
             <section className="product-reviews"><h2>{copy.productReviews}</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>{copy.label394Reviews}</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>{copy.latestReviews}</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>{copy.label2DaysAgo}</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>
