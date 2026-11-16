@@ -86,7 +86,7 @@ export function ArticlesPage() {
         </div>
       </section>
 
-      {state === 'loading' && !search && !category && <section className="article-featured-section">
+      {state === 'loading' && page === 1 && !search && !category && <section className="article-featured-section">
         <div className="article-section-inner">
           <LoadingRegion label={copy.loadingArticles}>
             <div className="article-featured-card"><Bone variant="media" /><SkeletonLines /></div>

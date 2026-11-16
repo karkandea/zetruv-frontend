@@ -76,6 +76,13 @@
   height: 100%;
   border-radius: 0;
 }
+.skeleton-content .homepage-hero-card__copy {
+  display: grid;
+  gap: 12px;
+}
+.skeleton-content .homepage-hero-card__copy .skeleton-bone {
+  background-color: #f1f3fa;
+}
 .skeleton-content .service-category strong,
 .skeleton-content .service-category small { width: 100%; }
 .skeleton-content .service-category .skeleton-bone { margin-inline: auto; }
@@ -91,7 +98,10 @@
 .skeleton-content .search-game-card__thumb { width: 46px; height: 46px; }
 .skeleton-content .physical-product-card__image > .skeleton-bone { height: 100%; }
 .skeleton-content .physical-gallery__primary > .skeleton-bone { width: 100%; height: 100%; }
-.skeleton-content .physical-product-card__price.skeleton-bone { background-color: #e1e5f0; padding: 0; }
+.skeleton-content .physical-product-card .physical-product-card__price.skeleton-bone {
+  background-color: #f0f2f8;
+  padding: 0;
+}
 .skeleton-content .article-featured-card > .skeleton-bone--media { width: 100%; min-height: 140px; }
 .skeleton-content .article-detail-hero > .skeleton-bone { width: min(1100px, calc(100% - 40px)); margin: 0 auto; }
 .skeleton-content .article-reading-column .skeleton-lines { margin-bottom: 22px; }
@@ -110,6 +120,7 @@
 .skeleton-content :is(.product-hero__copy, .login-product-hero__copy, .special-product-hero__copy, .ga-detail-hero-copy) > .skeleton-lines {
   width: min(240px, 60vw);
 }
+.skeleton-content .checkout-product > .skeleton-lines { margin-block: 12px; }
 .skeleton-content .digital-payment-methods .skeleton-row {
   border: 1px solid #e0e3eb;
   border-radius: 10px;

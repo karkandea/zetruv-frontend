@@ -1,4 +1,4 @@
-import { LoadingRegion, SkeletonRows } from '../components/Skeleton'
+import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -594,7 +594,13 @@ export default function CheckoutPage() {
           <h2>{copy.orderSummary}</h2>
           <div className="digital-checkout-items">
             {items.length && catalogState === 'loading' ? <LoadingRegion label={copy.loadingCatalog}>
-              <SkeletonRows count={items.length} />
+              {items.map(item => <div className="digital-checkout-item checkout-product" key={item.cartKey}>
+                <div className="checkout-product__row">
+                  <Bone variant="thumb" className="digital-checkout-item__thumb" />
+                  <SkeletonLines />
+                </div>
+                <SkeletonLines />
+              </div>)}
             </LoadingRegion> : items.length ? items.map(item=>{
               const earlier=allCreds.filter(other=>other.productId===item.productId &&
                 items.findIndex(x=>x.cartKey===other.cartKey)<items.findIndex(x=>x.cartKey===item.cartKey))

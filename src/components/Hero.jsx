@@ -96,10 +96,17 @@ export default function Hero({ items = [], loading = false }) {
       >
         <div
           className="homepage-hero-card__track"
-          style={{ transform: `translateX(-${visibleIndex * 100}%)` }}
+          style={{ transform: `translateX(-${loading ? 0 : visibleIndex * 100}%)` }}
           aria-live="off"
         >
-          {loading ? <Bone /> : banners.map((banner, index) => (
+          {loading ? <>
+            <Bone />
+            <div className="homepage-hero-card__copy">
+              <Bone width="54%" height="24px" />
+              <Bone width="39%" />
+              <div className="homepage-hero-card__actions"><Bone variant="control" width="126px" height="36px" /></div>
+            </div>
+          </> : banners.map((banner, index) => (
             <article
               className={`homepage-hero-card__slide homepage-hero-card__slide--${banner.theme}`}
               key={banner.id}
