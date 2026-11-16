@@ -79,7 +79,7 @@
     width: calc(100% - 32px);
     height: 64px;
     grid-template-columns: 52px minmax(0, 1fr) 44px;
-    gap: 12px;
+    column-gap: var(--navbar-top-gap);
     padding: 0;
   }
 
@@ -475,7 +475,6 @@
     --mobile-logo-width: clamp(68px, 19vw, 80px);
     width: calc(100% - 24px);
     grid-template-columns: var(--mobile-logo-width) minmax(0, 1fr) 44px;
-    gap: 8px;
   }
 
   .site-shell--homepage-final .navbar--homepage-mobile .brand,
@@ -789,10 +788,6 @@
 }
 
 @media (max-width: 360px) {
-  .site-shell--homepage-final .navbar--homepage-mobile .navbar__top {
-    gap: 6px;
-  }
-
   .site-shell--homepage-final .homepage-hero-card {
     height: 325px;
   }
