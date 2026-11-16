@@ -437,7 +437,7 @@
     width: calc(100% - 32px);
     height: 64px;
     grid-template-columns: 52px minmax(0, 1fr) 44px;
-    gap: 12px;
+    column-gap: var(--navbar-top-gap);
     padding: 0;
   }
 

@@ -79,7 +79,7 @@
     width: calc(100% - 32px);
     height: 64px;
     grid-template-columns: 52px minmax(0, 1fr) 44px;
-    gap: 12px;
+    column-gap: var(--navbar-top-gap);
     padding: 0;
   }
 
@@ -94,16 +94,11 @@
     padding: 0;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(255,255,255,.26);
-    border-radius: 12px;
+    border: 0;
+    border-radius: 8px;
     color: #fff;
-    background: rgba(255,255,255,.09);
+    background: transparent;
     cursor: pointer;
-  }
-
-  .navbar--homepage-mobile .navbar__hamburger:hover,
-  .navbar--homepage-mobile .navbar__hamburger[aria-expanded='true'] {
-    background: rgba(255,255,255,.18);
   }
 
   .navbar--homepage-mobile .navbar__hamburger:focus-visible,
@@ -319,27 +314,65 @@
 
   /* Allow sections and card grids to grow with real CMS content. */
   .site-shell--homepage-final .hero.hero--homepage-final {
-    height: 640px;
+    height: auto;
     min-height: 0;
+    padding: 118px 0 18px;
   }
 
   .site-shell--homepage-final .homepage-hero-card {
-    top: 118px;
+    position: relative;
+    inset: auto;
     height: 280px;
+    margin-inline: auto;
+    transform: none;
   }
 
   .site-shell--homepage-final .hero--homepage-final .trust-strip {
-    top: 421px;
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0;
     width: calc(100% - 40px);
+    max-width: 570px;
     height: auto;
-    flex-wrap: wrap;
-    gap: 8px 20px;
+    margin: 14px auto 0;
+    padding-block: 10px;
+    border-radius: 16px;
+    background: #eef0fa;
+    transform: none;
+  }
+
+  .site-shell--homepage-final .hero--homepage-final .trust-strip__item {
+    height: auto;
+    padding: 2px 6px;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    color: var(--navy);
+    font-size: clamp(11px, 3vw, 13px);
+    line-height: 1.35;
+    font-weight: 600;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .site-shell--homepage-final .hero--homepage-final .trust-strip__item + .trust-strip__item {
+    border-inline-start: 1px solid #d6daec;
+  }
+
+  .site-shell--homepage-final .hero--homepage-final .trust-strip__item img {
+    width: 18px;
+    height: 18px;
+    flex: none;
   }
 
   .site-shell--homepage-final .service-categories.service-categories--homepage-final {
     height: auto;
     min-height: 0;
-    margin-top: -140px;
+    margin-top: 0;
     padding: 0 24px;
     overflow: visible;
   }
@@ -442,7 +475,6 @@
     --mobile-logo-width: clamp(68px, 19vw, 80px);
     width: calc(100% - 24px);
     grid-template-columns: var(--mobile-logo-width) minmax(0, 1fr) 44px;
-    gap: 8px;
   }
 
   .site-shell--homepage-final .navbar--homepage-mobile .brand,
@@ -464,24 +496,19 @@
   }
 
   .site-shell--homepage-final .hero.hero--homepage-final {
-    height: 560px;
+    padding-top: 96px;
   }
 
   .site-shell--homepage-final .homepage-hero-card {
-    top: 96px;
     width: calc(100% - 24px);
     height: 315px;
   }
 
   .site-shell--homepage-final .hero--homepage-final .trust-strip {
-    top: 426px;
     width: calc(100% - 24px);
-    justify-content: center;
-    gap: 4px 12px;
   }
 
   .site-shell--homepage-final .service-categories.service-categories--homepage-final {
-    margin-top: -84px;
     padding: 0 12px;
   }
 
@@ -761,10 +788,6 @@
 }
 
 @media (max-width: 360px) {
-  .site-shell--homepage-final .navbar--homepage-mobile .navbar__top {
-    gap: 6px;
-  }
-
   .site-shell--homepage-final .homepage-hero-card {
     height: 325px;
   }
