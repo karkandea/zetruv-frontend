@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonItems, SkeletonPanel } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
@@ -103,12 +104,23 @@ export function LivePhysicalCatalogPage() {
           </select></label>
         </div>
         <div className="physical-catalog__context"><strong>{copy.allProducts}</strong><span>•</span><span>{copy.pricingAndStockComeFromTheCatalog}</span></div>
-        {state === 'loading' && <p role="status">{copy.loadingMerchandise}</p>}
+        {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
+          <div className="physical-product-grid">
+            <SkeletonItems className="physical-product-card" count={4}>
+              <div className="physical-product-card__link">
+                <div className="physical-product-card__image"><Bone variant="media" /></div>
+                <div className="physical-product-card__meta"><Bone width="54%" /></div>
+                <Bone className="physical-product-card__name" width="78%" />
+                <Bone className="physical-product-card__price" width="64px" height="20px" />
+              </div>
+            </SkeletonItems>
+          </div>
+        </LoadingRegion>}
         {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
         {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
           ? copy.noProductsMatchYourSearch
           : copy.noMerchandiseHasBeenPublishedInThe}</p>}
-        <div className="physical-product-grid">{state === 'ready' && visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>
+        {state === 'ready' && <div className="physical-product-grid">{visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>}
       </section>
     </div></main>
     <SupportChat />
@@ -142,8 +154,21 @@ export function LivePhysicalProductPage({ slug }) {
     return () => controller.abort()
   }, [slug])
 
+  if (state === 'loading') return <div className="physical-shell"><Navbar /><main className="physical-pdp">
+    <LoadingRegion label={copy.loadingProduct}>
+      <Bone width="36%" />
+      <div className="physical-pdp__main">
+        <section className="physical-gallery">
+          <div className="physical-gallery__thumbs"><SkeletonItems count={3}><Bone variant="thumb" /></SkeletonItems></div>
+          <div className="physical-gallery__primary"><Bone variant="media" /></div>
+        </section>
+        <section className="physical-purchase-panel"><SkeletonPanel /></section>
+      </div>
+    </LoadingRegion>
+  </main></div>
+
   if (state !== 'ready') return <div className="physical-shell"><Navbar /><main className="physical-pdp" role="status">
-    <h1>{state === 'loading' ? copy.loadingProduct : state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3}</h1>
+    <h1>{state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3}</h1>
     <a href="/merchandise">{copy.backToMerchandise}</a>
   </main></div>
 

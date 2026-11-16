@@ -89,19 +89,6 @@
   line-height: 1.6;
   margin: 0 0 20px;
 }
-.product-detail-page .pdp-data-state__skeleton {
-  display: grid;
-  gap: 12px;
-  max-width: 440px;
-}
-.product-detail-page .pdp-data-state__skeleton span {
-  display: block;
-  height: 22px;
-  border-radius: 9px;
-  background: #e9edf5;
-}
-.product-detail-page .pdp-data-state__skeleton span:nth-child(2) { width: 85%; }
-.product-detail-page .pdp-data-state__skeleton span:nth-child(3) { width: 65%; }
 .product-detail-page .pdp-data-state__actions {
   display: flex;
   flex-wrap: wrap;

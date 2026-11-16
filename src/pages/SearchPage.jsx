@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
@@ -454,7 +455,6 @@ export default function SearchPage({ mode = 'player-id' }) {
 
               <div className="search-query-state" aria-live="polite">
                 {searchState === 'min' && <span>{copy.typeAtLeast3CharactersToStart}</span>}
-                {searchState === 'loading' && <span>{copy.loadingResults}</span>}
                 {searchState === 'error' && <span>{copy.weCouldnTLoadTheLatestResults}</span>}
                 {searchState === 'empty' && <span>{submittedQuery
                   ? formatCopy(copy.noResultsFoundForTryAnotherKeyword, { query: submittedQuery })
@@ -508,10 +508,16 @@ export default function SearchPage({ mode = 'player-id' }) {
                 </>
               )}
 
-              {searchState !== 'results' && (
+              {searchState === 'loading' && <LoadingRegion label={copy.loadingCatalog}>
+                <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-primary'}`}>
+                  <SkeletonItems className="search-game-card" count={6}>
+                    <Bone variant="thumb" className="search-game-card__thumb" /><SkeletonLines />
+                  </SkeletonItems>
+                </div>
+              </LoadingRegion>}
+              {searchState !== 'results' && searchState !== 'loading' && (
                 <div className="search-empty search-empty--browse search-empty--state">
                   {searchState === 'min' && copy.enterAtLeast3CharactersToSearch2}
-                  {searchState === 'loading' && copy.loadingCatalog}
                   {searchState === 'error' && copy.weCouldnTLoadTheCatalogPlease}
                   {searchState === 'empty' && copy.noProductsMatchYourSearch}
                 </div>

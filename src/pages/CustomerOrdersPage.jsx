@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, Package, RefreshCw } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
@@ -7,7 +8,7 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { activateCustomerCart, restoreCustomerSession, setCustomerSession } from '../services/customerCartSync'
 import { formatCopy } from '../services/storefrontCopy'
 import { AccountShell, PageHeader, useCustomerSession } from './AccountPages'
-import { dateTime, money, OrderStatusDetails, orderStatusLabel, paymentStatusLabel } from './SharedOrderStatusPage'
+import { dateTime, money, OrderDetailsSkeleton, OrderStatusDetails, orderStatusLabel, paymentStatusLabel } from './SharedOrderStatusPage'
 import '../styles/customer-orders.css'
 
 const guestLookupUrl = '/order-status?guest=1'
@@ -22,9 +23,23 @@ function requestOrder(path, accessToken, signal) {
   })
 }
 
-function OrderMessage({ title, description, children, loading }) {
-  return <section className="account-orders-empty" aria-live="polite" aria-busy={loading || undefined}>
-    {!loading && <img src="/assets/account/orders-empty.svg" alt="" width="132" height="129" />}
+function OrdersSkeleton({ orderId, label }) {
+  if (orderId) return <OrderDetailsSkeleton label={label} />
+  return <LoadingRegion label={label}>
+    <div className="customer-orders-list">
+      <SkeletonItems className="customer-order-card">
+        <div className="customer-order-card__header"><Bone width="42%" /></div>
+        <div className="customer-order-card__item"><Bone variant="thumb" /><SkeletonLines /></div>
+        <div className="customer-order-card__statuses"><Bone width="50%" /></div>
+        <div className="customer-order-card__footer"><Bone width="33%" /></div>
+      </SkeletonItems>
+    </div>
+  </LoadingRegion>
+}
+
+function OrderMessage({ title, description, children }) {
+  return <section className="account-orders-empty" aria-live="polite">
+    <img src="/assets/account/orders-empty.svg" alt="" width="132" height="129" />
     <h2>{title}</h2>
     {description && <p>{description}</p>}
     {children}
@@ -61,7 +76,7 @@ export default function CustomerOrdersPage({ orderId }) {
     {session?.accessToken ? (
       <CustomerOrdersContent key={session.accessToken} token={session.accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />
     ) : restoring ? (
-      <OrderMessage title={copy.loadingOrders} loading />
+      <OrdersSkeleton orderId={orderId} label={copy.loadingOrders} />
     ) : (
       <OrderMessage title={copy.logInToViewOrders} description={copy.accountOrdersIntro}>
         {login}
@@ -104,7 +119,7 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
       <button type="button" className="account-btn account-btn--primary" onClick={refresh}>{copy.tryAgain}</button>
     </OrderMessage>
   } else if (!current) {
-    body = <OrderMessage title={copy.loadingOrders} loading />
+    body = <OrdersSkeleton orderId={orderId} label={copy.loadingOrders} />
   } else if (orderId) {
     body = <OrderStatusDetails order={current.data} onRefresh={refresh}
       itemAction={item => current.data.paymentState === 'Paid' && item.kind === 'GameVoucher' &&
@@ -181,6 +196,7 @@ function VoucherCodes({ orderId, itemId, token }) {
   }
 
   return <div className="customer-order-voucher">
+    {state === 'loading' && <LoadingRegion label={copy.loadingVoucherCodes}><Bone width="55%" /></LoadingRegion>}
     {state === 'ready' ? <ul aria-label={copy.voucherCodes}>{codes.map(code => <li key={code}><code>{code}</code></li>)}</ul> :
       <button type="button" className="account-btn account-btn--outline" disabled={state === 'loading'} onClick={reveal}>
         {state === 'loading' ? copy.loadingVoucherCodes : copy.revealVoucherCodes}

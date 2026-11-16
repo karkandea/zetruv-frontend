@@ -1,3 +1,4 @@
+import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
@@ -203,10 +204,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       <Navbar variant="loginCatalog" />
       <main className="login-product-page">
         {status === 'loading' && (
-          <section className="login-product-loading" role="status">
-            <LoaderCircle size={22} className="login-product-spin" aria-hidden="true" />
-            {copy.loadingPackagesFromTheCatalog}
-          </section>
+          <ProductSkeleton label={copy.loadingPackagesFromTheCatalog} hero="login-product-hero"
+            heroContent="login-product-container login-product-hero__content" cover="login-product-cover" heroCopy="login-product-hero__copy"
+            body="login-product-body" container="login-product-container" layout="login-product-layout" panel="login-package-panel"
+            grid="login-package-grid" card="login-package-card" aside="login-product-summary" />
         )}
         {status === 'error' && (
           <section className="login-product-loading" role="alert">

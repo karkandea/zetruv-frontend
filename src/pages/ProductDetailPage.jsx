@@ -1,3 +1,4 @@
+import { ProductSkeleton } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
@@ -158,14 +159,18 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
   if (catalogStatus !== 'ready' || product?.slug !== slug || !selected) {
     const loading = catalogStatus === 'loading' || Boolean(product && product.slug !== slug)
     return <div className="product-detail-shell"><Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} />
-      <main className="product-detail-page pdp-data-state" aria-busy={loading}>
-        <div className="product-detail-container pdp-data-state__content" role={loading ? 'status' : 'alert'}>
-          <h1>{loading ? copy.loadingProductAndPricing : copy.productCouldnTBeLoaded}</h1>
-          <p>{loading ? copy.pricingAndPackagesWillAppearAfterWe : catalogError || copy.thisProductIsCurrentlyUnavailableInThe}</p>
-          {loading ? <div className="pdp-data-state__skeleton" aria-hidden="true"><span /><span /><span /></div>
-            : <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>{copy.tryAgain3}</button><a href="/search">{copy.backToCatalog}</a></div>}
+      {loading ? <main className="product-detail-page">
+        <ProductSkeleton label={copy.loadingProductAndPricing} hero="product-hero pdp-figma-hero"
+          heroContent="product-detail-container product-hero__content" cover="product-game-cover" heroCopy="product-hero__copy"
+          container="product-detail-container" layout="product-detail-layout" panel="product-selection-panel"
+          grid="sku-grid" card="sku-card" aside="product-order-panel pdp-order-sidebar" />
+      </main> : <main className="product-detail-page pdp-data-state">
+        <div className="product-detail-container pdp-data-state__content" role="alert">
+          <h1>{copy.productCouldnTBeLoaded}</h1>
+          <p>{catalogError || copy.thisProductIsCurrentlyUnavailableInThe}</p>
+          <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>{copy.tryAgain3}</button><a href="/search">{copy.backToCatalog}</a></div>
         </div>
-      </main>
+      </main>}
     </div>
   }
 

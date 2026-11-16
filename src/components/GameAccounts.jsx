@@ -1,9 +1,10 @@
+import { Bone, SkeletonItems, SkeletonLines } from './Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { accountPrice, accountProductHref, getAccountAttributes } from '../services/gameAccountPresentation'
 import { useCarouselPages } from '../hooks/useCarouselPages'
 
-export default function GameAccounts({ items = [] }) {
+export default function GameAccounts({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const cards = items.filter((item) => item?.id && item?.slug).slice(0, 3)
   const { rowRef, activePage, updateActivePage, showPage } = useCarouselPages(cards.length)
@@ -20,10 +21,14 @@ export default function GameAccounts({ items = [] }) {
           <span className="homepage-accounts__mobile-label">{copy.viewAll}</span>
         </a>
       </div>
-      {cards.length === 0
+      {!loading && cards.length === 0
         ? <div className="homepage-accounts__empty">{copy.thereAreNoGameAccountsToShow}</div>
         : <div className="homepage-accounts__row" id="homepage-accounts-slides" ref={rowRef} onScroll={updateActivePage}>
-          {cards.map((account) => {
+          {loading ? <SkeletonItems className="homepage-account-card">
+            <Bone className="homepage-account-card__preview" variant="media" />
+            <div className="homepage-account-card__info"><SkeletonLines /></div>
+            <div className="homepage-account-card__bottom"><Bone width="38%" /></div>
+          </SkeletonItems> : cards.map((account) => {
             const attributes = getAccountAttributes(account.accountDetails, { cardOnly: true, limit: 3 })
             const href = accountProductHref(account)
             return (

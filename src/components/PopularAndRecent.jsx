@@ -1,3 +1,4 @@
+import { Bone, SkeletonItems } from './Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { assets } from '../data/assets'
 import { identifyHomepageGame } from '../services/homeArtwork'
@@ -25,7 +26,7 @@ function MiniItem({ item }) {
   )
 }
 
-export default function PopularAndRecent({ popular = [], recent = [], featured = [], authenticated = false }) {
+export default function PopularAndRecent({ popular = [], recent = [], featured = [], authenticated = false, loading = false }) {
   const copy = useStorefrontCopy()
   // Never represent promotional items as a customer's purchase history.
   // Guests see public featured offers; signed-in users see their own orders.
@@ -44,18 +45,18 @@ export default function PopularAndRecent({ popular = [], recent = [], featured =
           <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>{copy.popularGames}</h2></div>
         </header>
         <div className="mini-panel mini-panel--popular">
-          {popular.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
-          {popular.length === 0 && <p role="status">{copy.thereAreNoPopularGamesYet}</p>}
+          {loading ? <SkeletonItems className="mini-game" count={5}><Bone className="mini-game__image" variant="thumb" /><Bone width="68%" /></SkeletonItems> : popular.slice(0, 10).map((item) => <MiniItem item={item} key={item.id} />)}
+          {!loading && popular.length === 0 && <p role="status">{copy.thereAreNoPopularGamesYet}</p>}
         </div>
       </div>
 
-      <div className={`popular-recent__column${authenticated || showFeatured ? '' : ' popular-recent__column--sign-in-prompt'}`}>
+      <div className={`popular-recent__column${authenticated || showFeatured || loading ? '' : ' popular-recent__column--sign-in-prompt'}`}>
         <header className="compact-heading">
           <div><img src={assets.recentHeader} alt="" loading="lazy" decoding="async" /><h2>{showFeatured ? copy.featuredItems : copy.recentPurchases}</h2></div>
         </header>
         <div className="mini-panel mini-panel--recent">
-          {sidebarItems.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
-          {sidebarItems.length === 0 && <p role="status">{authenticated ? copy.thisAccountHasNoPurchaseHistoryYet : copy.logInToSeeYourRecentPurchases}</p>}
+          {loading ? <SkeletonItems className="mini-game"><Bone className="mini-game__image" variant="thumb" /><Bone width="68%" /></SkeletonItems> : sidebarItems.slice(0, 3).map((item) => <MiniItem item={item} key={item.id} />)}
+          {!loading && sidebarItems.length === 0 && <p role="status">{authenticated ? copy.thisAccountHasNoPurchaseHistoryYet : copy.logInToSeeYourRecentPurchases}</p>}
         </div>
       </div>
     </section>

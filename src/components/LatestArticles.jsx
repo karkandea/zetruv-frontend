@@ -1,7 +1,8 @@
+import { Bone, SkeletonLines } from './Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { assets } from '../data/assets'
 
-export default function LatestArticles({ items = [] }) {
+export default function LatestArticles({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const articles = items.filter((item) => item?.slug && item?.title).slice(0, 3)
 
@@ -17,7 +18,12 @@ export default function LatestArticles({ items = [] }) {
       </div>
 
       <div className="homepage-articles__grid">
-        {articles.map((article, index) => (
+        {loading ? [1, 2, 3].map(index => (
+          <div className={`homepage-article-card homepage-article-card--${index}`} key={index}>
+            <Bone variant="media" />
+            <div className="homepage-article-card__body"><SkeletonLines /></div>
+          </div>
+        )) : articles.map((article, index) => (
           <a className={`homepage-article-card homepage-article-card--${index + 1}`} href={`/articles/${encodeURIComponent(article.slug)}`} key={article.id}>
             <img src={article.thumbnailUrl || assets.articleOne} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.articleOne }} />
             <div className="homepage-article-card__body">
@@ -28,7 +34,7 @@ export default function LatestArticles({ items = [] }) {
             </div>
           </a>
         ))}
-        {articles.length === 0 && <p role="status">{copy.noArticlesHaveBeenPublishedYet}</p>}
+        {!loading && articles.length === 0 && <p role="status">{copy.noArticlesHaveBeenPublishedYet}</p>}
       </div>
     </section>
   )

@@ -1,8 +1,9 @@
+import { Bone, SkeletonItems } from './Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCarouselPages } from '../hooks/useCarouselPages'
 
-export default function JockeyGames({ items = [] }) {
+export default function JockeyGames({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const displayItems = items.filter((item) => item?.id && item?.slug).slice(0, 10)
   const { rowRef, pageCount, activePage, updateActivePage, showPage } = useCarouselPages(displayItems.length, 2)
@@ -14,7 +15,10 @@ export default function JockeyGames({ items = [] }) {
         <a className="yellow-button jockey-section__mobile-link" href="/search?kind=Joki">{copy.viewAll}</a>
       </header>
       <div className="jockey-grid" id="jockey-slides" ref={rowRef} onScroll={updateActivePage}>
-        {displayItems.map((game) => (
+        {loading ? <SkeletonItems className="jockey-card" count={6}>
+          <div className="jockey-card__image"><Bone variant="media" /></div>
+          <div className="jockey-card__caption"><Bone width="70%" /></div>
+        </SkeletonItems> : displayItems.map((game) => (
           <a className="jockey-card" href={`/product/joki/${encodeURIComponent(game.slug)}`} key={game.id}>
             <div className="jockey-card__image">{game.image && <img src={game.image} alt={game.name} loading="lazy" decoding="async" />}</div>
             <div className="jockey-card__caption">
@@ -23,7 +27,7 @@ export default function JockeyGames({ items = [] }) {
             </div>
           </a>
         ))}
-        {displayItems.length === 0 && <p role="status">{copy.gameBoostingIsCurrentlyUnavailable}</p>}
+        {!loading && displayItems.length === 0 && <p role="status">{copy.gameBoostingIsCurrentlyUnavailable}</p>}
       </div>
       {pageCount > 1 && (
         <div className="homepage-slider-dots jockey-section__dots" role="group" aria-label={copy.selectAGameBoostingPage}>

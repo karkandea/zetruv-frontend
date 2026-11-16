@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -258,7 +259,9 @@ export default function CartPage() {
               <span>{itemCount} {copy.items}</span>
             </div>
 
-            {items.length === 0 ? (
+            {items.length === 0 && readCustomerSession() && cartSync.state === 'loading' ? (
+              <LoadingRegion label={copy.loadingAndMergingYourAccountCart}><SkeletonRows count={2} /></LoadingRegion>
+            ) : items.length === 0 ? (
               <div className="digital-empty-cart">
                 <ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" />
                 <strong>{copy.yourDigitalCartIsEmpty}</strong>
@@ -302,7 +305,7 @@ export default function CartPage() {
                             </button>
                           </div>
                         ) : <p>{itemContext(item, copy)}</p>}
-                        {checking && !issue && <p className="digital-cart-item__checking" role="status">{copy.checkingProductRequirementsAndAccountDetails}</p>}
+                        {checking && !issue && <LoadingRegion className="digital-cart-item__checking" label={copy.checkingProductRequirementsAndAccountDetails}><Bone width="70%" /></LoadingRegion>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
                         {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
                           <button type="button" onClick={() => remove(item)}>{copy.removeThisPackage}</button>

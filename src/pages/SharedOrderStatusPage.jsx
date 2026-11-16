@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useRef, useState } from 'react'
@@ -107,6 +108,17 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
   </section>
 }
 
+export function OrderDetailsSkeleton({ label }) {
+  return <LoadingRegion label={label}>
+    <section className="sos-lookup-result">
+      <header className="sos-lookup-result__header"><SkeletonLines /></header>
+      <div className="sos-lookup-statuses"><div><SkeletonLines /></div><div><SkeletonLines /></div></div>
+      <div className="sos-lookup-items"><SkeletonRows count={2} /></div>
+      <div className="sos-lookup-summary"><Bone width="70%" /><Bone width="45%" /></div>
+    </section>
+  </LoadingRegion>
+}
+
 export default function SharedOrderStatusPage() {
   const copy = useStorefrontCopy()
   const [number, setNumber] = useState('')
@@ -194,6 +206,7 @@ export default function SharedOrderStatusPage() {
         </button>
         <p className="sos-lookup-note"><Mail size={15} aria-hidden="true" /> {copy.useTheEmailAddressOrPhoneNumber}</p>
       </form>
+      {loading && <OrderDetailsSkeleton label={copy.checkingYourOrder} />}
       {order && <OrderStatusDetails order={order} onReset={() => { clearResult(); setNumber(''); setContact(''); document.getElementById('sos-order-number')?.focus() }} />}
       <div className="sos-lookup-help"><a href="/order-status">{copy.myOrders} <ArrowRight size={15} aria-hidden="true" /></a></div>
       {!order && !loading && <div className="sos-lookup-help"><strong>{copy.noOrderYet}</strong><span>{copy.chooseAProductAndContinueToCheckout}</span><a href="/search">{copy.browseProducts} <ArrowRight size={15} aria-hidden="true" /></a></div>}

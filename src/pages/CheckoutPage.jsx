@@ -1,3 +1,4 @@
+import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -592,7 +593,15 @@ export default function CheckoutPage() {
         <section className="digital-checkout-order">
           <h2>{copy.orderSummary}</h2>
           <div className="digital-checkout-items">
-            {items.length ? items.map(item=>{
+            {items.length && catalogState === 'loading' ? <LoadingRegion label={copy.loadingCatalog}>
+              {items.map(item => <div className="digital-checkout-item checkout-product" key={item.cartKey}>
+                <div className="checkout-product__row">
+                  <Bone variant="thumb" className="digital-checkout-item__thumb" />
+                  <SkeletonLines />
+                </div>
+                <SkeletonLines />
+              </div>)}
+            </LoadingRegion> : items.length ? items.map(item=>{
               const earlier=allCreds.filter(other=>other.productId===item.productId &&
                 items.findIndex(x=>x.cartKey===other.cartKey)<items.findIndex(x=>x.cartKey===item.cartKey))
               const key=matchingAccountSource(items,item,sharing)
@@ -643,8 +652,9 @@ export default function CheckoutPage() {
         </section>
         <aside className="digital-payment-panel">
           <h2>{copy.paymentMethod}</h2>
-          {methodsState==='loading' && <p className="checkout-gateway-state"><LoaderCircle className="checkout-spinner" size={16}/>{copy.checkingPaymentMethods}</p>}
-          <div className="digital-payment-methods">
+          {methodsState === 'loading' ? <LoadingRegion label={copy.checkingPaymentMethods}>
+            <div className="digital-payment-methods"><SkeletonRows count={displayMethods.length} /></div>
+          </LoadingRegion> : <div className="digital-payment-methods">
             {(showLiveMethods ? readiness.availableMethods.map(m=>({
               ...displayMethods.find(x=>x.code===m.code),...m,
               name:displayMethods.find(x=>x.code===m.code)?.name||m.name||m.code,
@@ -660,7 +670,7 @@ export default function CheckoutPage() {
                 <b aria-hidden="true"/>
               </button>
             })}
-          </div>
+          </div>}
           {readiness?.isSandbox && <p className="checkout-gateway-state" role="status">
             <Info size={16}/>{copy.testModeThisTransactionUsesNoReal}
           </p>}
