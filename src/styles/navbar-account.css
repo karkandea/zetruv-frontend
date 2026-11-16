@@ -177,6 +177,12 @@
   }
 }
 
+@media (max-width: 900px) {
+  .navbar.navbar--homepage-mobile {
+    --navbar-top-gap: 4px;
+  }
+}
+
 @media (max-width: 430px) {
   .nav-account__trigger { gap: 2px; }
   .nav-account__trigger > svg { width: 10px; }
