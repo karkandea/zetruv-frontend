@@ -93,7 +93,9 @@ try{
     else await page.getByText('Keranjang Digital Masih Kosong').waitFor({timeout:12000})
     await page.screenshot({path:output+'/guest-'+device+'-cart.png',fullPage:true})
     // Navbar AuthModal must authenticate against backend, not preview flag.
-    await page.getByRole('button',{name:'Masuk',exact:true}).first().click()
+    const mobileMenu = page.locator('.navbar__hamburger')
+    if (await mobileMenu.isVisible()) await mobileMenu.click()
+    await page.locator('.navbar').getByRole('button',{name:'Masuk',exact:true}).click()
     const modal=page.getByRole('dialog',{name:'Masuk'})
     await modal.locator('input[name="email"]').fill('qa@example.test')
     await modal.locator('input[name="password"]').fill('synthetic-only-password')
