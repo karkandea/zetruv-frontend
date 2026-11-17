@@ -1,7 +1,7 @@
-import { ProductSkeleton } from '../components/Skeleton'
+import { Bone, ProductSkeleton } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, Flame, Gem, ShoppingCart, Star, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
@@ -46,6 +46,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
   const [selectionWarning, setSelectionWarning] = useState('')
   const [saving,setSaving] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(readCustomerSession()))
+  const packageGridRef = useRef(null)
   useEffect(() => {
     const sync = () => setIsAuthenticated(Boolean(readCustomerSession()))
     window.addEventListener(CUSTOMER_EVENT, sync)
@@ -87,6 +88,13 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     })
     return () => { active = false }
   }, [slug, initialVariantId, retryCount])
+
+  useLayoutEffect(() => {
+    const grid = packageGridRef.current
+    if (!grid || grid.scrollWidth <= grid.clientWidth) return
+    const selectedCard = grid.querySelector('[aria-pressed="true"]')
+    if (selectedCard) grid.scrollLeft = selectedCard.offsetLeft
+  }, [catalogStatus, initialVariantId])
 
   const selected = useMemo(() => product?.variants?.find((item) => item.id === selectedId) || product?.variants?.[0], [product, selectedId])
   const accountFields = useMemo(() => (product?.inputFields || [])
@@ -162,6 +170,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
       {loading ? <main className="product-detail-page">
         <ProductSkeleton label={copy.loadingProductAndPricing} hero="product-hero pdp-figma-hero"
           heroContent="product-detail-container product-hero__content" cover="product-game-cover" heroCopy="product-hero__copy"
+          heroBenefits={<div className="product-benefits"><Bone /><Bone /><Bone /></div>}
           container="product-detail-container" layout="product-detail-layout" panel="product-selection-panel"
           grid="sku-grid" card="sku-card" aside="product-order-panel pdp-order-sidebar" />
       </main> : <main className="product-detail-page pdp-data-state">
@@ -185,9 +194,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
             <div className="product-game-cover"><img src={gameArt} alt={productName} /></div>
             <div className="product-hero__copy">
               <h1>{productName}</h1>
-              <div className="product-rating-line"><strong>{product.game?.publisher || 'Game'}</strong><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></div>
-              <ProductBenefits />
+              <div className="product-rating-line">
+                <strong>{product.game?.publisher || 'Game'}</strong>
+                <span className="product-rating-score"><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></span>
+              </div>
             </div>
+            <ProductBenefits />
           </div>
         </section>
 
@@ -195,7 +207,20 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
           <section className="product-selection-panel">
             <div className="product-selection-heading"><h2>{copy.chooseAnItem}</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || copy.topUp}</button></div></div>
             {selectionWarning && <p className="pdp-variant-warning" role="status">{selectionWarning}</p>}
-            <div className="sku-grid">{product.variants.map((item, index) => <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`} disabled={item.isAvailable === false} aria-pressed={selectedId === item.id} onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}><span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span><span className="sku-card__copy"><strong>{item.name}</strong><small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small></span>{item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}</button>)}</div>
+            <div className="sku-grid" ref={packageGridRef}>
+              {product.variants.map((item, index) => (
+                <button type="button" key={item.id} className={`sku-card${selectedId === item.id ? ' active' : ''}`}
+                  disabled={item.isAvailable === false} aria-pressed={selectedId === item.id}
+                  onClick={() => { setSelectedId(item.id); setNotice(''); setSelectionWarning('') }}>
+                  <span className="sku-art"><TopUpCurrencyIcon slug={slug} variant={item} index={index} /></span>
+                  <span className="sku-card__copy">
+                    <strong>{item.name}</strong>
+                    <small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small>
+                  </span>
+                  {item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}
+                </button>
+              ))}
+            </div>
 
             <section className="product-reviews"><h2>{copy.productReviews}</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>{copy.label394Reviews}</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>{copy.latestReviews}</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>{copy.label2DaysAgo}</span></div><Stars small/><p>{text}</p></article>)}</div></section>
           </section>
