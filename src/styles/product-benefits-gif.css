@@ -9,9 +9,9 @@
 .login-product-page .login-product-benefits .pdp-benefit-gif-slot {
   display: inline-flex;
   position: relative;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
+  width: var(--pdp-benefit-icon-size, 16px);
+  height: var(--pdp-benefit-icon-size, 16px);
+  flex: 0 0 var(--pdp-benefit-icon-size, 16px);
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -21,8 +21,8 @@
 .product-detail-page .product-benefits .pdp-benefit-gif,
 .login-product-page .login-product-benefits .pdp-benefit-gif {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: var(--pdp-benefit-icon-size, 16px);
+  height: var(--pdp-benefit-icon-size, 16px);
   max-width: none;
   flex: 0 0 auto;
   object-fit: contain;
@@ -31,17 +31,17 @@
 
 .product-detail-page .product-benefits .pdp-benefit-gif-slot--fast .pdp-benefit-gif,
 .login-product-page .login-product-benefits .pdp-benefit-gif-slot--fast .pdp-benefit-gif {
-  width: 24px;
-  height: 24px;
-  flex-basis: 24px;
+  width: calc(var(--pdp-benefit-icon-size, 16px) * 1.5);
+  height: calc(var(--pdp-benefit-icon-size, 16px) * 1.5);
+  flex-basis: calc(var(--pdp-benefit-icon-size, 16px) * 1.5);
 }
 
 .product-detail-page .product-benefits .pdp-benefit-motion-fallback,
 .login-product-page .login-product-benefits .pdp-benefit-motion-fallback {
   display: none;
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
+  flex: 0 0 var(--pdp-benefit-icon-size, 16px);
+  width: var(--pdp-benefit-icon-size, 16px);
+  height: var(--pdp-benefit-icon-size, 16px);
 }
 
 /* GIF frames cannot be paused reliably with CSS. Respect reduced-motion

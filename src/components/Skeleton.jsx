@@ -36,12 +36,13 @@ export function SkeletonPanel() {
   </div>
 }
 
-export function ProductSkeleton({ label, hero, container, heroContent, cover, heroCopy, body, layout, panel, grid, card, aside }) {
+export function ProductSkeleton({ label, hero, container, heroContent, cover, heroCopy, heroBenefits, body, layout, panel, grid, card, aside }) {
   return <LoadingRegion label={label}>
     <section className={hero}>
       <div className={heroContent}>
         <Bone className={cover} variant="thumb" />
         <div className={heroCopy}><SkeletonLines /></div>
+        {heroBenefits}
       </div>
     </section>
     <div className={body}>

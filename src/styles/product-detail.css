@@ -4,21 +4,23 @@
 
 .product-hero { position: relative; height: 282px; overflow: hidden; background-position: center 46%; background-size: cover; }
 .product-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,5,16,.5), rgba(4,5,16,.2)); }
-.product-hero__content { position: relative; z-index: 2; height: 100%; display: flex; align-items: center; gap: 16px; padding: 10px 30px; }
-.product-game-cover { width: 130px; height: 130px; flex: none; overflow: hidden; border-radius: 24px; }
+.product-hero__content { position: relative; z-index: 2; height: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: center; align-items: center; gap: 16px; padding: 10px 30px; }
+.product-game-cover { grid-row: 1 / 3; width: 130px; height: 130px; overflow: hidden; border-radius: 24px; }
 .product-game-cover img { width: 100%; height: 100%; object-fit: cover; }
-.product-hero__copy { display: flex; flex-direction: column; gap: 16px; color: white; }
+.product-hero__copy { display: flex; flex-direction: column; gap: 16px; min-width: 0; color: white; overflow-wrap: anywhere; }
 .product-hero__copy h1 { margin: 0; font-size: 24px; line-height: 36px; font-weight: 700; }
 .product-rating-line { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.product-rating-score { display: inline-flex; align-items: center; gap: inherit; white-space: nowrap; }
 .product-rating-line > strong { color: #fed218; font-size: 15px; font-weight: 400; }
 .product-rating-number { font-size: 18px; font-weight: 600; }
 .product-stars { display: inline-flex; align-items: center; }
 .product-stars--large img { width: 24px; height: 24px; }
 .product-stars--small { gap: 2px; }
 .product-stars--small img { width: 16px; height: 16px; }
-.product-benefits { display: flex; gap: 12px; flex-wrap: wrap; }
+.product-benefits { display: flex; grid-column: 2; gap: 12px; flex-wrap: wrap; color: white; }
 .product-benefits > span { height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; border: 1px solid #a0b2ff; border-radius: 40px; background: rgba(255,255,255,.15); backdrop-filter: blur(10px); font-size: 12px; white-space: nowrap; }
 .product-benefits img { width: 16px; height: 16px; object-fit: cover; }
+.product-benefits > .skeleton-bone { display: block; width: 132px; }
 
 .product-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: stretch; padding: 24px 0 120px; }
 .product-selection-panel { min-width: 0; padding: 20px; border-radius: 24px; background: #fff; box-shadow: 0 -10px 35px rgba(171,171,171,.02); }
@@ -103,25 +105,37 @@
 @media (max-width: 700px) {
   .product-detail-page { padding-top: 116px; }
   .product-detail-container { width: calc(100% - 24px); }
-  .product-hero { height: auto; min-height: 330px; }
-  .product-hero__content { padding: 28px 0; align-items: flex-start; }
-  .product-game-cover { width: 104px; height: 104px; border-radius: 20px; }
-  .product-hero__copy h1 { font-size: 20px; line-height: 30px; }
-  .product-rating-line { gap: 6px; flex-wrap: wrap; font-size: 13px; }
-  .product-stars--large img { width: 18px; height: 18px; }
-  .product-benefits { gap: 8px; }
-  .product-benefits > span { height: 30px; padding-inline: 10px; font-size: 10px; }
-  .sku-grid { grid-template-columns: 1fr; }
+  .product-hero__content { padding: 20px 0; gap: 14px 12px; }
+  .product-hero__copy { gap: 5px; }
+  .product-hero__copy h1 { font-size: clamp(18px, 5vw, 24px); line-height: 1.2; }
+  .product-rating-line { gap: 4px 6px; flex-wrap: wrap; font-size: 11px; }
+  .product-rating-line > strong { font-size: 12px; }
+  .product-rating-number { font-size: 13px; }
+  .product-rating-score .pdp-stars svg { width: 12px; height: 12px; }
+  .product-benefits {
+    --pdp-benefit-icon-size: clamp(12px, 3.6vw, 16px);
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(4px, 1.4vw, 8px);
+  }
+  .product-benefits > span {
+    height: auto;
+    min-height: 34px;
+    justify-content: center;
+    gap: clamp(3px, 1vw, 6px);
+    padding: 5px clamp(4px, 1.25vw, 9px);
+    font-size: clamp(10px, 2.7vw, 12px);
+    line-height: 1.2;
+    white-space: normal;
+  }
+  .product-benefits > .skeleton-bone { width: 100%; }
   .review-grid { grid-template-columns: 1fr; }
   .rating-summary { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
-  .product-hero__content { flex-direction: column; }
-  .product-benefits > span { white-space: normal; }
   .product-selection-panel { padding: 16px; }
-  .sku-card { padding: 20px; }
-  .sku-flash { right: 8px; }
 }
 
 
@@ -225,7 +239,6 @@
   position: relative;
   width: 130px;
   height: 130px;
-  flex: 0 0 130px;
   border-radius: 24px;
   overflow: hidden;
 }
@@ -284,9 +297,75 @@
   .product-detail-page .sku-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
-  .product-detail-page .sku-grid { grid-template-columns: 1fr; }
-  .product-detail-page .pdp-figma-hero { height: auto; min-height: 330px; }
-  .product-detail-page .pdp-figma-hero .product-game-cover { width: 104px; height: 104px; flex-basis: 104px; }
+  .product-detail-page .pdp-figma-hero { height: auto; }
+  .product-detail-page .pdp-figma-hero .product-game-cover {
+    grid-row: 1;
+    width: clamp(72px, 21vw, 100px);
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 16px;
+  }
+
+  .product-detail-page .sku-grid {
+    --mobile-sku-size: clamp(116px, 33vw, 148px);
+    position: relative;
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: #c7cce1 transparent;
+  }
+
+  .product-detail-page .sku-card {
+    flex: 0 0 var(--mobile-sku-size);
+    height: var(--mobile-sku-size);
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 6px;
+    border-radius: 14px;
+    text-align: center;
+    scroll-snap-align: start;
+  }
+
+  .product-detail-page .sku-card:has(.sku-flash) { padding-top: 23px; }
+  .product-detail-page .sku-grid .sku-card:focus-visible { outline-offset: -3px; }
+
+  .product-detail-page .sku-card .sku-art {
+    width: clamp(28px, 8.5vw, 36px);
+    height: clamp(28px, 8.5vw, 36px);
+    min-width: 0;
+    flex: none;
+  }
+
+  .product-detail-page .sku-card .sku-card__copy { width: 100%; max-width: 100%; gap: 4px; }
+  .product-detail-page .sku-card .sku-card__copy strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: clamp(11px, 3.1vw, 13px);
+    line-height: 1.2;
+  }
+
+  .product-detail-page .sku-card .sku-card__copy small { font-size: 11px; line-height: 1.18; }
+  .product-detail-page .sku-card .sku-card__copy .pdp-original-price { display: block; margin-left: 0; font-size: 9px; }
+
+  .product-detail-page .sku-flash {
+    top: 5px;
+    right: 5px;
+    height: 16px;
+    gap: 3px;
+    padding-inline: 4px;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+
+  .product-detail-page .sku-flash svg { width: 9px; height: 9px; }
 }
 
 /* The icon inside a 36px Figma currency slot must never reuse a game cover. */
