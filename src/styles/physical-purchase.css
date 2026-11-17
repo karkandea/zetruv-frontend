@@ -2123,7 +2123,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .physical-pdp__main,
   .physical-cart-layout,
   .physical-checkout-layout,
   .physical-payment-layout,
@@ -2136,6 +2135,10 @@
   .physical-gallery,
   .physical-purchase-panel {
     height: auto;
+  }
+
+  .physical-pdp__main {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .physical-product-info {
@@ -2628,4 +2631,5 @@
 
 @media (max-width: 1024px) {
   .physical-cart { padding-top: 88px; }
+  .physical-purchase-panel__top { width: 100%; }
 }

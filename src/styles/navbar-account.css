@@ -154,9 +154,11 @@
 .nav-help-dialog .account-btn { min-height: 44px; font-size: 13px; }
 
 @media (max-width: 1024px) {
+  :root { --mobile-navbar-height: 64px; }
+
   .navbar--homepage-mobile {
     --navbar-top-gap: 10px;
-    height: 64px;
+    height: var(--mobile-navbar-height);
   }
 
   .navbar.navbar--homepage-mobile .navbar__top {
@@ -168,6 +170,14 @@
   }
 
   .navbar--homepage-mobile .nav-account__dropdown { right: calc(-44px - var(--navbar-top-gap)); }
+
+  .navbar--homepage-mobile + :is(.product-detail-page, .login-product-page, .special-product-page, .ga-detail-page) {
+    padding-top: var(--mobile-navbar-height);
+  }
+
+  .navbar--homepage-mobile + :is(.physical-pdp, .special-product-state) {
+    padding-top: calc(var(--mobile-navbar-height) + 24px);
+  }
 }
 
 @media (max-width: 700px) {

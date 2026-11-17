@@ -68,7 +68,7 @@ function ProductState({ state, retry, joki = false }) {
   const copy = useStorefrontCopy()
   const loading = state === 'loading'
   const failed = state === 'error'
-  return <div className="special-product-shell"><Navbar />
+  return <div className="special-product-shell"><Navbar homepageMobileMenu />
     {loading ? <main className="special-product-page">
       <ProductSkeleton label={copy.loadingProduct} hero={`special-product-hero special-product-hero--${joki ? 'joki' : 'voucher'}`}
         heroContent="special-product-hero__content" cover="special-product-hero__visual" heroCopy="special-product-hero__copy"
@@ -182,7 +182,7 @@ function SpecialProduct({ product, slug, joki = false }) {
 
   return (
     <div className="special-product-shell">
-      <Navbar variant="catalog" />
+      <Navbar variant="catalog" homepageMobileMenu />
       <main className="special-product-page">
         <section className={`special-product-hero special-product-hero--${joki ? 'joki' : 'voucher'}`}>
           <img className="special-product-hero__background" src={hero} alt="" />

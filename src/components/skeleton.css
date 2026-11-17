@@ -71,7 +71,9 @@
 .skeleton-content .homepage-hero-card {
   background: #ebedf7;
 }
-.skeleton-content .homepage-hero-card__track > .skeleton-bone {
+.skeleton-content .homepage-hero-card__slide > .skeleton-bone {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   border-radius: 0;

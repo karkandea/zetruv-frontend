@@ -158,7 +158,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
 
   if (catalogStatus !== 'ready' || product?.slug !== slug || !selected) {
     const loading = catalogStatus === 'loading' || Boolean(product && product.slug !== slug)
-    return <div className="product-detail-shell"><Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} />
+    return <div className="product-detail-shell"><Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} homepageMobileMenu />
       {loading ? <main className="product-detail-page">
         <ProductSkeleton label={copy.loadingProductAndPricing} hero="product-hero pdp-figma-hero"
           heroContent="product-detail-container product-hero__content" cover="product-game-cover" heroCopy="product-hero__copy"
@@ -176,7 +176,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
 
   return (
     <div className="product-detail-shell">
-      <Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} onAuthenticated={() => setIsAuthenticated(Boolean(readCustomerSession()))} />
+      <Navbar variant={isAuthenticated ? 'loginCatalog' : 'default'} homepageMobileMenu onAuthenticated={() => setIsAuthenticated(Boolean(readCustomerSession()))} />
       <main className="product-detail-page">
         <section className="product-hero pdp-figma-hero">
           <img className="pdp-hero-image" src={slug === 'mobile-legends' ? media.heroBackground : gameArt} alt="" />

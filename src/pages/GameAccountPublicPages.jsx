@@ -375,7 +375,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
     window.location.href = '/cart?flow=account'
   }
 
-  return <div className="ga-shell"><Navbar />
+  return <div className="ga-shell"><Navbar homepageMobileMenu />
     {loading ? <main className="ga-detail-page">
       <ProductSkeleton label={copy.loadingAccountDetails} hero="ga-detail-hero ga-live-hero"
         heroContent="ga-detail-hero-content" cover="ga-hero-thumb" heroCopy="ga-detail-hero-copy"

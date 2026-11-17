@@ -154,7 +154,7 @@ export function LivePhysicalProductPage({ slug }) {
     return () => controller.abort()
   }, [slug])
 
-  if (state === 'loading') return <div className="physical-shell"><Navbar /><main className="physical-pdp">
+  if (state === 'loading') return <div className="physical-shell"><Navbar homepageMobileMenu /><main className="physical-pdp">
     <LoadingRegion label={copy.loadingProduct}>
       <Bone width="36%" />
       <div className="physical-pdp__main">
@@ -167,7 +167,7 @@ export function LivePhysicalProductPage({ slug }) {
     </LoadingRegion>
   </main></div>
 
-  if (state !== 'ready') return <div className="physical-shell"><Navbar /><main className="physical-pdp" role="status">
+  if (state !== 'ready') return <div className="physical-shell"><Navbar homepageMobileMenu /><main className="physical-pdp" role="status">
     <h1>{state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3}</h1>
     <a href="/merchandise">{copy.backToMerchandise}</a>
   </main></div>
@@ -191,7 +191,7 @@ export function LivePhysicalProductPage({ slug }) {
     setAdded(true)
   }
 
-  return <div className="physical-shell"><Navbar />
+  return <div className="physical-shell"><Navbar homepageMobileMenu />
     <main className="physical-pdp">
       <div className="physical-breadcrumb"><a href="/merchandise">{copy.merchandise}</a> <span>/</span> {product.name}</div>
       <div className="physical-pdp__main">
