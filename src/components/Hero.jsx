@@ -17,7 +17,7 @@ function emptyBanner(copy) {
 
 export function mapCmsHeroes(items = []) {
   return items.filter((item) => item?.id && item?.title).map((item) => ({
-    id: item.id, theme: 'welcome', title: item.title, description: item.subtitle,
+    id: item.id, theme: 'welcome', title: item.title, description: item.subtitle?.trim(),
     artwork: item.imageUrl || null,
     actions: [
       item.primaryCtaLabel && item.primaryCtaUrl && { label: item.primaryCtaLabel, href: item.primaryCtaUrl },
@@ -99,14 +99,14 @@ export default function Hero({ items = [], loading = false }) {
           style={{ transform: `translateX(-${loading ? 0 : visibleIndex * 100}%)` }}
           aria-live="off"
         >
-          {loading ? <>
+          {loading ? <div className="homepage-hero-card__slide" aria-hidden="true">
             <Bone />
             <div className="homepage-hero-card__copy">
               <Bone width="54%" height="24px" />
               <Bone width="39%" />
               <div className="homepage-hero-card__actions"><Bone variant="control" width="126px" height="36px" /></div>
             </div>
-          </> : banners.map((banner, index) => (
+          </div> : banners.map((banner, index) => (
             <article
               className={`homepage-hero-card__slide homepage-hero-card__slide--${banner.theme}`}
               key={banner.id}
@@ -135,8 +135,8 @@ export default function Hero({ items = [], loading = false }) {
               <div className="homepage-hero-card__copy">
                 {banner.eyebrow && <span className="homepage-hero-card__eyebrow">{banner.eyebrow}</span>}
                 <h1>{banner.title}</h1>
-                <p>{banner.description}</p>
-                <div className="homepage-hero-card__actions">
+                {banner.description && <p>{banner.description}</p>}
+                {banner.actions.length > 0 && <div className="homepage-hero-card__actions">
                   {banner.actions.map((action) => (
                     <a
                       key={action.label}
@@ -147,7 +147,7 @@ export default function Hero({ items = [], loading = false }) {
                       {action.label}
                     </a>
                   ))}
-                </div>
+                </div>}
               </div>
             </article>
           ))}

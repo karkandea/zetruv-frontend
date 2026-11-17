@@ -66,18 +66,14 @@
 }
 
 @media (max-width: 1024px) {
-  .site-shell--homepage-final .navbar--homepage-mobile {
-    height: 64px;
-  }
-
   .navbar--homepage-mobile .navbar__homepage-mobile-wrapper {
     position: relative;
-    height: 64px;
+    height: var(--mobile-navbar-height);
   }
 
   .site-shell--homepage-final .navbar--homepage-mobile .navbar__top {
     width: calc(100% - 32px);
-    height: 64px;
+    height: var(--mobile-navbar-height);
     grid-template-columns: 52px minmax(0, 1fr) 44px;
     column-gap: var(--navbar-top-gap);
     padding: 0;
@@ -146,10 +142,10 @@
   .navbar--homepage-mobile .navbar__mobile-drawer {
     position: absolute;
     z-index: 150;
-    top: 64px;
+    top: var(--mobile-navbar-height);
     left: 0;
     right: 0;
-    max-height: calc(100dvh - 64px);
+    max-height: calc(100dvh - var(--mobile-navbar-height));
     display: block;
     overflow-y: auto;
     padding: 12px 16px 20px;
@@ -314,17 +310,11 @@
 
   /* Allow sections and card grids to grow with real CMS content. */
   .site-shell--homepage-final .hero.hero--homepage-final {
-    height: auto;
-    min-height: 0;
     padding: 118px 0 18px;
   }
 
   .site-shell--homepage-final .homepage-hero-card {
-    position: relative;
-    inset: auto;
-    height: 280px;
-    margin-inline: auto;
-    transform: none;
+    --homepage-banner-min-height: 280px;
   }
 
   .site-shell--homepage-final .hero--homepage-final .trust-strip {
@@ -501,7 +491,7 @@
 
   .site-shell--homepage-final .homepage-hero-card {
     width: calc(100% - 24px);
-    height: 315px;
+    --homepage-banner-min-height: 315px;
   }
 
   .site-shell--homepage-final .hero--homepage-final .trust-strip {
@@ -789,7 +779,7 @@
 
 @media (max-width: 360px) {
   .site-shell--homepage-final .homepage-hero-card {
-    height: 325px;
+    --homepage-banner-min-height: 325px;
   }
 }
 

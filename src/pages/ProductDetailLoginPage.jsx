@@ -201,7 +201,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
 
   return (
     <div className="login-product-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog" homepageMobileMenu />
       <main className="login-product-page">
         {status === 'loading' && (
           <ProductSkeleton label={copy.loadingPackagesFromTheCatalog} hero="login-product-hero"

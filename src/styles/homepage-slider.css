@@ -5,7 +5,7 @@
 
 .homepage-hero-card__track {
   width: 100%;
-  height: 100%;
+  min-height: var(--homepage-banner-min-height);
   display: flex;
   transition: transform 500ms cubic-bezier(.22, 1, .36, 1);
   will-change: transform;
@@ -13,10 +13,9 @@
 
 .homepage-hero-card__slide {
   position: relative;
-  width: 100%;
-  height: 100%;
   flex: 0 0 100%;
-  overflow: hidden;
+  min-width: 0;
+  padding: 42px 42px 56px;
   background: #060552;
 }
 
@@ -53,29 +52,47 @@
 }
 
 .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy {
+  position: relative;
+  inset: auto;
   z-index: 2;
-  width: min(610px, calc(100% - 90px));
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  width: min(610px, 100%);
+  overflow-wrap: anywhere;
 }
 
-.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy h1,
-.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy > p {
-  width: 100%;
-}
-
-.site-shell--homepage-final .homepage-hero-card__slide:not(.homepage-hero-card__slide--welcome) .homepage-hero-card__copy h1 {
+.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy h1 {
+  width: auto;
   min-height: 0;
-  margin-top: 6px;
+  margin: 0;
+  font-size: clamp(22px, 3.3vw, 29px);
   line-height: 1.24;
 }
 
-.site-shell--homepage-final .homepage-hero-card__slide:not(.homepage-hero-card__slide--welcome) .homepage-hero-card__copy > p {
+.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy > p {
+  width: auto;
   min-height: 0;
   max-width: 490px;
-  margin-top: 12px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
 }
 
-.site-shell--homepage-final .homepage-hero-card__slide:not(.homepage-hero-card__slide--welcome) .homepage-hero-card__actions {
-  margin-top: 17px;
+.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__actions {
+  max-width: 100%;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-button {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 42px;
+  padding: 8px 14px;
+  text-align: center;
 }
 
 .homepage-hero-card__eyebrow {
@@ -202,8 +219,8 @@
 }
 
 @media (max-width: 900px) {
-  .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy {
-    width: min(580px, calc(100% - 68px));
+  .homepage-hero-card__slide {
+    padding: 36px 34px 56px;
   }
 
   .homepage-hero-card__visual {
@@ -217,10 +234,12 @@
 }
 
 @media (max-width: 600px) {
+  .homepage-hero-card__slide {
+    padding: 24px 20px 52px;
+  }
+
   .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy {
-    top: 24px;
-    left: 20px;
-    width: calc(100% - 40px);
+    gap: 10px;
   }
 
   .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy h1 {
@@ -229,24 +248,15 @@
   }
 
   .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__copy > p {
-    margin-top: 10px;
-    font-size: 11px;
-    line-height: 1.5;
-  }
-
-  .site-shell--homepage-final .homepage-hero-card__slide:not(.homepage-hero-card__slide--welcome) .homepage-hero-card__copy > p {
-    margin-top: 10px;
+    font-size: 13px;
   }
 
   .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-card__actions {
     gap: 8px;
-    margin-top: 15px;
-    flex-wrap: wrap;
   }
 
   .site-shell--homepage-final .homepage-hero-card__slide .homepage-hero-button {
-    min-width: 0;
-    height: 37px;
+    min-height: 37px;
     padding-inline: 12px;
     font-size: 10px;
   }
