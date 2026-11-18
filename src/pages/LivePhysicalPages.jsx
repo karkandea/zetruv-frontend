@@ -3,6 +3,7 @@ import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import BrowseMobileControls from '../components/BrowseMobileControls'
 import SupportChat from '../components/SupportChat'
 import { Bookmark, ImageOff } from 'lucide-react'
@@ -203,8 +204,7 @@ export function LivePhysicalProductPage({ slug }) {
           <div className="physical-purchase-panel__top"><span className="physical-badge">{copy.merchandise2}</span><Availability available={product.isAvailable} /></div>
           <h1>{product.name}</h1>
           <div className="physical-rating-line">
-            {product.rating != null && <strong>★ {product.rating}</strong>}
-            {product.reviewCount > 0 && <span>{product.reviewCount} {copy.reviews}</span>}
+            <ProductRating product={product} />
             <span>{product.soldQuantity ?? 0} {copy.sold}</span>
           </div>
           <strong className="physical-pdp__price">{unitPrice != null ? rupiah(unitPrice) : copy.priceUnavailable}</strong>
@@ -228,6 +228,7 @@ export function LivePhysicalProductPage({ slug }) {
         </section>
       </div>
       <div className="physical-product-info"><section><strong>{copy.description}</strong><p>{product.description || product.shortDescription || copy.descriptionIsUnavailable}</p></section></div>
+      <ProductReviews product={product} />
     </main>
   </div>
 }

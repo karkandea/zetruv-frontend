@@ -30,3 +30,10 @@ export async function getCatalogProducts({
 export async function getCatalogProduct(slug, { signal } = {}) {
   return apiRequest(`/catalog/products/${encodeURIComponent(slug)}`, { signal })
 }
+
+export function getProductReviews(slug, offset, signal) {
+  return apiRequest(`/catalog/products/${encodeURIComponent(slug)}/reviews?offset=${offset}`, {
+    cache: 'no-store',
+    signal,
+  })
+}

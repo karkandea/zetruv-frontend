@@ -1,9 +1,10 @@
 import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
+import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
+import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import ProductOrderDock from '../components/ProductOrderDock'
 import genshinHero from '../assets/game-account-flow/genshin-impact.png'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
@@ -152,8 +153,6 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
   const selectedIndex = product?.variants?.findIndex((variant) => variant.id === selectedId) ?? -1
   const thumbnail = product && selected
     ? variantMedia(product, selected, Math.max(0, selectedIndex)) : genericGameImage
-  const reviewCount = Number(product?.reviewCount || 0)
-  const rating = Number(product?.rating || 0)
 
   function selectVariant(variant) {
     setSelectedId(variant.id)
@@ -239,13 +238,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                     <h1>{product.game?.name || product.name}</h1>
                     <div className="login-product-rating-line">
                       <strong>{product.game?.publisher || copy.gameTopUp}</strong>
-                      {rating > 0 && reviewCount > 0
-                        ? <span className="login-product-rating-group">
-                            <Star size={15} fill="#fed218" color="#fed218" aria-hidden="true" />
-                            <b>{rating.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</b>
-                            <em>({reviewCount.toLocaleString('id-ID')} {copy.reviews2}</em>
-                          </span>
-                        : <span className="login-product-unrated">{copy.noReviewsYet}</span>}
+                      <ProductRating product={product} />
                     </div>
                   </div>
                   <ProductBenefits className="login-product-benefits" />
@@ -292,6 +285,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       {!serviceStatus.available && <a href="/search">{copy.browseOtherServices} <ArrowRight size={13} aria-hidden="true" /></a>}
                     </div>
                   </div>
+                  <ProductReviews product={product} />
                 </section>
 
                 <aside className="login-product-summary" aria-label={copy.packageSummary}>

@@ -1,6 +1,6 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
-import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, Package, RefreshCw } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
+import { ArrowLeft, ArrowRight, Package, RefreshCw, Star } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
@@ -122,8 +122,11 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
     body = <OrdersSkeleton orderId={orderId} label={copy.loadingOrders} />
   } else if (orderId) {
     body = <OrderStatusDetails order={current.data} onRefresh={refresh}
-      itemAction={item => current.data.paymentState === 'Paid' && item.kind === 'GameVoucher' &&
-        item.fulfillmentStatus === 'Completed' && <VoucherCodes orderId={orderId} itemId={item.id} token={token} />} />
+      itemAction={item => <>
+        {current.data.paymentState === 'Paid' && item.kind === 'GameVoucher' && item.fulfillmentStatus === 'Completed' &&
+          <VoucherCodes orderId={orderId} itemId={item.id} token={token} />}
+        {(item.canReview || item.reviewStatus) && <OrderItemReview key={item.id} item={item} token={token} />}
+      </>} />
   } else if (!current.data.items.length) {
     body = <OrderMessage title={offset ? copy.noOrdersOnThisPage : group === 'history' ? copy.noPastOrders : copy.noActiveOrders}>
       {offset === 0 && group === 'active' && <a className="account-btn account-btn--primary" href="/search">{copy.browseProducts}</a>}
@@ -177,6 +180,68 @@ function OrderCard({ order, group }) {
       <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'history' ? '?group=history' : ''}`} aria-label={formatCopy(copy.orderDetailLink, { number: order.orderNumber })}>{copy.viewDetails} <ArrowRight size={15} aria-hidden="true" /></a>
     </div>
   </article>
+}
+
+const reviewMessages = { Pending: 'reviewPending', Published: 'reviewPublished', Hidden: 'reviewHidden', Duplicate: 'reviewDuplicate' }
+const reviewRatings = [1, 2, 3, 4, 5]
+
+function OrderItemReview({ item, token }) {
+  const copy = useStorefrontCopy()
+  const formId = useId()
+  const [open, setOpen] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState(false)
+  const [submitted, setSubmitted] = useState(null)
+  const statusMessage = reviewMessages[submitted || item.reviewStatus]
+
+  async function send(event) {
+    event.preventDefault()
+    if (sending || !rating) return
+    setSending(true)
+    setError(false)
+    try {
+      await apiRequest('/me/reviews', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderItemId: item.id, rating, comment: comment.trim() || null }),
+      })
+      setSubmitted('Pending')
+    } catch (failure) {
+      if (failure.status === 409) setSubmitted('Duplicate')
+      else setError(true)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  if (statusMessage) return <p className="customer-review__status" role="status">{copy[statusMessage]}</p>
+  return <div className="customer-review">
+    <button type="button" className="account-btn account-btn--outline" aria-expanded={open} aria-controls={formId}
+      disabled={sending} onClick={() => setOpen(value => !value)}>
+      <Star size={16} aria-hidden="true" /> {copy.writeProductReview}
+    </button>
+    <form id={formId} hidden={!open} onSubmit={send} aria-busy={sending}>
+      <fieldset disabled={sending}>
+        <legend>{copy.reviewRating}</legend>
+        <div className="customer-review__rating">
+          {reviewRatings.map(value => <label key={value}>
+            <input type="radio" name={formId} value={value} checked={rating === value} required
+              aria-label={formatCopy(copy.reviewStarsOutOfFive, { rating: value })} onChange={() => setRating(value)} />
+            <Star size={24} fill={value <= rating ? 'currentColor' : 'none'} aria-hidden="true" />
+          </label>)}
+        </div>
+      </fieldset>
+      <label className="customer-review__comment">{copy.reviewComment}
+        <textarea rows={3} maxLength={1000} value={comment} disabled={sending} onChange={event => setComment(event.target.value)} />
+      </label>
+      {error && <p role="alert">{copy.reviewSendError}</p>}
+      <button className="account-btn account-btn--primary" disabled={sending || !rating}>
+        {sending ? copy.reviewSending : copy.reviewSend}
+      </button>
+    </form>
+  </div>
 }
 
 function VoucherCodes({ orderId, itemId, token }) {

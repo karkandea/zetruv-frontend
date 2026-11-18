@@ -12,13 +12,14 @@ import VariantPricingTable from './VariantPricingTable'
 import { variantPriceWarning } from './variantPriceWarnings'
 import GameVoucherInventory from './GameVoucherInventory'
 import OrdersOperationsPage from './OrdersOperationsPage'
+import ProductReviewsAdminPage from './ProductReviewsAdminPage'
 import FlashSaleAdminPage from './FlashSaleAdminPage'
 import { toWibInput, wibInputToIso } from './flashSaleAdminUtils'
 import { PRODUCT_EDITOR_FIELDS, mergeProductTab, isProductTabDirty } from './productEditorTabs'
 import {
   AlertCircle, ArrowRight, ChevronDown, Clock3, CreditCard, ExternalLink,
   FileText, Image, LayoutDashboard, LogOut, Menu, Package, PanelsTopLeft,
-  Settings, ShoppingBag, Tags, TicketPercent, X, Zap,
+  MessageSquare, Settings, ShoppingBag, Tags, TicketPercent, X, Zap,
   AlertTriangle, ArrowLeft, ChevronRight, MoreHorizontal, Search, Star,
 } from 'lucide-react'
 import { getDashboardCounts, getRecentOrders } from './dashboardData'
@@ -32,6 +33,7 @@ const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/
 const NAV = [
   ['dashboard', 'Dashboard'],
   ['orders', 'Pesanan'],
+  ['reviews', 'Ulasan Produk'],
   ['catalog', 'Katalog'],
   ['homepage', 'Banner'],
   ['home-layout', 'Susunan Beranda'],
@@ -213,6 +215,7 @@ function Shell({ session, onLogout }) {
     'discount-vouchers': <DiscountVouchersPage />,
     articles: <ArticlesPage />,
     orders: <OrdersOperationsPage />,
+    reviews: <ProductReviewsAdminPage />,
     site: <SitePage />,
   }[route]
 
@@ -223,6 +226,7 @@ function Shell({ session, onLogout }) {
       <nav aria-label="Navigasi admin">
         {navButton('dashboard', 'Dashboard', LayoutDashboard)}
         {navButton('orders', 'Pesanan', ShoppingBag)}
+        {navButton('reviews', 'Ulasan Produk', MessageSquare)}
         {navButton('catalog', 'Katalog', Package)}
         <div className="admin-nav-group">
           <button type="button" className={`admin-nav-group-toggle${storeActive ? ' is-group-active' : ''}`} aria-expanded={storeOpen} aria-controls="admin-store-nav" onClick={() => setStoreOpen((open) => !open)}>

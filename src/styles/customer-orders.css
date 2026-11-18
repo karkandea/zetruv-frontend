@@ -84,3 +84,38 @@
 .customer-order-voucher ul { padding: 0; margin: 0; list-style: none; }
 .customer-order-voucher li + li { margin-top: 6px; }
 .customer-order-voucher code { display: inline-block; background: #eef0ff; border-radius: 6px; padding: 5px 8px; }
+.customer-review { display: grid; justify-items: start; gap: 10px; margin-top: 10px; }
+.customer-review form {
+  width: min(100%, 480px);
+  padding: 14px;
+  border: 1px solid #e1e7f2;
+  border-radius: 10px;
+  background: #f8faff;
+}
+.customer-review fieldset { margin: 0; padding: 0; border: 0; }
+.customer-review legend,
+.customer-review__comment { font-size: 14px; font-weight: 600; }
+.customer-review__rating { display: flex; flex-wrap: wrap; margin: 2px 0 8px; color: #a65f00; }
+.customer-review__rating label {
+  position: relative;
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.customer-review__rating input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.customer-review__rating label:has(input:focus-visible) { outline: 2px solid #2355ad; outline-offset: -2px; }
+.customer-review__comment { display: grid; gap: 5px; margin-bottom: 10px; }
+.customer-review textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid #aab7cc;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 400;
+}
+.customer-review__status { margin-top: 10px; font-weight: 600; }
+.customer-review p[role="alert"] { color: #a22525; }
