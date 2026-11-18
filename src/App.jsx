@@ -1,5 +1,6 @@
 import { useStorefrontCopy } from './hooks/useStorefrontCopy'
 import HomePage from './pages/HomePage'
+import CookiePolicyPage from './pages/CookiePolicyPage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import ProductDetailLoginPage from './pages/ProductDetailLoginPage'
@@ -42,6 +43,7 @@ export default function App() {
   const flow = params.get('flow')
   const kind = params.get('kind')
 
+  if (path === '/cookies-policy') return <CookiePolicyPage />
   if (path === '/auth/verify-email') return <VerifyEmailPage />
 
   if (path === '/account' || path === '/my-account') return <AccountOverviewPage />

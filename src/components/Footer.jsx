@@ -67,6 +67,7 @@ export default function Footer() {
               <div className="footer__column">
                 <h3>{copy.legal}</h3>
                 <a href="#terms">{copy.termsAndConditions}</a>
+                <a href="/cookies-policy">{copy.cookiePolicy}</a>
               </div>
             </div>
 

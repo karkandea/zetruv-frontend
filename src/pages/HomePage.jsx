@@ -11,6 +11,7 @@ import Merchandise from '../components/Merchandise'
 import LatestArticles from '../components/LatestArticles'
 import SupportChat from '../components/SupportChat'
 import Footer from '../components/Footer'
+import CookieNotice from '../components/CookieNotice'
 import { getHomepageData, getPersonalHomepage } from '../services/homeService'
 import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
 
@@ -84,6 +85,7 @@ export default function HomePage() {
       </main>
       <Footer />
       <SupportChat />
+      <CookieNotice />
     </div>
   )
 }
