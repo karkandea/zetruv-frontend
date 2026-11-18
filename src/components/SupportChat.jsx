@@ -74,7 +74,7 @@ export default function SupportChat({ open: controlledOpen, onOpenChange } = {})
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.94 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.44-.52.15-.17.2-.3.3-.5.1-.19.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.09 3.19 5.06 4.47.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35M12.07 21.7a9.7 9.7 0 0 1-4.92-1.34l-.35-.21-3.65.96.98-3.56-.23-.37a9.7 9.7 0 1 1 8.17 4.52M20.31 3.7A11.65 11.65 0 0 0 2.02 17.72L.36 23.78l6.2-1.62a11.65 11.65 0 0 0 13.75-18.46" />
                 </svg>
-                <input id="support-phone" type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder={copy.yourPhoneOrWhatsappNumber} required />
+                <input id="support-phone" type="tel" autoComplete="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder="+62 8xx xxxx xxxx" required />
               </span>
             </label>
           </div>
