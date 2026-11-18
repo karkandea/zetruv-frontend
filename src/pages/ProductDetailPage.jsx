@@ -2,7 +2,7 @@ import { Bone, ProductSkeleton } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, CheckCircle2, Flame, Gem, ShoppingCart, Star, UserRound } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Flame, Gem, Info, ShoppingCart, Star, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
 import ProductOrderDock from '../components/ProductOrderDock'
@@ -129,9 +129,10 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     ...(!validUserId ? [firstLabel] : []),
     ...(showSecond && !validZone ? [secondLabel] : []),
   ]
+  const showAccountHint = !verified && selected?.isAvailable !== false
   const ctaHint = selected?.isAvailable === false
     ? copy.thisPackageIsUnavailableChooseAnotherPackage
-    : !verified
+    : showAccountHint
       ? formatCopy(copy.checkBeforeAddingToYourCart, { field: incompleteFields.join(', ') })
       : ''
 
@@ -227,45 +228,6 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
           </section>
 
           <aside className="product-order-panel pdp-order-sidebar" aria-label={copy.accountInformationAndOrderSummary}>
-            <div className="pdp-account-block">
-              <label htmlFor="pdp-user-id">
-                {firstLabel}
-                <div className="pdp-input">
-                  <UserRound size={16} aria-hidden="true" />
-                  <input id="pdp-user-id" name="userId" type="text"
-                    value={account.userId}
-                    placeholder={firstField?.placeholder || firstLabel}
-                    maxLength={firstField?.maxLength || 200}
-                    inputMode={firstField?.type === 'Number' ? 'numeric' : 'text'}
-                    autoComplete="off"
-                    required
-                    aria-invalid={Boolean(account.userId.trim()) && !validUserId}
-                    onChange={(event) => { setAccount((prev) => ({ ...prev, userId: event.target.value })); setNotice('') }}
-                  />
-                </div>
-              </label>
-              {showSecond && (
-                <label htmlFor="pdp-zone">
-                  {secondLabel}{!secondRequired && <span className="pdp-field-optional"> (opsional)</span>}
-                  <input id="pdp-zone" name="zone" type="text"
-                    value={account.zone}
-                    placeholder={secondField?.placeholder || secondLabel}
-                    maxLength={secondField?.maxLength || 200}
-                    inputMode={secondField?.type === 'Number' ? 'numeric' : 'text'}
-                    autoComplete="off"
-                    required={secondRequired}
-                    aria-invalid={Boolean(account.zone.trim()) && !validZone}
-                    onChange={(event) => { setAccount((prev) => ({ ...prev, zone: event.target.value })); setNotice('') }}
-                  />
-                </label>
-              )}
-              <p className="pdp-account-help">
-                {firstField?.helpText || copy.enterTheDetailsShownInYourGame}
-                {showSecond && secondField?.helpText ? ` ${secondField.helpText}` : ''}
-                {' '}{copy.checkTheDetailsBeforeContinuing}
-              </p>
-            </div>
-
             <ProductOrderDock
               title={copy.orderSummary}
               preview={[
@@ -287,7 +249,12 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
                   </button>
                 </div>
               }
-              message={ctaHint && <p className="pdp-sidebar-cta-hint" role="status">{ctaHint}</p>}
+              message={ctaHint && (
+                <p className={`pdp-sidebar-cta-hint${showAccountHint ? ' pdp-sidebar-cta-hint--info' : ''}`} role="status">
+                  {showAccountHint && <Info size={16} aria-hidden="true" />}
+                  <span>{ctaHint}</span>
+                </p>
+              )}
               feedback={notice === 'added' && (
                 <div className="pdp-sidebar-feedback" role="status" aria-live="polite">
                   <div className="pdp-sidebar-feedback__heading">
@@ -302,6 +269,44 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
                 </div>
               )}
             >
+              <div className="pdp-account-block">
+                <label htmlFor="pdp-user-id">
+                  {firstLabel}
+                  <div className="pdp-input">
+                    <UserRound size={16} aria-hidden="true" />
+                    <input id="pdp-user-id" name="userId" type="text"
+                      value={account.userId}
+                      placeholder={firstField?.placeholder || firstLabel}
+                      maxLength={firstField?.maxLength || 200}
+                      inputMode={firstField?.type === 'Number' ? 'numeric' : 'text'}
+                      autoComplete="off"
+                      required
+                      aria-invalid={Boolean(account.userId.trim()) && !validUserId}
+                      onChange={(event) => { setAccount((prev) => ({ ...prev, userId: event.target.value })); setNotice('') }}
+                    />
+                  </div>
+                </label>
+                {showSecond && (
+                  <label htmlFor="pdp-zone">
+                    {secondLabel}{!secondRequired && <span className="pdp-field-optional"> (opsional)</span>}
+                    <input id="pdp-zone" name="zone" type="text"
+                      value={account.zone}
+                      placeholder={secondField?.placeholder || secondLabel}
+                      maxLength={secondField?.maxLength || 200}
+                      inputMode={secondField?.type === 'Number' ? 'numeric' : 'text'}
+                      autoComplete="off"
+                      required={secondRequired}
+                      aria-invalid={Boolean(account.zone.trim()) && !validZone}
+                      onChange={(event) => { setAccount((prev) => ({ ...prev, zone: event.target.value })); setNotice('') }}
+                    />
+                  </label>
+                )}
+                <p className="pdp-account-help">
+                  {firstField?.helpText || copy.enterTheDetailsShownInYourGame}
+                  {showSecond && secondField?.helpText ? ` ${secondField.helpText}` : ''}
+                  {' '}{copy.checkTheDetailsBeforeContinuing}
+                </p>
+              </div>
               <section className="pdp-sidebar-summary" aria-labelledby="pdp-order-summary-title">
                 <h2 id="pdp-order-summary-title">{copy.orderSummary}</h2>
                 <div className="pdp-sidebar-item">

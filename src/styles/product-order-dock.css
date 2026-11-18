@@ -1,17 +1,23 @@
 .product-order-dock,
 .product-order-dock__details,
+.product-order-dock__details-body,
 .product-order-dock__footer,
 .product-order-dock__message {
   display: contents;
 }
 
-.product-order-dock__toggle { display: none; }
+.product-order-dock__toggle,
+.product-order-dock__message .pdp-sidebar-cta-hint svg {
+  display: none;
+}
 
 @media (max-width: 700px) {
   .product-detail-page:has(.product-order-dock) .product-detail-layout {
+    row-gap: 0;
     padding-bottom: 24px;
   }
 
+  .product-detail-page .product-order-panel.pdp-order-sidebar:has(.product-order-dock),
   .login-product-shell .login-product-summary:has(.product-order-dock) {
     height: 0;
     padding: 0;
@@ -32,11 +38,11 @@
   .product-order-dock {
     position: fixed;
     z-index: 45;
-    inset: auto 0 0;
+    inset: auto 0 var(--product-order-dock-bottom, 0px);
     display: flex;
     flex-direction: column;
     max-height: 75vh;
-    max-height: 75dvh;
+    max-height: min(75dvh, calc(var(--product-order-dock-viewport-height, 100dvh) - 48px));
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
@@ -48,10 +54,14 @@
   }
 
   .product-order-dock__toggle {
-    display: block;
+    display: flex;
     flex: none;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    padding: 10px 0 9px;
+    min-height: 48px;
+    margin-top: 4px;
+    padding: 8px 0;
     border: 0;
     border-bottom: 1px solid #edf0f5;
     background: #fff;
@@ -63,26 +73,24 @@
 
   .product-order-dock__toggle:focus-visible {
     outline: 2px solid #5772ef;
-    outline-offset: -2px;
+    outline-offset: 1px;
     border-radius: 8px;
   }
 
-  .product-order-dock__title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 650;
-    line-height: 18px;
+  .product-order-dock__chevron {
+    flex: none;
+    transition: transform 180ms ease;
   }
 
-  .product-order-dock__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .product-order-dock__toggle[aria-expanded="true"] .product-order-dock__chevron {
+    transform: rotate(180deg);
+  }
 
   .product-order-dock__preview {
     display: flex;
+    flex: 1;
+    min-width: 0;
     gap: 8px;
-    margin-top: 5px;
   }
 
   .product-order-dock__preview > span {
@@ -114,22 +122,46 @@
     line-height: 17px;
   }
 
-  .product-order-dock__details { display: none; }
-
-  .product-order-dock__details.is-expanded {
-    display: block;
+  .product-order-dock__details {
+    display: grid;
+    grid-template-rows: 0fr;
     min-height: 0;
-    max-height: 36vh;
-    max-height: 36dvh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-top: 12px;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows 200ms ease, opacity 150ms ease, visibility 0s linear 200ms;
   }
 
-  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-summary {
-    margin: 0;
-    padding: 0;
-    border: 0;
+  .product-order-dock__details.is-expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .product-order-dock__details-body {
+    display: block;
+    min-height: 0;
+    max-height: 50vh;
+    max-height: 50dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .product-order-dock__details-body::before {
+    content: '';
+    display: block;
+    height: 12px;
+  }
+
+  .product-detail-page .pdp-order-sidebar .pdp-sidebar-summary {
+    margin: 14px 0 0;
+    padding: 14px 0 0;
+  }
+
+  .product-detail-page .pdp-order-sidebar .pdp-account-block .pdp-input input,
+  .product-detail-page .pdp-order-sidebar .pdp-account-block > label > input {
+    font-size: 16px;
   }
 
   .product-order-dock__details h2,
@@ -199,7 +231,30 @@
     text-align: left;
   }
 
+  .product-detail-page .pdp-order-sidebar .product-order-dock__message .pdp-sidebar-cta-hint--info {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 7px 9px;
+    border: 1px solid #dbe5ff;
+    border-radius: 8px;
+    background: #edf3ff;
+    color: #294b88;
+  }
+
+  .product-order-dock__message .pdp-sidebar-cta-hint--info svg {
+    display: block;
+    flex: none;
+  }
+
   .login-product-shell .product-order-dock__message :is(.login-product-summary__unavailable, .login-product-summary__hint) {
     margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-order-dock__details,
+  .product-order-dock__chevron {
+    transition: none;
   }
 }
