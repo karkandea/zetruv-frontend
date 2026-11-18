@@ -202,7 +202,7 @@
   border-radius: 17px;
   box-shadow: 0 4px 18px rgba(24,32,78,.03);
 }
-.login-product-shell .login-product-summary > h2 {
+.login-product-shell .login-product-summary h2 {
   width: auto;
   margin: 0 0 17px;
   color: #171c2b;

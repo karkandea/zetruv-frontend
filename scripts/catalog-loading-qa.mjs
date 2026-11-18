@@ -62,8 +62,9 @@ try {
     assert.equal(await page.locator('.pdp-sidebar-summary').count(), 0, 'no fake cart price')
     assert.equal(await page.getByText('Rp12.000').count(), 0, 'no placeholder price flash')
     gate.release()
-    await page.getByRole('button', { name: /5 Diamond/ }).waitFor()
-    await page.locator('.pdp-sidebar-item__price').getByText('Rp1.500').waitFor()
+    await page.locator('.sku-grid').getByRole('button', { name: /5 Diamond/ }).waitFor()
+    const price = device === 'mobile' ? '.pdp-sidebar-total' : '.pdp-sidebar-item__price'
+    await page.locator(price).getByText('Rp1.500').waitFor()
     assert.equal(await page.getByText('Rp12.000').count(), 0)
 
     // HTTP failure is a real error state, with a working user-initiated retry.
@@ -78,7 +79,7 @@ try {
     await page.getByRole('heading', { name: 'Produk Belum Bisa Dimuat' }).waitFor()
     assert.equal(await page.getByText('Rp12.000').count(), 0)
     await page.getByRole('button', { name: 'Coba lagi' }).click()
-    await page.getByRole('button', { name: /5 Diamond/ }).waitFor()
+    await page.locator('.sku-grid').getByRole('button', { name: /5 Diamond/ }).waitFor()
     assert.equal(attempts, 2)
 
     await context.close()

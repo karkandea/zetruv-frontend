@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, Flame, Gem, ShoppingCart, Star, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
+import ProductOrderDock from '../components/ProductOrderDock'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { addCartItem, awaitCartPersistence } from '../services/cartService'
@@ -265,52 +266,62 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
               </p>
             </div>
 
-            <section className="pdp-sidebar-summary" aria-labelledby="pdp-order-summary-title">
-              <h2 id="pdp-order-summary-title">{copy.orderSummary}</h2>
-              <div className="pdp-sidebar-item">
-                <span className="pdp-sidebar-item__art" aria-hidden="true">
-                  <TopUpCurrencyIcon slug={slug} variant={selected} index={product.variants.findIndex((item) => item.id === selected.id)} />
-                </span>
-                <div className="pdp-sidebar-item__name">
-                  <strong>{selected.name}</strong>
-                  <small>{product.game?.name || product.name}</small>
+            <ProductOrderDock
+              title={copy.orderSummary}
+              preview={[
+                { label: copy.product, value: selected.name },
+                { label: firstLabel, value: account.userId.trim() },
+                ...(showSecond ? [{ label: secondLabel, value: account.zone.trim() }] : []),
+              ]}
+              total={
+                <div className="pdp-sidebar-total">
+                  <span>{copy.paymentTotal2}</span>
+                  <strong>{rupiah(total)}</strong>
                 </div>
-                <strong className="pdp-sidebar-item__price">{rupiah(unitPrice)}</strong>
-              </div>
-
-              <div className="pdp-sidebar-pricing">
-                <div><span>{copy.subtotal}</span><strong>{rupiah(subtotal)}</strong></div>
-                <div><span>{copy.serviceFee}</span><strong>{rupiah(serviceFee)}</strong></div>
-                <div><span>{copy.discount}</span><strong className={discount > 0 ? 'pdp-sidebar-discount' : ''}>{discount > 0 ? `−${rupiah(discount)}` : rupiah(0)}</strong></div>
-              </div>
-              <div className="pdp-sidebar-total">
-                <span>{copy.paymentTotal2}</span>
-                <strong>{rupiah(total)}</strong>
-              </div>
-            </section>
-
-            <div className="pdp-sidebar-action">
-              <button className="pdp-sidebar-add" type="button" disabled={!canPurchase} onClick={add}>
-                <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />
-                <span>{copy.addToCart}</span>
-              </button>
-              {ctaHint && <p className="pdp-sidebar-cta-hint" role="status">{ctaHint}</p>}
-            </div>
-
-            {notice === 'added' && (
-              <div className="pdp-sidebar-feedback" role="status" aria-live="polite">
-                <div className="pdp-sidebar-feedback__heading">
-                  <CheckCircle2 size={19} aria-hidden="true" />
-                  <strong>{copy.addedToCart}</strong>
+              }
+              action={
+                <div className="pdp-sidebar-action">
+                  <button className="pdp-sidebar-add" type="button" disabled={!canPurchase} onClick={add}>
+                    <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />
+                    <span>{copy.addToCart}</span>
+                  </button>
                 </div>
-                <p>{selected.name} {copy.wasAddedToYourCart}</p>
-                <div className="pdp-sidebar-feedback__actions">
-                  <a href="/search">{copy.continueShopping}</a>
-                  <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
+              }
+              message={ctaHint && <p className="pdp-sidebar-cta-hint" role="status">{ctaHint}</p>}
+              feedback={notice === 'added' && (
+                <div className="pdp-sidebar-feedback" role="status" aria-live="polite">
+                  <div className="pdp-sidebar-feedback__heading">
+                    <CheckCircle2 size={19} aria-hidden="true" />
+                    <strong>{copy.addedToCart}</strong>
+                  </div>
+                  <p>{selected.name} {copy.wasAddedToYourCart}</p>
+                  <div className="pdp-sidebar-feedback__actions">
+                    <a href="/search">{copy.continueShopping}</a>
+                    <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            >
+              <section className="pdp-sidebar-summary" aria-labelledby="pdp-order-summary-title">
+                <h2 id="pdp-order-summary-title">{copy.orderSummary}</h2>
+                <div className="pdp-sidebar-item">
+                  <span className="pdp-sidebar-item__art" aria-hidden="true">
+                    <TopUpCurrencyIcon slug={slug} variant={selected} index={product.variants.findIndex((item) => item.id === selected.id)} />
+                  </span>
+                  <div className="pdp-sidebar-item__name">
+                    <strong>{selected.name}</strong>
+                    <small>{product.game?.name || product.name}</small>
+                  </div>
+                  <strong className="pdp-sidebar-item__price">{rupiah(unitPrice)}</strong>
+                </div>
 
+                <div className="pdp-sidebar-pricing">
+                  <div><span>{copy.subtotal}</span><strong>{rupiah(subtotal)}</strong></div>
+                  <div><span>{copy.serviceFee}</span><strong>{rupiah(serviceFee)}</strong></div>
+                  <div><span>{copy.discount}</span><strong className={discount > 0 ? 'pdp-sidebar-discount' : ''}>{discount > 0 ? `−${rupiah(discount)}` : rupiah(0)}</strong></div>
+                </div>
+              </section>
+            </ProductOrderDock>
           </aside>
         </div>
       </main>
