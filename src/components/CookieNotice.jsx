@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import '../styles/cookie-notice.css'
 
-const noticeKey = 'zetruv-cookie-notice-v1'
+const cookieChoiceKey = 'zetruv-cookie-choice-v1'
 
-function hasDismissedNotice() {
+function hasCookieChoice() {
   try {
-    return window.localStorage.getItem(noticeKey) === 'dismissed'
+    const choice = window.localStorage.getItem(cookieChoiceKey)
+    return choice === 'allow-all' || choice === 'decline-all'
   } catch {
     return false
   }
@@ -14,28 +15,29 @@ function hasDismissedNotice() {
 
 export default function CookieNotice() {
   const copy = useStorefrontCopy()
-  const [dismissed, setDismissed] = useState(hasDismissedNotice)
+  const [hasChoice, setHasChoice] = useState(hasCookieChoice)
 
-  function dismissNotice() {
+  function saveChoice(choice) {
     try {
-      window.localStorage.setItem(noticeKey, 'dismissed')
+      window.localStorage.setItem(cookieChoiceKey, choice)
     } catch {
       // Users can still dismiss the notice while browser storage is unavailable.
     }
-    setDismissed(true)
+    setHasChoice(true)
   }
 
-  if (dismissed) return null
+  if (hasChoice) return null
 
   return (
     <aside className="cookie-notice" aria-labelledby="cookie-notice-title">
       <div className="cookie-notice__content">
         <h2 id="cookie-notice-title">{copy.cookieNoticeTitle}</h2>
-        <p>{copy.cookieNoticeText}</p>
+        <p>{copy.cookieNoticeText} <a href="/cookies-policy">{copy.cookiePolicy}</a></p>
       </div>
       <div className="cookie-notice__actions">
-        <a href="/cookies-policy">{copy.cookiePolicy}</a>
-        <button type="button" onClick={dismissNotice}>{copy.cookieNoticeDismiss}</button>
+        <a href="/cookies-policy#manage-cookies">{copy.cookieSettings}</a>
+        <button type="button" onClick={() => saveChoice('allow-all')}>{copy.cookieAllowAll}</button>
+        <button type="button" onClick={() => saveChoice('decline-all')}>{copy.cookieDeclineAll}</button>
       </div>
     </aside>
   )

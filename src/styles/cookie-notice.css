@@ -12,7 +12,9 @@
   padding: 18px 22px;
   border: 1px solid var(--lavender);
   border-radius: 20px;
-  background: var(--navy);
+  background: rgb(1 1 84 / 82%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
   color: #fff;
   box-shadow: 0 12px 32px rgba(1, 1, 84, .24);
 }
@@ -36,43 +38,39 @@
   flex: none;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 16px;
+  gap: 6px;
 }
 
-.cookie-notice__actions a,
-.cookie-notice__actions button {
+.cookie-notice__actions :is(a, button) {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   justify-content: center;
+  padding: 0 12px;
+  border: 1px solid var(--lavender);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  text-align: center;
   font-size: 13px;
   font-weight: 600;
 }
 
-.cookie-notice__actions a {
+.cookie-notice__content a {
   color: #fff;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .cookie-notice__actions button {
-  padding: 0 20px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--yellow);
-  color: var(--navy);
   cursor: pointer;
 }
 
-.cookie-notice__actions a:hover {
-  color: var(--lavender);
+.cookie-notice__actions :is(a, button):hover {
+  background: rgb(255 255 255 / 20%);
 }
 
-.cookie-notice__actions button:hover {
-  background: #ffe066;
-}
-
-.cookie-notice__actions :focus-visible {
+.cookie-notice :focus-visible {
   outline: 2px solid var(--lavender);
   outline-offset: 3px;
 }
@@ -93,7 +91,13 @@
   }
 
   .cookie-notice__actions {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cookie-notice__actions :is(a, button) {
+    padding-inline: 6px;
+    font-size: 12px;
   }
 }
 

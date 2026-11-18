@@ -38,7 +38,7 @@ export default function CookiePolicyPage() {
               <dd>{copy.cookiePolicyStorage}</dd>
             </dl>
           </section>
-          <section>
+          <section id="manage-cookies">
             <h2>{copy.cookiePolicyManageTitle}</h2>
             <p>{copy.cookiePolicyManage}</p>
           </section>
