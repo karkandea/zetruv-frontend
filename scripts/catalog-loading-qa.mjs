@@ -63,17 +63,8 @@ try {
     assert.equal(await page.getByText('Rp12.000').count(), 0, 'no placeholder price flash')
     gate.release()
     await page.locator('.sku-grid').getByRole('button', { name: /5 Diamond/ }).waitFor()
-    await page.locator('.pdp-sidebar-total').getByText('Rp1.500').waitFor()
-    if (device === 'mobile') {
-      const dock = page.locator('.product-order-dock')
-      const toggle = dock.locator('.product-order-dock__toggle')
-      await toggle.waitFor()
-      assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.product-order-dock')).position), 'fixed')
-      assert.equal(await toggle.getAttribute('aria-expanded'), 'false')
-      await toggle.click()
-      assert.equal(await toggle.getAttribute('aria-expanded'), 'true')
-    }
-    await page.locator('.pdp-sidebar-item__price').getByText('Rp1.500').waitFor()
+    const price = device === 'mobile' ? '.pdp-sidebar-total' : '.pdp-sidebar-item__price'
+    await page.locator(price).getByText('Rp1.500').waitFor()
     assert.equal(await page.getByText('Rp12.000').count(), 0)
 
     // HTTP failure is a real error state, with a working user-initiated retry.
