@@ -2,9 +2,10 @@ import { Bone, ProductSkeleton } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, CheckCircle2, Flame, Gem, Info, ShoppingCart, Star, UserRound } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Flame, Gem, Info, ShoppingCart, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
+import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import ProductOrderDock from '../components/ProductOrderDock'
 import { productDetailAssets as media } from '../data/productDetailAssets'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
@@ -29,10 +30,6 @@ function TopUpCurrencyIcon({ slug, variant, index }) {
     return <span className="sku-art__placeholder" aria-hidden="true"><Gem size={21} strokeWidth={1.8} /></span>
   }
   return <img src={image} alt="" loading="lazy" decoding="async" onError={() => setIconFailed(true)} />
-}
-
-function Stars({ small = false }) {
-  return <span className={`pdp-stars${small ? ' is-small' : ''}`}>{[0,1,2,3,4].map((n) => <Star key={n} fill="#fed218" strokeWidth={0} />)}</span>
 }
 
 export default function ProductDetailPage({ slug = 'mobile-legends', initialVariantId = '' }) {
@@ -198,7 +195,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
               <h1>{productName}</h1>
               <div className="product-rating-line">
                 <strong>{product.game?.publisher || 'Game'}</strong>
-                <span className="product-rating-score"><span className="product-rating-number">4,6</span><Stars /><span>(2rb)</span></span>
+                <ProductRating product={product} />
               </div>
             </div>
             <ProductBenefits />
@@ -224,7 +221,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
               ))}
             </div>
 
-            <section className="product-reviews"><h2>{copy.productReviews}</h2><div className="rating-summary"><div className="rating-summary__score"><div><Star size={30} fill="#ffa300" strokeWidth={0} /><strong>4.8</strong><span>/5</span></div><small>{copy.label394Reviews}</small></div><div className="rating-distribution">{[[5,86],[4,10],[3,3],[2,1],[1,0]].map(([n,w]) => <div className="rating-row" key={n}><span>{n}</span><Star size={12} fill="#ffa300" strokeWidth={0}/><i><b style={{width:`${w}%`}} /></i></div>)}</div></div><div className="review-divider"/><h3>{copy.latestReviews}</h3><div className="review-grid">{[['D***h','Cepat banget, langsung masuk.'],['A***n','Proses aman dan mudah.'],['R***a','Mantap, bakal order lagi.']].map(([name,text]) => <article className="review-card" key={name}><div className="review-card__top"><UserRound size={18}/><strong>{name}</strong><span>{copy.label2DaysAgo}</span></div><Stars small/><p>{text}</p></article>)}</div></section>
+            <ProductReviews product={product} />
           </section>
 
           <aside className="product-order-panel pdp-order-sidebar" aria-label={copy.accountInformationAndOrderSummary}>

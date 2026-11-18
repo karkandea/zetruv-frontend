@@ -3,6 +3,7 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import BrowseMobileControls from '../components/BrowseMobileControls'
 import SupportChat from '../components/SupportChat'
 import { saveGameAccountCart } from '../data/gameAccountCatalog'
@@ -389,8 +390,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
             <div className="ga-hero-thumb"><GameArtwork image={product.thumbnailUrl || product.game?.imageUrl} name={product.name} /></div>
             <div className="ga-detail-hero-copy"><h1>{product.name}</h1>
               <div className="ga-hero-rating"><span>{product.game?.name || copy.gameAccount}</span>
-                {product.rating != null && product.reviewCount > 0 &&
-                  <small>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} {copy.reviews}</small>}
+                <ProductRating product={product} />
               </div>
               <div className="ga-hero-badges"><span>{available ? copy.accountAvailable : copy.accountUnavailable}</span>
                 {product.soldQuantity > 0 && <span>{product.soldQuantity} {copy.sold}</span>}</div>
@@ -407,10 +407,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
             {product.images?.length > 0 && <div className="ga-live-gallery" aria-label={copy.listingPhoto}>
               {product.images.map((image) => <img key={image.id} src={image.url} alt={image.altText || product.name} loading="lazy" />)}
             </div>}
-            <div className="ga-live-reviews"><h2>{copy.productReviews}</h2>
-              {product.rating != null && product.reviewCount > 0
-                ? <p>{product.rating.toLocaleString('id-ID')} / 5 · {product.reviewCount} {copy.verifiedReviews}</p>
-                : <p>{copy.thereAreNoVerifiedReviewsYet}</p>}</div>
+            <ProductReviews product={product} />
           </section>
           <aside className="ga-purchase-card ga-live-purchase"><h2>{copy.product}</h2>
             <div className="ga-selected-account"><strong>{product.name}</strong>

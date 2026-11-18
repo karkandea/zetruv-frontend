@@ -2,6 +2,7 @@ import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar'
+import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import { searchAssets } from '../data/searchAssets'
 import voucherSteam from '../assets/special/voucher-steam.png'
 import { getCatalogProduct } from '../services/catalogService'
@@ -131,7 +132,6 @@ function SpecialProduct({ product, slug, joki = false }) {
   const image = joki ? product.thumbnailUrl || product.game?.imageUrl || searchAssets.categoryJoki : product.image
   const hero = joki ? product.images?.[0]?.url || image : product.hero || image
   const publisher = joki ? product.game?.publisher : product.publisher
-  const jokiMeta = [publisher, product.rating != null && `${product.rating} ★`].filter(Boolean).join(' · ')
   const description = product.shortDescription || product.description
   const entry = selected ? {
     accountKey: 'checkout-required',
@@ -192,8 +192,8 @@ function SpecialProduct({ product, slug, joki = false }) {
             <div className="special-product-hero__copy">
               <span>{joki ? copy.gameBoosting : copy.gameVouchers}</span>
               <h1>{product.name}</h1>
-              {joki ? (jokiMeta && <p>{jokiMeta}</p>)
-                : <p>{publisher} {copy.label49SecureCheckoutWithZetruv}</p>}
+              {publisher && <p>{publisher}</p>}
+              <ProductRating product={product} />
               {description && <small>{description}</small>}
             </div>
           </div>
@@ -215,6 +215,7 @@ function SpecialProduct({ product, slug, joki = false }) {
               ))}
             </div>
             {!joki && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
+            <ProductReviews product={joki ? product : { slug }} />
           </section>
 
           {entry && <aside className="special-product-summary">
