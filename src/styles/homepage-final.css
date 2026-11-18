@@ -201,13 +201,18 @@
 /* Popular / recent: final design uses dark navy panels. */
 .site-shell--homepage-final .popular-recent {
   width: min(1200px, calc(100% - 80px));
-  height: 370px;
+  height: auto;
   margin: 100px auto 0;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
 }
 
+.site-shell--homepage-final .popular-recent--paired {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .site-shell--homepage-final .popular-recent__column {
-  height: 370px;
+  height: auto;
   gap: 18px;
 }
 
@@ -235,7 +240,12 @@
 }
 
 .site-shell--homepage-final .mini-panel {
-  height: 316px;
+  height: auto;
+  flex: 1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: none;
+  align-content: start;
+  min-height: 0;
   padding: 22px 24px;
   column-gap: 12px;
   row-gap: 12px;
@@ -243,18 +253,6 @@
   border-radius: 28px;
   background: linear-gradient(115deg, #080846 0%, #171970 100%);
   box-shadow: 0 10px 28px rgba(5, 5, 46, .16);
-}
-
-.site-shell--homepage-final .mini-panel--popular {
-  grid-template-rows: repeat(2, 124px);
-}
-
-.site-shell--homepage-final .mini-panel--recent {
-  height: 316px;
-  /* Keep a consistent five-slot rhythm, even when CMS has only three items. */
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: 124px;
-  align-content: start;
 }
 
 .site-shell--homepage-final .mini-game {
@@ -265,7 +263,18 @@
   font-weight: 500;
 }
 
-/* Long CMS offer names stay within the same two-line card rhythm. */
+.site-shell--homepage-final .mini-game:is(a:hover, a:focus-visible) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.site-shell--homepage-final .mini-game:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Keep catalog names within two lines. */
 .site-shell--homepage-final .mini-game > span:last-child {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -293,6 +302,7 @@
 }
 
 .site-shell--homepage-final .mini-panel [role='status'] {
+  grid-column: 1 / -1;
   color: rgba(255, 255, 255, .86);
   font-size: 14px;
   line-height: 1.5;
@@ -580,16 +590,16 @@
 
 .site-shell--homepage-final .merch-card__image {
   position: relative;
-  width: 208px;
+  width: 100%;
   height: 154px;
   overflow: hidden;
   background: linear-gradient(111deg, #f7f8fb 0%, #eceff6 86.957%);
 }
 
 .site-shell--homepage-final .merch-card__image img {
-  width: 210px;
-  height: 210px;
-  transform: translateY(-28px);
+  width: 100%;
+  height: 100%;
+  transform: none;
 }
 
 .site-shell--homepage-final .merch-card__chip {
@@ -783,8 +793,6 @@
 .site-shell--homepage-final > .contact-fab {
   top: 458px;
   right: 38px;
-  width: 160px;
-  justify-content: center;
 }
 
 /* Product dropdown remains visibly active while open. */
@@ -842,21 +850,6 @@
   .site-shell--homepage-final .jockey-section,
   .homepage-accounts {
     width: calc(100% - 48px);
-  }
-
-  .site-shell--homepage-final .popular-recent {
-    height: auto;
-    grid-template-columns: 1fr;
-  }
-
-  .site-shell--homepage-final .popular-recent__column {
-    height: auto;
-  }
-
-  .site-shell--homepage-final .mini-panel--popular,
-  .site-shell--homepage-final .mini-panel--recent {
-    height: auto;
-    min-height: 278px;
   }
 
   .site-shell--homepage-final .jockey-section {
@@ -962,11 +955,6 @@
     display: none;
   }
 
-  .site-shell--homepage-final .mini-panel {
-    grid-template-columns: repeat(3, 1fr);
-    padding: 20px;
-  }
-
   .site-shell--homepage-final .jockey-grid {
     grid-template-columns: 1fr;
   }
@@ -1014,7 +1002,6 @@
   .site-shell--homepage-final > .contact-fab {
     top: 425px;
     right: 14px;
-    width: 48px;
   }
 }
 
@@ -1122,7 +1109,6 @@
   top: auto;
   right: 38px;
   bottom: 32px;
-  width: 160px;
   height: 42px;
   justify-content: center;
   box-shadow: 0 10px 28px rgba(5, 3, 24, .24);
@@ -1186,10 +1172,6 @@
   .site-shell--homepage-final > .contact-fab {
     right: 14px;
     bottom: 14px;
-    width: 150px;
-    height: 40px;
-    padding-inline: 12px;
-    font-size: 10px;
   }
 }
 
@@ -1669,19 +1651,18 @@
   pointer-events: none;
 }
 
-/* 4) Floating support button — exact 160x42 Figma treatment and no wrapping. */
+/* 4) Floating support button sizes to the icon and translated label. */
 .site-shell--homepage-final > .contact-fab {
   box-sizing: border-box;
-  width: 160px;
+  width: max-content;
   height: 42px;
-  min-width: 160px;
   min-height: 42px;
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 8px;
-  padding: 0 16px 0 12px;
+  padding: 0 14px;
   border: 2px solid #fff;
   border-radius: 40px;
   color: #fff;
@@ -1720,8 +1701,11 @@
 
 /* 5) Merchandise carousel controls reuse the Flash Sale arrow language. */
 .site-shell--homepage-final .merchandise__panel {
+  --merch-visible-cards: 5;
+  --merch-gap: 16px;
   position: relative;
   overflow: visible;
+  padding-inline: 0;
 }
 
 .site-shell--homepage-final .merchandise__viewport {
@@ -1729,6 +1713,9 @@
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  padding-inline: var(--merch-gap);
+  scroll-padding-inline: var(--merch-gap);
+  scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;
 }
@@ -1738,10 +1725,22 @@
 }
 
 .site-shell--homepage-final .merchandise__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - (var(--merch-visible-cards) - 1) * var(--merch-gap)) / var(--merch-visible-cards));
+  gap: var(--merch-gap);
   height: 100%;
   align-items: flex-end;
-  width: max-content;
-  padding-right: 24px;
+  width: 100%;
+}
+
+.site-shell--homepage-final .merchandise__track .merch-card {
+  width: 100%;
+  scroll-snap-align: start;
+}
+
+.site-shell--homepage-final .merchandise__track [role='status'] {
+  grid-column: 1 / -1;
 }
 
 .site-shell--homepage-final .merchandise__arrow {
@@ -1776,4 +1775,23 @@
   .site-shell--homepage-final .merchandise__arrow {
     display: none;
   }
+}
+
+@media (max-width: 1120px) {
+  .site-shell--homepage-final .merchandise__panel { --merch-visible-cards: 4; }
+}
+
+@media (max-width: 900px) {
+  .site-shell--homepage-final .merchandise__panel { --merch-visible-cards: 3; }
+}
+
+@media (max-width: 600px) {
+  .site-shell--homepage-final .merchandise__panel {
+    --merch-visible-cards: 2;
+    --merch-gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-shell--homepage-final .merchandise__viewport { scroll-behavior: auto; }
 }

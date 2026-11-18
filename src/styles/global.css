@@ -120,16 +120,7 @@ img { display: block; max-width: 100%; }
 
 .contact-fab { position: fixed; z-index: 40; right: 26px; top: 56%; display: flex; align-items: center; gap: 8px; padding: 11px 16px; border: 2px solid white; border-radius: 40px; color: white; background: var(--navy); box-shadow: 0 10px 30px rgba(0,0,0,.25); cursor: pointer; }
 .contact-fab img { width: 16px; height: 16px; }
-.chat-backdrop { position: fixed; z-index: 90; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 20px; background: rgba(5,3,24,.48); backdrop-filter: blur(6px); }
-.chat-panel { width: min(405px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 20px; border-radius: 24px; background: #e2e8f0; }
-.chat-panel__top { display: flex; justify-content: space-between; margin-bottom: 12px; }
 .icon-button { width: 36px; height: 36px; border: 0; color: var(--navy); background: transparent; font-size: 28px; cursor: pointer; }
-.support-form { display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 24px; background: #f8fafc; font-family: Helvetica, Arial, sans-serif; }
-.support-form h2 { margin: 0 0 14px; color: #333; font-size: 34px; letter-spacing: -1.36px; }
-.support-form label { display: flex; flex-direction: column; gap: 8px; font-size: 18px; font-weight: 700; }
-.support-form input, .support-form textarea { width: 100%; border: 0; outline: 0; padding: 12px 14px; border-radius: 29px; color: #333; background: #f1f5f9; font-size: 14px; font-weight: 400; resize: vertical; }
-.support-form textarea { min-height: 155px; border-radius: 26px; }
-.support-submit { min-height: 42px; margin-top: 4px; border: 0; border-radius: 12px; color: #f8f2f2; background: var(--navy); cursor: pointer; }
 .form-status { margin: 0; font-size: 12px; font-weight: 400; }
 .form-status.success { color: #116329; }
 .form-status.error { color: #a31919; }
@@ -188,8 +179,6 @@ img { display: block; max-width: 100%; }
   .footer__links > div:last-child { grid-column: 1 / -1; }
   .contact-fab { right: 14px; top: auto; bottom: 18px; font-size: 0; width: 48px; height: 48px; justify-content: center; padding: 0; }
   .contact-fab img { width: 19px; height: 19px; }
-  .chat-backdrop { align-items: flex-end; padding: 8px; }
-  .chat-panel { max-height: calc(100vh - 16px); border-radius: 24px 24px 18px 18px; }
 }
 
 @media (max-width: 430px) {
@@ -202,7 +191,6 @@ img { display: block; max-width: 100%; }
   .avatar-stack { display: none; }
   .game-card { min-height: 155px; }
   .game-card__caption { padding-inline: 12px; }
-  .support-form h2 { font-size: 30px; }
 }
 
 

@@ -8,19 +8,8 @@ export const homepageMock = {
     { id: 'jockey', label: 'Joki Game', image: assets.categoryJockey, ring: assets.categoryRingBlue },
     { id: 'merch', label: 'Merchandise', image: assets.categoryMerch, ring: assets.categoryRingPink },
   ],
-  popularGames: [
-    { id: 'popular-ml', name: 'Mobile Legend', image: assets.popularMl },
-    { id: 'popular-ff', name: 'Garena Free Fire', image: assets.popularFreeFire },
-    { id: 'popular-val', name: 'Valorant', image: assets.popularValorant },
-    { id: 'popular-pubg-1', name: 'PUBG Mobile', image: assets.popularPubg },
-    { id: 'popular-pubg-2', name: 'PUBG Mobile', image: assets.popularPubgAlt },
-    ...Array.from({ length: 5 }, (_, index) => ({ id: `popular-pubg-${index + 3}`, name: 'PUBG Mobile', image: assets.popularPubgAlt })),
-  ],
-  recentPurchases: [
-    { id: 'recent-ml', name: '86 Diamonds MLBB', image: assets.recentMl },
-    { id: 'recent-pubg', name: '300+ UC PUBG Mobile', image: assets.recentPubg },
-    { id: 'recent-val', name: '100+ VP Valorant', image: assets.recentValorant },
-  ],
+  popularGames: [],
+  recentPurchases: [],
   flashSale: [
     { id: 'ml-flash', name: 'Mobile Legend', image: assets.flashMobileLegends, price: 10000, originalPrice: 50000, item: '100 Diamond' },
     { id: 'pubg-flash', name: 'PUBG Mobile', image: assets.flashPubg, price: 10000, originalPrice: 50000, item: '100 Diamond' },

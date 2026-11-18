@@ -11,10 +11,9 @@ export default function Merchandise({ items = [], loading = false }) {
   const displayItems = items.filter((item) => item?.slug && item?.id)
 
   function slide(direction) {
-    viewportRef.current?.scrollBy({
-      left: direction * 226,
-      behavior: 'smooth',
-    })
+    const viewport = viewportRef.current
+    const [first, second] = viewport.firstElementChild.children
+    if (second) viewport.scrollBy({ left: direction * (second.offsetLeft - first.offsetLeft) })
   }
 
   return (
@@ -42,7 +41,7 @@ export default function Merchandise({ items = [], loading = false }) {
 
         <div className="merchandise__viewport" ref={viewportRef}>
           <div className="merchandise__track">
-            {loading ? <SkeletonItems className="merch-card" count={4}>
+            {loading ? <SkeletonItems className="merch-card" count={5}>
               <div className="merch-card__image"><Bone variant="media" /></div>
               <div className="merch-card__body"><SkeletonLines /></div>
             </SkeletonItems> : displayItems.map((item) => (

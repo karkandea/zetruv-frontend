@@ -402,20 +402,14 @@
     margin-top: 64px;
   }
 
-  .site-shell--homepage-final .popular-recent,
-  .site-shell--homepage-final .popular-recent__column,
   .site-shell--homepage-final .jockey-section,
   .site-shell--homepage-final .homepage-accounts,
   .site-shell--homepage-final .homepage-articles {
     height: auto;
   }
 
-  .site-shell--homepage-final .mini-panel--popular,
-  .site-shell--homepage-final .mini-panel--recent {
-    height: auto;
-    min-height: 0;
-    grid-template-rows: auto;
-    row-gap: 16px;
+  .site-shell--homepage-final .popular-recent--paired {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .site-shell--homepage-final .jockey-grid {
@@ -446,10 +440,6 @@
   .site-shell--homepage-final .homepage-article-card__body {
     height: auto;
     min-height: 180px;
-  }
-
-  .site-shell--homepage-final .merchandise__panel {
-    overflow-x: auto;
   }
 
   .site-shell--homepage-final > .contact-fab {
@@ -543,10 +533,6 @@
 
   .site-shell--homepage-final .popular-recent {
     gap: 30px;
-  }
-
-  .site-shell--homepage-final .popular-recent__column--sign-in-prompt {
-    display: none;
   }
 
   .site-shell--homepage-final .mini-panel--recent {
@@ -756,18 +742,11 @@
     top: auto;
     right: 14px;
     bottom: 14px;
-    width: auto;
     height: 48px;
     min-width: 48px;
     min-height: 48px;
     justify-content: center;
-    padding: 0 14px 0 10px;
-  }
-
-  .site-shell--homepage-final > .contact-fab img {
-    width: 30px;
-    height: 30px;
-    flex-basis: 30px;
+    padding: 0 14px;
   }
 }
 

@@ -30,8 +30,9 @@ const emptyHomepage = {
 
 export default function HomePage() {
   const copy = useStorefrontCopy()
-  const [data, setData] = useState(emptyHomepage)
+  const [{ data, loadedFor }, setHomepage] = useState({ data: emptyHomepage, loadedFor: null })
   const [session, setSession] = useState(readCustomerSession)
+  const token = session?.accessToken || null
   const [hasError, setHasError] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -45,22 +46,28 @@ export default function HomePage() {
     let active = true
     setLoading(true)
     // Personal purchases are not included in the public homepage response.
-    const request = session?.accessToken
-      ? getPersonalHomepage(session.accessToken).catch((error) => {
+    const request = token
+      ? getPersonalHomepage(token).catch((error) => {
         if (error.status === 401 || error.status === 403) return getHomepageData()
         throw error
       })
       : getHomepageData()
     request
       .then((result) => {
-        if (active) { setData({ ...emptyHomepage, ...result }); setHasError(false); setLoading(false) }
+        if (active) {
+          setHomepage({ data: { ...emptyHomepage, ...result }, loadedFor: token })
+          setHasError(false)
+          setLoading(false)
+        }
       })
       .catch((error) => {
         if (active) { setHasError(true); setLoading(false) }
         console.error('Homepage API unavailable.', error)
       })
     return () => { active = false }
-  }, [session?.accessToken])
+  }, [token])
+
+  const recent = token && token === loadedFor && !hasError ? data.recentPurchases : []
 
   return (
     <div className="site-shell site-shell--homepage-final">
@@ -76,7 +83,7 @@ export default function HomePage() {
           <Hero items={data.heroes} loading={loading} />
           <ServiceCategories items={data.serviceCategories} loading={loading} />
           <FlashSale items={data.flashSale} countdown={data.flashSaleEndsAt} loading={loading} />
-          <PopularAndRecent popular={data.popularGames} recent={data.recentPurchases} featured={data.flashSale} authenticated={Boolean(session)} loading={loading} />
+          <PopularAndRecent popular={data.popularGames} recent={recent} loading={loading} />
           <JockeyGames items={data.jockeyGames} loading={loading} />
           <GameAccounts items={data.gameAccounts} loading={loading} />
           <Merchandise items={data.merchandise} loading={loading} />
