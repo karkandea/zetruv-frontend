@@ -1,3 +1,4 @@
+import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -195,6 +196,7 @@ export default function PaymentPage() {
                   : <Clock3 size={28} />}
                 <div><h2>{error && !payment ? copy.statusCouldnTBeVerified : title}</h2><p>{error && !payment ? error : description}</p></div>
               </div>
+              <GameItemAdminContact paid={state === 'Paid'} phone={payment?.gameItemSupportPhone} orderNumber={context.orderNumber} />
               {active ? <>
                 {countdown !== null && <p className="payment-session-expiry"><Clock3 size={16} /> {copy.timeRemainingToPay} <strong>{countdown}</strong></p>}
                 {qr && <div className="payment-session-qr">

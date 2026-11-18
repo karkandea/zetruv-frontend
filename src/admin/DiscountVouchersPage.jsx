@@ -3,7 +3,7 @@ import { cmsRequest } from './api'
 import { toLocalDatetime, toVoucherPayload, validateVoucherForm } from './discountVoucherForm'
 import './discount-vouchers.css'
 
-const KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount']
+const KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount', 'GameItem']
 const rupiah = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value || 0))
 const when = value => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—'
 const discountLabel = (type, value) => type === 'Percentage' ? value + '%' : rupiah(value)

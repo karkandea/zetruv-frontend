@@ -13,7 +13,7 @@ import { Bookmark } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
-const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'Joki', 'GameAccount', 'GameVoucher', 'Merchandise']
+const CATEGORY_ORDER = ['TopUpGame', 'TopUpLogin', 'Joki', 'GameAccount', 'GameVoucher', 'GameItem', 'Merchandise']
 const CATEGORY_PRESENTATION = {
   TopUpGame: {
     key: 'player-id',
@@ -39,6 +39,7 @@ const CATEGORY_PRESENTATION = {
     loginLabel: 'gameBoosting',
     icon: searchAssets.categoryJoki || searchAssets.categoryItems,
   },
+  GameItem: { key: 'game-items', browseLabel: 'gameItems', loginLabel: 'gameItems', icon: searchAssets.categoryItems },
   GameAccount: {
     key: 'accounts',
     browseLabel: 'gameAccounts',
@@ -105,7 +106,7 @@ const BROWSE_PRODUCT_MATCHERS = [
 const alphabet = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'V', 'W']
 
 function fallbackProductImage(product) {
-  if (product.kind === 'GameVoucher') return searchAssets.categoryItems
+  if (['GameVoucher', 'GameItem'].includes(product.kind)) return searchAssets.categoryItems
   if (product.kind === 'Joki') return searchAssets.categoryJoki || searchAssets.categoryItems
   if (product.kind === 'GameAccount') return searchAssets.categoryAccounts
   if (product.kind === 'Merchandise') return searchAssets.categoryMerchandise
@@ -124,7 +125,7 @@ function publisherForProduct(product, fallback) {
   if (product.publisher) return product.publisher
   if (product.gamePublisher) return product.gamePublisher
   if (product.game?.publisher) return product.game.publisher
-  if (['GameVoucher', 'Joki', 'GameAccount', 'Merchandise'].includes(product.kind)) return product.gameName || fallback
+  if (['GameVoucher', 'Joki', 'GameAccount', 'GameItem', 'Merchandise'].includes(product.kind)) return product.gameName || fallback
 
   const value = `${product.name || ''} ${product.gameName || ''}`.toLowerCase()
   if (value.includes('mobile legend')) return 'Moonton'
@@ -142,6 +143,7 @@ function productHref(product) {
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
   if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
   if (product.kind === 'Joki') return `/product/joki/${product.slug}`
+  if (product.kind === 'GameItem') return `/product/item/${encodeURIComponent(product.slug)}`
   if (product.kind === 'GameAccount') return product.gameSlug ? `/game-accounts/${encodeURIComponent(product.gameSlug)}/${encodeURIComponent(product.slug)}` : '/game-accounts'
   if (product.kind === 'Merchandise') return `/merchandise/${encodeURIComponent(product.slug)}`
   return undefined
@@ -309,7 +311,7 @@ export default function SearchPage({ mode = 'player-id' }) {
     return {
       ...category,
       key: presentation.key,
-      label: kind === 'GameAccount' || kind === 'Merchandise'
+      label: ['GameAccount', 'GameItem', 'Merchandise'].includes(kind)
         ? copy[presentation.browseLabel]
         : apiCategory?.name || copy[isLoginMode ? presentation.loginLabel : presentation.browseLabel],
       icon: category.iconUrl || presentation.icon,

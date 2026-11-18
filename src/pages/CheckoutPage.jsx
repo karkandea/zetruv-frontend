@@ -36,7 +36,7 @@ const paymentDisplay = (copy) => [
 ]
 class CheckoutError extends Error {}
 
-const methodLabel = (item, copy) => item.productKind === 'Joki' ? copy.gameBoosting : ({
+const methodLabel = (item, copy) => item.productKind === 'GameItem' ? copy.gameItems : item.productKind === 'Joki' ? copy.gameBoosting : ({
   AUTO_ID:copy.topUpById, MANUAL_LOGIN:copy.topUpByLogin,
   VOUCHER_CODE:copy.gameVouchers, JOKI_MANUAL:copy.gameBoosting,
 }[item.fulfillmentMethod] || (item.productKind === 'GameAccount' ? copy.gameAccount : copy.digitalProduct))
@@ -52,7 +52,7 @@ const renderLoginField = (field, value, onChange, visible, toggle, disabled, err
     ) : (
       <div className="checkout-account-input-wrap">
         <input id={`checkout-${field.key}-${field.formId}`}
-          type={field.type === 'Password' && !visible ? 'password' : 'text'}
+          type={field.type === 'Password' && !visible ? 'password' : field.type === 'SteamTradeUrl' ? 'url' : 'text'}
           inputMode={field.type === 'Number' ? 'numeric' : 'text'}
           maxLength={field.maxLength}
           placeholder={field.placeholder || field.label}
@@ -83,6 +83,8 @@ function CheckoutProduct({
   const [passwordVisible, setPasswordVisible] = useState({})
   const isLogin = item.fulfillmentMethod === 'MANUAL_LOGIN'
   const isId = item.fulfillmentMethod === 'AUTO_ID'
+  const isGameItem = item.productKind === 'GameItem'
+  const deliveryFields = isGameItem ? checkoutFields(product, 'OrderDelivery') : []
   const fields = checkoutFields(product, isLogin ? 'LoginCredential' : 'AccountValidation')
   const effectiveValues = values || {}
   const validation = validateCheckoutAccount(fields, isId ? idValues : effectiveValues, copy)
@@ -97,7 +99,7 @@ function CheckoutProduct({
           onError={e => { if(e.currentTarget.dataset.fail !== '1'){e.currentTarget.dataset.fail='1';e.currentTarget.src=fallback} }} />
         <div className="checkout-product__identity">
           <span className="digital-product-method">{methodLabel(item, copy)}</span>
-          <strong>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</strong>
+          <strong>{['Joki', 'GameItem'].includes(item.productKind) ? item.productName : item.gameName || item.productName}</strong>
           <span>{item.variantName}</span>
           <small>{copy.unitPrice2} {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
         </div>
@@ -141,6 +143,21 @@ function CheckoutProduct({
               </div>
             )}
           </>)}
+        </div>
+      )}
+
+      {isGameItem && deliveryFields.length > 0 && (
+        <div className="checkout-product__account">
+          <div className="checkout-product__account-title">
+            <strong>{copy.gameItemDeliveryDetails}</strong>
+            <span>{copy.gameItemDeliveryAfterPayment}</span>
+          </div>
+          <div className="checkout-product__fields">
+            {deliveryFields.map(field => renderLoginField(
+              {...field, formId: item.cartKey}, effectiveValues[field.slot],
+              value => onValue(item.cartKey, field.slot, value), false, undefined, false,
+              showErrors ? validateCheckoutField(field, effectiveValues[field.slot], copy) : '', copy))}
+          </div>
         </div>
       )}
 
@@ -334,6 +351,11 @@ export default function CheckoutPage() {
     if(changes.length)result.push(copy.aProductPriceChangedConfirmTheLatest)
     for(const item of items){
       const product=catalog[item.productSlug]
+      if(item.productKind === 'GameItem'){
+        const fields = checkoutFields(product, 'OrderDelivery')
+        const message = fields.length && validateCheckoutAccount(fields, values[item.cartKey], copy)
+        if(message) result.push(`${item.productName}: ${message}`)
+      }
       if(item.fulfillmentMethod==='AUTO_ID'){
         const fields=checkoutFields(product,'AccountValidation')
         const message=validateCheckoutAccount(fields,item.accountFields,copy)
@@ -375,6 +397,11 @@ export default function CheckoutPage() {
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
+    if(item.productKind === 'GameItem'){
+      const fields = checkoutFields(catalog[item.productSlug], 'OrderDelivery')
+      const reason = fields.length && validateCheckoutAccount(fields, values[item.cartKey], copy)
+      return reason ? {cartKey: item.cartKey, message: `${item.productName}: ${reason}`} : null
+    }
     if(!['MANUAL_LOGIN','AUTO_ID'].includes(item.fulfillmentMethod)) return null
     const kind=item.fulfillmentMethod==='AUTO_ID'?'AccountValidation':'LoginCredential'
     const fields=checkoutFields(catalog[item.productSlug],kind)
@@ -485,6 +512,13 @@ export default function CheckoutPage() {
         voucherCode:voucher?.code || null,
         items:items.map(item=>{
           const data={productVariantId:item.variantId,quantity:Number(item.quantity||1),expectedUnitPrice:Number(item.unitPrice)}
+          if(item.productKind === 'GameItem'){
+            const fields = checkoutFields(freshCatalog[item.productSlug], 'OrderDelivery')
+            const message = fields.length && validateCheckoutAccount(fields, values[item.cartKey], copy)
+            if(message) throw new CheckoutError(message)
+            if(fields.length) data.deliveryDetails = Object.fromEntries(fields.map(field =>
+              [field.key, String(values[item.cartKey]?.[field.slot] || '').trim()]))
+          }
           if(item.fulfillmentMethod==='AUTO_ID')
             data.gameAccountValidationId=idValidations[item.cartKey]?.validationId
           if(item.fulfillmentMethod==='MANUAL_LOGIN'){

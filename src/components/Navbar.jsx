@@ -18,6 +18,7 @@ const productLinks = [
   { label: 'Voucher Game', href: '/search?kind=GameVoucher' },
   { label: 'Joki Game', href: '/search?kind=Joki' },
   { label: 'Merchandise', href: '/merchandise' },
+  { label: 'Game Items', href: '/search?kind=GameItem' },
   { label: 'Game Account', href: '/game-accounts' },
 ]
 
@@ -380,7 +381,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             <div id="zetruv-homepage-products" className="navbar__mobile-submenu" data-open={isHomepageProductsOpen} inert={!isHomepageProductsOpen}>
               <div className="navbar__mobile-submenu-clip">
                 <div className="navbar__mobile-submenu-links">
-                  {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</a>)}
+                  {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{link.href === '/search?kind=GameItem' ? copy.gameItems : link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</a>)}
                 </div>
               </div>
             </div>
@@ -439,7 +440,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <div className="product-dropdown" aria-label={copy.productCategories} aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a className="navbar-control" href={link.href} key={link.label}>
-                    <span>{link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</span>
+                    <span>{link.href === '/search?kind=GameItem' ? copy.gameItems : link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</span>
                     {link.arrow && <img src={assets.productDropdownArrow} alt="" />}
                   </a>
                 ))}

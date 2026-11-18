@@ -15,6 +15,7 @@ const destinationOptions = [
   { value: '/search?kind=TopUpGame', label: 'Top Up via ID' },
   { value: '/search?kind=TopUpLogin', label: 'Top Up via Login' },
   { value: '/search?kind=GameVoucher', label: 'Voucher Game' },
+  { value: '/search?kind=GameItem', label: 'Item Game' },
   { value: '/search?kind=Joki', label: 'Joki Game' },
   { value: '/articles', label: 'Artikel' },
 ]

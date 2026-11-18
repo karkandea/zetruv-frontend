@@ -7,6 +7,7 @@ const categories = [
   { kind: 'GameVoucher', label: 'gameVouchers', icon: searchAssets.categoryItems, href: '/search?kind=GameVoucher' },
   { kind: 'Joki', label: 'gameBoosting', icon: searchAssets.categoryJoki || searchAssets.categoryItems, href: '/search?kind=Joki' },
   { kind: 'GameAccount', label: 'gameAccounts', icon: searchAssets.categoryAccounts, href: '/game-accounts' },
+  { kind: 'GameItem', label: 'gameItems', icon: searchAssets.categoryItems, href: '/search?kind=GameItem' },
   { kind: 'Merchandise', label: 'merchandise', icon: searchAssets.categoryMerchandise, href: '/merchandise' },
 ]
 

@@ -38,6 +38,7 @@ const clean = (value) => String(value ?? '').trim()
 function itemContext(item, copy) {
   if (item.fulfillmentMethod === 'MANUAL_LOGIN') return copy.enterGameAccountInformationAtCheckoutIf
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return copy.theVoucherCodeWillBeSentAfter
+  if (item.productKind === 'GameItem') return copy.gameItemDeliveryAfterPayment
   if (item.productKind === 'Joki') return copy.manualServiceAfterPayment
   if (item.productKind === 'GameAccount') return copy.weLlVerifyYourGameAccountBefore
   return copy.digitalProduct
@@ -288,8 +289,8 @@ export default function CartPage() {
                     <article className="digital-cart-item" key={item.cartKey}>
                       <CartThumbnail item={item} />
                       <div className="digital-cart-item__copy">
-                        <span className="digital-cart-item__badge">{item.productKind === 'Joki' ? copy.gameBoosting : copy[methodLabel[item.fulfillmentMethod]] || copy.digitalProduct}</span>
-                        <h2>{item.productKind === 'Joki' ? item.productName : item.gameName || item.productName}</h2>
+                        <span className="digital-cart-item__badge">{item.productKind === 'GameItem' ? copy.gameItems : item.productKind === 'Joki' ? copy.gameBoosting : copy[methodLabel[item.fulfillmentMethod]] || copy.digitalProduct}</span>
+                        <h2>{['Joki', 'GameItem'].includes(item.productKind) ? item.productName : item.gameName || item.productName}</h2>
                         <strong className="digital-cart-item__variant">{item.variantName}</strong>
                         <span className="digital-cart-item__unit">{copy.unitPrice} {rupiah(Number(item.unitPrice) || 0)}</span>
 

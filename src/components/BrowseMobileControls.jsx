@@ -1,4 +1,4 @@
-import { IdCard, LogIn, Search, Shirt, Ticket, Trophy, UserRound } from 'lucide-react'
+import { Box, IdCard, LogIn, Search, Shirt, Ticket, Trophy, UserRound } from 'lucide-react'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 
 const tabs = [
@@ -7,6 +7,7 @@ const tabs = [
   { kind: 'Joki', label: 'gameBoosting', href: '/search?kind=Joki', Icon: Trophy },
   { kind: 'GameAccount', label: 'gameAccounts', href: '/game-accounts', Icon: UserRound },
   { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher', Icon: Ticket },
+  { kind: 'GameItem', label: 'gameItems', href: '/search?kind=GameItem', Icon: Box },
   { kind: 'Merchandise', label: 'merchandise', href: '/merchandise', Icon: Shirt },
 ]
 

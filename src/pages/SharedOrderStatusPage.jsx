@@ -1,3 +1,4 @@
+import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -71,6 +72,7 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
       <div><span>{copy.payment2}</span><strong className={isPaid ? 'is-success' : ''}>{payment}</strong></div>
       <div><span>{copy.paymentTotal2}</span><strong>{money(order.grandTotal, order.currency)}</strong></div>
     </div>
+    <GameItemAdminContact paid={isPaid} phone={order.gameItemSupportPhone} orderNumber={order.orderNumber} />
     {order.hasFulfillmentIssue && <p className="sos-lookup-warning" role="status"><CircleAlert size={17} aria-hidden="true" /> {copy.weHadTroubleProcessingAnItemContact}</p>}
     <div className="sos-lookup-items">
       <h3>{copy.products}{order.items?.length || 0})</h3>
