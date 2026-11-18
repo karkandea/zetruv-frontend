@@ -60,6 +60,7 @@ export default function Footer() {
             <div className="footer__two-columns">
               <div className="footer__column">
                 <h3>{copy.support}</h3>
+                <a href="/#faq">FAQ</a>
                 <a href="#">Youtube</a>
                 <a href="#">Facebook</a>
               </div>

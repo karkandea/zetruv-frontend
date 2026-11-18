@@ -204,15 +204,15 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
         <div className="special-product-layout">
           <section className="special-product-packages">
             <h2>{gameItem ? copy.chooseGameItem : joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
-            <p>{gameItem ? copy.gameItemDeliveryAfterPayment : joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>
-            {!selected && <p role="status">{copy.thereAreNoPackagesToChooseFrom}</p>}
+            {(!gameItem || selected) && <p>{gameItem ? copy.gameItemDeliveryAfterPayment : joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>}
+            {!selected && <p role="status">{gameItem ? copy.gameItemUnavailable : copy.thereAreNoPackagesToChooseFrom}</p>}
             <div className="special-product-grid">
               {variants.map((item) => (
                 <button className={selected?.id === item.id ? 'is-active' : ''} type="button"
                   disabled={!available.includes(item)} aria-pressed={selected?.id === item.id}
                   onClick={() => { setSelectedId(item.id); setQuantity(1); setNotice(''); setError('') }} key={item.id}>
                   <strong>{item.name}</strong>
-                  <span>{available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
+                  <span>{gameItem || available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
                 </button>
               ))}
             </div>

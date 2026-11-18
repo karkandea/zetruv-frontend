@@ -138,12 +138,12 @@ function publisherForProduct(product, fallback) {
 }
 
 function productHref(product) {
+  if (product.kind === 'GameItem') return `/product/item/${encodeURIComponent(product.slug)}`
   if (product.isAvailable === false) return undefined
   if (product.kind === 'TopUpGame') return `/product/${product.slug}`
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
   if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
   if (product.kind === 'Joki') return `/product/joki/${product.slug}`
-  if (product.kind === 'GameItem') return `/product/item/${encodeURIComponent(product.slug)}`
   if (product.kind === 'GameAccount') return product.gameSlug ? `/game-accounts/${encodeURIComponent(product.gameSlug)}/${encodeURIComponent(product.slug)}` : '/game-accounts'
   if (product.kind === 'Merchandise') return `/merchandise/${encodeURIComponent(product.slug)}`
   return undefined
@@ -160,15 +160,22 @@ function CatalogCard({ product, categoryLabel }) {
 
   const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
   return (
-    <article className={`search-game-card${!available ? ' is-unavailable' : ''}`}>
-      {available ? <a className="search-game-card__link" href={href} aria-label={formatCopy(copy.viewProduct, { product: product.name })} /> : null}
+    <article className={`search-game-card${!href && !available ? ' is-unavailable' : ''}`}>
+      {href && <a className="search-game-card__link" href={href} aria-label={formatCopy(copy.viewProduct, { product: product.name })} />}
       <img src={thumbnail} alt="" onError={(event) => {
         const fallback = fallbackProductImage(product)
         if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
       }} />
       <span className="search-game-card__copy">
         <strong className="catalog-card-title">{product.name}</strong>
-        <small className="catalog-card-meta">{publisherForProduct(product, product.gameName || categoryLabel)}</small>
+        <small className="catalog-card-meta">{product.kind === 'GameItem' && product.gameName
+          ? product.gameName : publisherForProduct(product, product.gameName || categoryLabel)}</small>
+        {product.kind === 'GameItem' && product.minPrice != null && (
+          <small className="search-game-card__item-price">
+            {product.minPrice !== product.maxPrice ? `${copy.gameItemPriceFrom} ` : ''}
+            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.minPrice)}
+          </small>
+        )}
         {!available && <small>{copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}

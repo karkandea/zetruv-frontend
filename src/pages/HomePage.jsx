@@ -9,6 +9,7 @@ import JockeyGames from '../components/JockeyGames'
 import GameAccounts from '../components/GameAccounts'
 import Merchandise from '../components/Merchandise'
 import LatestArticles from '../components/LatestArticles'
+import HomeFaq from '../components/HomeFaq'
 import SupportChat from '../components/SupportChat'
 import Footer from '../components/Footer'
 import CookieNotice from '../components/CookieNotice'
@@ -35,6 +36,7 @@ export default function HomePage() {
   const token = session?.accessToken || null
   const [hasError, setHasError] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [supportOpen, setSupportOpen] = useState(false)
 
   useEffect(() => {
     const update = () => setSession(readCustomerSession())
@@ -89,9 +91,10 @@ export default function HomePage() {
           <Merchandise items={data.merchandise} loading={loading} />
           <LatestArticles items={data.latestArticles} loading={loading} />
         </div>
+        <HomeFaq onContact={() => setSupportOpen(true)} />
       </main>
       <Footer />
-      <SupportChat />
+      <SupportChat open={supportOpen} onOpenChange={setSupportOpen} />
       <CookieNotice />
     </div>
   )
