@@ -46,6 +46,7 @@
 .search-game-card__copy strong { overflow: hidden; color: #1e1e1e; font-size: 13px; line-height: 19px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .search-game-card__copy small { color: #707070; font-size: 10px; line-height: 15px; }
 .search-game-card__copy .search-game-card__item-price { color: var(--navy); font-weight: 600; }
+.search-game-card__item-price span { color: var(--muted); font-weight: 400; }
 .search-empty { margin-top: 10px; padding: 26px; border: 1px dashed #d8dbe7; border-radius: 14px; color: #707070; background: #fbfbfd; font-size: 12px; text-align: center; }
 
 .nav-avatar { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; color: white; background: #108ee9; font-family: Inter, Arial, sans-serif; font-size: 12px; font-weight: 700; }

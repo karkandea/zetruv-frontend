@@ -153,6 +153,7 @@ function CatalogCard({ product, categoryLabel }) {
   const copy = useStorefrontCopy()
   const href = productHref(product)
   const available = product.isAvailable !== false
+  const showItemPrice = product.kind === 'GameItem' && product.minPrice != null
   const favoriteId = product.kind === 'Merchandise'
     ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
@@ -170,13 +171,14 @@ function CatalogCard({ product, categoryLabel }) {
         <strong className="catalog-card-title">{product.name}</strong>
         <small className="catalog-card-meta">{product.kind === 'GameItem' && product.gameName
           ? product.gameName : publisherForProduct(product, product.gameName || categoryLabel)}</small>
-        {product.kind === 'GameItem' && product.minPrice != null && (
+        {showItemPrice && (
           <small className="search-game-card__item-price">
             {product.minPrice !== product.maxPrice ? `${copy.gameItemPriceFrom} ` : ''}
             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.minPrice)}
+            {!available && <span> · {copy.unavailable2}</span>}
           </small>
         )}
-        {!available && <small>{copy.unavailable2}</small>}
+        {!available && !showItemPrice && <small>{copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
         aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
