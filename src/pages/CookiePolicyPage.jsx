@@ -12,6 +12,12 @@ export default function CookiePolicyPage() {
     document.title = `${copy.cookiePolicy} | Zetruv`
   }, [copy.cookiePolicy])
 
+  useEffect(() => {
+    if (window.location.hash === '#manage-cookies') {
+      document.getElementById('manage-cookies')?.scrollIntoView()
+    }
+  }, [])
+
   return (
     <div className="site-shell site-shell--homepage-final cookie-policy-page">
       <Navbar variant="legal" homepageMobileMenu />
