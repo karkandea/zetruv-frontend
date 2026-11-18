@@ -31,8 +31,6 @@ const DUMMY_ACCOUNTS = {
       minPrice: 1850000,
       isAvailable: true,
       soldQuantity: 12,
-      rating: 4.9,
-      reviewCount: 38,
       description: 'Akun Dota 2 Divine 5 dengan 126 hero aktif dan riwayat akun yang sudah diverifikasi untuk demo storefront.',
       accountDetails: {
         attributes: [
@@ -340,7 +338,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
       if (!active) return
       const fallback = dummyAccountFor(gameSlug, accountSlug)
       if (fallback) {
-        setProduct(fallback)
+        setProduct({ ...fallback, reviewCount: 0 })
         setError('')
       } else {
         setError(copy.weCouldnTLoadTheAccountDetails)
