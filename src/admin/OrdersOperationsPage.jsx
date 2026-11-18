@@ -134,6 +134,15 @@ function DetailPage({ id, detail, loading, busy, error, notice, onBack, onReconc
           {allowed && item.accountTarget && <div className="ops-destination"><h4>Data Tujuan Top Up</h4>{item.accountTarget.accountDisplayName && <p>{item.accountTarget.accountDisplayName}</p>}
             {Object.entries(item.accountTarget.fields || {}).filter(([key]) => !/password|secret|token|otp|credential|pin/i.test(key)).map(([key, value]) => <div className="ops-field-row" key={key}><div><span>{key.replace(/[_-]/g, ' ')}</span><strong>{String(value)}</strong></div><CopyButton text={value} label="Salin" onCopied={onCopied} /></div>)}
           </div>}
+          {allowed && detail.paymentStatus === 'Paid' && item.gameItemDelivery?.length > 0 && (
+            <div className="ops-destination">
+              <h4>Tujuan Pengiriman Item</h4>
+              {item.gameItemDelivery.map(({ label, value }, index) => <div className="ops-field-row" key={index}>
+                <div><span>{label}</span><strong>{value}</strong></div>
+                <CopyButton text={value} label="Salin" onCopied={onCopied} />
+              </div>)}
+            </div>
+          )}
           {item.fulfillmentReference && <p className="ops-item-note">Referensi proses: {item.fulfillmentReference}</p>}
           {item.fulfillmentMessage && <p className="ops-item-note">Catatan: {item.fulfillmentMessage}</p>}
           {item.hasManualLoginCredentials && <p className="ops-item-note">Informasi login tersimpan secara terenkripsi dan tidak ditampilkan di sini.</p>}

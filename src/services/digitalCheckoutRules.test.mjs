@@ -74,3 +74,14 @@ test('backend live gateway determines available selected methods',()=>{
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:true,availableMethods:[{code:'QRIS'}]},'QRIS'),true)
  assert.equal(paymentSelectionAllowed({canAcceptLivePayments:true,availableMethods:[{code:'QRIS'}]},'GOPAY'),false)
 })
+
+test('GameItem delivery accepts Steam Trade Offers only on the canonical Steam origin', () => {
+ const fields = checkoutFields({inputFields:[
+   {scope:'LoginCredential', key:'password', type:'Password', isRequired:true},
+   {scope:'OrderDelivery', key:'trade', label:'Steam Trade Offer URL', type:'SteamTradeUrl', isRequired:true},
+ ]}, 'OrderDelivery')
+ assert.deepEqual(fields.map(field => field.key), ['trade'])
+ assert.equal(validateCheckoutField(fields[0], 'https://steamcommunity.com/tradeoffer/new/?partner=123&token=qa-token'), '')
+ assert.notEqual(validateCheckoutField(fields[0], 'https://steamcommunity.com.example/tradeoffer/new/?partner=123&token=qa-token'), '')
+ assert.notEqual(validateCheckoutField(fields[0], 'https://steamcommunity.com/tradeoffer/new/?partner=123&token=a&token=b'), '')
+})

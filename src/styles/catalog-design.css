@@ -370,3 +370,43 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The category rail grows when a new catalog category is available. */
+@media (min-width: 901px) {
+  .search-page--browse .search-catalog--browse { height: auto; }
+  .search-page--browse .search-sidebar--browse { height: auto; }
+}
+
+.game-item-admin-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid var(--catalog-border);
+  border-radius: 12px;
+  color: var(--catalog-ink);
+  background: var(--catalog-sidebar-surface);
+}
+.game-item-admin-contact > div {
+  display: grid;
+  gap: 3px;
+  font-size: var(--catalog-subtitle-size);
+}
+.game-item-admin-contact > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--navy);
+  font-size: var(--catalog-subtitle-size);
+  font-weight: 600;
+}
+
+.service-category__game-item-icon { color: var(--navy); }

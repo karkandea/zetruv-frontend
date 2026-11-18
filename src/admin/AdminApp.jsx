@@ -45,10 +45,10 @@ const NAV = [
   ['provider-mapping', 'Integrasi Penyedia'],
 ]
 
-const PRODUCT_KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount']
+const PRODUCT_KINDS = ['TopUpGame', 'TopUpLogin', 'GameVoucher', 'Joki', 'Merchandise', 'GameAccount', 'GameItem']
 const PRODUCT_LABELS = {
   TopUpGame: 'Top Up Game', TopUpLogin: 'Top Up menggunakan Login', GameVoucher: 'Voucher Game',
-  Joki: 'Joki Game', GameAccount: 'Akun Game', Merchandise: 'Merchandise',
+  GameItem: 'Item Game', Joki: 'Joki Game', GameAccount: 'Akun Game', Merchandise: 'Merchandise',
 }
 const FULFILLMENT_LABELS = {
   AUTO_ID: 'Diproses otomatis berdasarkan ID game',
@@ -452,8 +452,8 @@ function VariantEditor({ productId, detail, onReload, section = 'variants' }) {
   async function saveVariant(form, id, assets = [], markHandled) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, iconUrl: form.iconUrl?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); await discardCatalogAssets(assets, form.iconUrl); markHandled?.(); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveImage(form, id, assets = [], markHandled) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); await discardCatalogAssets(assets, form.url); markHandled?.(); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveInputField(form, id) {
-    const scope = detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
-    const isSensitive = detail.fulfillmentMethod === 'AUTO_ID' ? false : form.type === 'Password' ? true : Boolean(form.isSensitive)
+    const scope = detail.kind === 'GameItem' ? 'OrderDelivery' : detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
+    const isSensitive = scope === 'LoginCredential' && (form.type === 'Password' || Boolean(form.isSensitive))
     const options = form.type === 'Select' ? String(form.optionsText || '').split(/[,\n]/).map((value) => value.trim()).filter(Boolean) : []
     const body = { key: id ? form.key : attributeKeyFromLabel(form.label, detail.inputFields?.map((entry) => entry.key)), label: form.label, scope, type: form.type, placeholder: form.placeholder || null, helpText: form.helpText || null, isRequired: Boolean(form.isRequired), isSensitive, maxLength: Number(form.maxLength || 200), options, sortOrder: Number(form.sortOrder || 0) }
     try { await cmsRequest(id ? `/catalog/products/${productId}/input-fields/${id}` : `/catalog/products/${productId}/input-fields`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); setFieldEditing(undefined); onReload() } catch (err) { setError(err.message) }
@@ -461,7 +461,7 @@ function VariantEditor({ productId, detail, onReload, section = 'variants' }) {
   async function disableVariant(item) { if (!confirm(`Nonaktifkan varian ${item.name}? Data penjualan lama tetap tersimpan.`)) return; try { await cmsRequest(`/catalog/products/${productId}/variants/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
   async function deleteImage(item) { if (!confirm('Hapus gambar dari galeri produk ini?')) return; try { await cmsRequest(`/catalog/products/${productId}/images/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
   async function deleteInputField(item) { if (!confirm(`Nonaktifkan informasi ${item.label}?`)) return; try { await cmsRequest(`/catalog/products/${productId}/input-fields/${item.id}`, { method: 'DELETE' }); onReload() } catch (err) { setError(err.message) } }
-  const supportsInputSchema = detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
+  const supportsInputSchema = detail.kind === 'GameItem' || detail.fulfillmentMethod === 'AUTO_ID' || detail.fulfillmentMethod === 'MANUAL_LOGIN'
   return <div className="admin-product-subresources"><ErrorBox error={error} />
     {section === 'variants' && <Panel title="Harga & Varian" subtitle="Kelola nominal, harga, dan ketersediaan produk." action={<Button tone="ghost" onClick={() => setEditing(null)}>+ Tambah Varian</Button>}>
       <VariantPricingTable variants={detail.variants || []} kind={detail.kind} onEdit={setEditing} onDisable={disableVariant} onVoucher={setVoucherVariant} />
@@ -471,17 +471,17 @@ function VariantEditor({ productId, detail, onReload, section = 'variants' }) {
         <div><small>{image.altText || 'Tanpa keterangan'}</small><div><Button tone="ghost" onClick={() => setImageEditing(image)}>Ubah</Button><Button tone="danger" onClick={() => deleteImage(image)}>Hapus</Button></div></div></article>)}</div>
       : <div className="catalog-editor-empty"><Image size={28} /><strong>Belum ada gambar tambahan</strong><p>Unggah gambar lain agar pembeli bisa melihat produk dari beberapa sisi.</p><Button onClick={() => setImageEditing(null)}>Unggah Gambar</Button></div>}
     </Panel>}
-    {section === 'inputs' && supportsInputSchema && <Panel title="Informasi yang Diisi Pembeli" subtitle={detail.fulfillmentMethod === 'AUTO_ID' ? 'Informasi akun nonrahasia untuk validasi sebelum pemesanan' : 'Data login dikumpulkan hanya saat checkout melalui proses aman'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Tambah Isian</Button>}>
+    {section === 'inputs' && supportsInputSchema && <Panel title="Informasi yang Diisi Pembeli" subtitle={detail.kind === 'GameItem' ? 'Tujuan pengiriman ditanyakan saat checkout. Masukkan hanya informasi yang diperlukan admin.' : detail.fulfillmentMethod === 'AUTO_ID' ? 'Informasi akun nonrahasia untuk validasi sebelum pemesanan' : 'Data login dikumpulkan hanya saat checkout melalui proses aman'} action={<Button tone="ghost" onClick={() => setFieldEditing(null)}>+ Tambah Isian</Button>}>
       <div className="admin-mini-list">{detail.inputFields?.length ? detail.inputFields.map((item) => <div key={item.id}><div><strong>{item.label}</strong><small>{item.isRequired ? 'Wajib diisi' : 'Opsional'}</small></div>
         <span>{item.type === 'Text' ? 'Teks' : item.type === 'Number' ? 'Angka' : item.type === 'Select' ? 'Pilihan' : item.type === 'Password' ? 'Kata Sandi' : item.type}</span><span>{item.isSensitive ? 'Data sensitif' : 'Data umum'}</span>
         <div><Button tone="ghost" onClick={() => setFieldEditing(item)}>Ubah</Button><Button tone="danger" onClick={() => deleteInputField(item)}>Nonaktifkan</Button></div>
       </div>) : <Empty text="Belum ada isian pembeli. Produk tertentu memerlukan informasi ini agar dapat dipesan." />}</div>
     </Panel>}
-    {section === 'inputs' && !supportsInputSchema && <div className="catalog-editor-empty"><strong>Produk ini tidak memerlukan isian pembeli.</strong><p>Informasi akun hanya dibutuhkan untuk produk top up via ID atau login.</p></div>}
+    {section === 'inputs' && !supportsInputSchema && <div className="catalog-editor-empty"><strong>Produk ini tidak memerlukan isian pembeli.</strong><p>Isian tersedia untuk Item Game dan top up via ID atau login.</p></div>}
     {editing !== undefined && <Modal title={editing ? 'Ubah Varian' : 'Tambah Varian'} onClose={() => setEditing(undefined)}><VariantForm item={editing} kind={detail.kind} siblings={detail.variants || []} onSave={(form, assets, markHandled) => saveVariant(form, editing?.id, assets, markHandled)} onCancel={() => setEditing(undefined)} /></Modal>}
     {voucherVariant && <Modal title={`${voucherVariant.name} · Kode Voucher Terenkripsi`} onClose={() => setVoucherVariant(null)} wide><GameVoucherInventory productId={productId} variant={voucherVariant} onStockChanged={onReload} /></Modal>}
     {imageEditing !== undefined && <Modal title={imageEditing ? 'Ubah Gambar' : 'Tambah Gambar'} onClose={() => setImageEditing(undefined)}><ImageForm item={imageEditing} onSave={(form, assets, markHandled) => saveImage(form, imageEditing?.id, assets, markHandled)} onCancel={() => setImageEditing(undefined)} /></Modal>}
-    {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Ubah Isian Pembeli' : 'Tambah Isian Pembeli'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
+    {fieldEditing !== undefined && <Modal title={fieldEditing ? 'Ubah Isian Pembeli' : 'Tambah Isian Pembeli'} onClose={() => setFieldEditing(undefined)}><InputFieldForm item={fieldEditing} fulfillmentMethod={detail.fulfillmentMethod} gameItem={detail.kind === 'GameItem'} onSave={(form) => saveInputField(form, fieldEditing?.id)} onCancel={() => setFieldEditing(undefined)} /></Modal>}
   </div>
 }
 
@@ -528,13 +528,13 @@ function ImageForm({ item, onSave, onCancel }) {
   </form>
 }
 
-function InputFieldForm({ item, fulfillmentMethod, onSave, onCancel }) {
+function InputFieldForm({ item, fulfillmentMethod, gameItem, onSave, onCancel }) {
   const [form, setForm] = useState(item ? { ...item, optionsText: (item.options || []).join(', ') } : { key: '', label: '', type: 'Text', placeholder: '', helpText: '', isRequired: true, isSensitive: false, maxLength: 200, optionsText: '', sortOrder: 0 })
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
   function typeChanged(value) { setForm((old) => ({ ...old, type: value, isSensitive: fulfillmentMethod === 'AUTO_ID' ? false : value === 'Password' ? true : old.isSensitive, optionsText: value === 'Select' ? old.optionsText : '' })) }
   return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave(form) }}>
     <Field label="Nama Isian"><TextInput value={form.label} onChange={(e) => set('label', e.target.value)} required placeholder="Contoh: User ID" /></Field>
-    <Field label="Jenis Isian"><Select value={form.type} onChange={(e) => typeChanged(e.target.value)} options={INPUT_FIELD_TYPES.filter((value) => fulfillmentMethod !== 'AUTO_ID' || value !== 'Password').map((value) => ({ value, label: ({ Text: 'Teks', Password: 'Kata Sandi', Email: 'Email', Number: 'Angka', Select: 'Pilihan' })[value] }))} /></Field>
+    <Field label="Jenis Isian"><Select value={form.type} onChange={(e) => typeChanged(e.target.value)} options={[...INPUT_FIELD_TYPES, ...(gameItem ? ['SteamTradeUrl'] : [])].filter((value) => fulfillmentMethod === 'MANUAL_LOGIN' || value !== 'Password').map((value) => ({ value, label: ({ Text: 'Teks', Password: 'Kata Sandi', Email: 'Email', Number: 'Angka', Select: 'Pilihan', SteamTradeUrl: 'Steam Trade Offer URL' })[value] }))} /></Field>
     <Field label="Contoh Isian"><TextInput value={form.placeholder || ''} onChange={(e) => set('placeholder', e.target.value)} /></Field>
     <Field label="Petunjuk untuk Pembeli" wide><TextArea value={form.helpText || ''} onChange={(e) => set('helpText', e.target.value)} /></Field>
     {form.type === 'Select' && <Field label="Daftar Pilihan" hint="Pisahkan dengan koma atau baris baru." wide><TextArea value={form.optionsText || ''} onChange={(e) => set('optionsText', e.target.value)} required /></Field>}
@@ -644,7 +644,7 @@ function ProductEditor({ item, categories, games, onDone }) {
             <Field label="Kategori"><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} required options={availableCategories.map((value) => ({ value: value.id, label: value.name }))} /></Field>
             <p className="catalog-field-note">Jenis produk: <strong>{PRODUCT_LABELS[form.kind]}</strong>{lockedKind && ' · Tidak dapat diubah karena sudah memiliki varian.'}</p>
             <Field label="Game" hint={form.kind === 'GameAccount' ? 'Wajib untuk akun game yang dijual.' : 'Pilih game terkait jika ada.'}>
-              <Select required={form.kind === 'GameAccount'} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
+              <Select required={['GameAccount', 'GameItem'].includes(form.kind)} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
             </Field>
             <Field label="Deskripsi Singkat (opsional)"><TextArea rows={3} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Tulis keunggulan utama produk…" /></Field>
             <Field label="Detail Produk"><TextArea rows={6} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi untuk pelanggan…" /></Field>
@@ -827,7 +827,7 @@ function SitePage() {
     </Panel>
   </div>
 }
-function SiteSettingsForm({ item, onSave }) { const [form, setForm] = useState({ logoUrl: item.logoUrl || '', brandDescription: item.brandDescription || '', copyrightText: item.copyrightText || '', contactTeamLabel: item.contactTeamLabel || '', contactTeamUrl: item.contactTeamUrl || '' }); return <Panel title="Brand & contact" subtitle="Global settings used by site/footer responses"><form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave({ ...form, logoUrl: form.logoUrl || null, contactTeamUrl: form.contactTeamUrl || null }) }}><Field label="Logo URL" wide><TextInput value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} /></Field><Field label="Brand description" wide><TextArea value={form.brandDescription} onChange={(e) => setForm({ ...form, brandDescription: e.target.value })} required /></Field><Field label="Copyright"><TextInput value={form.copyrightText} onChange={(e) => setForm({ ...form, copyrightText: e.target.value })} required /></Field><Field label="Contact CTA label"><TextInput value={form.contactTeamLabel} onChange={(e) => setForm({ ...form, contactTeamLabel: e.target.value })} required /></Field><Field label="Contact CTA URL" wide><TextInput value={form.contactTeamUrl} onChange={(e) => setForm({ ...form, contactTeamUrl: e.target.value })} /></Field><div className="admin-form-actions"><button className="admin-button admin-button--primary">Save site settings</button></div></form></Panel> }
+function SiteSettingsForm({ item, onSave }) { const [form, setForm] = useState({ logoUrl: item.logoUrl || '', brandDescription: item.brandDescription || '', copyrightText: item.copyrightText || '', contactTeamLabel: item.contactTeamLabel || '', contactTeamUrl: item.contactTeamUrl || '', gameItemSupportPhone: item.gameItemSupportPhone || '' }); return <Panel title="Brand & contact" subtitle="Global settings used by site/footer responses"><form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); onSave({ ...form, logoUrl: form.logoUrl || null, contactTeamUrl: form.contactTeamUrl || null }) }}><Field label="Logo URL" wide><TextInput value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} /></Field><Field label="Brand description" wide><TextArea value={form.brandDescription} onChange={(e) => setForm({ ...form, brandDescription: e.target.value })} required /></Field><Field label="Copyright"><TextInput value={form.copyrightText} onChange={(e) => setForm({ ...form, copyrightText: e.target.value })} required /></Field><Field label="Contact CTA label"><TextInput value={form.contactTeamLabel} onChange={(e) => setForm({ ...form, contactTeamLabel: e.target.value })} required /></Field><Field label="Contact CTA URL" wide><TextInput value={form.contactTeamUrl} onChange={(e) => setForm({ ...form, contactTeamUrl: e.target.value })} /></Field><Field label="WhatsApp Admin Item Game" hint="Gunakan format +62. Nomor tampil di pesanan Item Game setelah pembayaran terverifikasi." wide><TextInput type="tel" maxLength={16} placeholder="+6281234567890" value={form.gameItemSupportPhone} onChange={(e) => setForm({ ...form, gameItemSupportPhone: e.target.value })} /></Field><div className="admin-form-actions"><button className="admin-button admin-button--primary">Save site settings</button></div></form></Panel> }
 
 export default function AdminApp() {
   const [session, setSession] = useState(getAdminSession)

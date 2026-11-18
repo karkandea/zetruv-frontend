@@ -101,6 +101,9 @@ export default function App() {
   const voucherProductMatch = path.match(/^\/product\/voucher\/([^/]+)$/)
   if (voucherProductMatch) return <SpecialProductPage type="voucher" slug={decodeURIComponent(voucherProductMatch[1])} />
 
+  const gameItemMatch = path.match(/^\/product\/item\/([^/]+)$/)
+  if (gameItemMatch) return <SpecialProductPage type="item" slug={decodeURIComponent(gameItemMatch[1])} />
+
   const jokiProductMatch = path.match(/^\/product\/joki\/([^/]+)$/)
   if (jokiProductMatch) return <SpecialProductPage type="joki" slug={decodeURIComponent(jokiProductMatch[1])} />
 

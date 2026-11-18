@@ -167,3 +167,5 @@
 @media(max-width:420px){.ops-metrics article{padding:12px 8px}.ops-metrics span{min-height:30px}.ops-metrics strong{font-size:20px}.ops-toolbar-filters{gap:5px}.ops-filter-popup>summary{padding:0 9px}}
 @media(max-width:760px){.ops-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.ops-page *{scroll-behavior:auto!important;transition:none!important}}
+
+.ops-destination .ops-field-row strong { overflow-wrap: anywhere; }

@@ -30,7 +30,7 @@ export function seedCartPriceQuotes(rows) {
   }
   storePriceQuotes(quotes)
 }
-const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount'])
+const SINGLE_QUANTITY_KINDS = new Set(['TopUpGame', 'Joki', 'GameAccount', 'GameItem'])
 const CREDENTIAL_METHODS = new Set(['MANUAL_LOGIN', 'JOKI_MANUAL'])
 
 function safeParse(raw) {

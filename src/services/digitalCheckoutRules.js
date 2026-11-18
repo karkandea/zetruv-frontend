@@ -43,10 +43,27 @@ export function validateCheckoutField(field, raw, copy = storefrontCopy.id) {
   }
   // A 'Text' field may explicitly accept username OR email; never enforce
   // email syntax on it without a distinct backend Email schema type.
+  if (field.type === 'SteamTradeUrl' && !validSteamTradeUrl(value)) {
+    return copy.invalidSteamTradeUrl
+  }
   if (field.type === 'Email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     return copy.invalidEmail
   }
   return ''
+}
+
+function validSteamTradeUrl(value) {
+  try {
+    const url = new URL(value)
+    const token = url.searchParams.getAll('token')
+    const partner = url.searchParams.getAll('partner')
+    return url.origin === 'https://steamcommunity.com' && !url.username && !url.password && !url.hash &&
+      ['/tradeoffer/new', '/tradeoffer/new/'].includes(url.pathname) &&
+      partner.length === 1 && /^\d+$/.test(partner[0]) && Number(partner[0]) > 0 && Number(partner[0]) <= 4294967295 &&
+      token.length === 1 && /^[A-Za-z0-9_-]{1,64}$/.test(token[0])
+  } catch {
+    return false
+  }
 }
 
 export function validateCheckoutAccount(fields, values, copy = storefrontCopy.id) {

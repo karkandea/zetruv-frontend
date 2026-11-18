@@ -65,7 +65,7 @@ const VOUCHERS = {
   },
 }
 
-function ProductState({ state, retry, joki = false }) {
+function ProductState({ state, retry, joki = false, gameItem = false }) {
   const copy = useStorefrontCopy()
   const loading = state === 'loading'
   const failed = state === 'error'
@@ -81,12 +81,13 @@ function ProductState({ state, retry, joki = false }) {
         {state === 'not-found' && <p>{copy.thisProductIsUnavailableInTheCatalog}</p>}
       </div>
       {failed && <button type="button" className="special-secondary" onClick={retry}>{copy.tryAgain}</button>}
-      <a href={joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>
+      <a href={gameItem ? '/search?kind=GameItem' : joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>
     </main>}
   </div>
 }
 
-function LiveJokiProduct({ slug }) {
+function LiveManualProduct({ slug, kind }) {
+  const gameItem = kind === 'GameItem'
   const [result, setResult] = useState({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
@@ -94,19 +95,19 @@ function LiveJokiProduct({ slug }) {
     const controller = new AbortController()
     getCatalogProduct(slug, { signal: controller.signal }).then((product) => {
       if (controller.signal.aborted) return
-      setResult(product?.kind === 'Joki' ? { state: 'ready', product } : { state: 'not-found' })
+      setResult(product?.kind === kind ? { state: 'ready', product } : { state: 'not-found' })
     }).catch((error) => {
       if (!controller.signal.aborted) setResult({ state: error.status === 404 ? 'not-found' : 'error' })
     })
     return () => controller.abort()
-  }, [slug, attempt])
+  }, [slug, kind, attempt])
 
-  if (result.state !== 'ready') return <ProductState joki state={result.state} retry={() => {
+  if (result.state !== 'ready') return <ProductState joki={!gameItem} gameItem={gameItem} state={result.state} retry={() => {
     setResult({ state: 'loading' })
     setAttempt((value) => value + 1)
   }} />
 
-  return <SpecialProduct product={result.product} slug={slug} joki />
+  return <SpecialProduct product={result.product} slug={slug} joki={!gameItem} gameItem={gameItem} />
 }
 
 function packagePrice(variant) {
@@ -118,10 +119,11 @@ function isPurchasable(variant) {
     Number.isFinite(packagePrice(variant)) && packagePrice(variant) > 0
 }
 
-function SpecialProduct({ product, slug, joki = false }) {
+function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
+  const manual = joki || gameItem
   const copy = useStorefrontCopy()
   const variants = product.variants || []
-  const available = variants.filter((variant) => !joki || (product.isAvailable && isPurchasable(variant)))
+  const available = variants.filter((variant) => !manual || (product.isAvailable && isPurchasable(variant)))
   const [selectedId, setSelectedId] = useState(available[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
   const [notice, setNotice] = useState('')
@@ -129,9 +131,9 @@ function SpecialProduct({ product, slug, joki = false }) {
   const [saving, setSaving] = useState(false)
   const addGuard = useRef(false)
   const selected = available.find((item) => item.id === selectedId) || available[0]
-  const image = joki ? product.thumbnailUrl || product.game?.imageUrl || searchAssets.categoryJoki : product.image
-  const hero = joki ? product.images?.[0]?.url || image : product.hero || image
-  const publisher = joki ? product.game?.publisher : product.publisher
+  const image = manual ? product.thumbnailUrl || product.game?.imageUrl || (gameItem ? searchAssets.categoryItems : searchAssets.categoryJoki) : product.image
+  const hero = manual ? product.images?.[0]?.url || image : product.hero || image
+  const publisher = manual ? product.game?.publisher : product.publisher
   const description = product.shortDescription || product.description
   const entry = selected ? {
     accountKey: 'checkout-required',
@@ -141,17 +143,17 @@ function SpecialProduct({ product, slug, joki = false }) {
     productKind: product.kind,
     fulfillmentMethod: product.fulfillmentMethod,
     thumbnailUrl: image,
-    gameName: joki ? product.game?.name || product.name : product.name,
+    gameName: manual ? product.game?.name || product.name : product.name,
     variantId: selected.id,
     variantName: selected.name,
     unitPrice: packagePrice(selected),
     regularPrice: selected.price,
     quantity,
-    maxQuantity: joki ? 1 : 9,
+    maxQuantity: manual ? 1 : 9,
     requiresGameAccountValidation: Boolean(product.requiresGameAccountValidation),
   } : null
   const pricing = entry ? getDigitalPricing([entry]) : null
-  const voucherServiceFee = joki ? 0 : 2000
+  const voucherServiceFee = manual ? 0 : 2000
 
   async function add(goToCart) {
     if (!entry || addGuard.current) return
@@ -160,12 +162,12 @@ function SpecialProduct({ product, slug, joki = false }) {
     setNotice('')
     setError('')
     try {
-      if (joki && readCustomerSession() && getCartSyncStatus().state !== 'synced') {
+      if (manual && readCustomerSession() && getCartSyncStatus().state !== 'synced') {
         throw Error('cartNotSynced')
       }
-      const alreadyAdded = joki && readCart().some((item) => item.variantId === entry.variantId)
+      const alreadyAdded = manual && readCart().some((item) => item.variantId === entry.variantId)
       if (!alreadyAdded) addCartItem(entry)
-      if (joki) {
+      if (manual) {
         await awaitCartPersistence()
         const sync = getCartSyncStatus()
         if (sync.state === 'error' || sync.state === 'conflict') throw Error(sync.message)
@@ -190,7 +192,7 @@ function SpecialProduct({ product, slug, joki = false }) {
           <div className="special-product-hero__content">
             <div className="special-product-hero__visual"><img src={image} alt="" /></div>
             <div className="special-product-hero__copy">
-              <span>{joki ? copy.gameBoosting : copy.gameVouchers}</span>
+              <span>{gameItem ? copy.gameItems : joki ? copy.gameBoosting : copy.gameVouchers}</span>
               <h1>{product.name}</h1>
               {publisher && <p>{publisher}</p>}
               <ProductRating product={product} />
@@ -201,8 +203,8 @@ function SpecialProduct({ product, slug, joki = false }) {
 
         <div className="special-product-layout">
           <section className="special-product-packages">
-            <h2>{joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
-            <p>{joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>
+            <h2>{gameItem ? copy.chooseGameItem : joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
+            <p>{gameItem ? copy.gameItemDeliveryAfterPayment : joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>
             {!selected && <p role="status">{copy.thereAreNoPackagesToChooseFrom}</p>}
             <div className="special-product-grid">
               {variants.map((item) => (
@@ -214,19 +216,19 @@ function SpecialProduct({ product, slug, joki = false }) {
                 </button>
               ))}
             </div>
-            {!joki && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
-            <ProductReviews product={joki ? product : { slug }} />
+            {!manual && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
+            <ProductReviews product={manual ? product : { slug }} />
           </section>
 
           {entry && <aside className="special-product-summary">
             <h2>{copy.summary}</h2>
             <div className="special-product-selected">
               <div><strong>{selected.name}</strong><span>{rupiah(entry.unitPrice)} / item</span></div>
-              {!joki && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
+              {!manual && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
             </div>
             <div className="special-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             {pricing.discount > 0 && <div className="special-summary-row"><span>{copy.discount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}
-            {!joki && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
+            {!manual && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
             <hr />
             <div className="special-summary-total"><span>{copy.total}</span><strong>{rupiah(pricing.total + voucherServiceFee)}</strong></div>
             {notice && <p role="status" className="special-product-success">{copy[notice]}</p>}
@@ -241,7 +243,7 @@ function SpecialProduct({ product, slug, joki = false }) {
 }
 
 export default function SpecialProductPage({ type = 'voucher', slug }) {
-  if (type === 'joki') return <LiveJokiProduct key={slug} slug={slug} />
+  if (type === 'joki' || type === 'item') return <LiveManualProduct key={slug} slug={slug} kind={type === 'item' ? 'GameItem' : 'Joki'} />
   const product = Object.hasOwn(VOUCHERS, slug) ? VOUCHERS[slug] : null
   return product ? <SpecialProduct key={slug} slug={slug} product={product} /> : <ProductState state="not-found" />
 }

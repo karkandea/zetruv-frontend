@@ -4,6 +4,7 @@ const categoryMeta = {
   TopUpGame: { badge: 'TOP UP', subtitle: 'Top Up · Player ID', fallbackImage: '/assets/search/category-topup.webp' },
   TopUpLogin: { badge: 'LOGIN', subtitle: 'Top Up · Account Login', fallbackImage: '/assets/search/category-topup.webp' },
   GameVoucher: { badge: 'VOUCHER', subtitle: 'Game Voucher · Digital Code', fallbackImage: '/assets/search/category-voucher.webp' },
+  GameItem: { badge: 'ITEM', subtitle: 'Game Item', fallbackImage: '/assets/search/category-voucher.webp' },
   Joki: { badge: 'JOKI', subtitle: 'Game Boosting · Service', fallbackImage: '/assets/search/category-joki.webp' },
   GameAccount: { badge: 'ACCOUNT', subtitle: 'Game Account · Marketplace', fallbackImage: '/assets/search/category-account.webp' },
   Merchandise: { badge: 'MERCH', subtitle: 'Merchandise · Physical Product', fallbackImage: '/assets/search/category-merchandise.webp' },
@@ -20,6 +21,7 @@ export function searchProductHref(product) {
     case 'TopUpGame': return `/product/${slug}`
     case 'TopUpLogin': return `/product/${slug}/login`
     case 'GameVoucher': return `/product/voucher/${slug}`
+    case 'GameItem': return `/product/item/${slug}`
     case 'Joki': return `/product/joki/${slug}`
     case 'GameAccount':
       return product.gameSlug
