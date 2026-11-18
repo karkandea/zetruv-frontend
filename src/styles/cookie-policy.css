@@ -1,3 +1,11 @@
+.cookie-policy-page > .navbar {
+  position: relative;
+}
+
+.cookie-policy-page > .footer {
+  margin-top: 0;
+}
+
 .cookie-policy {
   max-width: 850px;
   padding-block: clamp(24px, 5vw, 56px) clamp(48px, 8vw, 88px);

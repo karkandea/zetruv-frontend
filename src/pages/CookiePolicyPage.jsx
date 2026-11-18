@@ -13,7 +13,7 @@ export default function CookiePolicyPage() {
   }, [copy.cookiePolicy])
 
   return (
-    <div className="site-shell site-shell--homepage-final">
+    <div className="site-shell site-shell--homepage-final cookie-policy-page">
       <Navbar variant="legal" homepageMobileMenu />
       <main className="container cookie-policy">
         <a className="cookie-policy__back" href="/">
