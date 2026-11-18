@@ -18,6 +18,7 @@ import './styles/flash-sale-adaptive.css'
 import './styles/navbar-search-dropdown.css'
 import './styles/homepage-responsive.css'
 import './styles/navbar-account.css'
+import './styles/catalog-design.css'
 
 document.documentElement.lang = readNavbarLanguage()
 window.addEventListener('storage', () => { document.documentElement.lang = readNavbarLanguage() })

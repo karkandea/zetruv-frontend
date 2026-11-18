@@ -1,0 +1,372 @@
+:root {
+  --catalog-ink: #1e1e1e;
+  --catalog-muted: #616675;
+  --catalog-border: #e0e3ed;
+  --catalog-sidebar-surface: #f6f7fb;
+  --catalog-title-size: 30px;
+  --catalog-heading-size: 16px;
+  --catalog-card-title-size: 14px;
+  --catalog-subtitle-size: 13px;
+  --catalog-caption-size: 12px;
+}
+
+:is(.catalog-shell, .search-site-shell) .catalog-title {
+  margin: 0;
+  color: var(--catalog-ink);
+  font-size: var(--catalog-title-size);
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+:is(.catalog-shell, .search-site-shell) .catalog-heading {
+  color: var(--catalog-ink);
+  font-size: var(--catalog-heading-size);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+:is(.catalog-shell, .search-site-shell) .catalog-subtitle {
+  margin: 4px 0 0;
+  color: var(--catalog-muted);
+  font-size: var(--catalog-subtitle-size);
+  line-height: 1.5;
+}
+
+.catalog-shell .catalog-card-title,
+.search-site-shell .search-game-card .catalog-card-title {
+  color: var(--catalog-ink);
+  font-size: var(--catalog-card-title-size);
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.catalog-shell .catalog-card-meta,
+.search-site-shell .search-game-card .catalog-card-meta {
+  color: var(--catalog-muted);
+  font-size: var(--catalog-caption-size);
+  line-height: 1.4;
+}
+
+:is(.catalog-shell, .search-site-shell) .search-sidebar {
+  background: var(--catalog-sidebar-surface);
+}
+
+:is(.catalog-shell, .search-site-shell) .search-category {
+  width: 100%;
+  color: var(--catalog-ink);
+  font-size: var(--catalog-card-title-size);
+  line-height: 1.5;
+}
+
+:is(.catalog-shell, .search-site-shell) .search-category:focus-visible,
+.catalog-shell :is(.ga-game-card, .ga-live-card, .catalog-sort):focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: -2px;
+}
+
+.catalog-shell {
+  min-height: 100vh;
+  color: var(--catalog-ink);
+  background: #fbfbfd;
+}
+
+.catalog-page {
+  width: min(1152px, calc(100% - 40px));
+  margin-inline: auto;
+  padding: 148px 0 64px;
+}
+
+.catalog-layout {
+  display: grid;
+  grid-template-columns: clamp(205px, 22%, 248px) minmax(0, 1fr);
+  align-items: start;
+  border: 1px solid var(--catalog-border);
+  border-radius: 22px;
+  background: #fff;
+}
+
+.catalog-layout .search-sidebar--browse {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  border-radius: 22px 0 0 22px;
+}
+
+.catalog-layout .search-help-card {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.catalog-content {
+  min-width: 0;
+  padding: 24px 28px 32px;
+}
+
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+
+.catalog-game-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catalog-game-heading > :is(img, .ga-live-placeholder) {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.catalog-sort {
+  min-width: 0;
+  max-width: 50%;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--catalog-border);
+  border-radius: 10px;
+  color: var(--catalog-ink);
+  background: #fff;
+  font-size: var(--catalog-caption-size);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.catalog-content .catalog-search--desktop {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.catalog-content .catalog-search--desktop:focus-within {
+  outline: 2px solid var(--lavender);
+  outline-offset: 2px;
+}
+
+.catalog-content .ga-game-grid {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.catalog-content .ga-game-card {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 74px;
+  grid-template-columns: 52px minmax(0, 1fr) 20px;
+  gap: 10px;
+}
+
+.catalog-content .ga-game-card > :is(img, .ga-live-placeholder) {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+}
+
+.catalog-content .ga-stock-tabs {
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.catalog-content .ga-account-grid.ga-live-grid,
+.catalog-content .catalog-merch-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.catalog-content .ga-account-card.ga-live-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.catalog-content .ga-live-card[href]:hover {
+  border-color: var(--lavender);
+  box-shadow: 0 6px 20px rgb(1 1 84 / 8%);
+}
+
+.catalog-content .ga-live-card .ga-account-art {
+  height: auto;
+  aspect-ratio: 1.85;
+}
+
+.catalog-content .ga-live-card .ga-account-price-row {
+  align-items: center;
+  color: var(--navy);
+}
+
+.catalog-content .catalog-merch-grid {
+  min-height: 0;
+  overflow: visible;
+}
+
+.catalog-content .physical-product-card {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  padding: 0;
+  border-color: var(--catalog-border);
+}
+
+.catalog-content .physical-product-card__link {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.catalog-content .physical-product-card__link:focus-visible {
+  outline-offset: -2px;
+}
+
+.catalog-content .physical-product-card__image {
+  display: grid;
+  place-items: center;
+  color: var(--catalog-muted);
+  width: 100%;
+  height: auto;
+  max-height: 158px;
+  aspect-ratio: 1.5;
+  border-radius: 10px;
+}
+
+.catalog-content .physical-product-card__image img {
+  object-fit: contain;
+}
+
+.catalog-content .physical-product-card__name {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.catalog-merch-card__footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: auto;
+}
+
+.catalog-content .physical-product-card__price {
+  margin: 0;
+  color: var(--navy);
+  font-size: var(--catalog-card-title-size);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.catalog-content .physical-product-card__favorite.is-saved {
+  color: var(--navy);
+}
+
+.catalog-content .physical-product-card__favorite {
+  inset: 12px 12px auto auto;
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 1024px) {
+  .catalog-page { padding-top: 88px; }
+
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .navbar__top {
+    width: calc(100% - 32px);
+    grid-template-columns: var(--navbar-logo-width) minmax(0, 1fr) 44px 44px;
+    column-gap: 4px;
+  }
+
+  .navbar.navbar--mobile-cart.navbar--has-account .navbar__top {
+    grid-template-columns: var(--navbar-logo-width) minmax(0, 1fr) 44px 44px 44px;
+  }
+
+  .navbar--mobile-cart .navbar__quick-actions {
+    display: block;
+  }
+
+  .navbar--mobile-cart .nav-language-menu,
+  .navbar--mobile-cart .nav-cart-trigger > span {
+    display: none;
+  }
+
+  .navbar--mobile-cart .navbar__quick-actions .nav-cart-trigger {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+  }
+
+  .navbar--mobile-cart .nav-cart-trigger > img {
+    width: 21px;
+    height: 21px;
+  }
+
+  .navbar--mobile-cart .nav-cart-count {
+    position: absolute;
+    inset: 2px 0 auto auto;
+  }
+
+  .navbar--mobile-cart .nav-cart-menu > .cart-dropdown {
+    right: -44px;
+    max-width: calc(100vw - 28px);
+  }
+}
+
+@media (max-width: 900px) {
+  :root { --catalog-title-size: 24px; }
+
+  .catalog-shell .catalog-page {
+    padding-top: 80px;
+  }
+
+  .catalog-page .browse-mobile-controls {
+    margin: 0 0 18px;
+  }
+
+  .catalog-layout {
+    display: block;
+    border: 0;
+    background: transparent;
+  }
+
+  .catalog-layout .search-sidebar,
+  .catalog-content .catalog-search--desktop {
+    display: none;
+  }
+
+  .catalog-content {
+    padding: 0;
+  }
+
+  .catalog-content .ga-account-grid.ga-live-grid,
+  .catalog-content .catalog-merch-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .catalog-content .ga-game-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-content .ga-account-grid.ga-live-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

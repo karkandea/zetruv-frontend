@@ -31,7 +31,7 @@ function readPhysicalCartCount() {
   }
 }
 
-export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, restoreSession = true }) {
+export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, showMobileCart = false, restoreSession = true }) {
   const copy = useStorefrontCopy()
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -168,6 +168,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
     isLoggedIn ? 'navbar--has-account' : '',
     isHomeLoggedIn ? 'navbar--home-final' : '',
     homepageMobileMenu ? 'navbar--homepage-mobile' : '',
+    homepageMobileMenu && showMobileCart ? 'navbar--mobile-cart' : '',
   ].filter(Boolean).join(' ')
 
   function selectNav(name) {
@@ -379,7 +380,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             <div id="zetruv-homepage-products" className="navbar__mobile-submenu" data-open={isHomepageProductsOpen} inert={!isHomepageProductsOpen}>
               <div className="navbar__mobile-submenu-clip">
                 <div className="navbar__mobile-submenu-links">
-                  {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{t.products[link.label] || link.label}</a>)}
+                  {productLinks.map((link) => <a href={link.href} key={link.label} onClick={() => selectNav('product')}>{link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</a>)}
                 </div>
               </div>
             </div>
@@ -438,7 +439,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <div className="product-dropdown" aria-label={copy.productCategories} aria-hidden={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a className="navbar-control" href={link.href} key={link.label}>
-                    <span>{t.products[link.label] || link.label}</span>
+                    <span>{link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</span>
                     {link.arrow && <img src={assets.productDropdownArrow} alt="" />}
                   </a>
                 ))}

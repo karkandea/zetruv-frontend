@@ -274,6 +274,36 @@
   border-radius: 12px;
 }
 
+@media (min-width: 601px) {
+  .site-shell--homepage-final .popular-recent:not(.popular-recent--paired) .mini-panel--popular {
+    grid-template-columns: repeat(var(--popular-columns), minmax(0, 1fr));
+    padding: 16px;
+  }
+
+  .site-shell--homepage-final .popular-recent:not(.popular-recent--paired) .mini-game {
+    min-height: 72px;
+    flex-direction: row;
+    gap: 10px;
+    padding: 9px;
+    border: 1px solid #ffffff26;
+    border-radius: 14px;
+    background: #ffffff0d;
+    text-align: left;
+  }
+
+  .site-shell--homepage-final .popular-recent:not(.popular-recent--paired) .mini-game__image {
+    width: 48px;
+    height: 48px;
+    border-radius: 9px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .site-shell--homepage-final .popular-recent:not(.popular-recent--paired) .mini-panel--popular {
+    grid-template-columns: repeat(min(3, var(--popular-columns)), minmax(0, 1fr));
+  }
+}
+
 /* Keep catalog names within two lines. */
 .site-shell--homepage-final .mini-game > span:last-child {
   display: -webkit-box;

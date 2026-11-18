@@ -37,7 +37,7 @@ export default function PopularAndRecent({ popular = [], recent = [], loading = 
         <header className="compact-heading">
           <div><img src={assets.popularHeader} alt="" loading="lazy" decoding="async" /><h2>{copy.popularGames}</h2></div>
         </header>
-        <div className="mini-panel mini-panel--popular">
+        <div className="mini-panel mini-panel--popular" style={{ '--popular-columns': loading ? 4 : Math.max(1, Math.min(5, popular.length)) }}>
           {loading ? <SkeletonItems className="mini-game" count={4}><Bone className="mini-game__image" variant="thumb" /><Bone width="68%" /></SkeletonItems> : popular.map((item) => (
             <MiniItem item={item} href={item.slug ? `/game/${encodeURIComponent(item.slug)}` : undefined} key={item.id} />
           ))}

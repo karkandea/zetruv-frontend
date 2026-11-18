@@ -4,6 +4,7 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import BrowseMobileControls from '../components/BrowseMobileControls'
+import CatalogSidebar from '../components/CatalogSidebar'
 import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
@@ -164,8 +165,8 @@ function CatalogCard({ product, categoryLabel }) {
         if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
       }} />
       <span className="search-game-card__copy">
-        <strong>{product.name}</strong>
-        <small>{publisherForProduct(product, product.gameName || categoryLabel)}</small>
+        <strong className="catalog-card-title">{product.name}</strong>
+        <small className="catalog-card-meta">{publisherForProduct(product, product.gameName || categoryLabel)}</small>
         {!available && <small>{copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
@@ -308,7 +309,9 @@ export default function SearchPage({ mode = 'player-id' }) {
     return {
       ...category,
       key: presentation.key,
-      label: apiCategory?.name || copy[isLoginMode ? presentation.loginLabel : presentation.browseLabel],
+      label: kind === 'GameAccount' || kind === 'Merchandise'
+        ? copy[presentation.browseLabel]
+        : apiCategory?.name || copy[isLoginMode ? presentation.loginLabel : presentation.browseLabel],
       icon: category.iconUrl || presentation.icon,
     }
   }), [categories, isLoginMode, copy])
@@ -388,17 +391,17 @@ export default function SearchPage({ mode = 'player-id' }) {
 
   return (
     <div className={`search-site-shell${isLoginMode ? ' search-site-shell--login' : ''}`}>
-      <Navbar variant={isLoginMode ? 'loginCatalog' : 'default'} homepageMobileMenu={!isLoginMode} />
+      <Navbar variant={isLoginMode ? 'loginCatalog' : 'default'} homepageMobileMenu={!isLoginMode} showMobileCart={!isLoginMode} />
 
       <main className={`search-page${isLoginMode ? ' search-page--login' : ' search-page--browse'}`}>
         <div className="search-page__container">
           {!isLoginMode && (
             <>
               <p className="search-breadcrumb"><a href="/">{copy.home2}</a> {copy.categories}</p>
-              <h1>{globalResults ? copy.searchResults : (
+              <h1 className="catalog-title">{globalResults ? copy.searchResults : (
                 <><span className="browse-title--desktop">{copy.browseCategories}</span><span className="browse-title--mobile">{copy.browse}</span></>
               )}</h1>
-              <p className={`search-page__intro${globalResults ? ' search-page__intro--results' : ''}`}>{globalResults
+              <p className={`search-page__intro catalog-subtitle${globalResults ? ' search-page__intro--results' : ''}`}>{globalResults
                 ? formatCopy(copy.resultsForAcrossAllCategories, { query: submittedQuery })
                 : copy.findTheGameTopUpMethodOr}</p>
             </>
@@ -414,30 +417,13 @@ export default function SearchPage({ mode = 'player-id' }) {
                 onCategoryChange={handleCategory}
               />
             )}
-            <aside className={`search-sidebar${isLoginMode ? '' : ' search-sidebar--browse'}`}>
-              <h2>{isLoginMode ? copy.categories3 : copy.categories2}</h2>
-              <div className="search-category-list">
-                {categoryDefinitions.map((category) => (
-                  <button
-                    type="button"
-                    key={category.kind}
-                    className={`search-category${!globalResults && activeKind === category.kind ? ' active' : ''}`}
-                    aria-pressed={category.kind === 'Merchandise' || category.kind === 'GameAccount'
-                      ? undefined : !globalResults && activeKind === category.kind}
-                    onClick={() => handleCategory(category.kind)}
-                  >
-                    <span className="search-category__icon"><img src={category.icon} alt="" /></span>
-                    <span>{category.label}</span>
-                    {!globalResults && activeKind === category.kind && <i aria-hidden="true" />}
-                  </button>
-                ))}
-              </div>
-
-              <button className="search-help-card" type="button" onClick={() => setSupportOpen(true)}>
-                <strong>{isLoginMode ? copy.customerSupport : copy.needHelp}</strong>
-                <span>{isLoginMode ? copy.chatWithSupportIfYouNeedHelp : copy.chatWithOurSupportTeam}</span>
-              </button>
-            </aside>
+            <CatalogSidebar
+              activeKind={globalResults ? undefined : activeKind}
+              definitions={categoryDefinitions}
+              loginMode={isLoginMode}
+              onCategoryChange={handleCategory}
+              onSupport={() => setSupportOpen(true)}
+            />
 
             <div className={`search-catalog__content${isLoginMode ? '' : ' search-catalog__content--browse'}`}>
               <form className="catalog-search catalog-search--desktop" onSubmit={handleSearch}>
@@ -451,7 +437,7 @@ export default function SearchPage({ mode = 'player-id' }) {
                 <button type="submit" disabled={queryTooShort}>{isLoginMode ? copy.search3 : copy.search2}</button>
               </form>
 
-              {!isLoginMode && <h2 className="browse-list-title">{browseCategoryLabel}</h2>}
+              {!isLoginMode && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
 
               <div className="search-query-state" aria-live="polite">
                 {searchState === 'min' && <span>{copy.typeAtLeast3CharactersToStart}</span>}

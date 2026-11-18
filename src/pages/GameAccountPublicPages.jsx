@@ -1,13 +1,11 @@
 import { Bone, LoadingRegion, ProductSkeleton, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Search } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
-import BrowseMobileControls from '../components/BrowseMobileControls'
-import SupportChat from '../components/SupportChat'
+import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
 import { saveGameAccountCart } from '../data/gameAccountCatalog'
-import { searchAssets } from '../data/searchAssets'
 import { getCatalogGames, getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { accountPrice, accountProductHref, getAccountAttributes, summarizeAccountAttributes } from '../services/gameAccountPresentation'
 import '../styles/game-accounts.css'
@@ -96,37 +94,6 @@ function dummyAccountFor(gameSlug, accountSlug) {
   return (DUMMY_ACCOUNTS[gameSlug] || []).find((item) => item.slug === accountSlug) || null
 }
 
-const catalogSidebarLinks = [
-  { label: 'gameTopUpById', href: '/search', icon: searchAssets.categoryPlayerId },
-  { label: 'gameTopUpByLogin', href: '/search?kind=TopUpLogin', icon: searchAssets.categoryLogin },
-  { label: 'gameVouchers', href: '/search?kind=GameVoucher', icon: searchAssets.categoryItems },
-  { label: 'gameBoosting', href: '/search?kind=Joki', icon: searchAssets.categoryJoki || searchAssets.categoryItems },
-  { label: 'gameAccounts', href: '/game-accounts', icon: searchAssets.categoryAccounts },
-  { label: 'merchandise', href: '/merchandise', icon: searchAssets.categoryMerchandise },
-]
-
-function GameAccountSidebar() {
-  const copy = useStorefrontCopy()
-  return (
-    <aside className="ga-catalog-sidebar" aria-label={copy.productCategories2}>
-      <h2>{copy.categories2}</h2>
-      <nav>
-        {catalogSidebarLinks.map((link) => <a
-          className={link.href === '/game-accounts' ? 'is-active' : ''}
-          aria-current={link.href === '/game-accounts' ? 'page' : undefined}
-          href={link.href}
-          key={link.href}
-        >
-          <span className="ga-catalog-sidebar__icon"><img src={link.icon} alt="" /></span>
-          <span>{copy[link.label]}</span>
-          {link.href === '/game-accounts' && <i aria-hidden="true" />}
-        </a>)}
-      </nav>
-      <a className="ga-catalog-sidebar__help" href="/order-status"><strong>{copy.needHelp}</strong><span>{copy.checkYourOrderOrContactSupport}</span></a>
-    </aside>
-  )
-}
-
 function StateMessage({ children }) {
   return <div className="ga-live-state" role="status">{children}</div>
 }
@@ -164,25 +131,17 @@ export function GameAccountsPage() {
     () => games.filter((game) => `${game.name} ${game.publisher || ''}`.toLowerCase().includes(query.trim().toLowerCase())),
     [games, query],
   )
-  return <div className="ga-shell browse-catalog-shell">
-    <Navbar homepageMobileMenu />
-    <main className="ga-picker ga-container browse-catalog-page">
-      <h1 className="browse-title--mobile">{copy.browse}</h1>
-      <BrowseMobileControls
-        activeKind="GameAccount"
-        query={query}
-        onQueryChange={setQuery}
-        onSubmit={event => event.preventDefault()}
-      />
-    <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
-    <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><span>{copy.gameAccounts}</span></p>
-    <h1>{copy.gameAccounts}</h1><p className="ga-lead">{copy.chooseAGameToSeeAvailableAccount}</p>
-    <form className="ga-search-row" onSubmit={(event) => event.preventDefault()}>
-      <label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchGames} aria-label={copy.searchGames2} /></label>
-      <button type="submit">{copy.search3}</button>
-    </form>
-    <h2 className="browse-title--desktop">{copy.games}</h2>
-    <h2 className="browse-list-title">{copy.gameAccounts}</h2>
+  function search(event) {
+    event.preventDefault()
+  }
+  return <CatalogPage activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
+    <header className="catalog-header">
+      <div>
+        <h1 className="catalog-title">{copy.gameAccounts}</h1>
+        <p className="catalog-subtitle">{copy.chooseAGameToSeeAvailableAccount}</p>
+      </div>
+    </header>
+    <CatalogSearch label={copy.searchGames2} query={query} onQueryChange={setQuery} onSubmit={search} />
     {loading ? <LoadingRegion label={copy.loadingGames}>
       <div className="ga-game-grid">
         <SkeletonItems className="ga-game-card"><Bone variant="thumb" className="ga-live-placeholder" /><SkeletonLines /></SkeletonItems>
@@ -192,15 +151,15 @@ export function GameAccountsPage() {
       : <div className="ga-game-grid">{visibleGames.map((game) =>
         <a className="ga-game-card ga-live-game-link" key={game.id} href={`/game-accounts/${encodeURIComponent(game.slug)}`}>
           <GameArtwork image={game.imageUrl} name={game.name} />
-          <span><strong>{game.name}</strong><small>{game.publisher || copy.gameAccount}</small></span>
+          <span><strong className="catalog-card-title">{game.name}</strong><small className="catalog-card-meta">{game.publisher || copy.gameAccount}</small></span>
           <ChevronRight size={20} />
         </a>)}</div>}
-  </div></div></main><SupportChat /></div>
+  </CatalogPage>
 }
 
 export function GameAccountListingPage({ gameSlug }) {
   const copy = useStorefrontCopy()
-  const [game, setGame] = useState(null)
+  const [game, setGame] = useState(() => DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
   const [products, setProducts] = useState([])
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
@@ -224,7 +183,7 @@ export function GameAccountListingPage({ gameSlug }) {
       setGame(source.find((item) => item.slug === gameSlug) || DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
     }).catch(() => {
       if (active) {
-        setGame(DUMMY_GAMES.find((item) => item.slug === gameSlug) || DUMMY_GAMES[0])
+        setGame(DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
         setError('')
       }
     })
@@ -266,26 +225,24 @@ export function GameAccountListingPage({ gameSlug }) {
   function search(event) {
     event.preventDefault(); setPage(1); setSubmittedQuery(query.trim())
   }
-  return <div className="ga-shell"><Navbar /><main className="ga-list-page ga-container">
-    <div className="ga-catalog-layout"><GameAccountSidebar /><div className="ga-catalog-main">
-    <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><a href="/game-accounts">{copy.gameAccounts}</a><span>/</span><span>{game?.name || gameSlug}</span></p>
-    <header className="ga-list-head">
-      <GameArtwork image={game?.imageUrl} name={game?.name || gameSlug} />
-      <div><h1>{copy.account} {game?.name || gameSlug}</h1><p>{copy.accountInformationComesFromTheListing}</p></div>
-      <div className="ga-stock-tabs">
-        {[[ 'all', copy.all ], [ 'available', copy.available2 ], [ 'unavailable', copy.unavailable2 ]].map(([value, label]) =>
-          <button key={value} type="button" className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}
+  return <CatalogPage activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
+    <p className="ga-breadcrumb"><a href="/">{copy.home}</a><span>/</span><a href="/game-accounts">{copy.gameAccounts}</a></p>
+    <header className="catalog-header">
+      <div className="catalog-game-heading">
+        <GameArtwork image={game?.imageUrl} name="" />
+        <h1 className="catalog-title">{copy.gameAccounts} · {game?.name || gameSlug}</h1>
       </div>
-    </header>
-    <form className="ga-list-tools" onSubmit={search}>
-      <label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchAccountNames} aria-label={copy.searchAccounts} /></label>
-      <button type="submit">{copy.search3}</button>
-      <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortCurrentPage}>
+      <select className="catalog-sort" value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortCurrentPage}>
         <option value="default">{copy.catalogOrder}</option>
         <option value="low">{copy.lowestPriceThisPage}</option>
         <option value="high">{copy.highestPriceThisPage}</option>
       </select>
-    </form>
+    </header>
+    <CatalogSearch label={copy.searchAccounts} query={query} onQueryChange={setQuery} onSubmit={search} />
+    <div className="ga-stock-tabs">
+      {[[ 'all', copy.all ], [ 'available', copy.available2 ], [ 'unavailable', copy.unavailable2 ]].map(([value, label]) =>
+        <button key={value} type="button" className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setTab(value)}>{label}</button>)}
+    </div>
     {loading ? <LoadingRegion label={copy.loadingListings}>
       <div className="ga-account-grid ga-live-grid">
         <SkeletonItems className="ga-account-card ga-live-card">
@@ -297,28 +254,30 @@ export function GameAccountListingPage({ gameSlug }) {
       : visible.length === 0 ? <StateMessage>{copy.noAccountsMatchTheseFilters}</StateMessage>
       : <div className="ga-account-grid ga-live-grid">{visible.map((item) => {
         const attributes = getAccountAttributes(item.accountDetails, { cardOnly: true, limit: 3 })
-        return <article className={`ga-account-card ga-live-card${item.isAvailable ? '' : ' sold'}`} key={item.id}>
+        const href = accountProductHref(item)
+        const Card = href ? 'a' : 'article'
+        return <Card className={`ga-account-card ga-live-card${item.isAvailable ? '' : ' sold'}`} href={href} key={item.id}>
           <div className="ga-account-art">
             <GameArtwork image={item.thumbnailUrl} name={item.name} />
             <span className={item.isAvailable ? 'available' : 'sold-out'}>{item.isAvailable ? copy.available : copy.unavailable}</span>
           </div>
           <div className="ga-account-copy">
-            <h2>{item.name}</h2><p>{item.gameName || game?.name || copy.gameAccount2}</p>
+            <h2 className="catalog-card-title">{item.name}</h2><p className="catalog-card-meta">{item.gameName || game?.name || copy.gameAccounts}</p>
             <div className="ga-tags ga-live-tags">{attributes.map((field) =>
               <span key={field.key} title={`${field.label}: ${field.value}`}>{field.label}: {field.value}</span>)}</div>
             <div className="ga-account-price-row">
               <strong>{accountPrice(item.minPrice) || copy.priceUnavailable}</strong>
-              <a href={accountProductHref(item)}>{copy.viewDetails}</a>
+              {href && <ChevronRight size={18} aria-hidden="true" />}
             </div>
           </div>
-        </article>
+        </Card>
       })}</div>}
     <div className="ga-live-pagination">
       <span>{copy.showingPage} {page} {copy.of2} {totalPages} · {totalItems} {copy.listings}</span>
       <button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>{copy.previous}</button>
       <button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>{copy.next}</button>
     </div>
-  </div></div></main></div>
+  </CatalogPage>
 }
 
 export function GameAccountDetailPage({ gameSlug, accountSlug }) {
@@ -374,7 +333,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
     window.location.href = '/cart?flow=account'
   }
 
-  return <div className="ga-shell"><Navbar homepageMobileMenu />
+  return <div className="ga-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart />
     {loading ? <main className="ga-detail-page">
       <ProductSkeleton label={copy.loadingAccountDetails} hero="ga-detail-hero ga-live-hero"
         heroContent="ga-detail-hero-content" cover="ga-hero-thumb" heroCopy="ga-detail-hero-copy"

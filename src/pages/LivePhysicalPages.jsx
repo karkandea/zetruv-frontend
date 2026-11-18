@@ -4,12 +4,10 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
-import BrowseMobileControls from '../components/BrowseMobileControls'
-import SupportChat from '../components/SupportChat'
+import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
 import { Bookmark, ImageOff } from 'lucide-react'
 import { getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
-import { searchAssets } from '../data/searchAssets'
 import '../styles/physical-purchase.css'
 
 const CART_KEY = 'zetruv-physical-cart-v1'
@@ -31,10 +29,11 @@ function ProductCard({ product }) {
       <div className="physical-product-card__image">
         {product.thumbnailUrl ? <img src={product.thumbnailUrl} alt="" loading="lazy" /> : <ImageOff size={20} aria-label={copy.photoUnavailable} />}
       </div>
-      <div className="physical-product-card__meta"><span className="physical-badge">{copy.merchandise2}</span><Availability available={product.isAvailable} /></div>
-      <strong className="physical-product-card__name">{product.name}</strong>
-      <span className="physical-product-card__variant">{product.categorySlug}</span>
-      <strong className="physical-product-card__price">{product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable}</strong>
+      <strong className="physical-product-card__name catalog-card-title">{product.name}</strong>
+      <div className="catalog-merch-card__footer">
+        <strong className="physical-product-card__price">{product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable}</strong>
+        <Availability available={product.isAvailable} />
+      </div>
     </a>
     <button type="button" className={`physical-product-card__favorite${saved ? ' is-saved' : ''}`}
       aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
@@ -70,62 +69,39 @@ export function LivePhysicalCatalogPage() {
     return items
   }, [products, sort, query])
 
-  const categories = [
-    [copy.gameTopUpById, searchAssets.categoryPlayerId, '/search?kind=TopUpGame'],
-    [copy.gameTopUpByLogin, searchAssets.categoryLogin, '/search?kind=TopUpLogin'],
-    [copy.gameVouchers, searchAssets.categoryItems, '/search?kind=GameVoucher'],
-    [copy.gameBoosting, searchAssets.categoryJoki, '/search?kind=Joki'],
-    [copy.gameAccounts2, searchAssets.categoryAccounts, '/game-accounts'],
-    [copy.merchandise, searchAssets.categoryMerchandise, '/merchandise'],
-  ]
+  function search(event) {
+    event.preventDefault()
+  }
 
-  return <div className="physical-shell browse-catalog-shell">
-    <Navbar homepageMobileMenu />
-    <main className="physical-catalog browse-catalog-page">
-      <h1 className="browse-title--mobile">{copy.browse}</h1>
-      <BrowseMobileControls
-        activeKind="Merchandise"
-        query={query}
-        onQueryChange={setQuery}
-        onSubmit={event => event.preventDefault()}
-      />
-      <div className="physical-catalog-layout">
-      <aside className="physical-catalog-sidebar">
-        <h2>{copy.categories2}</h2><nav>{categories.map(([label, icon, href]) => <a className={href === '/merchandise' ? 'is-active' : ''} href={href} key={label}>
-          <span><img src={icon} alt="" /></span><strong>{label}</strong>{href === '/merchandise' && <i aria-hidden="true" />}
-        </a>)}</nav>
-      </aside>
-      <section className="physical-catalog-content">
-        <header className="physical-catalog__heading"><div><h1>{copy.merchandise}</h1><p>{copy.physicalProductsListedInTheZetruvCatalog}</p></div><span>{products.length} {copy.products2}</span></header>
-        <div className="physical-catalog__toolbar">
-          <div className="physical-filter-pills"><span>{copy.allMerchandise}</span></div>
-          <h2 className="browse-list-title">{copy.merchandise}</h2>
-          <label className="physical-sort"><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
-            <option value="newest">{copy.catalogOrder}</option><option value="low">{copy.lowestPrice}</option><option value="high">{copy.highestPrice}</option>
-          </select></label>
+  return (
+    <CatalogPage activeKind="Merchandise" query={query} onQueryChange={setQuery} onSubmit={search}>
+      <header className="catalog-header">
+        <h1 className="catalog-title">{copy.merchandise}</h1>
+        <select className="catalog-sort" value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
+          <option value="newest">{copy.catalogOrder}</option>
+          <option value="low">{copy.lowestPrice}</option>
+          <option value="high">{copy.highestPrice}</option>
+        </select>
+      </header>
+      <CatalogSearch label={copy.searchGamesOrProducts} query={query} onQueryChange={setQuery} onSubmit={search} />
+      {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
+        <div className="physical-product-grid catalog-merch-grid">
+          <SkeletonItems className="physical-product-card" count={4}>
+            <div className="physical-product-card__link">
+              <div className="physical-product-card__image"><Bone variant="media" /></div>
+              <Bone className="physical-product-card__name" width="78%" />
+              <div className="catalog-merch-card__footer"><Bone className="physical-product-card__price" width="64px" height="20px" /></div>
+            </div>
+          </SkeletonItems>
         </div>
-        <div className="physical-catalog__context"><strong>{copy.allProducts}</strong><span>•</span><span>{copy.pricingAndStockComeFromTheCatalog}</span></div>
-        {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
-          <div className="physical-product-grid">
-            <SkeletonItems className="physical-product-card" count={4}>
-              <div className="physical-product-card__link">
-                <div className="physical-product-card__image"><Bone variant="media" /></div>
-                <div className="physical-product-card__meta"><Bone width="54%" /></div>
-                <Bone className="physical-product-card__name" width="78%" />
-                <Bone className="physical-product-card__price" width="64px" height="20px" />
-              </div>
-            </SkeletonItems>
-          </div>
-        </LoadingRegion>}
-        {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
-        {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
-          ? copy.noProductsMatchYourSearch
-          : copy.noMerchandiseHasBeenPublishedInThe}</p>}
-        {state === 'ready' && <div className="physical-product-grid">{visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>}
-      </section>
-    </div></main>
-    <SupportChat />
-  </div>
+      </LoadingRegion>}
+      {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
+      {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
+        ? copy.noProductsMatchYourSearch
+        : copy.noMerchandiseHasBeenPublishedInThe}</p>}
+      {state === 'ready' && <div className="physical-product-grid catalog-merch-grid">{visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>}
+    </CatalogPage>
+  )
 }
 
 export function LivePhysicalProductPage({ slug }) {
@@ -155,7 +131,7 @@ export function LivePhysicalProductPage({ slug }) {
     return () => controller.abort()
   }, [slug])
 
-  if (state === 'loading') return <div className="physical-shell"><Navbar homepageMobileMenu /><main className="physical-pdp">
+  if (state === 'loading') return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart /><main className="physical-pdp">
     <LoadingRegion label={copy.loadingProduct}>
       <Bone width="36%" />
       <div className="physical-pdp__main">
@@ -168,7 +144,7 @@ export function LivePhysicalProductPage({ slug }) {
     </LoadingRegion>
   </main></div>
 
-  if (state !== 'ready') return <div className="physical-shell"><Navbar homepageMobileMenu /><main className="physical-pdp" role="status">
+  if (state !== 'ready') return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart /><main className="physical-pdp" role="status">
     <h1>{state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3}</h1>
     <a href="/merchandise">{copy.backToMerchandise}</a>
   </main></div>
@@ -192,7 +168,7 @@ export function LivePhysicalProductPage({ slug }) {
     setAdded(true)
   }
 
-  return <div className="physical-shell"><Navbar homepageMobileMenu />
+  return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart />
     <main className="physical-pdp">
       <div className="physical-breadcrumb"><a href="/merchandise">{copy.merchandise}</a> <span>/</span> {product.name}</div>
       <div className="physical-pdp__main">
