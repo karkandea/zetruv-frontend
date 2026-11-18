@@ -63,6 +63,15 @@ try {
     assert.equal(await page.getByText('Rp12.000').count(), 0, 'no placeholder price flash')
     gate.release()
     await page.getByRole('button', { name: /5 Diamond/ }).waitFor()
+    await page.locator('.pdp-sidebar-total').getByText('Rp1.500').waitFor()
+    if (device === 'mobile') {
+      const dock = page.locator('.product-order-dock')
+      const toggle = dock.locator('.product-order-dock__toggle')
+      assert.equal(await dock.evaluate((element) => getComputedStyle(element).position), 'fixed')
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false')
+      await toggle.click()
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true')
+    }
     await page.locator('.pdp-sidebar-item__price').getByText('Rp1.500').waitFor()
     assert.equal(await page.getByText('Rp12.000').count(), 0)
 

@@ -352,7 +352,7 @@
   background: #fff;
 }
 
-.login-product-summary > h2 {
+.login-product-summary h2 {
   width: 92px;
   margin: 0;
   color: #17171f;

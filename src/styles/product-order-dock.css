@@ -1,0 +1,205 @@
+.product-order-dock,
+.product-order-dock__details,
+.product-order-dock__footer,
+.product-order-dock__message {
+  display: contents;
+}
+
+.product-order-dock__toggle { display: none; }
+
+@media (max-width: 700px) {
+  .product-detail-page:has(.product-order-dock) .product-detail-layout {
+    padding-bottom: 24px;
+  }
+
+  .login-product-shell .login-product-summary:has(.product-order-dock) {
+    height: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .login-product-shell .login-product-layout:has(.product-order-dock) {
+    gap: 0;
+  }
+
+  :is(.product-detail-page, .login-product-page):has(.product-order-dock)::after {
+    content: '';
+    display: block;
+    height: var(--product-order-dock-height, 145px);
+  }
+
+  .product-order-dock {
+    position: fixed;
+    z-index: 45;
+    inset: auto 0 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 75vh;
+    max-height: 75dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    border: 1px solid #e1e5f0;
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background: #fff;
+    box-shadow: 0 -8px 28px rgba(1, 1, 84, .12);
+  }
+
+  .product-order-dock__toggle {
+    display: block;
+    flex: none;
+    width: 100%;
+    padding: 10px 0 9px;
+    border: 0;
+    border-bottom: 1px solid #edf0f5;
+    background: #fff;
+    color: var(--navy);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .product-order-dock__toggle:focus-visible {
+    outline: 2px solid #5772ef;
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+
+  .product-order-dock__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 18px;
+  }
+
+  .product-order-dock__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+  .product-order-dock__preview {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+  }
+
+  .product-order-dock__preview > span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .product-order-dock__preview > span:first-child { flex-grow: 1.5; }
+
+  .product-order-dock__preview > span + span {
+    padding-left: 8px;
+    border-left: 1px solid #edf0f5;
+  }
+
+  .product-order-dock__preview > span > * {
+    display: block;
+    overflow: hidden;
+    color: #616678;
+    font-size: 10px;
+    line-height: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .product-order-dock__preview > span > strong {
+    color: #1d2133;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 17px;
+  }
+
+  .product-order-dock__details { display: none; }
+
+  .product-order-dock__details.is-expanded {
+    display: block;
+    min-height: 0;
+    max-height: 36vh;
+    max-height: 36dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-top: 12px;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-summary {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .product-order-dock__details h2,
+  .product-order-dock__details .login-summary-divider {
+    display: none;
+  }
+
+  .product-order-dock__footer {
+    display: grid;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+    align-items: center;
+    gap: 0 10px;
+    padding-top: 10px;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-total,
+  .login-product-shell .product-order-dock .login-summary-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 0;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-total > span,
+  .login-product-shell .product-order-dock .login-summary-total > span {
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-total > strong,
+  .login-product-shell .product-order-dock .login-summary-total > strong {
+    font-size: clamp(14px, 4.4vw, 18px);
+    line-height: 23px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-action,
+  .login-product-shell .product-order-dock .login-product-actions {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock .pdp-sidebar-add,
+  .login-product-shell .product-order-dock .login-product-actions .login-product-add {
+    gap: 7px;
+    min-height: 44px;
+    padding: 7px 8px;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .product-order-dock__message:not(:empty) {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 6px 0 0;
+    color: #616678;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: left;
+  }
+
+  .product-detail-page .pdp-order-sidebar .product-order-dock__message .pdp-sidebar-cta-hint {
+    margin: 0;
+    text-align: left;
+  }
+
+  .login-product-shell .product-order-dock__message :is(.login-product-summary__unavailable, .login-product-summary__hint) {
+    margin: 0;
+  }
+}

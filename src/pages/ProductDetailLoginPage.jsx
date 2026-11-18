@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductBenefits from '../components/ProductBenefits'
+import ProductOrderDock from '../components/ProductOrderDock'
 import genshinHero from '../assets/game-account-flow/genshin-impact.png'
 import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
@@ -294,67 +295,89 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                 </section>
 
                 <aside className="login-product-summary" aria-label={copy.packageSummary}>
-                  <h2>{copy.summary}</h2>
-                  {selected ? (
-                    <>
-                      <div className="login-selected-package">
-                        <div className="login-selected-package__info">
-                          <strong>{selected.name}</strong>
-                          <span>{rupiah(unitPrice)} / item</span>
-                        </div>
+                  <ProductOrderDock
+                    title={copy.orderSummary}
+                    preview={[
+                      { label: copy.product, value: selected?.name },
+                      ...(quantityCapable ? [{ label: copy.quantity, value: quantity }] : []),
+                    ]}
+                    total={selected && (
+                      <div className="login-summary-total">
+                        <span>{copy.paymentTotal}</span><strong>{rupiah(pricing.total)}</strong>
                       </div>
-                      {quantityCapable && (
-                        <div className="login-quantity-row">
-                          <span>{copy.quantity}</span>
-                          <div className="login-quantity-stepper" role="group" aria-label={copy.packageQuantity}>
-                            <button type="button" aria-label={copy.decreaseQuantity} disabled={quantity <= 1}
-                              onClick={() => { setQuantity((n) => Math.max(1, n - 1)); setNotice(false) }}>
-                              <Minus size={16} aria-hidden="true" />
-                            </button>
-                            <output aria-label={copy.quantity}>{quantity}</output>
-                            <button type="button" aria-label={copy.increaseQuantity} disabled={quantity >= limit}
-                              onClick={() => { setQuantity((n) => Math.min(limit, n + 1)); setNotice(false) }}>
-                              <Plus size={16} aria-hidden="true" />
-                            </button>
+                    )}
+                    action={
+                      <div className="login-product-actions">
+                        <button type="button" className="login-product-add" disabled={!canAdd} onClick={addToCart}>
+                          {isAdding ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
+                            : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
+                          <span>{isAdding ? 'Menambahkan...' : copy.addToCart}</span>
+                        </button>
+                      </div>
+                    }
+                    message={
+                      <>
+                        {!serviceStatus.available && (
+                          <p className="login-product-summary__unavailable" role="status">
+                            <CircleAlert size={17} aria-hidden="true" />
+                            <span><strong>{copy.serviceTemporarilyUnavailable}</strong>
+                              {copy.thisPackageIsnTAvailableForPurchase} <a href="/search">{copy.browseOtherProducts}</a>.</span>
+                          </p>
+                        )}
+                        {!selected && serviceStatus.available && <p className="login-product-summary__hint">{copy.chooseAnAvailablePackageFirst}</p>}
+                        {selected && !available && <p className="login-product-summary__hint">{copy.thisPackageIsCurrentlyUnavailable}</p>}
+                      </>
+                    }
+                    feedback={
+                      <>
+                        {notice && (
+                          <div className="login-product-feedback" role="status" aria-live="polite">
+                            <div><CheckCircle2 size={19} aria-hidden="true" /><strong>{copy.addedToCart}</strong></div>
+                            <p>{selected?.name} {copy.wasAddedToYourCart}</p>
+                            <nav aria-label={copy.nextSteps}>
+                              <a href="/search">{copy.continueShopping}</a>
+                              <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
+                            </nav>
+                          </div>
+                        )}
+                        {error && <p className="login-product-summary__error" role="alert">{error}</p>}
+                      </>
+                    }
+                  >
+                    <h2>{copy.summary}</h2>
+                    {selected ? (
+                      <>
+                        <div className="login-selected-package">
+                          <div className="login-selected-package__info">
+                            <strong>{selected.name}</strong>
+                            <span>{rupiah(unitPrice)} / item</span>
                           </div>
                         </div>
-                      )}
-                      <div className="login-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
-                      <div className="login-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(pricing.serviceFee)}</strong></div>
-                      {pricing.discount > 0 && (
-                        <div className="login-summary-row login-summary-row--discount"><span>{copy.productDiscount}</span><strong>−{rupiah(pricing.discount)}</strong></div>
-                      )}
-                      <div className="login-summary-divider" />
-                      <div className="login-summary-total"><span>{copy.paymentTotal}</span><strong>{rupiah(pricing.total)}</strong></div>
-                    </>
-                  ) : <p className="login-product-summary__hint">{copy.thereAreNoPackagesToChooseFrom}</p>}
-                  <div className="login-product-actions">
-                    <button type="button" className="login-product-add" disabled={!canAdd}
-                      onClick={addToCart}>
-                      {isAdding ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
-                        : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
-                      <span>{isAdding ? 'Menambahkan...' : copy.addToCart}</span>
-                    </button>
-                    {!serviceStatus.available && <p className="login-product-summary__unavailable" role="status">
-                      <CircleAlert size={17} aria-hidden="true" />
-                      <span><strong>{copy.serviceTemporarilyUnavailable}</strong>
-                        {copy.thisPackageIsnTAvailableForPurchase} <a href="/search">{copy.browseOtherProducts}</a>.</span>
-                    </p>}
-                    {!selected && serviceStatus.available && <p className="login-product-summary__hint">{copy.chooseAnAvailablePackageFirst}</p>}
-                    {selected && !available && <p className="login-product-summary__hint">{copy.thisPackageIsCurrentlyUnavailable}</p>}
-                  </div>
-
-                  {notice && (
-                    <div className="login-product-feedback" role="status" aria-live="polite">
-                      <div><CheckCircle2 size={19} aria-hidden="true" /><strong>{copy.addedToCart}</strong></div>
-                      <p>{selected?.name} {copy.wasAddedToYourCart}</p>
-                      <nav aria-label={copy.nextSteps}>
-                        <a href="/search">{copy.continueShopping}</a>
-                        <a href="/cart">{copy.viewCart} <ArrowRight size={15} aria-hidden="true" /></a>
-                      </nav>
-                    </div>
-                  )}
-                  {error && <p className="login-product-summary__error" role="alert">{error}</p>}
+                        {quantityCapable && (
+                          <div className="login-quantity-row">
+                            <span>{copy.quantity}</span>
+                            <div className="login-quantity-stepper" role="group" aria-label={copy.packageQuantity}>
+                              <button type="button" aria-label={copy.decreaseQuantity} disabled={quantity <= 1}
+                                onClick={() => { setQuantity((n) => Math.max(1, n - 1)); setNotice(false) }}>
+                                <Minus size={16} aria-hidden="true" />
+                              </button>
+                              <output aria-label={copy.quantity}>{quantity}</output>
+                              <button type="button" aria-label={copy.increaseQuantity} disabled={quantity >= limit}
+                                onClick={() => { setQuantity((n) => Math.min(limit, n + 1)); setNotice(false) }}>
+                                <Plus size={16} aria-hidden="true" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <div className="login-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
+                        <div className="login-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(pricing.serviceFee)}</strong></div>
+                        {pricing.discount > 0 && (
+                          <div className="login-summary-row login-summary-row--discount"><span>{copy.productDiscount}</span><strong>−{rupiah(pricing.discount)}</strong></div>
+                        )}
+                        <div className="login-summary-divider" />
+                      </>
+                    ) : <p className="login-product-summary__hint">{copy.thereAreNoPackagesToChooseFrom}</p>}
+                  </ProductOrderDock>
                 </aside>
               </div>
             </div>
