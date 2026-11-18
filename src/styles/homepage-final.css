@@ -1739,6 +1739,10 @@
   scroll-snap-align: start;
 }
 
+.site-shell--homepage-final .merchandise__track .merch-card:last-child {
+  margin-inline-end: var(--merch-gap);
+}
+
 .site-shell--homepage-final .merchandise__track [role='status'] {
   grid-column: 1 / -1;
 }
