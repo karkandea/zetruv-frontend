@@ -300,7 +300,7 @@
     display: none;
   }
 
-  .navbar--mobile-cart .nav-cart-trigger {
+  .navbar--mobile-cart .navbar__quick-actions .nav-cart-trigger {
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -314,6 +314,11 @@
   .navbar--mobile-cart .nav-cart-trigger > img {
     width: 21px;
     height: 21px;
+  }
+
+  .navbar--mobile-cart .nav-cart-count {
+    position: absolute;
+    inset: 2px 0 auto auto;
   }
 
   .navbar--mobile-cart .nav-cart-menu > .cart-dropdown {
