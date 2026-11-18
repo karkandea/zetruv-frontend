@@ -5,6 +5,7 @@ import '../styles/product-order-dock.css'
 export default function ProductOrderDock({ title, preview, total, action, message, feedback, children }) {
   const [expanded, setExpanded] = useState(false)
   const detailsId = useId()
+  const previewId = useId()
   const dockRef = useRef(null)
   const toggleRef = useRef(null)
 
@@ -29,11 +30,12 @@ export default function ProductOrderDock({ title, preview, total, action, messag
   return (
     <div className="product-order-dock" ref={dockRef} onKeyDown={dismissDetails}>
       <button className="product-order-dock__toggle" type="button" ref={toggleRef}
-        aria-controls={detailsId} aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+        aria-label={title} aria-describedby={previewId} aria-controls={detailsId}
+        aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
         <span className="product-order-dock__title">
           {title}<ChevronUp size={18} aria-hidden="true" />
         </span>
-        <span className="product-order-dock__preview">
+        <span className="product-order-dock__preview" id={previewId}>
           {preview.map(({ label, value }) => (
             <span key={label}>
               <span>{label}</span>
