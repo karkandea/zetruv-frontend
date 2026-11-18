@@ -1,6 +1,7 @@
 import { useStorefrontCopy } from './hooks/useStorefrontCopy'
 import HomePage from './pages/HomePage'
 import CookiePolicyPage from './pages/CookiePolicyPage'
+import PopularGamePage from './pages/PopularGamePage'
 import SearchPage from './pages/SearchPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import ProductDetailLoginPage from './pages/ProductDetailLoginPage'
@@ -65,6 +66,8 @@ export default function App() {
   if (path === '/account/favorites' || path === '/account/favourites') return <AccountFavoritesPage />
   if (path === '/leaderboard') return <LeaderboardPage />
   if (path === '/articles' || path === '/article') return <ArticlesPage />
+  const gameMatch = path.match(/^\/game\/([^/]+)$/)
+  if (gameMatch) return <PopularGamePage slug={decodeURIComponent(gameMatch[1])} />
   const articleDetailMatch = path.match(/^\/(?:articles|article)\/([^/]+)$/)
   if (articleDetailMatch) return <ArticleDetailPage slug={decodeURIComponent(articleDetailMatch[1])} />
   if (path === '/cart' && flow === 'account') return <GameAccountCartPage />

@@ -1,0 +1,173 @@
+.chat-panel {
+  position: fixed;
+  inset: 0 24px 0 auto;
+  width: min(468px, calc(100% - 48px));
+  max-height: calc(100dvh - 48px);
+  margin: auto 0;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e2e6f3;
+  border-radius: 24px;
+  color: #171721;
+  background: #fff;
+  box-shadow: 0 20px 64px rgba(5, 3, 24, .22);
+}
+
+.chat-panel::backdrop {
+  background: rgba(5, 3, 24, .46);
+}
+
+.chat-panel__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #edf0f7;
+}
+
+.chat-panel__top h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.chat-panel__back {
+  display: grid;
+  flex: 0 0 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  color: var(--navy);
+  background: #eef1ff;
+  cursor: pointer;
+}
+
+.support-form {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 24px;
+}
+
+.support-form__identity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.support-form label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.support-form input,
+.support-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dce1ed;
+  border-radius: 12px;
+  color: inherit;
+  background: #fcfcfe;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.support-form input::placeholder,
+.support-form textarea::placeholder {
+  color: #696e82;
+}
+
+.support-form textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+
+.support-form__phone {
+  position: relative;
+  display: block;
+}
+
+.support-form__phone input {
+  padding-inline-start: 37px;
+}
+
+.support-form__phone svg {
+  position: absolute;
+  inset: 0 auto 0 12px;
+  width: 16px;
+  height: 16px;
+  margin-block: auto;
+  color: #168054;
+  pointer-events: none;
+}
+
+.support-submit {
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--navy);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.support-submit:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+
+.chat-panel :is(input, textarea, button):focus-visible {
+  outline: 2px solid #566de4;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .chat-panel {
+    inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+    margin: 0;
+  }
+
+  .chat-panel__top, .support-form {
+    padding-inline: 16px;
+  }
+
+  .support-form__identity {
+    grid-template-columns: 1fr;
+  }
+
+  .support-form input,
+  .support-form textarea {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chat-panel[open] {
+    animation: support-panel-enter .22s ease-out both;
+  }
+
+  .chat-panel[open]::backdrop {
+    animation: support-backdrop-enter .2s ease-out both;
+  }
+
+  @keyframes support-panel-enter {
+    from { opacity: 0; transform: translateY(12px) scale(.985); }
+  }
+
+  @keyframes support-backdrop-enter {
+    from { opacity: 0; }
+  }
+}
