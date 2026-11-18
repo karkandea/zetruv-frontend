@@ -12,7 +12,7 @@ export default function Merchandise({ items = [], loading = false }) {
 
   function slide(direction) {
     const viewport = viewportRef.current
-    const [first, second] = viewport.firstElementChild.children
+    const [first, second] = viewport.children
     if (second) viewport.scrollBy({ left: direction * (second.offsetLeft - first.offsetLeft) })
   }
 
@@ -40,31 +40,29 @@ export default function Merchandise({ items = [], loading = false }) {
         </button>
 
         <div className="merchandise__viewport" ref={viewportRef}>
-          <div className="merchandise__track">
-            {loading ? <SkeletonItems className="merch-card" count={5}>
-              <div className="merch-card__image"><Bone variant="media" /></div>
-              <div className="merch-card__body"><SkeletonLines /></div>
-            </SkeletonItems> : displayItems.map((item) => (
-              <a className="merch-card" key={item.id} href={`/merchandise/${encodeURIComponent(item.slug)}`}>
-                <div className="merch-card__image">
-                  <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.jersey }} />
-                  <span className="merch-card__chip">{copy.merchandise2}</span>
+          {loading ? <SkeletonItems className="merch-card" count={5}>
+            <div className="merch-card__image"><Bone variant="media" /></div>
+            <div className="merch-card__body"><SkeletonLines /></div>
+          </SkeletonItems> : displayItems.map((item) => (
+            <a className="merch-card" key={item.id} href={`/merchandise/${encodeURIComponent(item.slug)}`}>
+              <div className="merch-card__image">
+                <img src={item.image || assets.jersey} alt={item.name} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = assets.jersey }} />
+                <span className="merch-card__chip">{copy.merchandise2}</span>
+              </div>
+              <div className="merch-card__body">
+                <div className="merch-card__copy">
+                  <h3>{item.name}</h3>
+                  <p>{item.variant}</p>
+                  <strong>{item.price != null ? rupiah(item.price) : copy.priceUnavailable}</strong>
                 </div>
-                <div className="merch-card__body">
-                  <div className="merch-card__copy">
-                    <h3>{item.name}</h3>
-                    <p>{item.variant}</p>
-                    <strong>{item.price != null ? rupiah(item.price) : copy.priceUnavailable}</strong>
-                  </div>
-                  <div className="merch-card__meta">
-                    <span>{item.sold ?? 0} {copy.sold}</span>
-                    {item.rating != null && <span className="merch-rating">{item.rating}<img src={assets.star} alt="" /></span>}
-                  </div>
+                <div className="merch-card__meta">
+                  <span>{item.sold ?? 0} {copy.sold}</span>
+                  {item.rating != null && <span className="merch-rating">{item.rating}<img src={assets.star} alt="" /></span>}
                 </div>
-              </a>
-            ))}
-            {!loading && displayItems.length === 0 && <p role="status">{copy.thereIsNoMerchandiseInTheCatalog}</p>}
-          </div>
+              </div>
+            </a>
+          ))}
+          {!loading && displayItems.length === 0 && <p role="status">{copy.thereIsNoMerchandiseInTheCatalog}</p>}
         </div>
 
         <button
