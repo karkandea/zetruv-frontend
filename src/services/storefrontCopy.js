@@ -169,7 +169,7 @@ const messages = {
   termsAndConditions: ["Terms and Conditions","Syarat dan Ketentuan","Terma dan Syarat"],
   payment: ["Payment","Pembayaran","Pembayaran"],
   supportedPaymentMethods: ["Supported payment methods","Metode pembayaran yang didukung","Kaedah pembayaran yang disokong"],
-  label2024CvZetruvAllRightsReserved: ["© 2024 CV Zetruv. All rights reserved.","© 2024 CV Zetruv. Hak cipta dilindungi.","© 2024 CV Zetruv. Hak cipta terpelihara."],
+  footerCopyright: ["© 2026 CV Zetruv. All rights reserved.","© 2026 CV Zetruv. Hak cipta dilindungi.","© 2026 CV Zetruv. Hak cipta terpelihara."],
   zetruvHome: ["Zetruv home","Beranda Zetruv","Laman utama Zetruv"],
   topUpsVouchersBoostingGameAccounts: ["Top-Ups, Vouchers, Boosting & Game Accounts","Top Up, Voucher, Joki & Akun Game","Tambah Nilai, Baucar, Khidmat Joki & Akaun Permainan"],
   closeNavigationMenu: ["Close navigation menu","Tutup menu navigasi","Tutup menu navigasi"],

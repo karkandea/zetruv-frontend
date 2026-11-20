@@ -19,7 +19,7 @@
   .flash-section { width: calc(100% - 48px); }
   .merchandise { padding-inline: 24px; }
   .footer { padding-inline: 32px; }
-  .footer__content, .footer__copyright { width: 100%; }
+  .footer__content, .footer__bottom { width: 100%; }
   .footer__content { grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr); }
 }
 
@@ -63,7 +63,6 @@
   .footer__content { height: auto; grid-template-columns: 1fr; gap: 36px; }
   .footer__brand, .footer__brand p { width: 100%; }
   .footer__links { height: auto; justify-content: flex-start; }
-  .footer__copyright { margin-top: 32px; }
   .contact-fab { top: 500px; right: 20px; }
 }
 
@@ -105,7 +104,6 @@
   .merchandise__panel { margin-top: 20px; }
   .footer { padding: 42px 24px; }
   .footer__links { flex-direction: column; gap: 28px; }
-  .footer__support-payment { width: 100%; }
-  .footer__two-columns { gap: 46px; }
+  .footer__links > .footer__two-columns { gap: 46px; }
   .contact-fab { top: 455px; width: auto; height: 38px; padding-inline: 11px; font-size: 12px; }
 }

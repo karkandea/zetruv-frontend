@@ -72,18 +72,53 @@
 .socials img { width: 16px; height: 16px; object-fit: contain; }
 .footer__links { height: 169px; display: flex; align-items: flex-start; justify-content: flex-end; gap: 50px; }
 .footer__column { display: flex; flex-direction: column; gap: 12px; white-space: nowrap; font-size: 12px; line-height: 19px; }
-.footer__column h3, .footer__payments h3 { margin: 0; color: var(--lavender); font-size: 12px; line-height: 19px; }
+.footer__column h3 { margin: 0; color: var(--lavender); font-size: 12px; line-height: 19px; }
 .footer__column a { font-weight: 500; }
-.footer__support-payment { width: 206px; display: flex; flex-direction: column; gap: 10px; }
-.footer__two-columns { display: flex; gap: 50px; }
-.footer__payments { display: flex; flex-direction: column; gap: 14px; }
-.payment-grid { width: 206px; display: grid; grid-template-columns: repeat(6, 23px); gap: 12px; }
-.payment-mark { width: 23px; height: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 1.5px; background: white; }
-.payment-mark img { width: 86%; height: 72%; object-fit: contain; }
-.payment-mark--blue { background: #005cae; }
-.payment-mark--red { background: #e82529; }
-.payment-mark--yellow { background: #ffce4c; }
-.payment-mark--purple { background: #4c3494; }
-.payment-mark--orange { background: #f0592c; }
-.payment-mark--blue-light { background: #108ee9; }
-.footer__copyright { position: relative; z-index: 1; width: min(1170px, 100%); height: 29px; margin: 32px auto 0; padding-top: 12px; border-top: 1px solid white; color: rgba(255,255,255,.45); font-size: 12px; line-height: 17px; }
+.footer__links > .footer__two-columns { flex-direction: row; gap: 50px; }
+.footer__bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(1170px, 100%);
+  margin: 32px auto 0;
+  padding-top: 12px;
+  border-top: 1px solid white;
+}
+
+.footer__copyright {
+  color: rgba(255, 255, 255, .45);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.footer__payments {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(3px, 1vw, 8px);
+  width: 364px;
+  max-width: 100%;
+}
+
+.footer__payments img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 23 / 16.414;
+  border-radius: 1.313px;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .footer__payments {
+    align-self: flex-end;
+  }
+}

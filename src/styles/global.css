@@ -114,9 +114,6 @@ img { display: block; max-width: 100%; }
 .footer__links h3 { margin: 0; color: var(--lavender); font-size: 12px; }
 .footer__links a { font-size: 11px; }
 .footer-subtitle { margin-top: 8px !important; }
-.payment-grid { display: flex; flex-wrap: wrap; gap: 6px; max-width: 205px; }
-.payment-grid span { padding: 3px 5px; border-radius: 3px; color: #111; background: #fff; font-size: 7px; font-weight: 700; }
-.footer__copyright { padding: 16px 0 46px; border-top: 1px solid rgba(255,255,255,.75); color: rgba(255,255,255,.45); font-size: 11px; }
 
 .contact-fab { position: fixed; z-index: 40; right: 26px; top: 56%; display: flex; align-items: center; gap: 8px; padding: 11px 16px; border: 2px solid white; border-radius: 40px; color: white; background: var(--navy); box-shadow: 0 10px 30px rgba(0,0,0,.25); cursor: pointer; }
 .contact-fab img { width: 16px; height: 16px; }

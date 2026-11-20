@@ -56,40 +56,31 @@ export default function Footer() {
             <a href="/order-status">{copy.checkTransaction}</a>
           </div>
 
-          <div className="footer__support-payment">
-            <div className="footer__two-columns">
-              <div className="footer__column">
-                <h3>{copy.support}</h3>
-                <a href="/#faq">FAQ</a>
-                <a href="#">Youtube</a>
-                <a href="#">Facebook</a>
-              </div>
-
-              <div className="footer__column">
-                <h3>{copy.legal}</h3>
-                <a href="#terms">{copy.termsAndConditions}</a>
-                <a href="/cookies-policy">{copy.cookiePolicy}</a>
-              </div>
+          <div className="footer__two-columns">
+            <div className="footer__column">
+              <h3>{copy.support}</h3>
+              <a href="/#faq">FAQ</a>
+              <a href="#">Youtube</a>
+              <a href="#">Facebook</a>
             </div>
 
-            <div className="footer__payments">
-              <h3>{copy.payment}</h3>
-              <div className="payment-grid" aria-label={copy.supportedPaymentMethods}>
-                {payments.map((payment) => (
-                  <img
-                    className="payment-mark"
-                    src={payment.image}
-                    alt={payment.name}
-                    key={payment.name}
-                  />
-                ))}
-              </div>
+            <div className="footer__column">
+              <h3>{copy.legal}</h3>
+              <a href="#terms">{copy.termsAndConditions}</a>
+              <a href="/cookies-policy">{copy.cookiePolicy}</a>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="footer__copyright">{copy.label2024CvZetruvAllRightsReserved}</div>
+      <div className="footer__bottom">
+        <small className="footer__copyright">{copy.footerCopyright}</small>
+        <div className="footer__payments" role="group" aria-label={copy.supportedPaymentMethods}>
+          {payments.map((payment) => (
+            <img src={payment.image} alt={payment.name} key={payment.name} />
+          ))}
+        </div>
+      </div>
     </footer>
   )
 }
