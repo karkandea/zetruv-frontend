@@ -9,7 +9,7 @@ import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, readFavorites, setFavorite, subscribeFavorites, toggleFavorite } from '../services/favoritesService'
-import { Bookmark, ImageOff, Search } from 'lucide-react'
+import { Bookmark, ImageOff } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
@@ -159,77 +159,47 @@ function FavoriteGameCover({ image }) {
   </span>
 }
 
+const favoriteGameLabels = new Map([
+  ['Mobile Legends: Bang Bang', 'Mobile Legends'],
+  ['Call of Duty Mobile CP', 'Call of Duty Mobile'],
+  ['eFootball Coins', 'eFootball'],
+  ['eFootball Mobile', 'eFootball'],
+])
+
 function FavoriteGames({ products }) {
   const copy = useStorefrontCopy()
   const [favorites, setFavorites] = useState(readFavorites)
-  const [query, setQuery] = useState('')
-  const [removed, setRemoved] = useState(null)
   useEffect(() => subscribeFavorites(setFavorites), [])
 
   const games = favorites.filter(({ id, href }) => id.startsWith('catalog:TopUpGame:') && href.startsWith('/product/'))
   const catalogById = new Map(products.filter(({ kind }) => kind === 'TopUpGame')
     .map((product) => [`catalog:TopUpGame:${product.slug || product.id}`, product]))
-  const term = query.trim().toLowerCase()
-  const visible = games.map((game) => {
-    const product = catalogById.get(game.id)
-    return {
-      game,
-      name: product?.name || game.name,
-      image: product?.thumbnailUrl || game.image,
-      publisher: publisherForProduct(product || game, game.publisher),
-    }
-  }).filter(({ name, publisher }) => !term || `${name} ${publisher || ''}`.toLowerCase().includes(term))
-
-  function remove(game) {
-    const next = setFavorite(game, false)
-    if (!next.some(({ id }) => id === game.id)) setRemoved(game)
-  }
-
-  function undo() {
-    const next = setFavorite(removed, true)
-    if (next.some(({ id }) => id === removed.id)) setRemoved(null)
-  }
 
   return (
     <section className="favorite-games" aria-labelledby="favorite-games-title">
       <h2 id="favorite-games-title">{copy.favoriteGames}</h2>
-      <label className="favorite-games__search">
-        <Search size={18} aria-hidden="true" />
-        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)}
-          placeholder={copy.searchFavoriteGames} aria-label={copy.searchFavoriteGames} />
-      </label>
-      {visible.length > 0 ? (
+      {games.length > 0 ? (
         <ul className="favorite-games__grid">
-          {visible.map(({ game, name, image, publisher }) => (
-            <li className="favorite-game" key={game.id}>
+          {games.map((game) => {
+            const product = catalogById.get(game.id)
+            const name = product?.name || game.name
+            const label = favoriteGameLabels.get(name) || product?.gameName || name
+            return <li className="favorite-game" key={game.id}>
               <a href={game.href} className="favorite-game__link">
-                <FavoriteGameCover image={image} />
-                <span className="favorite-game__copy">
-                  <strong title={name}>{name}</strong>
-                  {publisher && <small>{publisher}</small>}
-                </span>
+                <FavoriteGameCover image={product?.thumbnailUrl || game.image} />
+                <strong title={label}>{label}</strong>
               </a>
-              <button type="button" className="favorite-game__bookmark" title={copy.removeFavoriteGame}
-                aria-label={formatCopy(copy.removeFromFavorites, { product: name })} onClick={() => remove(game)}>
-                <Bookmark size={18} fill="currentColor" aria-hidden="true" />
-              </button>
             </li>
-          ))}
+          })}
         </ul>
       ) : (
-        <p className="favorite-games__empty" role="status">{games.length ? copy.noFavoriteGamesMatch : copy.noFavoriteGames}</p>
-      )}
-      {removed && (
-        <div className="favorite-games__undo">
-          <span role="status">{formatCopy(copy.favoriteGameRemoved, { game: removed.name })}</span>
-          <button type="button" onClick={undo}>{copy.undo}</button>
-        </div>
+        <p className="favorite-games__empty">{copy.noFavoriteGames}</p>
       )}
     </section>
   )
 }
 
-function CatalogCard({ product, categoryLabel }) {
+function CatalogCard({ product, categoryLabel, onRemoveFavorite }) {
   const copy = useStorefrontCopy()
   const href = productHref(product)
   const available = product.isAvailable !== false
@@ -240,6 +210,19 @@ function CatalogCard({ product, categoryLabel }) {
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
   const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
+  function handleBookmark() {
+    const favorite = {
+      id: favoriteId, name: product.name, type: categoryLabel || product.kind,
+      href: href || '/search', image: thumbnail,
+      publisher: product.kind === 'TopUpGame' ? publisherForProduct(product) : undefined,
+      price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
+    }
+    const previous = onRemoveFavorite && saved ? readFavorites().find(({ id }) => id === favoriteId) : null
+    const next = toggleFavorite(favorite)
+    setSaved(next)
+    if (previous && !next) onRemoveFavorite(previous)
+  }
+
   return (
     <article className={`search-game-card${!href && !available ? ' is-unavailable' : ''}`}>
       {href && <a className="search-game-card__link" href={href} aria-label={formatCopy(copy.viewProduct, { product: product.name })} />}
@@ -263,12 +246,8 @@ function CatalogCard({ product, categoryLabel }) {
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
         aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
         aria-pressed={saved}
-        onClick={() => setSaved(toggleFavorite({
-          id: favoriteId, name: product.name, type: categoryLabel || product.kind,
-          href: href || '/search', image: thumbnail,
-          publisher: product.kind === 'TopUpGame' ? publisherForProduct(product) : undefined,
-          price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
-        }))}>
+        title={onRemoveFavorite && saved ? copy.removeFavoriteGame : undefined}
+        onClick={handleBookmark}>
         <Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
       </button>
     </article>
@@ -332,6 +311,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [supportOpen, setSupportOpen] = useState(false)
+  const [removedFavorite, setRemovedFavorite] = useState(null)
 
   const trimmedQuery = query.trim()
   const queryTooShort = trimmedQuery.length > 0 && trimmedQuery.length < 3
@@ -435,6 +415,11 @@ export default function SearchPage({ mode = 'player-id' }) {
     setSubmittedQuery(next)
   }
 
+  function undoFavoriteRemoval() {
+    const next = setFavorite(removedFavorite, true)
+    if (next.some(({ id }) => id === removedFavorite.id)) setRemovedFavorite(null)
+  }
+
   function handleLetter(letter) {
     if (letterFiltering && activeLetter === letter) {
       setLetterFiltering(false)
@@ -457,6 +442,7 @@ export default function SearchPage({ mode = 'player-id' }) {
     setActiveKind(kind)
     setGlobalResults(false)
     setLetterFiltering(false)
+    setRemovedFavorite(null)
     setCatalogError('')
     const url = new URL(window.location.href)
     url.pathname = '/search'
@@ -508,6 +494,7 @@ export default function SearchPage({ mode = 'player-id' }) {
                 onQueryChange={setQuery}
                 onSubmit={handleSearch}
                 onCategoryChange={handleCategory}
+                showSearch={!showFavorites}
               />
             )}
             <CatalogSidebar
@@ -521,9 +508,11 @@ export default function SearchPage({ mode = 'player-id' }) {
             <div className={`search-catalog__content${isLoginMode ? '' : ' search-catalog__content--browse'}`}>
               {showFavorites && <FavoriteGames products={products} />}
               {showFavorites && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
-              <form className="catalog-search catalog-search--desktop" onSubmit={handleSearch}>
+              <form className={`catalog-search ${showFavorites ? 'catalog-search--topup' : 'catalog-search--desktop'}`}
+                onSubmit={handleSearch} role="search" aria-label={copy.searchTheCatalog}>
                 <img src={searchAssets.searchIcon} alt="" />
                 <input
+                  type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrCategories}
@@ -567,7 +556,8 @@ export default function SearchPage({ mode = 'player-id' }) {
                   {(isLoginMode ? popularProducts : browsePrimaryProducts).length > 0 ? (
                     <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-primary'}`}>
                       {(isLoginMode ? popularProducts : browsePrimaryProducts).map((product) => (
-                        <CatalogCard key={product.id} product={product} categoryLabel={categoryLabel} />
+                        <CatalogCard key={product.id} product={product} categoryLabel={categoryLabel}
+                          onRemoveFavorite={showFavorites ? setRemovedFavorite : undefined} />
                       ))}
                     </div>
                   ) : (
@@ -581,7 +571,8 @@ export default function SearchPage({ mode = 'player-id' }) {
                       </div>
                       <div className={`search-game-grid${isLoginMode ? '' : ' search-game-grid--browse-more'}`}>
                         {(isLoginMode ? moreProducts : browseMoreProducts).map((product) => (
-                          <CatalogCard key={`more-${product.id}`} product={product} categoryLabel={categoryLabel} />
+                          <CatalogCard key={`more-${product.id}`} product={product} categoryLabel={categoryLabel}
+                            onRemoveFavorite={showFavorites ? setRemovedFavorite : undefined} />
                         ))}
                       </div>
                     </>
@@ -601,6 +592,12 @@ export default function SearchPage({ mode = 'player-id' }) {
                   {searchState === 'min' && copy.enterAtLeast3CharactersToSearch2}
                   {searchState === 'error' && copy.weCouldnTLoadTheCatalogPlease}
                   {searchState === 'empty' && copy.noProductsMatchYourSearch}
+                </div>
+              )}
+              {showFavorites && removedFavorite && (
+                <div className="favorite-games__undo">
+                  <span role="status">{formatCopy(copy.favoriteGameRemoved, { game: removedFavorite.name })}</span>
+                  <button type="button" onClick={undoFavoriteRemoval}>{copy.undo}</button>
                 </div>
               )}
             </div>

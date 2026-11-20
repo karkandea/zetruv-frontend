@@ -11,12 +11,12 @@ const tabs = [
   { kind: 'Merchandise', label: 'merchandise', href: '/merchandise', Icon: Shirt },
 ]
 
-export default function BrowseMobileControls({ activeKind, query, onQueryChange, onSubmit, onCategoryChange }) {
+export default function BrowseMobileControls({ activeKind, query, onQueryChange, onSubmit, onCategoryChange, showSearch = true }) {
   const copy = useStorefrontCopy()
 
   return (
     <div className="browse-mobile-controls">
-      <form className="catalog-search browse-mobile-search" onSubmit={onSubmit} role="search" aria-label={copy.searchTheCatalog}>
+      {showSearch && <form className="catalog-search browse-mobile-search" onSubmit={onSubmit} role="search" aria-label={copy.searchTheCatalog}>
         <Search size={19} aria-hidden="true" />
         <input
           type="search"
@@ -26,7 +26,7 @@ export default function BrowseMobileControls({ activeKind, query, onQueryChange,
           placeholder={copy.searchGamesOrProducts}
           aria-label={copy.searchGamesOrProducts}
         />
-      </form>
+      </form>}
       <nav className="browse-mobile-tabs" aria-label={copy.productCategories2}>
         {tabs.map(({ kind, label, href, Icon }) => {
           const active = kind === activeKind
