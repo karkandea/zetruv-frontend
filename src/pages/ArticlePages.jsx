@@ -1,8 +1,8 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Copy, Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowRight, Clock, Copy, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { apiRequest } from '../api/httpClient'
@@ -11,7 +11,19 @@ import '../styles/articles.css'
 
 const articleImage = (article) => article.thumbnailUrl || assets.articleOne
 const articleCategory = (article, copy) => article.category?.name || copy.article
-const articleMeta = (article, copy) => `${article.authorName || 'Zetruv'} · ${article.readTimeMinutes || 1} ${copy.minRead}`
+function ArticleReadingTime({ minutes, label }) {
+  return <span className="article-reading-time">
+    <Clock size={13} strokeWidth={1.75} aria-hidden="true" />
+    {minutes || 1} {label}
+  </span>
+}
+
+function ArticleMeta({ article, copy }) {
+  return <small className="article-card-meta">
+    <span>{article.authorName || 'Zetruv'}</span>
+    <ArticleReadingTime minutes={article.readTimeMinutes} label={copy.minRead} />
+  </small>
+}
 
 function ArticleCard({ article }) {
   const copy = useStorefrontCopy()
@@ -21,7 +33,7 @@ function ArticleCard({ article }) {
       <span className="article-category-pill">{articleCategory(article, copy)}</span>
       <h3>{article.title}</h3>
       <p>{article.excerpt}</p>
-      <small>{articleMeta(article, copy)}</small>
+      <ArticleMeta article={article} copy={copy} />
     </div>
   </a>
 }
@@ -66,50 +78,60 @@ export function ArticlesPage() {
   }, [search, category, page])
 
   const articles = result.items
-  const featured = useMemo(() => page === 1 && !category && !search ? articles[0] : null, [articles, page, category, search])
+  const showFeatured = page === 1 && !category && !search
+  const featured = showFeatured ? articles[0] : null
 
   return <div className="article-shell">
     <Navbar variant="article" homepageMobileMenu />
     <main>
-      <section className="article-index-header">
+      <section className="article-index-header" aria-labelledby="article-index-title">
         <div className="article-index-header__inner">
-          <span className="article-eyebrow">{copy.zetruvStories}</span>
-          <h1>{copy.articlesGuides}</h1>
+          <h1 id="article-index-title">{copy.articlesGuides}</h1>
           <p>{copy.articlesPublishedByTheZetruvTeam}</p>
           <div className="article-index-tools">
-            <label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchArticles} aria-label={copy.searchArticles} /></label>
+            <label><Search size={17} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchArticles} aria-label={copy.searchArticles} /></label>
             <div>
-              <button type="button" className={!category ? 'active' : ''} onClick={() => { setCategory(''); setPage(1) }}>{copy.all}</button>
-              {categories.map((item) => <button type="button" className={category === item.slug ? 'active' : ''} onClick={() => { setCategory(item.slug); setPage(1) }} key={item.id}>{item.name}</button>)}
+              <button type="button" aria-pressed={!category} onClick={() => { setCategory(''); setPage(1) }}>{copy.all}</button>
+              {categories.map((item) => <button type="button" aria-pressed={category === item.slug} onClick={() => { setCategory(item.slug); setPage(1) }} key={item.id}>{item.name}</button>)}
             </div>
           </div>
         </div>
       </section>
 
-      {state === 'loading' && page === 1 && !search && !category && <section className="article-featured-section">
+      {state === 'loading' && showFeatured && <section className="article-featured-section">
         <div className="article-section-inner">
           <LoadingRegion label={copy.loadingArticles}>
-            <div className="article-featured-card"><Bone variant="media" /><SkeletonLines /></div>
+            <div className="article-featured-card">
+              <div className="article-featured-card__media"><Bone variant="media" /></div>
+              <div className="article-featured-card__body"><SkeletonLines /></div>
+            </div>
           </LoadingRegion>
         </div>
       </section>}
       {featured && state === 'ready' && <section className="article-featured-section">
         <div className="article-section-inner">
-          <div className="article-section-heading"><span>{copy.latestArticle}</span><h2>{copy.startHere}</h2></div>
           <a className="article-featured-card" href={`/articles/${encodeURIComponent(featured.slug)}`}>
-            <img src={articleImage(featured)} alt="" fetchPriority="high" decoding="async" />
-            <div><span className="article-category-pill">{articleCategory(featured, copy)}</span><h2>{featured.title}</h2><p>{featured.excerpt}</p><small>{articleMeta(featured, copy)}</small><span className="article-read-button">{copy.readArticle} <ArrowRight size={16} /></span></div>
+            <div className="article-featured-card__media">
+              <img src={articleImage(featured)} alt="" fetchPriority="high" decoding="async" />
+            </div>
+            <div className="article-featured-card__body">
+              <span className="article-category-pill">{articleCategory(featured, copy)}</span>
+              <h2>{featured.title}</h2>
+              <p>{featured.excerpt}</p>
+              <ArticleMeta article={featured} copy={copy} />
+              <span className="article-read-button">{copy.readArticle} <ArrowRight size={16} aria-hidden="true" /></span>
+            </div>
           </a>
         </div>
       </section>}
 
-      <section className="article-latest-section">
+      <section className="article-latest-section" aria-labelledby="article-list-title">
         <div className="article-section-inner">
-          <div className="article-section-heading"><span>{copy.articles}</span><h2>{copy.allStories}</h2></div>
+          <h2 id="article-list-title" className="article-list-title">{copy.allStories}</h2>
           {state === 'loading' && <LoadingRegion label={copy.loadingArticles}>
             <div className="article-grid">
               <SkeletonItems className="article-list-card">
-                <Bone variant="media" /><div className="article-list-card__body"><SkeletonLines /></div>
+                <Bone className="article-list-card__image" variant="media" /><div className="article-list-card__body"><SkeletonLines /></div>
               </SkeletonItems>
             </div>
           </LoadingRegion>}
@@ -187,7 +209,7 @@ export function ArticleDetailPage({ slug }) {
         <section className="article-detail-header"><div className="article-detail-header__inner">
           <span className="article-category-pill">{articleCategory(article, copy)}</span>
           <h1>{article.title}</h1><p>{article.excerpt}</p>
-          <div className="article-detail-meta"><span>{date}</span><i /><span>{article.authorName || 'ZETRUV'}</span><i /><span>{article.readTimeMinutes} {copy.minRead2}</span></div>
+          <div className="article-detail-meta"><span>{date}</span><i /><span>{article.authorName || 'ZETRUV'}</span><i /><ArticleReadingTime minutes={article.readTimeMinutes} label={copy.minRead} /></div>
         </div></section>
         {article.thumbnailUrl && <section className="article-detail-hero"><img src={article.thumbnailUrl} alt="" fetchPriority="high" decoding="async" /></section>}
         <section className="article-detail-body"><div className="article-reading-layout">
@@ -200,7 +222,7 @@ export function ArticleDetailPage({ slug }) {
           <div className="article-read-next__header"><h2>{copy.relatedArticles}</h2></div>
           <div className="article-related-grid">{related.map((item) => <a href={`/articles/${encodeURIComponent(item.slug)}`} key={item.id}>
             <img src={articleImage(item)} alt="" loading="lazy" decoding="async" />
-            <span className="article-category-pill">{articleCategory(item)}</span><h3>{item.title}</h3><small>{articleMeta(item)}</small>
+            <span className="article-category-pill">{articleCategory(item, copy)}</span><h3>{item.title}</h3><ArticleMeta article={item} copy={copy} />
           </a>)}</div><a className="article-view-all" href="/articles">{copy.viewAllArticles2} <ArrowRight size={14} /></a>
         </div></section>}
       </>}

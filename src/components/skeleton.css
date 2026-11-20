@@ -104,7 +104,6 @@
   background-color: #f0f2f8;
   padding: 0;
 }
-.skeleton-content .article-featured-card > .skeleton-bone--media { width: 100%; min-height: 140px; }
 .skeleton-content .article-detail-hero > .skeleton-bone { width: min(1100px, calc(100% - 40px)); margin: 0 auto; }
 .skeleton-content .article-reading-column .skeleton-lines { margin-bottom: 22px; }
 
