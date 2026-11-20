@@ -31,7 +31,7 @@ During local `vite dev`, leaving `VITE_API_BASE_URL` empty keeps the existing mo
 
 The homepage service adapts the backend `GET /homepage` contract into the current UI view model, including service categories, popular games, recent purchases, flash sale, joki products, merchandise, and the first CMS hero image.
 
-`POST /support/reports` is still expected by the floating support form but is not part of the current backend feature set yet; production requests will fail instead of reporting a fake mock success.
+The floating support form submits to `POST /support/reports`. Submitted reports appear under **Laporan Kendala** in the CMS via the admin-only `GET /cms/support/reports` endpoint.
 
 ## Structure
 

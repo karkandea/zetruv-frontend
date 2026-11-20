@@ -190,6 +190,7 @@ const messages = {
   tellUsWhatHappened: ["Tell us what happened","Ceritakan kendala yang kamu alami","Beritahu kami perkara yang berlaku"],
   yourReportWasSaved: ["Your report was saved.","Laporan berhasil disimpan.","Laporan anda telah disimpan."],
   couldnTSendTheReport: ["Couldn’t send the report.","Gagal mengirim laporan.","Laporan tidak dapat dihantar."],
+  checkSupportReportFields: ["Enter your name, a valid phone number and a description of the issue.","Isi nama, nomor telepon yang valid, dan penjelasan kendala.","Isi nama, nombor telefon yang sah dan penerangan masalah."],
   sending: ["Sending…","Mengirim…","Menghantar…"],
   send: ["Send","Kirim","Hantar"],
   available: ["AVAILABLE","TERSEDIA","TERSEDIA"],

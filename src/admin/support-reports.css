@@ -1,0 +1,48 @@
+.support-reports-refresh,
+.support-reports-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.support-reports-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.support-reports-list li {
+  padding: 16px 20px;
+  overflow-wrap: anywhere;
+}
+
+.support-reports-list li + li,
+.support-reports-pagination {
+  border-top: 1px solid #e4e9f2;
+}
+
+.support-report-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.support-report-heading time,
+.support-report-phone {
+  color: #586579;
+  font-size: 13px;
+}
+
+.support-reports-list p {
+  margin: 8px 0 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.support-reports-pagination {
+  justify-content: flex-end;
+  padding: 12px 20px;
+  font-size: 13px;
+}

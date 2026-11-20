@@ -1,13 +1,10 @@
-import { apiRequest, hasBackend } from '../api/httpClient'
+import { apiRequest } from '../api/httpClient'
 
 export async function submitSupportReport(payload) {
-  if (!hasBackend) {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return { ok: true, mode: 'mock', payload }
-  }
-
-  return apiRequest('/support/reports', {
+  const receipt = await apiRequest('/support/reports', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+  if (receipt?.id !== payload.requestId) throw new Error('The report receipt could not be confirmed.')
+  return receipt
 }
