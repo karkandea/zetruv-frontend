@@ -3,9 +3,10 @@ import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import MerchandiseCard, { MerchandiseCardSkeletons } from '../components/MerchandiseCard'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
-import { Bookmark, ImageOff } from 'lucide-react'
+import { Bookmark } from 'lucide-react'
 import { getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/physical-purchase.css'
@@ -16,34 +17,6 @@ const rupiah = (value) => `Rp${new Intl.NumberFormat('id-ID').format(Number(valu
 function Availability({ available }) {
   const copy = useStorefrontCopy()
   return <span className={`physical-stock physical-stock--${available ? 'ok' : 'low'}`}>{available ? copy.available2 : copy.unavailable2}</span>
-}
-
-function ProductCard({ product }) {
-  const copy = useStorefrontCopy()
-  const favoriteId = `merchandise:${product.slug}`
-  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
-  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
-
-  return <article className="physical-product-card">
-    <a className="physical-product-card__link" href={`/merchandise/${encodeURIComponent(product.slug)}`}>
-      <div className="physical-product-card__image">
-        {product.thumbnailUrl ? <img src={product.thumbnailUrl} alt="" loading="lazy" /> : <ImageOff size={20} aria-label={copy.photoUnavailable} />}
-      </div>
-      <strong className="physical-product-card__name catalog-card-title">{product.name}</strong>
-      <div className="catalog-merch-card__footer">
-        <strong className="physical-product-card__price">{product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable}</strong>
-        <Availability available={product.isAvailable} />
-      </div>
-    </a>
-    <button type="button" className={`physical-product-card__favorite${saved ? ' is-saved' : ''}`}
-      aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
-      aria-pressed={saved}
-      onClick={() => setSaved(toggleFavorite({
-        id: favoriteId, name: product.name, type: 'Merchandise',
-        price: product.minPrice != null ? rupiah(product.minPrice) : copy.priceUnavailable,
-        href: `/merchandise/${product.slug}`, image: product.thumbnailUrl,
-      }))}><Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" /></button>
-  </article>
 }
 
 export function LivePhysicalCatalogPage() {
@@ -85,21 +58,15 @@ export function LivePhysicalCatalogPage() {
       </header>
       <CatalogSearch label={copy.searchGamesOrProducts} query={query} onQueryChange={setQuery} onSubmit={search} />
       {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
-        <div className="physical-product-grid catalog-merch-grid">
-          <SkeletonItems className="physical-product-card" count={4}>
-            <div className="physical-product-card__link">
-              <div className="physical-product-card__image"><Bone variant="media" /></div>
-              <Bone className="physical-product-card__name" width="78%" />
-              <div className="catalog-merch-card__footer"><Bone className="physical-product-card__price" width="64px" height="20px" /></div>
-            </div>
-          </SkeletonItems>
+        <div className="catalog-merch-grid">
+          <MerchandiseCardSkeletons count={4} />
         </div>
       </LoadingRegion>}
       {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
       {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
         ? copy.noProductsMatchYourSearch
         : copy.noMerchandiseHasBeenPublishedInThe}</p>}
-      {state === 'ready' && <div className="physical-product-grid catalog-merch-grid">{visible.map((product) => <ProductCard product={product} key={product.id} />)}</div>}
+      {state === 'ready' && <div className="catalog-merch-grid">{visible.map((product) => <MerchandiseCard product={product} key={product.id} />)}</div>}
     </CatalogPage>
   )
 }

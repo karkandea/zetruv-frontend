@@ -4,7 +4,7 @@ import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
 import HelpCenterDialog from './HelpCenterDialog'
-import { ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Newspaper, Settings, ShoppingBag, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
+import { ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Newspaper, Settings, ShoppingBag, ShoppingCart, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
 import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
@@ -347,10 +347,12 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </button>
             <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen}>
               <a className="navbar-control" href="/cart" role="menuitem" onClick={() => setIsCartOpen(false)}>
+                <ShoppingCart className="nav-cart-menu__icon" size={18} aria-hidden="true" />
                 <span><strong>{t.digitalCart}</strong><small>{copy.topUpsVouchersBoostingGameAccounts}</small></span>
                 <b>{cartCount(cartItems)}</b>
               </a>
               <a className="navbar-control" href="/cart?flow=physical" role="menuitem" onClick={() => setIsCartOpen(false)}>
+                <ShoppingBag className="nav-cart-menu__icon" size={18} aria-hidden="true" />
                 <span><strong>{copy.merchandiseCart}</strong></span>
                 <b>{physicalCartCount}</b>
               </a>
@@ -435,7 +437,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           <a href="/articles" onClick={() => selectNav('article')}><Newspaper size={18} aria-hidden="true" />{articleLabel}</a>
           <a href="/order-status"><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
           <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>
-          <a href="/cart" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
+          <a href="/cart" onClick={() => selectNav('cart')}><ShoppingCart size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
           <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{copy.merchandiseCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
           {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />{t.account}</a>}
         </nav>

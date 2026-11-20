@@ -25,6 +25,7 @@ export function setFavorite(product, enabled) {
         id: String(product.id), name: String(product.name || 'Produk'),
         type: String(product.type || 'Produk Zetruv'), price: String(product.price || ''),
         href: product.href, image: product.image || '', code: String(product.code || '♥'),
+        ...(product.publisher && { publisher: String(product.publisher) }),
       }]
     : existing.filter((item) => item.id !== product.id)
   try {

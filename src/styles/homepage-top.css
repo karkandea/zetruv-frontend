@@ -573,6 +573,10 @@
 }
 
 
+.nav-cart-menu > .cart-dropdown > a { justify-content: flex-start; gap: 10px; }
+.nav-cart-menu > .cart-dropdown > a > span { flex: 1; }
+.nav-cart-menu__icon { flex: none; color: #cfd3ef; }
+
 /* Language chooser — inherits the existing cart dropdown's panel/animation. */
 .nav-language-menu {
   position: relative;

@@ -8,8 +8,8 @@ import CatalogSidebar from '../components/CatalogSidebar'
 import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
-import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
-import { Bookmark } from 'lucide-react'
+import { isFavorite, readFavorites, setFavorite, subscribeFavorites, toggleFavorite } from '../services/favoritesService'
+import { Bookmark, ImageOff, Search } from 'lucide-react'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
@@ -133,6 +133,7 @@ function publisherForProduct(product, fallback) {
   if (value.includes('valorant')) return 'Riot Games'
   if (value.includes('genshin')) return 'HoYoverse'
   if (value.includes('call of duty') || value.includes('codm')) return 'Activision'
+  if (value.includes('efootball')) return 'Konami'
   if (value.includes('star rail')) return 'HoYoverse'
   return fallback
 }
@@ -147,6 +148,85 @@ function productHref(product) {
   if (product.kind === 'GameAccount') return product.gameSlug ? `/game-accounts/${encodeURIComponent(product.gameSlug)}/${encodeURIComponent(product.slug)}` : '/game-accounts'
   if (product.kind === 'Merchandise') return `/merchandise/${encodeURIComponent(product.slug)}`
   return undefined
+}
+
+function FavoriteGameCover({ image }) {
+  const [brokenImage, setBrokenImage] = useState(null)
+  return <span className="favorite-game__cover">
+    {image && brokenImage !== image
+      ? <img src={image} alt="" loading="lazy" onError={() => setBrokenImage(image)} />
+      : <ImageOff size={18} aria-hidden="true" />}
+  </span>
+}
+
+function FavoriteGames({ products }) {
+  const copy = useStorefrontCopy()
+  const [favorites, setFavorites] = useState(readFavorites)
+  const [query, setQuery] = useState('')
+  const [removed, setRemoved] = useState(null)
+  useEffect(() => subscribeFavorites(setFavorites), [])
+
+  const games = favorites.filter(({ id, href }) => id.startsWith('catalog:TopUpGame:') && href.startsWith('/product/'))
+  const catalogById = new Map(products.filter(({ kind }) => kind === 'TopUpGame')
+    .map((product) => [`catalog:TopUpGame:${product.slug || product.id}`, product]))
+  const term = query.trim().toLowerCase()
+  const visible = games.map((game) => {
+    const product = catalogById.get(game.id)
+    return {
+      game,
+      name: product?.name || game.name,
+      image: product?.thumbnailUrl || game.image,
+      publisher: publisherForProduct(product || game, game.publisher),
+    }
+  }).filter(({ name, publisher }) => !term || `${name} ${publisher || ''}`.toLowerCase().includes(term))
+
+  function remove(game) {
+    const next = setFavorite(game, false)
+    if (!next.some(({ id }) => id === game.id)) setRemoved(game)
+  }
+
+  function undo() {
+    const next = setFavorite(removed, true)
+    if (next.some(({ id }) => id === removed.id)) setRemoved(null)
+  }
+
+  return (
+    <section className="favorite-games" aria-labelledby="favorite-games-title">
+      <h2 id="favorite-games-title">{copy.favoriteGames}</h2>
+      <label className="favorite-games__search">
+        <Search size={18} aria-hidden="true" />
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)}
+          placeholder={copy.searchFavoriteGames} aria-label={copy.searchFavoriteGames} />
+      </label>
+      {visible.length > 0 ? (
+        <ul className="favorite-games__grid">
+          {visible.map(({ game, name, image, publisher }) => (
+            <li className="favorite-game" key={game.id}>
+              <a href={game.href} className="favorite-game__link">
+                <FavoriteGameCover image={image} />
+                <span className="favorite-game__copy">
+                  <strong title={name}>{name}</strong>
+                  {publisher && <small>{publisher}</small>}
+                </span>
+              </a>
+              <button type="button" className="favorite-game__bookmark" title={copy.removeFavoriteGame}
+                aria-label={formatCopy(copy.removeFromFavorites, { product: name })} onClick={() => remove(game)}>
+                <Bookmark size={18} fill="currentColor" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="favorite-games__empty" role="status">{games.length ? copy.noFavoriteGamesMatch : copy.noFavoriteGames}</p>
+      )}
+      {removed && (
+        <div className="favorite-games__undo">
+          <span role="status">{formatCopy(copy.favoriteGameRemoved, { game: removed.name })}</span>
+          <button type="button" onClick={undo}>{copy.undo}</button>
+        </div>
+      )}
+    </section>
+  )
 }
 
 function CatalogCard({ product, categoryLabel }) {
@@ -186,6 +266,7 @@ function CatalogCard({ product, categoryLabel }) {
         onClick={() => setSaved(toggleFavorite({
           id: favoriteId, name: product.name, type: categoryLabel || product.kind,
           href: href || '/search', image: thumbnail,
+          publisher: product.kind === 'TopUpGame' ? publisherForProduct(product) : undefined,
           price: product.price ? `Rp${new Intl.NumberFormat('id-ID').format(product.price)}` : '',
         }))}>
         <Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
@@ -330,6 +411,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   const activeCategory = categoryDefinitions.find((category) => category.kind === activeKind)
   const categoryLabel = globalResults ? copy.allCategories : activeCategory?.label || copy.catalog
   const browseCategoryLabel = globalResults ? copy.allCategories : copy[CATEGORY_PRESENTATION[activeKind].loginLabel]
+  const showFavorites = !isLoginMode && !globalResults && activeKind === 'TopUpGame'
   // The API is the only source of listed products. Never show preview items as stock.
   const sourceProducts = products
   const effectiveLetter = letterFiltering ? activeLetter : ''
@@ -418,7 +500,7 @@ export default function SearchPage({ mode = 'player-id' }) {
             </>
           )}
 
-          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}`} aria-label={copy.browseZetruvCategories}>
+          <section className={`search-catalog${isLoginMode ? '' : ' search-catalog--browse'}${showFavorites ? ' search-catalog--with-favorites' : ''}`} aria-label={copy.browseZetruvCategories}>
             {!isLoginMode && (
               <BrowseMobileControls
                 activeKind={globalResults ? undefined : activeKind}
@@ -437,6 +519,8 @@ export default function SearchPage({ mode = 'player-id' }) {
             />
 
             <div className={`search-catalog__content${isLoginMode ? '' : ' search-catalog__content--browse'}`}>
+              {showFavorites && <FavoriteGames products={products} />}
+              {showFavorites && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
               <form className="catalog-search catalog-search--desktop" onSubmit={handleSearch}>
                 <img src={searchAssets.searchIcon} alt="" />
                 <input
@@ -448,7 +532,7 @@ export default function SearchPage({ mode = 'player-id' }) {
                 <button type="submit" disabled={queryTooShort}>{isLoginMode ? copy.search3 : copy.search2}</button>
               </form>
 
-              {!isLoginMode && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
+              {!isLoginMode && !showFavorites && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
 
               <div className="search-query-state" aria-live="polite">
                 {searchState === 'min' && <span>{copy.typeAtLeast3CharactersToStart}</span>}

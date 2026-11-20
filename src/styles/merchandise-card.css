@@ -1,0 +1,116 @@
+.merch-card {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e3e5f0;
+  border-radius: 16px;
+  color: #151627;
+  background: #fff;
+}
+
+.merch-card__link {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  color: inherit;
+}
+
+.merch-card__link:focus-visible {
+  outline: 2px solid #7189ee;
+  outline-offset: -3px;
+}
+
+.merch-card__image {
+  position: relative;
+  display: grid;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  overflow: hidden;
+  color: #595f70;
+  background: #f1f3f9;
+}
+.merch-card__image > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.merch-card__chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 7px;
+  border: 1px solid #dde3f2;
+  border-radius: 999px;
+  background: #fff;
+  color: #08084b;
+  font-size: 9px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.merch-card__bookmark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #dde3f2;
+  border-radius: 50%;
+  color: #010154;
+  background: #fff;
+  cursor: pointer;
+}
+.merch-card__bookmark:hover,
+.merch-card__bookmark[aria-pressed='true'] { background: #edf0ff; }
+.merch-card__bookmark:focus-visible { outline: 2px solid #7189ee; outline-offset: 2px; }
+
+.merch-card__body {
+  display: grid;
+  align-content: start;
+  flex: 1;
+  gap: 8px;
+  padding: 12px;
+}
+.merch-card__body h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  min-height: 2.8em;
+  color: #151627;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.merch-card__body > strong {
+  color: #08084b;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.merch-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: #595f70;
+  font-size: 11px;
+}
+.merch-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.merch-card__rating svg { color: #9a6400; }
+
+@media (max-width: 600px) {
+  .merch-card__body { padding: 10px; }
+  .merch-card__body > strong { font-size: 15px; }
+}
