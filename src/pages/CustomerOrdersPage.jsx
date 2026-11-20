@@ -46,14 +46,11 @@ function OrderMessage({ title, description, children }) {
   </section>
 }
 
-export default function CustomerOrdersPage({ orderId }) {
+export function RequireOrderSession({ children }) {
   const copy = useStorefrontCopy()
   const session = useCustomerSession()
   const [restoring, setRestoring] = useState(true)
-  const [authMode, setAuthMode] = useState(null)
-  const query = new URLSearchParams(window.location.search)
-  const group = query.get('group') === 'history' ? 'history' : 'active'
-  const listUrl = window.location.pathname === '/account/orders' || orderId ? '/account/orders' : '/order-status'
+  const [authMode, setAuthMode] = useState('login')
 
   useEffect(() => {
     let current = true
@@ -67,24 +64,36 @@ export default function CustomerOrdersPage({ orderId }) {
     activateCustomerCart().catch(() => {})
   }
 
+  if (session?.accessToken) return children
+
+  return <AccountShell active="orders">
+    <PageHeader title={copy.myOrders} />
+    {restoring ? <OrdersSkeleton label={copy.loadingOrders} /> : <>
+      <OrderMessage title={copy.logInToViewOrders} description={copy.accountOrdersIntro}>
+        <button type="button" className="account-btn account-btn--primary" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>{copy.login}</button>
+      </OrderMessage>
+      {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={signIn} />}
+    </>}
+  </AccountShell>
+}
+
+export default function CustomerOrdersPage({ orderId }) {
+  const copy = useStorefrontCopy()
+  const accessToken = useCustomerSession()?.accessToken
+  const [authMode, setAuthMode] = useState(null)
+  const group = new URLSearchParams(window.location.search).get('group') === 'history' ? 'history' : 'active'
+  const listUrl = window.location.pathname === '/account/orders' || orderId ? '/account/orders' : '/order-status'
   const login = <button type="button" className="account-btn account-btn--primary" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>{copy.login}</button>
-  const guestLink = <a className="customer-orders-guest" href={guestLookupUrl}>{copy.checkGuestOrder} <ArrowRight size={15} aria-hidden="true" /></a>
 
   return <AccountShell active="orders">
     {orderId && <a className="customer-orders-back" href={group === 'history' ? '/account/orders?group=history' : '/account/orders'}><ArrowLeft size={16} aria-hidden="true" /> {copy.myOrders}</a>}
     <PageHeader title={orderId ? copy.customerOrderDetailTitle : copy.myOrders} />
-    {session?.accessToken ? (
-      <CustomerOrdersContent key={session.accessToken} token={session.accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />
-    ) : restoring ? (
-      <OrdersSkeleton orderId={orderId} label={copy.loadingOrders} />
-    ) : (
-      <OrderMessage title={copy.logInToViewOrders} description={copy.accountOrdersIntro}>
-        {login}
-        {guestLink}
-      </OrderMessage>
-    )}
-    {session?.accessToken && !orderId && guestLink}
-    {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={signIn} />}
+    {accessToken && <CustomerOrdersContent key={accessToken} token={accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />}
+    {!orderId && <a className="customer-orders-guest" href={guestLookupUrl}>{copy.checkGuestOrder} <ArrowRight size={15} aria-hidden="true" /></a>}
+    {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={response => {
+      setCustomerSession(response)
+      activateCustomerCart().catch(() => {})
+    }} />}
   </AccountShell>
 }
 

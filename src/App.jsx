@@ -15,9 +15,10 @@ import { PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOr
 import { LivePhysicalCatalogPage, LivePhysicalProductPage } from './pages/LivePhysicalPages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
 import { AccountOverviewPage, AccountEditProfilePage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
-import CustomerOrdersPage from './pages/CustomerOrdersPage'
+import CustomerOrdersPage, { RequireOrderSession } from './pages/CustomerOrdersPage'
 import Navbar from './components/Navbar'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import { isOrderRoute } from './services/orderRoutes'
 import { GameAccountsPage, GameAccountListingPage, GameAccountDetailPage } from './pages/GameAccountPublicPages'
 import {
   GameAccountCartPage,
@@ -40,6 +41,11 @@ function AccountOrderUnavailablePage() {
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  const page = <StorefrontRoute path={path} />
+  return isOrderRoute(path) ? <RequireOrderSession>{page}</RequireOrderSession> : page
+}
+
+function StorefrontRoute({ path }) {
   const params = new URLSearchParams(window.location.search)
   const flow = params.get('flow')
   const kind = params.get('kind')

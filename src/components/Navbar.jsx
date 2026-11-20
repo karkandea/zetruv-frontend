@@ -8,7 +8,8 @@ import { ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Ne
 import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
 import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
-import { activateCustomerCart, readCustomerSession, refreshCustomerCart, setCustomerSession, logoutCustomer, watchCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
+import { activateCustomerCart, readCustomerSession, refreshCustomerCart, restoreCustomerSession, setCustomerSession, logoutCustomer, watchCustomerSession, CUSTOMER_EVENT } from '../services/customerCartSync'
+import { isOrderRoute } from '../services/orderRoutes'
 import { readPendingRegistration } from '../services/registrationVerification'
 
 const productLinks = [
@@ -68,6 +69,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const accountMenuRef = useRef(null)
   const accountButtonRef = useRef(null)
   const brandRef = useRef(null)
+  const orderLogin = useRef(null)
 
   const isCatalog = variant === 'catalog'
   const isLoginCatalog = variant === 'loginCatalog'
@@ -112,6 +114,37 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   },[])
 
   useEffect(() => watchCustomerSession({ restoreSession }), [restoreSession])
+
+  useEffect(() => {
+    async function handleOrderLink(event) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const link = event.target.closest?.('a[href]')
+      if (!link || link.origin !== window.location.origin || !isOrderRoute(link.pathname) ||
+          (link.target && link.target !== '_self') || link.hasAttribute('download') || readCustomerSession()) return
+
+      event.preventDefault()
+      const request = { href: link.href, link }
+      orderLogin.current = request
+      await restoreCustomerSession().catch(() => {})
+      if (orderLogin.current !== request) return
+      if (readCustomerSession()) {
+        orderLogin.current = null
+        window.location.assign(request.href)
+        return
+      }
+
+      setIsHelpOpen(false)
+      setIsHomepageDrawerOpen(false)
+      setIsMobileMenuOpen(false)
+      setAuthMode('login')
+    }
+
+    document.addEventListener('click', handleOrderLink)
+    return () => {
+      document.removeEventListener('click', handleOrderLink)
+      orderLogin.current = null
+    }
+  }, [])
 
   useEffect(() => {
     const refreshPhysicalCart = () => setPhysicalCartCount(readPhysicalCartCount())
@@ -189,10 +222,23 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   }
 
   function handleAuthenticated(response) {
+    const orderDestination = orderLogin.current?.href
     setCustomerSession(response)
     setVerifiedSession(readCustomerSession())
-    activateCustomerCart().catch(()=>{}) // error is displayed on cart; guest draft retained.
+    const cart = activateCustomerCart().catch(() => {}) // error is displayed on cart; guest draft retained.
     onAuthenticated?.(response)
+    if (orderDestination) void cart.then(() => window.location.assign(orderDestination))
+  }
+
+  function closeAuth() {
+    const trigger = orderLogin.current?.link
+    orderLogin.current = null
+    setAuthMode(null)
+    if (!trigger) return
+    requestAnimationFrame(() => {
+      if (trigger.isConnected && !trigger.closest('[inert]') && trigger.getClientRects().length) trigger.focus()
+      else (homepageMenuButtonRef.current?.getClientRects().length ? homepageMenuButtonRef.current : brandRef.current)?.focus()
+    })
   }
 
   async function handleLogout() {
@@ -387,7 +433,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </div>
           </div>
           <a href="/articles" onClick={() => selectNav('article')}><Newspaper size={18} aria-hidden="true" />{articleLabel}</a>
-          <a href="/order-status" onClick={() => selectNav('transaction')}><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
+          <a href="/order-status"><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
           <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>
           <a href="/cart" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
           <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.physicalCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
@@ -450,7 +496,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             <a className={`navbar-control${activeNav === 'article' ? ' active' : ''}`} href="/articles" aria-current={activeNav === 'article' ? 'page' : undefined} onClick={() => selectNav('article')}>
               <img src={assets.transaction} alt="" />{articleLabel}
             </a>
-            <a className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`} href="/order-status" aria-current={activeNav === 'transaction' ? 'page' : undefined} onClick={() => selectNav('transaction')}>
+            <a className={`navbar-control${activeNav === 'transaction' ? ' active' : ''}`} href="/order-status" aria-current={activeNav === 'transaction' ? 'page' : undefined}>
               <img src={assets.transaction} alt="" />{transactionLabel}
             </a>
             <a className={`navbar-control${activeNav === 'leaderboard' ? ' active' : ''}`} href="/leaderboard" aria-current={activeNav === 'leaderboard' ? 'page' : undefined} onClick={() => selectNav('leaderboard')}>
@@ -491,7 +537,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
         requestAnimationFrame(() => accountButtonRef.current?.focus())
       }} />}
       {authMode && (
-        <AuthModal mode={authMode} resetToken={resetToken.current} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={handleAuthenticated} />
+        <AuthModal mode={authMode} resetToken={resetToken.current} onModeChange={setAuthMode} onClose={closeAuth} onAuthenticated={handleAuthenticated} />
       )}
     </>
   )
