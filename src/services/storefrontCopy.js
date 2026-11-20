@@ -536,6 +536,7 @@ const messages = {
   useDraft: ["Use Draft","Gunakan Draf","Guna Draf"],
   editYourGameUserIdAndZone: ["Edit your game user ID and zone or server in your cart. Only enter game login details at checkout for top-up by login. Never enter a password or one-time code here.","Ubah ID pengguna dan zona atau server di keranjang. Isi data login game saat checkout untuk layanan Top Up via Login. Jangan masukkan kata sandi atau OTP di sini.","Sunting ID pengguna dan zon atau pelayan dalam troli. Masukkan butiran log masuk permainan semasa pembayaran untuk tambah nilai melalui log masuk. Jangan masukkan kata laluan atau OTP di sini."],
   cartProducts: ["Cart ({count} products)","Keranjang ({count} produk)","Troli ({count} produk)"],
+  cartTitleWithCount: ["{cart} ({count} products)","{cart} ({count} produk)","{cart} ({count} produk)"],
   yourDigitalCartIsEmpty: ["Your Digital Cart Is Empty","Keranjang Digital Masih Kosong","Troli Digital Anda Kosong"],
   chooseATopUpVoucherOrBoosting: ["Choose a top-up, voucher, or boosting service to get started.","Pilih Top Up, Voucher, atau Joki Game untuk mulai transaksi.","Pilih tambah nilai, baucar atau khidmat joki untuk bermula."],
   thisProductStockOrDestinationAccountIs: ["This product, stock, or destination account is unavailable. Verify the details again before checkout.","Produk, stok, atau akun tujuan ini tidak tersedia. Verifikasi ulang sebelum checkout.","Produk, stok atau akaun sasaran tidak tersedia. Sahkan semula sebelum pembayaran."],

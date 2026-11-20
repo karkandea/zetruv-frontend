@@ -12,6 +12,9 @@
   margin-top: 2px;
 }
 .digital-shell .digital-info-strip strong { font-weight: 600; color: #323c67; }
+.digital-shell .digital-cart-layout--empty { grid-template-columns: minmax(0, 1fr); }
+.digital-cart-layout--empty .digital-cart-list-card { min-height: 0; }
+.digital-cart-layout--empty .digital-empty-cart { min-height: 144px; }
 .digital-shell .digital-cart-list-head {
   height: auto;
   min-height: 34px;
@@ -20,7 +23,9 @@
   padding-bottom: 13px;
   border-bottom: 1px solid #ecedf3;
 }
-.digital-shell .digital-cart-list-head strong {
+.digital-shell .digital-cart-list-head strong,
+.digital-shell .digital-cart-list-head h1 {
+  margin: 0;
   color: #191c30;
   font-size: 16px;
   line-height: 24px;

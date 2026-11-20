@@ -351,7 +351,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
                 <b>{cartCount(cartItems)}</b>
               </a>
               <a className="navbar-control" href="/cart?flow=physical" role="menuitem" onClick={() => setIsCartOpen(false)}>
-                <span><strong>{t.physicalCart}</strong><small>{copy.merchandise}</small></span>
+                <span><strong>{copy.merchandiseCart}</strong></span>
                 <b>{physicalCartCount}</b>
               </a>
             </div>
@@ -436,7 +436,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           <a href="/order-status"><ClipboardList size={18} aria-hidden="true" />{transactionLabel}</a>
           <a href="/leaderboard" onClick={() => selectNav('leaderboard')}><Trophy size={18} aria-hidden="true" />{t.leaderboard}</a>
           <a href="/cart" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.digitalCart} <span className="navbar__mobile-count">{cartCount(cartItems)}</span></a>
-          <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{t.physicalCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
+          <a href="/cart?flow=physical" onClick={() => selectNav('cart')}><ShoppingBag size={18} aria-hidden="true" />{copy.merchandiseCart} <span className="navbar__mobile-count">{physicalCartCount}</span></a>
           {verifiedSession && <a href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />{t.account}</a>}
         </nav>
         <div className="navbar__mobile-language" role="group" aria-label={t.language}>

@@ -169,6 +169,10 @@ export default function CartPage() {
   }, [accountSlugs])
 
   const pricing = useMemo(() => getDigitalPricing(items), [items])
+  const hasItems = items.length > 0
+  const hasCustomerSession = Boolean(readCustomerSession())
+  const isLoadingCart = hasCustomerSession && cartSync.state === 'loading'
+  const hasSyncIssue = hasCustomerSession && ['conflict', 'error'].includes(cartSync.state)
   const itemCount = cartCount(items)
   const isChecking = (item) => isCartCatalogPending(item, catalogProducts, catalogErrors)
   const checkingCatalog = items.some(isChecking)
@@ -182,8 +186,8 @@ export default function CartPage() {
         ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
         : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements : getCartItemProblem(item, requirements, copy),
   })).filter(problem => problem.message)
-  const canCheckout = items.length > 0 && problems.length === 0 && !checkingCatalog &&
-    (!readCustomerSession() || cartSync.state==='synced')
+  const canCheckout = hasItems && problems.length === 0 && !checkingCatalog &&
+    (!hasCustomerSession || cartSync.state==='synced')
   const editing = items.find((item) => item.cartKey === editingKey) || null
 
   function changeQty(item, nextQty) {
@@ -220,12 +224,12 @@ export default function CartPage() {
     <div className="digital-shell">
       <Navbar homepageMobileMenu />
       <main className="digital-cart-page digital-container">
-        <header className="digital-page-heading">
+        {hasItems && <header className="digital-page-heading">
           <div><h1>{copy.digitalCart}</h1><p>{copy.reviewYourProductsAndDestinationAccountsBefore}</p></div>
           <a href="/search">{copy.continueShopping}</a>
-        </header>
+        </header>}
 
-        {readCustomerSession() && <section className="digital-info-strip" role="status" aria-live="polite">
+        {hasCustomerSession && (hasItems || hasSyncIssue || cartSync.state === 'saving') && <section className="digital-info-strip" role="status" aria-live="polite">
           <Info size={18}/>
           <span>{cartSync.state==='synced'?copy.yourCartIsSavedToYourZetruv:
             cartSync.state==='saving'?copy.savingCartChanges:
@@ -234,7 +238,7 @@ export default function CartPage() {
           <button type="button" disabled={['saving','loading','conflict','error'].includes(cartSync.state)}
             onClick={()=>activateCustomerCart().catch(()=>{})}>{copy.syncAgain}</button>
         </section>}
-        {readCustomerSession() && ['conflict','error'].includes(cartSync.state) && (
+        {hasSyncIssue && (
           <section className="digital-info-strip" role="alert" aria-live="assertive">
             <CircleAlert size={18} aria-hidden="true"/>
             <span>{copy.yourChangesHavenTBeenSavedCompare}</span>
@@ -248,26 +252,29 @@ export default function CartPage() {
             }}>{copy.useDraft}</button>
           </section>
         )}
-        <div className="digital-info-strip">
+        {hasItems && <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
           <span>{copy.editYourGameUserIdAndZone}</span>
-        </div>
+        </div>}
 
-        <div className="digital-cart-layout">
+        <div className={`digital-cart-layout${hasItems ? '' : ' digital-cart-layout--empty'}`}>
           <section className="digital-cart-list-card" aria-labelledby="digital-cart-title">
             <div className="digital-cart-list-head">
-              <strong id="digital-cart-title">{formatCopy(copy.cartProducts, { count: items.length })}</strong>
-              <span>{itemCount} {copy.items}</span>
+              {hasItems ? (
+                <>
+                  <strong id="digital-cart-title">{formatCopy(copy.cartProducts, { count: items.length })}</strong>
+                  <span>{itemCount} {copy.items}</span>
+                </>
+              ) : (
+                <h1 id="digital-cart-title">{isLoadingCart ? copy.digitalCart : formatCopy(copy.cartTitleWithCount, { cart: copy.digitalCart, count: 0 })}</h1>
+              )}
             </div>
 
-            {items.length === 0 && readCustomerSession() && cartSync.state === 'loading' ? (
+            {!hasItems && isLoadingCart ? (
               <LoadingRegion label={copy.loadingAndMergingYourAccountCart}><SkeletonRows count={2} /></LoadingRegion>
-            ) : items.length === 0 ? (
+            ) : !hasItems ? (
               <div className="digital-empty-cart">
                 <ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" />
-                <strong>{copy.yourDigitalCartIsEmpty}</strong>
-                <p>{copy.chooseATopUpVoucherOrBoosting}</p>
-                <a href="/search">{copy.viewProducts}</a>
               </div>
             ) : (
               <div className="digital-cart-items">
@@ -347,7 +354,7 @@ export default function CartPage() {
             )}
           </section>
 
-          <aside className="digital-cart-summary" aria-labelledby="cart-summary-title">
+          {hasItems && <aside className="digital-cart-summary" aria-labelledby="cart-summary-title">
             <h2 id="cart-summary-title">{copy.paymentSummary}</h2>
             <div><span>{copy.productSubtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             <div>
@@ -372,9 +379,9 @@ export default function CartPage() {
             {problems.length > 0 ? (
               <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails} {problems[0].message}</p>
             ) : checkingCatalog ? <p role="status">{copy.verifyingTheCatalogBeforeCheckout}</p>
-              : <p>{items.length ? copy.pricesAndPromotionsWillBeCheckedAgain : copy.addAProductToContinue}</p>}
+              : <p>{copy.pricesAndPromotionsWillBeCheckedAgain}</p>}
             {status && <p className="digital-cart-summary__success" role="status"><CheckCircle2 size={15} />{status}</p>}
-          </aside>
+          </aside>}
         </div>
       </main>
 

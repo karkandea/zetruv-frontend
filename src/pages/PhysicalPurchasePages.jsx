@@ -1,5 +1,7 @@
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
+import { formatCopy } from '../services/storefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
+import { ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
 import { readCustomerSession, setCustomerSession } from '../services/customerCartSync'
@@ -459,50 +461,55 @@ export function PhysicalCartPage() {
     <div className="physical-shell">
       <Navbar homepageMobileMenu />
       <main className="physical-cart">
-        <header className="physical-cart__heading">
-          <div><h1>{copy.merchandiseCart}</h1><p>{item ? copy.label1PhysicalItem : copy.label0PhysicalItems}</p></div>
-          <a href="/merchandise">{copy.continueShopping2}</a>
-        </header>
-        <div className="physical-cart-notice"><strong>INFO</strong><span>{copy.digitalProductsAndMerchandiseUseSeparateCarts}</span></div>
+        {item ? (
+          <>
+            <header className="physical-cart__heading">
+              <div><h1>{copy.merchandiseCart}</h1><p>{copy.label1PhysicalItem}</p></div>
+              <a href="/merchandise">{copy.continueShopping2}</a>
+            </header>
+            <div className="physical-cart-notice"><strong>INFO</strong><span>{copy.digitalProductsAndMerchandiseUseSeparateCarts}</span></div>
 
-        <div className="physical-cart-layout">
-          <div className="physical-cart-left">
-            {item ? (
-              <article className="physical-cart-item">
-                <img src={item.image || jerseyCard} alt="" />
-                <div className="physical-cart-item__copy">
-                  <span className="physical-badge">{item.category?.toUpperCase() || copy.merchandise2}</span>
-                  <h2>{item.name}</h2>
-                  <p>{item.color ? `${item.color} · ` : ''}{item.size === 'One Size' ? copy.oneSize : `${copy.option} ${item.size}`}</p>
-                  <span className="physical-cart-stock-note">{copy.availabilityHasnTBeenConfirmed}</span>
-                  <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>{copy.editOption}</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>{copy.remove3}</button></div>
-                </div>
-                <div className="physical-cart-item__price">
-                  <strong>{rupiah(item.price)}</strong>
-                  <div className="physical-qty"><button type="button" onClick={() => updateQty(item.qty - 1)}>−</button><span>{item.qty}</span><button type="button" onClick={() => updateQty(item.qty + 1)}>+</button></div>
-                </div>
-              </article>
-            ) : (
-              <div className="physical-cart-empty"><strong>{copy.yourMerchandiseCartIsEmpty}</strong><a href="/merchandise">{copy.continueShopping2}</a></div>
-            )}
+            <div className="physical-cart-layout">
+              <div className="physical-cart-left">
+                <article className="physical-cart-item">
+                  <img src={item.image || jerseyCard} alt="" />
+                  <div className="physical-cart-item__copy">
+                    <span className="physical-badge">{item.category?.toUpperCase() || copy.merchandise2}</span>
+                    <h2>{item.name}</h2>
+                    <p>{item.color ? `${item.color} · ` : ''}{item.size === 'One Size' ? copy.oneSize : `${copy.option} ${item.size}`}</p>
+                    <span className="physical-cart-stock-note">{copy.availabilityHasnTBeenConfirmed}</span>
+                    <div><a href={`/merchandise/${encodeURIComponent(item.slug)}`}>{copy.editOption}</a><button type="button" onClick={() => { setItem(null); window.sessionStorage.removeItem(PHYSICAL_CART_KEY); window.dispatchEvent(new Event('zetruv:physical-cart-changed')) }}>{copy.remove3}</button></div>
+                  </div>
+                  <div className="physical-cart-item__price">
+                    <strong>{rupiah(item.price)}</strong>
+                    <div className="physical-qty"><button type="button" onClick={() => updateQty(item.qty - 1)}>−</button><span>{item.qty}</span><button type="button" onClick={() => updateQty(item.qty + 1)}>+</button></div>
+                  </div>
+                </article>
 
-            <div className="physical-cart-assurance">
-              <strong>{copy.shippingAtCheckout}</strong>
-              <p>{copy.shippingFeesDeliveryEstimatesAndMerchandiseCheckout}</p>
-              <p>{copy.youCanUpdateQuantityAndOptionsIn}</p>
+                <div className="physical-cart-assurance">
+                  <strong>{copy.shippingAtCheckout}</strong>
+                  <p>{copy.shippingFeesDeliveryEstimatesAndMerchandiseCheckout}</p>
+                  <p>{copy.youCanUpdateQuantityAndOptionsIn}</p>
+                </div>
+              </div>
+
+              <aside className="physical-cart-summary">
+                <h2>{copy.orderSummary2}</h2>
+                <div><span>{copy.subtotal}</span><strong>{rupiah(item.price * item.qty)}</strong></div>
+                <div><span>{copy.shipping2}</span><span>{copy.calculatedAtCheckout}</span></div>
+                <hr />
+                <div className="physical-cart-summary__total"><strong>{copy.estimatedTotal2}</strong><b>{rupiah(item.price * item.qty)}</b></div>
+                <PhysicalButton onClick={continueCheckout}>{readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}</PhysicalButton>
+                <div className="physical-login-note"><strong>{copy.merchandiseCheckoutIsUnavailable}</strong><span>{readCustomerSession() ? copy.youReLoggedInShippingAndPayment : copy.youCanLogInToYourZetruv}</span></div>
+              </aside>
             </div>
-          </div>
-
-          <aside className="physical-cart-summary">
-            <h2>{copy.orderSummary2}</h2>
-            <div><span>{copy.subtotal}</span><strong>{rupiah(item ? item.price * item.qty : 0)}</strong></div>
-            <div><span>{copy.shipping2}</span><span>{copy.calculatedAtCheckout}</span></div>
-            <hr />
-            <div className="physical-cart-summary__total"><strong>{copy.estimatedTotal2}</strong><b>{rupiah(item ? item.price * item.qty : 0)}</b></div>
-            <PhysicalButton onClick={continueCheckout} disabled={!item}>{readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}</PhysicalButton>
-            <div className="physical-login-note"><strong>{copy.merchandiseCheckoutIsUnavailable}</strong><span>{readCustomerSession() ? copy.youReLoggedInShippingAndPayment : copy.youCanLogInToYourZetruv}</span></div>
-          </aside>
-        </div>
+          </>
+        ) : (
+          <section className="physical-cart-empty" aria-labelledby="merchandise-cart-title">
+            <h1 id="merchandise-cart-title">{formatCopy(copy.cartTitleWithCount, { cart: copy.merchandiseCart, count: 0 })}</h1>
+            <div><ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" /></div>
+          </section>
+        )}
       </main>
       {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={(response) => { setCustomerSession(response); window.location.href = '/checkout?flow=physical' }} />}
     </div>
