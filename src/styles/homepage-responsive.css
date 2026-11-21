@@ -847,3 +847,122 @@
     transition: none;
   }
 }
+
+
+/* 2026-11 mobile storefront: horizontal discovery rails and compact account cards. */
+@media (max-width: 600px) {
+  .site-shell--homepage-final .service-categories.service-categories--homepage-final {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 12px;
+  }
+  .site-shell--homepage-final .service-categories--homepage-final .service-categories__inner {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-shell--homepage-final .service-categories--homepage-final .service-categories__inner::-webkit-scrollbar,
+  .site-shell--homepage-final .mini-panel--popular::-webkit-scrollbar { display: none; }
+  .site-shell--homepage-final .service-categories--homepage-final .service-category {
+    flex: 0 0 clamp(164px, 47vw, 205px);
+    width: auto;
+    min-width: 0;
+    height: 116px;
+    scroll-snap-align: start;
+  }
+  .site-shell--homepage-final .mini-panel--popular {
+    display: flex;
+    min-width: 0;
+    gap: 10px;
+    align-items: stretch;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game {
+    flex: 0 0 clamp(205px, 72vw, 300px);
+    width: auto;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+}
+.site-shell--homepage-final .homepage-accounts__row {
+  min-height: 0;
+  align-items: stretch;
+}
+.site-shell--homepage-final .homepage-account-card {
+  height: auto;
+  min-height: 0;
+}
+.site-shell--homepage-final .homepage-account-card__info {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.site-shell--homepage-final .homepage-account-card__bottom {
+  margin-top: 0;
+}
+@media (max-width: 600px) {
+  .site-shell--homepage-final .homepage-account-card {
+    min-height: 0;
+    align-self: stretch;
+  }
+}
+/* Desktop account actions stay in the account dropdown.
+   On small screens the hamburger drawer owns sign-out; hide the extra avatar. */
+@media (max-width: 1024px) {
+  .navbar.navbar--homepage-mobile .nav-account { display: none; }
+  .navbar.navbar--homepage-mobile.navbar--has-account:not(.navbar--mobile-cart) .navbar__top,
+  .site-shell--homepage-final .navbar.navbar--homepage-mobile.navbar--has-account:not(.navbar--mobile-cart) .navbar__top {
+    grid-template-columns: var(--navbar-logo-width, 88px) minmax(0, 1fr) 44px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart.navbar--has-account .navbar__top {
+    grid-template-columns: var(--navbar-logo-width, 88px) minmax(0, 1fr) 44px 44px;
+  }
+  .navbar--homepage-mobile .navbar__mobile-logout {
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.16);
+  }
+  .navbar--homepage-mobile .navbar__mobile-logout button {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 10px;
+    color: #ffb9bd;
+    background: rgba(166,42,56,.18);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .navbar--homepage-mobile .navbar__mobile-logout button:disabled { opacity: .55; cursor: wait; }
+  .navbar--homepage-mobile .navbar__mobile-logout button:focus-visible {
+    outline: 2px solid #a0b2ff;
+    outline-offset: 2px;
+  }
+  .navbar--homepage-mobile .cart-dropdown .navbar-control > span { min-width: 0; }
+  .navbar--homepage-mobile .cart-dropdown .navbar-control small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
