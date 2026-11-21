@@ -33,7 +33,7 @@ function readPhysicalCartCount() {
   }
 }
 
-export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, showMobileCart = false, restoreSession = true }) {
+export default function Navbar({ variant = 'default', onAuthenticated, homepageMobileMenu = false, showMobileCart = true, restoreSession = true }) {
   const copy = useStorefrontCopy()
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
