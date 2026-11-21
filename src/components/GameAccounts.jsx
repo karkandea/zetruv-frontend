@@ -36,9 +36,9 @@ export default function GameAccounts({ items = [], loading = false }) {
                 {account.thumbnailUrl || account.imageUrl
                   ? <img className="homepage-account-card__preview" src={account.thumbnailUrl || account.imageUrl} alt={account.name} />
                   : <div className="homepage-account-card__preview homepage-account-card__preview--empty" aria-hidden="true">{copy.gameAccounts}</div>}
-                <span className={`homepage-account-card__status${account.isAvailable ? '' : ' is-unavailable'}`}>
-                  {account.isAvailable ? copy.available : copy.unavailable}
-                </span>
+                {!account.isAvailable && (
+                  <span className="homepage-account-card__status is-unavailable">{copy.unavailable}</span>
+                )}
                 <div className="homepage-account-card__info">
                   <strong>{account.name}</strong>
                   <span>{account.gameName || copy.gameAccount}</span>
