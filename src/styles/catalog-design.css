@@ -408,3 +408,88 @@
     scroll-snap-align: start;
   }
 }
+
+
+/* The same Digital/Merchandise cart chooser is reachable beside the mobile hamburger
+   on all storefront pages, regardless of login state. Desktop unchanged. */
+@media (max-width: 1024px) {
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .navbar__top,
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart.navbar--has-account .navbar__top {
+    grid-template-columns: var(--navbar-logo-width, 88px) minmax(0, 1fr) 44px 44px;
+    column-gap: 4px;
+  }
+  .site-shell--homepage-final .navbar.navbar--homepage-mobile.navbar--mobile-cart .navbar__top {
+    grid-template-columns: 52px minmax(0, 1fr) 44px 44px;
+    column-gap: 4px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .navbar__quick-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-language-menu {
+    display: none;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-menu {
+    position: relative;
+    display: block;
+    width: 44px;
+    height: 44px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .navbar__quick-actions .nav-cart-trigger {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-trigger > img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-trigger > span { display: none; }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-menu > .cart-dropdown {
+    z-index: 175;
+    top: calc(100% + 8px);
+    right: -44px; /* align the dropdown with the hamburger's right edge */
+    left: auto;
+    width: min(290px, calc(100vw - 28px));
+    max-width: calc(100vw - 28px);
+    padding: 9px;
+    border-radius: 15px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-menu > .cart-dropdown a {
+    gap: 10px;
+    padding: 11px 10px;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-menu > .cart-dropdown a > span {
+    min-width: 0;
+    flex: 1;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-cart-menu > .cart-dropdown small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .navbar.navbar--homepage-mobile.navbar--mobile-cart .nav-account { display: none; }
+}
