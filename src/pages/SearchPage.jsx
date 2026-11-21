@@ -140,7 +140,8 @@ function publisherForProduct(product, fallback) {
 
 function productHref(product) {
   if (product.kind === 'GameItem') return `/product/item/${encodeURIComponent(product.slug)}`
-  if (product.isAvailable === false) return undefined
+  // Out-of-stock vouchers remain discoverable; their purchase actions stay guarded in detail.
+  if (product.isAvailable === false && product.kind !== 'GameVoucher') return undefined
   if (product.kind === 'TopUpGame') return `/product/${product.slug}`
   if (product.kind === 'TopUpLogin') return `/product/${product.slug}/login`
   if (product.kind === 'GameVoucher') return `/product/voucher/${product.slug}`
