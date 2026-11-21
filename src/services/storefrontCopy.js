@@ -171,7 +171,7 @@ const messages = {
   supportedPaymentMethods: ["Supported payment methods","Metode pembayaran yang didukung","Kaedah pembayaran yang disokong"],
   footerCopyright: ["© 2026 CV Zetruv. All rights reserved.","© 2026 CV Zetruv. Hak cipta dilindungi.","© 2026 CV Zetruv. Hak cipta terpelihara."],
   zetruvHome: ["Zetruv home","Beranda Zetruv","Laman utama Zetruv"],
-  topUpsVouchersBoostingGameAccounts: ["Top-Ups, Vouchers, Boosting & Game Accounts","Top Up, Voucher, Joki & Akun Game","Tambah Nilai, Baucar, Khidmat Joki & Akaun Permainan"],
+  topUpsVouchersBoostingGameAccounts: ["Top-Ups, Vouchers, etc.","Top Up, Voucher, dll.","Tambah Nilai, Baucar, dll."],
   closeNavigationMenu: ["Close navigation menu","Tutup menu navigasi","Tutup menu navigasi"],
   openNavigationMenu: ["Open navigation menu","Buka menu navigasi","Buka menu navigasi"],
   zetruvMobileNavigation: ["Zetruv mobile navigation","Navigasi seluler Zetruv","Navigasi mudah alih Zetruv"],
