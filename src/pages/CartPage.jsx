@@ -266,7 +266,7 @@ export default function CartPage() {
                   <span>{itemCount} {copy.items}</span>
                 </>
               ) : (
-                <h1 id="digital-cart-title">{isLoadingCart ? copy.digitalCart : formatCopy(copy.cartTitleWithCount, { cart: copy.digitalCart, count: 0 })}</h1>
+                <h1 id="digital-cart-title">{copy.digitalCart}</h1>
               )}
             </div>
 
@@ -274,7 +274,15 @@ export default function CartPage() {
               <LoadingRegion label={copy.loadingAndMergingYourAccountCart}><SkeletonRows count={2} /></LoadingRegion>
             ) : !hasItems ? (
               <div className="digital-empty-cart">
-                <ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" />
+                <div className="digital-empty-cart__art" aria-hidden="true">
+                  <ShoppingCart className="digital-empty-cart__fallback" size={82} strokeWidth={1.1} />
+                  {/* CC0 asset: https://freesvg.org/empty-shopping-basket-vector-drawing */}
+                  <img src="https://freesvg.org/img/cesta.png" alt="" loading="lazy"
+                    onError={(event) => { event.currentTarget.hidden = true }} />
+                </div>
+                <strong>{copy.yourDigitalCartIsEmpty}</strong>
+                <p>{copy.chooseATopUpVoucherOrBoosting}</p>
+                <a className="digital-empty-cart__cta" href="/search">{copy.continueShopping}</a>
               </div>
             ) : (
               <div className="digital-cart-items">
