@@ -448,6 +448,13 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
             </button>
           ))}
         </div>
+        {verifiedSession && (
+          <div className="navbar__mobile-logout nav-account__footer">
+            <button type="button" onClick={handleLogout} disabled={loggingOut}>
+              <LogOut size={18} aria-hidden="true" />{t.logout}
+            </button>
+          </div>
+        )}
         {!verifiedSession && <div className="navbar__mobile-auth">
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); setAuthMode('login') }}><LogIn size={18} aria-hidden="true" />{t.login}</button>
             <button type="button" onClick={() => { setIsHomepageDrawerOpen(false); openRegistration() }}><UserRoundPlus size={18} aria-hidden="true" />{t.register}</button>
