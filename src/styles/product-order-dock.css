@@ -288,6 +288,10 @@
     font-size: 11px;
     line-height: 15px;
   }
+  /* Keep quantity in one place: the collapsed/expanded dock header. */
+  .login-product-shell .product-order-dock__details .login-quantity-row {
+    display: none;
+  }
   .product-order-dock__inline-quantity {
     display: flex;
     flex-direction: column;
