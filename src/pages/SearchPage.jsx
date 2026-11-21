@@ -242,7 +242,7 @@ function CatalogCard({ product, categoryLabel, onRemoveFavorite }) {
             {!available && <span> · {copy.unavailable2}</span>}
           </small>
         )}
-        {!available && !showItemPrice && <small>{copy.unavailable2}</small>}
+        {!available && !showItemPrice && <small>{product.kind === 'GameVoucher' ? copy.voucherStockLabel : copy.unavailable2}</small>}
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
         aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
