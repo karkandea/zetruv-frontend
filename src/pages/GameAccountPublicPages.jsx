@@ -134,7 +134,7 @@ export function GameAccountsPage() {
   function search(event) {
     event.preventDefault()
   }
-  return <CatalogPage activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
+  return <CatalogPage className="catalog-shell--game-accounts" activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
     <header className="catalog-header">
       <div>
         <h1 className="catalog-title">{copy.gameAccounts}</h1>
