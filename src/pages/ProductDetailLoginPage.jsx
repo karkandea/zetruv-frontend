@@ -15,6 +15,7 @@ import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
+import '../styles/product-detail.css'
 import '../styles/product-detail-login.css'
 import '../styles/product-detail-login-improvements.css'
 import '../styles/service-unavailable-polish.css'
@@ -202,7 +203,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
   return (
     <div className="login-product-shell">
       <Navbar variant="loginCatalog" homepageMobileMenu />
-      <main className="login-product-page">
+      <main className="login-product-page product-detail-page">
         {status === 'loading' && (
           <ProductSkeleton label={copy.loadingPackagesFromTheCatalog} hero="login-product-hero"
             heroContent="login-product-container login-product-hero__content" cover="login-product-cover" heroCopy="login-product-hero__copy"
@@ -219,30 +220,28 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         )}
         {status === 'ready' && product && (
           <>
-            <section className="login-product-hero">
-              <img className="login-product-hero__background" src={cover.hero} alt="" decoding="async"
+            {/* Reuse the exact Top Up via ID hero structure and responsive layout. */}
+            <section className="product-hero pdp-figma-hero">
+              <img className="pdp-hero-image" src={cover.hero} alt="" decoding="async"
                 onError={(event) => {
                   if (event.currentTarget.dataset.fallback !== '1') {
                     event.currentTarget.dataset.fallback = '1'
                     event.currentTarget.src = cover.cover
                   }
                 }} />
-              <div className="login-product-hero__shade" />
-              <div className="login-product-container login-product-hero__content">
-                <div className="login-product-cover">
+              <div className="product-hero__shade" />
+              <div className="product-detail-container product-hero__content">
+                <div className="product-game-cover">
                   <VariantImage src={cover.cover} fallback={genericGameImage} alt={product.game?.name || product.name} />
                 </div>
-                <div className="login-product-hero__copy">
-                  <span className="login-product-service-badge">{copy.topUpByLogin2}</span>
-                  <div className="login-product-title-block">
-                    <h1>{product.game?.name || product.name}</h1>
-                    <div className="login-product-rating-line">
-                      <strong>{product.game?.publisher || copy.gameTopUp}</strong>
-                      <ProductRating product={product} />
-                    </div>
+                <div className="product-hero__copy">
+                  <h1>{product.game?.name || product.name}</h1>
+                  <div className="product-rating-line">
+                    <strong>{product.game?.publisher || copy.gameTopUp}</strong>
+                    <ProductRating product={product} />
                   </div>
-                  <ProductBenefits className="login-product-benefits" />
                 </div>
+                <ProductBenefits />
               </div>
             </section>
 
@@ -275,16 +274,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       )
                     })}
                   </div>
-                  <div className={`login-product-info-banner${!serviceStatus.available ? ' login-product-info-banner--unavailable' : ''}`} role={!serviceStatus.available ? 'status' : undefined}>
-                    {!serviceStatus.available ? <CircleAlert size={17} aria-hidden="true" /> : <Info size={17} aria-hidden="true" />}
-                    <div>
-                      {!serviceStatus.available && <strong>{copy.serviceTemporarilyUnavailable}</strong>}
-                      <p>{serviceStatus.available
-                        ? copy.weLlAskForYourGameAccount
-                        : copy.topUpByLoginIsUnavailableFor2}</p>
-                      {!serviceStatus.available && <a href="/search">{copy.browseOtherServices} <ArrowRight size={13} aria-hidden="true" /></a>}
+                  {serviceStatus.available && (
+                    <div className="login-product-info-banner">
+                      <Info size={17} aria-hidden="true" />
+                      <div><p>{copy.weLlAskForYourGameAccount}</p></div>
                     </div>
-                  </div>
+                  )}
                   <ProductReviews product={product} />
                 </section>
 
@@ -311,13 +306,6 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                     }
                     message={
                       <>
-                        {!serviceStatus.available && (
-                          <p className="login-product-summary__unavailable" role="status">
-                            <CircleAlert size={17} aria-hidden="true" />
-                            <span><strong>{copy.serviceTemporarilyUnavailable}</strong>
-                              {copy.thisPackageIsnTAvailableForPurchase} <a href="/search">{copy.browseOtherProducts}</a>.</span>
-                          </p>
-                        )}
                         {!selected && serviceStatus.available && <p className="login-product-summary__hint">{copy.chooseAnAvailablePackageFirst}</p>}
                         {selected && !available && <p className="login-product-summary__hint">{copy.thisPackageIsCurrentlyUnavailable}</p>}
                       </>
