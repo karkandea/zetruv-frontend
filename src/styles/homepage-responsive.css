@@ -708,10 +708,87 @@
     padding: 0;
   }
 
+  /* Two account cards visible per swipe on phones, with room for longer CMS data. */
+  .site-shell--homepage-final .homepage-accounts__row {
+    gap: 12px;
+    align-items: stretch;
+    scroll-padding-inline: 0;
+  }
+
   .site-shell--homepage-final .homepage-account-card {
-    flex: 0 0 100%;
+    flex: 0 0 calc((100% - 12px) / 2);
+    min-width: 0;
     height: auto;
-    min-height: 332px;
+    min-height: 360px;
+    padding: 10px;
+    gap: 8px;
+    scroll-snap-align: start;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__preview {
+    height: auto;
+    aspect-ratio: 16 / 10;
+    border-radius: 8px;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__status {
+    width: fit-content;
+    min-width: 68px;
+    height: 22px;
+    padding-inline: 8px;
+    font-size: 8px;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__info {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: visible;
+    gap: 5px;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__info strong {
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__attributes {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 4px;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__attributes span {
+    display: inline-block;
+    max-width: 100%;
+    padding: 3px 5px;
+    border-radius: 6px;
+    background: #f3f4f9;
+    font-size: 9px;
+    line-height: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__bottom {
+    height: auto;
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__bottom > strong {
+    font-size: 13px;
+    line-height: 19px;
+    overflow-wrap: anywhere;
+  }
+
+  .site-shell--homepage-final .homepage-account-card__bottom > a {
+    width: 100%;
+    height: 36px;
+    font-size: 10px;
   }
 
   .site-shell--homepage-final .merchandise {
