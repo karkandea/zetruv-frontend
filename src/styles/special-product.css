@@ -194,3 +194,15 @@
   .special-product-hero__content{flex-direction:column}
   .special-product-grid{grid-template-columns:1fr}
 }
+
+/* Keep the catalogue inspectable with no redeem codes; purchase remains disabled. */
+.special-product-packages > .special-product-stock-note {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #e4ddba;
+  border-radius: 10px;
+  color: #655316;
+  background: #fff9e8;
+  font-size: 12px;
+  line-height: 1.6;
+}
