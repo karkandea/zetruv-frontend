@@ -287,6 +287,16 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       { label: copy.product, value: selected?.name },
                       ...(quantityCapable ? [{ label: copy.quantity, value: quantity }] : []),
                     ]}
+                    quantityControl={quantityCapable ? {
+                      label: copy.quantity,
+                      value: quantity,
+                      min: 1,
+                      max: limit,
+                      decreaseLabel: copy.decreaseQuantity,
+                      increaseLabel: copy.increaseQuantity,
+                      onDecrease: () => { setQuantity((n) => Math.max(1, n - 1)); setNotice(false) },
+                      onIncrease: () => { setQuantity((n) => Math.min(limit, n + 1)); setNotice(false) },
+                    } : null}
                     total={selected && (
                       <div className="login-summary-total">
                         <span>{copy.paymentTotal}</span><strong>{rupiah(pricing.total)}</strong>
