@@ -983,3 +983,95 @@
     text-overflow: ellipsis;
   }
 }
+
+
+/* Game Populer mobile: square artwork and a caption underneath, like a
+   category icon rail. No elongated cards or dark enclosing panel. */
+@media (max-width: 600px) {
+  .site-shell--homepage-final .popular-recent__column {
+    min-width: 0;
+  }
+  .site-shell--homepage-final .mini-panel.mini-panel--popular {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    gap: 12px;
+    padding: 2px 0 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-shell--homepage-final .mini-panel.mini-panel--popular::-webkit-scrollbar {
+    display: none;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game {
+    display: flex;
+    flex: 0 0 clamp(86px, 25vw, 105px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: clamp(86px, 25vw, 105px);
+    min-width: 0;
+    min-height: 0;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #3b3d49;
+    text-align: center;
+    font-size: 12px;
+    line-height: 17px;
+    font-weight: 500;
+    scroll-snap-align: start;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game__image {
+    display: block;
+    flex: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border: 0;
+    border-radius: 15px;
+    background: #eef1fa;
+    box-shadow: none;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game__image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game > span:last-child {
+    display: -webkit-box;
+    width: 100%;
+    min-width: 0;
+    max-height: 36px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    text-overflow: ellipsis;
+    white-space: normal;
+  }
+  .site-shell--homepage-final .mini-panel--popular .mini-game:focus-visible {
+    outline: 2px solid #5367d3;
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
+}
