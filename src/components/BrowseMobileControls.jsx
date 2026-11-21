@@ -1,14 +1,15 @@
-import { Box, IdCard, LogIn, Search, Shirt, Ticket, Trophy, UserRound } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { searchAssets } from '../data/searchAssets'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 
 const tabs = [
-  { kind: 'TopUpGame', label: 'topUpById', href: '/search', Icon: IdCard },
-  { kind: 'TopUpLogin', label: 'topUpByLogin', href: '/search?kind=TopUpLogin', Icon: LogIn },
-  { kind: 'Joki', label: 'gameBoosting', href: '/search?kind=Joki', Icon: Trophy },
-  { kind: 'GameAccount', label: 'gameAccounts', href: '/game-accounts', Icon: UserRound },
-  { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher', Icon: Ticket },
-  { kind: 'GameItem', label: 'gameItems', href: '/search?kind=GameItem', Icon: Box },
-  { kind: 'Merchandise', label: 'merchandise', href: '/merchandise', Icon: Shirt },
+  { kind: 'TopUpGame', label: 'topUpById', href: '/search', icon: searchAssets.categoryPlayerId },
+  { kind: 'TopUpLogin', label: 'topUpByLogin', href: '/search?kind=TopUpLogin', icon: searchAssets.categoryLogin },
+  { kind: 'Joki', label: 'gameBoosting', href: '/search?kind=Joki', icon: searchAssets.categoryJoki || searchAssets.categoryItems },
+  { kind: 'GameAccount', label: 'gameAccounts', href: '/game-accounts', icon: searchAssets.categoryAccounts },
+  { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher', icon: searchAssets.categoryItems },
+  { kind: 'GameItem', label: 'gameItems', href: '/search?kind=GameItem', icon: searchAssets.categoryItems },
+  { kind: 'Merchandise', label: 'merchandise', href: '/merchandise', icon: searchAssets.categoryMerchandise },
 ]
 
 export default function BrowseMobileControls({ activeKind, query, onQueryChange, onSubmit, onCategoryChange, showSearch = true }) {
@@ -28,10 +29,10 @@ export default function BrowseMobileControls({ activeKind, query, onQueryChange,
         />
       </form>}
       <nav className="browse-mobile-tabs" aria-label={copy.productCategories2}>
-        {tabs.map(({ kind, label, href, Icon }) => {
+        {tabs.map(({ kind, label, href, icon }) => {
           const active = kind === activeKind
           const className = `browse-mobile-tab${active ? ' is-active' : ''}`
-          const content = <><Icon size={20} aria-hidden="true" /><span>{copy[label]}</span></>
+          const content = <><span className="browse-mobile-tab__icon"><img src={icon} alt="" /></span><span>{copy[label]}</span></>
 
           return onCategoryChange && kind !== 'Merchandise' && kind !== 'GameAccount' ? (
             <button type="button" className={className} aria-pressed={active} key={kind} onClick={() => onCategoryChange(kind)}>
