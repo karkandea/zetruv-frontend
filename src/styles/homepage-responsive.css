@@ -851,34 +851,51 @@
 
 /* 2026-11 mobile storefront: horizontal discovery rails and compact account cards. */
 @media (max-width: 600px) {
+  /* Restore the compact 2-up category grid on phones: never stack one
+     card per row. This also replaces the unstable mobile category rail. */
   .site-shell--homepage-final .service-categories.service-categories--homepage-final {
+    width: 100%;
     height: auto;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
     padding: 0 12px;
+    box-sizing: border-box;
   }
   .site-shell--homepage-final .service-categories--homepage-final .service-categories__inner {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
+    align-items: stretch;
+    justify-content: stretch;
     width: 100%;
     min-width: 0;
     max-width: 100%;
     height: auto;
     gap: 12px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    scroll-snap-type: none;
+    padding: 0;
+    box-sizing: border-box;
   }
-  .site-shell--homepage-final .service-categories--homepage-final .service-categories__inner::-webkit-scrollbar,
   .site-shell--homepage-final .mini-panel--popular::-webkit-scrollbar { display: none; }
   .site-shell--homepage-final .service-categories--homepage-final .service-category {
-    flex: 0 0 clamp(164px, 47vw, 205px);
-    width: auto;
+    display: flex;
+    flex: initial;
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
     min-width: 0;
+    max-width: 100%;
     height: 116px;
-    scroll-snap-align: start;
+    padding: 12px;
+    gap: 7px;
+    box-sizing: border-box;
+    scroll-snap-align: none;
+  }
+  .site-shell--homepage-final .service-categories--homepage-final .service-category small {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
   }
   .site-shell--homepage-final .mini-panel--popular {
     display: flex;
