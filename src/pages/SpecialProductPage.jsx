@@ -163,7 +163,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
                   disabled={!voucher && !available.includes(item)} aria-pressed={selected?.id === item.id}
                   onClick={() => { setSelectedId(item.id); setQuantity(1); setNotice(''); setError('') }} key={item.id}>
                   <strong>{item.name}</strong>
-                  <span>{voucher ? `${rupiah(packagePrice(item))}${available.includes(item) ? '' : ` · ${copy.unavailable2}`}` : gameItem || available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
+                  <span>{voucher ? `${rupiah(packagePrice(item))}${available.includes(item) ? '' : ` · ${copy.voucherStockLabel}`}` : gameItem || available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
                 </button>
               ))}
             </div>
