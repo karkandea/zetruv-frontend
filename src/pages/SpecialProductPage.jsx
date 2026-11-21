@@ -179,7 +179,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
             </div>
             <div className="special-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             {pricing.discount > 0 && <div className="special-summary-row"><span>{copy.discount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}
-            {voucher && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>
+            {voucher && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
             <hr />
             <div className="special-summary-total"><span>{copy.total}</span><strong>{rupiah(pricing.total + voucherServiceFee)}</strong></div>
             {notice && <p role="status" className="special-product-success">{copy[notice]}</p>}
