@@ -488,3 +488,99 @@
 @media (prefers-reduced-motion: reduce) {
   .digital-shell .digital-cart-fee-help [role="tooltip"] { transition: none; }
 }
+
+
+/* Empty cart: one clear message + discovery action (eBay empty-state pattern).
+   Basket art: FreeSVG/OpenClipart CC0, https://freesvg.org/empty-shopping-basket-vector-drawing */
+.digital-shell .digital-cart-layout--empty .digital-cart-list-card {
+  min-height: 460px;
+}
+.digital-shell .digital-cart-layout--empty .digital-empty-cart {
+  min-height: 385px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 34px 16px 42px;
+  text-align: center;
+}
+.digital-shell .digital-empty-cart__art {
+  position: relative;
+  width: 190px;
+  height: 164px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 34px;
+  background: radial-gradient(circle at 50% 45%, #eef1ff 0%, #f7f8ff 55%, transparent 74%);
+}
+.digital-shell .digital-empty-cart__fallback {
+  position: absolute;
+  color: #777fc0;
+}
+.digital-shell .digital-empty-cart__art > img {
+  position: relative;
+  z-index: 1;
+  width: 144px;
+  height: 138px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.digital-shell .digital-empty-cart__art > img[hidden] {
+  display: none;
+}
+.digital-shell .digital-empty-cart > strong {
+  color: #17172b;
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.4;
+  font-weight: 700;
+}
+.digital-shell .digital-empty-cart > p {
+  max-width: 360px;
+  margin: 8px 0 0;
+  color: #73798b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.digital-shell .digital-empty-cart > a.digital-empty-cart__cta {
+  min-width: 165px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 10px 22px;
+  border-radius: 11px;
+  background: #060552;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color .2s ease;
+}
+.digital-shell .digital-empty-cart > a.digital-empty-cart__cta:hover {
+  background: #18187a;
+}
+.digital-shell .digital-empty-cart > a.digital-empty-cart__cta:focus-visible {
+  outline: 2px solid #6b85fd;
+  outline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .digital-shell .digital-cart-layout--empty .digital-cart-list-card {
+    min-height: 400px;
+  }
+  .digital-shell .digital-cart-layout--empty .digital-empty-cart {
+    min-height: 340px;
+    padding: 30px 8px;
+  }
+  .digital-shell .digital-empty-cart__art {
+    width: 150px;
+    height: 140px;
+    margin-bottom: 12px;
+  }
+  .digital-shell .digital-empty-cart__art > img {
+    width: 125px;
+    height: 115px;
+  }
+}
