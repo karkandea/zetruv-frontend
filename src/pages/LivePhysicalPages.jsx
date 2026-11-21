@@ -1,7 +1,7 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonPanel } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Navbar from '../components/Navbar'
 import MerchandiseCard, { MerchandiseCardSkeletons } from '../components/MerchandiseCard'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
@@ -78,6 +78,7 @@ export function LivePhysicalProductPage({ slug }) {
   const [variantId, setVariantId] = useState('')
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const imageTouchX = useRef(null)
   const [added, setAdded] = useState(false)
   const favoriteId = `merchandise:${slug}`
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
@@ -120,6 +121,21 @@ export function LivePhysicalProductPage({ slug }) {
   const variant = variants.find((item) => item.id === variantId)
   const images = (product.images || []).map((item) => item.url).filter(Boolean)
   if (!images.length && product.thumbnailUrl) images.push(product.thumbnailUrl)
+  const activeImage = Math.min(selectedImage, Math.max(0, images.length - 1))
+  const selectGalleryImage = (index) => {
+    if (images.length < 2) return
+    setSelectedImage((index + images.length) % images.length)
+  }
+  function handleGalleryTouchStart(event) {
+    imageTouchX.current = event.touches[0]?.clientX ?? null
+  }
+  function handleGalleryTouchEnd(event) {
+    const start = imageTouchX.current
+    imageTouchX.current = null
+    const end = event.changedTouches[0]?.clientX
+    if (start == null || end == null || images.length < 2 || Math.abs(end - start) < 44) return
+    selectGalleryImage(activeImage + (end < start ? 1 : -1))
+  }
   const unitPrice = variant?.effectivePrice ?? variant?.price
   const canAdd = Boolean(product.isAvailable && variant?.isAvailable && unitPrice != null)
   const stockLimit = variant?.stockQuantity == null ? 9 : Math.min(9, variant.stockQuantity)
@@ -139,9 +155,26 @@ export function LivePhysicalProductPage({ slug }) {
     <main className="physical-pdp">
       <div className="physical-breadcrumb"><a href="/merchandise">{copy.merchandise}</a> <span>/</span> {product.name}</div>
       <div className="physical-pdp__main">
-        <section className="physical-gallery">
-          {images.length > 0 && <div className="physical-gallery__thumbs">{images.map((src, index) => <button type="button" className={index === selectedImage ? 'is-active' : ''} key={`${src}-${index}`} onClick={() => setSelectedImage(index)} aria-label={formatCopy(copy.viewImage, { number: index + 1 })}><img src={src} alt="" /></button>)}</div>}
-          <div className="physical-gallery__primary">{images.length ? <img src={images[Math.min(selectedImage, images.length - 1)]} alt={product.name} /> : <span>{copy.productPhotoUnavailable}</span>}</div>
+        <section className="physical-gallery physical-gallery--live" aria-label={product.name}>
+          {images.length > 0 && <div className="physical-gallery__thumbs">{images.map((src, index) => (
+            <button type="button" className={index === activeImage ? 'is-active' : ''} key={`${src}-${index}`}
+              onClick={() => setSelectedImage(index)} aria-pressed={index === activeImage}
+              aria-label={formatCopy(copy.viewImage, { number: index + 1 })}><img src={src} alt="" loading="lazy" /></button>
+          ))}</div>}
+          <div className="physical-gallery__primary" onTouchStart={handleGalleryTouchStart} onTouchEnd={handleGalleryTouchEnd}>
+            {images.length ? <img key={images[activeImage]} src={images[activeImage]} alt={product.name} decoding="async" /> : <span>{copy.productPhotoUnavailable}</span>}
+            {images.length > 1 && (
+              <div className="physical-gallery__mobile-dots" role="group" aria-label={product.name}>
+                {images.map((src, index) => (
+                  <button type="button" key={`${src}-${index}`}
+                    className={index === activeImage ? 'is-active' : ''}
+                    aria-pressed={index === activeImage}
+                    aria-label={formatCopy(copy.viewImage, { number: index + 1 })}
+                    onClick={() => setSelectedImage(index)}><span aria-hidden="true" /></button>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
         <section className="physical-purchase-panel">
           <div className="physical-purchase-panel__top"><span className="physical-badge">{copy.merchandise2}</span><Availability available={product.isAvailable} /></div>
