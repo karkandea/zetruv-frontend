@@ -7,7 +7,7 @@ import { useCarouselPages } from '../hooks/useCarouselPages'
 export default function GameAccounts({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   const cards = items.filter((item) => item?.id && item?.slug).slice(0, 3)
-  const { rowRef, activePage, updateActivePage, showPage } = useCarouselPages(cards.length)
+  const { rowRef, activePage, updateActivePage, showPage } = useCarouselPages(cards.length, 2)
 
   return (
     <section className="homepage-accounts" id="game-accounts" aria-labelledby="homepage-accounts-title">
