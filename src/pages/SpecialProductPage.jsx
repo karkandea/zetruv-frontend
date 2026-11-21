@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import { searchAssets } from '../data/searchAssets'
-import voucherSteam from '../assets/special/voucher-steam.png'
 import { getCatalogProduct } from '../services/catalogService'
 import { addCartItem, awaitCartPersistence, readCart } from '../services/cartService'
 import { getCartSyncStatus, readCustomerSession } from '../services/customerCartSync'
@@ -12,58 +11,6 @@ import { getDigitalPricing } from '../services/digitalCartPricing'
 import '../styles/special-product.css'
 
 const rupiah = (value = 0) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`
-
-const VOUCHERS = {
-  'steam-wallet-idr': {
-    id: 'voucher-steam-wallet',
-    name: 'Steam Wallet IDR',
-    publisher: 'Steam',
-    kind: 'GameVoucher',
-    fulfillmentMethod: 'VOUCHER_CODE',
-    image: voucherSteam,
-    hero: voucherSteam,
-    badge: 'VOUCHER GAME',
-    description: 'Kode voucher digital dikirim setelah pembayaran berhasil.',
-    variants: [
-      { id: 'steam-60', name: 'Steam Wallet IDR 60K', price: 65000 },
-      { id: 'steam-120', name: 'Steam Wallet IDR 120K', price: 125000 },
-      { id: 'steam-250', name: 'Steam Wallet IDR 250K', price: 257000 },
-      { id: 'steam-400', name: 'Steam Wallet IDR 400K', price: 408000 },
-    ],
-  },
-  'google-play-gift-code': {
-    id: 'voucher-google-play',
-    name: 'Google Play Gift Code',
-    publisher: 'Google Play',
-    kind: 'GameVoucher',
-    fulfillmentMethod: 'VOUCHER_CODE',
-    image: searchAssets.categoryItems,
-    hero: searchAssets.categoryItems,
-    badge: 'VOUCHER GAME',
-    description: 'Gift code digital untuk akun Google Play region Indonesia.',
-    variants: [
-      { id: 'gp-50', name: 'Google Play IDR 50K', price: 52000 },
-      { id: 'gp-100', name: 'Google Play IDR 100K', price: 103000 },
-      { id: 'gp-150', name: 'Google Play IDR 150K', price: 154000 },
-    ],
-  },
-  'playstation-store': {
-    id: 'voucher-playstation-store',
-    name: 'PlayStation Store Gift Card',
-    publisher: 'PlayStation',
-    kind: 'GameVoucher',
-    fulfillmentMethod: 'VOUCHER_CODE',
-    image: searchAssets.categoryItems,
-    hero: searchAssets.categoryItems,
-    badge: 'VOUCHER GAME',
-    description: 'Kode voucher PlayStation Store. Periksa region PSN sebelum membeli.',
-    variants: [
-      { id: 'psn-100', name: 'PS Store IDR 100K', price: 103000 },
-      { id: 'psn-200', name: 'PS Store IDR 200K', price: 206000 },
-      { id: 'psn-400', name: 'PS Store IDR 400K', price: 411000 },
-    ],
-  },
-}
 
 function ProductState({ state, retry, joki = false, gameItem = false }) {
   const copy = useStorefrontCopy()
@@ -81,13 +28,14 @@ function ProductState({ state, retry, joki = false, gameItem = false }) {
         {state === 'not-found' && <p>{copy.thisProductIsUnavailableInTheCatalog}</p>}
       </div>
       {failed && <button type="button" className="special-secondary" onClick={retry}>{copy.tryAgain}</button>}
-      <a href={gameItem ? '/search?kind=GameItem' : joki ? '/search?kind=Joki' : '/search'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>
+      <a href={gameItem ? '/search?kind=GameItem' : joki ? '/search?kind=Joki' : '/search?kind=GameVoucher'}>{joki ? copy.backToBoosting : copy.backToCatalog}</a>
     </main>}
   </div>
 }
 
 function LiveManualProduct({ slug, kind }) {
   const gameItem = kind === 'GameItem'
+  const isVoucher = kind === 'GameVoucher'
   const [result, setResult] = useState({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
@@ -107,7 +55,7 @@ function LiveManualProduct({ slug, kind }) {
     setAttempt((value) => value + 1)
   }} />
 
-  return <SpecialProduct product={result.product} slug={slug} joki={!gameItem} gameItem={gameItem} />
+  return <SpecialProduct product={result.product} slug={slug} joki={!gameItem && !isVoucher} gameItem={gameItem} voucher={isVoucher} />
 }
 
 function packagePrice(variant) {
@@ -119,23 +67,25 @@ function isPurchasable(variant) {
     Number.isFinite(packagePrice(variant)) && packagePrice(variant) > 0
 }
 
-function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
-  const manual = joki || gameItem
+function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher = false }) {
+  const manual = joki || gameItem || voucher
   const copy = useStorefrontCopy()
   const variants = product.variants || []
-  const available = variants.filter((variant) => !manual || (product.isAvailable && isPurchasable(variant)))
-  const [selectedId, setSelectedId] = useState(available[0]?.id || '')
+  const available = variants.filter((variant) => product.isAvailable && isPurchasable(variant))
+  const [selectedId, setSelectedId] = useState(available[0]?.id || variants[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const addGuard = useRef(false)
-  const selected = available.find((item) => item.id === selectedId) || available[0]
-  const image = manual ? product.thumbnailUrl || product.game?.imageUrl || (gameItem ? searchAssets.categoryItems : searchAssets.categoryJoki) : product.image
-  const hero = manual ? product.images?.[0]?.url || image : product.hero || image
+  // An out-of-stock voucher can be selected for viewing, never for purchase.
+  const selected = variants.find((item) => item.id === selectedId) || available[0] || variants[0]
+  const selectedPurchasable = Boolean(selected && available.includes(selected))
+  const image = product.thumbnailUrl || product.image || product.game?.imageUrl || (voucher ? searchAssets.categoryItems : gameItem ? searchAssets.categoryItems : searchAssets.categoryJoki)
+  const hero = product.images?.[0]?.url || product.hero || image
   const publisher = manual ? product.game?.publisher : product.publisher
   const description = product.shortDescription || product.description
-  const entry = selected ? {
+  const entry = selectedPurchasable ? {
     accountKey: 'checkout-required',
     productId: product.id,
     productSlug: product.slug || slug,
@@ -153,25 +103,23 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
     requiresGameAccountValidation: Boolean(product.requiresGameAccountValidation),
   } : null
   const pricing = entry ? getDigitalPricing([entry]) : null
-  const voucherServiceFee = manual ? 0 : 2000
+  const voucherServiceFee = voucher ? 2000 : 0
 
   async function add(goToCart) {
-    if (!entry || addGuard.current) return
+    if (!entry || !selectedPurchasable || addGuard.current) return
     addGuard.current = true
     setSaving(true)
     setNotice('')
     setError('')
     try {
-      if (manual && readCustomerSession() && getCartSyncStatus().state !== 'synced') {
+      if (readCustomerSession() && getCartSyncStatus().state !== 'synced') {
         throw Error('cartNotSynced')
       }
-      const alreadyAdded = manual && readCart().some((item) => item.variantId === entry.variantId)
+      const alreadyAdded = readCart().some((item) => item.variantId === entry.variantId)
       if (!alreadyAdded) addCartItem(entry)
-      if (manual) {
-        await awaitCartPersistence()
-        const sync = getCartSyncStatus()
-        if (sync.state === 'error' || sync.state === 'conflict') throw Error(sync.message)
-      }
+      await awaitCartPersistence()
+      const sync = getCartSyncStatus()
+      if (sync.state === 'error' || sync.state === 'conflict') throw Error(sync.message)
       if (goToCart) window.location.href = '/cart'
       else setNotice(alreadyAdded ? 'packageAlreadyInCart' : 'theProductWasAddedToYourCart')
     } catch (failure) {
@@ -206,17 +154,20 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
             <h2>{gameItem ? copy.chooseGameItem : joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
             {(!gameItem || selected) && <p>{gameItem ? copy.gameItemDeliveryAfterPayment : joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>}
             {!selected && <p role="status">{gameItem ? copy.gameItemUnavailable : copy.thereAreNoPackagesToChooseFrom}</p>}
+            {voucher && available.length === 0 && (
+              <p role="status" className="special-product-stock-note">{copy.voucherStockUnavailable}</p>
+            )}
             <div className="special-product-grid">
               {variants.map((item) => (
                 <button className={selected?.id === item.id ? 'is-active' : ''} type="button"
-                  disabled={!available.includes(item)} aria-pressed={selected?.id === item.id}
+                  disabled={!voucher && !available.includes(item)} aria-pressed={selected?.id === item.id}
                   onClick={() => { setSelectedId(item.id); setQuantity(1); setNotice(''); setError('') }} key={item.id}>
                   <strong>{item.name}</strong>
-                  <span>{gameItem || available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
+                  <span>{voucher ? `${rupiah(packagePrice(item))}${available.includes(item) ? '' : ` · ${copy.unavailable2}`}` : gameItem || available.includes(item) ? rupiah(packagePrice(item)) : copy.unavailable2}</span>
                 </button>
               ))}
             </div>
-            {!manual && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
+            {voucher && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
             <ProductReviews product={manual ? product : { slug }} />
           </section>
 
@@ -224,11 +175,11 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
             <h2>{copy.summary}</h2>
             <div className="special-product-selected">
               <div><strong>{selected.name}</strong><span>{rupiah(entry.unitPrice)} / item</span></div>
-              {!manual && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
+              {voucher && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
             </div>
             <div className="special-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             {pricing.discount > 0 && <div className="special-summary-row"><span>{copy.discount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}
-            {!manual && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>}
+            {voucher && <div className="special-summary-row"><span>{copy.serviceFee}</span><strong>{rupiah(voucherServiceFee)}</strong></div>
             <hr />
             <div className="special-summary-total"><span>{copy.total}</span><strong>{rupiah(pricing.total + voucherServiceFee)}</strong></div>
             {notice && <p role="status" className="special-product-success">{copy[notice]}</p>}
@@ -243,7 +194,6 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false }) {
 }
 
 export default function SpecialProductPage({ type = 'voucher', slug }) {
-  if (type === 'joki' || type === 'item') return <LiveManualProduct key={slug} slug={slug} kind={type === 'item' ? 'GameItem' : 'Joki'} />
-  const product = Object.hasOwn(VOUCHERS, slug) ? VOUCHERS[slug] : null
-  return product ? <SpecialProduct key={slug} slug={slug} product={product} /> : <ProductState state="not-found" />
+  return <LiveManualProduct key={slug} slug={slug}
+    kind={type === 'item' ? 'GameItem' : type === 'joki' ? 'Joki' : 'GameVoucher'} />
 }
