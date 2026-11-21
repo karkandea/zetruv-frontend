@@ -113,15 +113,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         setSelectedId((selection.variant && selection.variant.isAvailable ? selection.variant : firstAvailableVariant(data))?.id || '')
         if (selection.invalidSelection) setSelectionWarning(copy.thisFlashSaleOptionIsNoLonger2)
         else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning(copy.theFlashSaleForThisPackageHas)
-        try {
-          const readiness = await getManualLoginReadiness(data.id)
-          if (!active) return
-          setServiceReadiness(readiness)
-        } catch {
-          if (!active) return
-          setServiceReadiness(null)
-        }
+        // Shopping-cart eligibility depends on the SKU, not the fulfillment
+        // readiness gate. Resolve that gate separately for later checkout.
         setStatus('ready')
+        void getManualLoginReadiness(data.id)
+          .then((readiness) => { if (active) setServiceReadiness(readiness) })
+          .catch(() => { if (active) setServiceReadiness(null) })
       })
       .catch((reason) => {
         if (!active) return
@@ -149,7 +146,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
   )
   const pricing = useMemo(() => getDigitalPricing(previewItem), [previewItem])
   const serviceStatus = viaLoginServiceStatus(product, {}, serviceReadiness)
-  const canAdd = status === 'ready' && serviceStatus.available && available && Number.isFinite(unitPrice) && unitPrice > 0 && !isAdding
+  const canAdd = status === 'ready' && available && Number.isFinite(unitPrice) && unitPrice > 0 && !isAdding
   const cover = product ? productMedia(product) : { hero: genericGameImage, cover: genericGameImage }
   const selectedIndex = product?.variants?.findIndex((variant) => variant.id === selectedId) ?? -1
   const thumbnail = product && selected
