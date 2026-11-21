@@ -338,3 +338,73 @@
 }
 
 .service-category__game-item-icon { color: var(--navy); }
+
+
+/* Game Accounts landing: no enclosing catalog panel; game cards in a single horizontal rail. */
+.catalog-shell--game-accounts .catalog-layout {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 22px;
+}
+.catalog-shell--game-accounts .catalog-content {
+  padding: 0 0 32px;
+  min-width: 0;
+}
+.catalog-shell--game-accounts .catalog-layout .search-sidebar--browse {
+  border-radius: 18px;
+}
+.catalog-shell--game-accounts .catalog-content .ga-game-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: 0;
+  width: 100%;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 14px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.catalog-shell--game-accounts .catalog-content .ga-game-card {
+  flex: 0 0 clamp(210px, 29vw, 265px);
+  max-width: 265px;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+@media (max-width: 900px) {
+  .catalog-shell--game-accounts .catalog-layout { display: block; }
+  .catalog-shell--game-accounts .catalog-content { padding: 0; }
+  .catalog-shell--game-accounts .catalog-content .ga-game-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .catalog-shell--game-accounts .catalog-content .ga-game-grid::-webkit-scrollbar { display: none; }
+  .catalog-shell--game-accounts .catalog-content .ga-game-card {
+    flex: 0 0 clamp(205px, 72vw, 265px);
+  }
+  /* Merchandise browse should swipe, not stack vertically on narrow screens. */
+  .catalog-shell:not(.catalog-shell--game-accounts) .catalog-content .catalog-merch-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .catalog-shell .catalog-content .catalog-merch-grid::-webkit-scrollbar { display: none; }
+  .catalog-shell .catalog-content .catalog-merch-grid > .merch-card {
+    width: clamp(200px, 67vw, 258px);
+    min-width: 0;
+    flex: 0 0 clamp(200px, 67vw, 258px);
+    scroll-snap-align: start;
+  }
+}
