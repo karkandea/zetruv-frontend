@@ -18,11 +18,11 @@ export function CatalogSearch({ query, onQueryChange, onSubmit, label }) {
   )
 }
 
-export default function CatalogPage({ activeKind, query, onQueryChange, onSubmit, children }) {
+export default function CatalogPage({ activeKind, query, onQueryChange, onSubmit, children, className = '' }) {
   const [supportOpen, setSupportOpen] = useState(false)
 
   return (
-    <div className="browse-catalog-shell catalog-shell">
+    <div className={`browse-catalog-shell catalog-shell${className ? ` ${className}` : ''}`}>
       <Navbar homepageMobileMenu showMobileCart />
       <main className="catalog-page browse-catalog-page">
         <BrowseMobileControls activeKind={activeKind} query={query} onQueryChange={onQueryChange} onSubmit={onSubmit} />
