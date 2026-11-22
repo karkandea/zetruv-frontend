@@ -34,7 +34,6 @@ export default function MerchandiseCard({ product }) {
         {thumbnail && brokenImage !== thumbnail ? (
           <img src={thumbnail} alt="" loading="lazy" decoding="async" onError={() => setBrokenImage(thumbnail)} />
         ) : <ImageOff size={22} role="img" aria-label={copy.photoUnavailable} />}
-        <span className="merch-card__chip">{copy.merchandise2}</span>
       </div>
       <div className="merch-card__body">
         <h3 title={product.name}>{product.name}</h3>
