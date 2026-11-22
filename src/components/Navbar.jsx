@@ -383,12 +383,11 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <ChevronDown size={14} aria-hidden="true" />
             </button>
             <nav id="navbar-account-dropdown" className="nav-account__dropdown" aria-label={t.accountMenu} hidden={!isAccountOpen}>
-              <div className="nav-account__identity">
+              <a className="nav-account__identity" href="/account" onClick={() => setIsAccountOpen(false)}>
                 <span className="nav-account__avatar" aria-hidden="true">{accountInitial}</span>
                 <span><strong>{verifiedSession.customer?.name || t.account}</strong><small>{verifiedSession.customer?.email}</small></span>
-              </div>
+              </a>
               <div className="nav-account__links">
-                <a href="/account" onClick={() => setIsAccountOpen(false)}><UserRound size={18} aria-hidden="true" />{t.account}</a>
                 <a href="/account#account-settings" onClick={() => setIsAccountOpen(false)}><Settings size={18} aria-hidden="true" />{t.settings}</a>
                 <button type="button" aria-haspopup="dialog" onClick={() => {
                   setIsAccountOpen(false)
@@ -421,12 +420,11 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
       </div>
 
       {homepageMobileMenu && <div id="zetruv-homepage-mobile-nav" className="navbar__mobile-drawer" data-open={isHomepageDrawerOpen} inert={!isHomepageDrawerOpen}>
-        {verifiedSession && <div className="navbar__mobile-account-summary">
+        {verifiedSession && <a className="navbar__mobile-account-summary" href="/account" onClick={() => selectNav('account')}>
           <span className="nav-account__avatar" aria-hidden="true">{accountInitial}</span>
           <span><strong>{verifiedSession.customer?.name || t.account}</strong><small>{verifiedSession.customer?.email}</small></span>
-        </div>}
+        </a>}
         <nav className="navbar__mobile-links" aria-label={copy.zetruvMobileNavigation}>
-          {verifiedSession && <a className="navbar__mobile-account-link" href="/account" onClick={() => selectNav('account')}><UserRound size={18} aria-hidden="true" />{t.account}</a>}
           <a className={activeNav === 'home' ? 'is-current' : ''} href="/" onClick={() => selectNav('home')}><Home size={18} aria-hidden="true" />{t.home}</a>
           <div className="navbar__mobile-product">
             <button type="button" aria-expanded={isHomepageProductsOpen} aria-controls="zetruv-homepage-products" onClick={() => setIsHomepageProductsOpen((open) => !open)}>
