@@ -99,6 +99,7 @@ const messages = {
   productCategories: ["Product categories","Kategori produk","Kategori produk"],
   physicalProduct: ["Physical Product","Produk Fisik","Produk Fizikal"],
   digitalProduct: ["Digital Product","Produk Digital","Produk Digital"],
+  topUpViaId: ["Top Up via ID","Top Up via ID","Top Up melalui ID"],
   categoriesAreCurrentlyUnavailable: ["Categories are currently unavailable.","Kategori belum tersedia saat ini.","Kategori belum tersedia buat masa ini."],
   popularGamesAndRecentPurchases: ["Popular games and recent purchases","Game populer dan pembelian terakhir","Permainan popular dan pembelian terkini"],
   popularGames: ["Popular Games","Game Populer","Permainan Popular"],
