@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 8px 11px;
+  padding: 12px 10px 14px;
   border-radius: 10px;
 }
 
@@ -123,7 +123,6 @@
   cursor: pointer;
 }
 
-.nav-account__identity:hover,
 .nav-account__dropdown .nav-account__links > :is(a, button):hover { background: #eef0ff; }
 
 .nav-account__dropdown .nav-account__footer > button { background: #fff3f3; color: #a62a38; }
@@ -197,4 +196,34 @@
   .nav-account__trigger { gap: 2px; }
   .nav-account__trigger > svg { width: 10px; }
   .nav-account__avatar { width: 30px; height: 30px; }
+}
+
+/* Profile summary and account-first layout in the mobile drawer. */
+@media (max-width: 1024px) {
+  .navbar--homepage-mobile .navbar__mobile-account-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    margin-bottom: 8px;
+    padding: 8px 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+  }
+  .navbar--homepage-mobile .navbar__mobile-account-summary > span:last-child {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+  .navbar--homepage-mobile .navbar__mobile-account-summary :is(strong, small) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .navbar--homepage-mobile .navbar__mobile-account-summary strong { font-size: 14px; }
+  .navbar--homepage-mobile .navbar__mobile-account-summary small { font-size: 12px; color: #d5dbff; }
+  .navbar--homepage-mobile .navbar__mobile-links > .navbar__mobile-account-link {
+    font-weight: 600;
+    background: rgba(255,255,255,.09);
+  }
 }

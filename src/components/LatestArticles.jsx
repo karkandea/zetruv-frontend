@@ -14,7 +14,7 @@ export default function LatestArticles({ items = [], loading = false }) {
           <h2 id="latest-articles-title">{copy.latestArticles}</h2>
           <p>{copy.guidesUpdatesAndPracticalTipsToHelp}</p>
         </div>
-        <a href="/articles">{copy.viewAllArticles}</a>
+        <a href="/articles">{copy.viewArticlesShort}</a>
       </div>
 
       <div className="homepage-articles__grid">
