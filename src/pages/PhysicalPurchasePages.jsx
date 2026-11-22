@@ -461,6 +461,10 @@ export function PhysicalCartPage() {
     <div className="physical-shell">
       <Navbar homepageMobileMenu />
       <main className="physical-cart">
+        <nav className="zetruv-cart-switch" aria-label="Jenis keranjang">
+          <a href="/cart">{copy.digitalCart}</a>
+          <a href="/cart?flow=physical" aria-current="page">{copy.merchandiseCart}</a>
+        </nav>
         {item ? (
           <>
             <header className="physical-cart__heading">
