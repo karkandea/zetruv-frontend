@@ -14,7 +14,7 @@ import SharedOrderStatusPage from './pages/SharedOrderStatusPage'
 import { PhysicalCartPage, PhysicalCheckoutPage, PhysicalPaymentPage, PhysicalOrderTrackingPage } from './pages/PhysicalPurchasePages'
 import { LivePhysicalCatalogPage, LivePhysicalProductPage } from './pages/LivePhysicalPages'
 import { ArticlesPage, ArticleDetailPage } from './pages/ArticlePages'
-import { AccountOverviewPage, AccountEditProfilePage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
+import { AccountOverviewPage, AccountEditProfilePage, AccountPasswordPage, AccountAddressesPage, AccountAddressFormPage, AccountFavoritesPage } from './pages/AccountPages'
 import CustomerOrdersPage, { RequireOrderSession } from './pages/CustomerOrdersPage'
 import Navbar from './components/Navbar'
 import VerifyEmailPage from './pages/VerifyEmailPage'
@@ -55,6 +55,7 @@ function StorefrontRoute({ path }) {
 
   if (path === '/account' || path === '/my-account') return <AccountOverviewPage />
   if (path === '/account/edit' || path === '/account/profile') return <AccountEditProfilePage />
+  if (path === '/account/password') return <AccountPasswordPage />
 
   const accountOrderPaymentMatch = path.match(/^\/account\/orders\/([^/]+)\/payment$/)
   if (accountOrderPaymentMatch) return <AccountOrderUnavailablePage />

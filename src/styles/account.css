@@ -1156,3 +1156,91 @@
 /* Favorites show the real saved artwork rather than a hardcoded placeholder. */
 .favorite-card__image { overflow:hidden; }
 .favorite-card__image img { width:100%;height:100%;object-fit:cover;display:block; }
+
+/* Zetruv profile hub and saved-address UX (shared on desktop/mobile). */
+.account-layout--overview { grid-template-columns: minmax(0,1fr); max-width: 780px; }
+.account-layout--overview > .account-sidebar { display: none; }
+.account-layout--overview .account-main { width: 100%; }
+.zetruv-profile-title,.zetruv-address-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.zetruv-profile-title h1 { margin: 0; font-size: clamp(23px,3vw,30px); line-height: 1.2; }
+.zetruv-edit-round { width: 43px; height: 43px; flex: none; display: grid; place-items: center; border-radius: 50%; color: #060552; background: #eef2ff; border: 1px solid #e0e6ff; }
+.zetruv-edit-round:hover { background: #dce6ff; }
+.zetruv-profile-hero { display: flex; align-items: center; flex-direction: column; gap: 8px; margin: 4px 0 8px; padding: 25px 15px 22px; text-align: center; background: #fff; border: 1px solid #e0e3eb; border-radius: 20px; }
+.zetruv-profile-hero__avatar { width: 90px; height: 90px; font-size: 36px; background: linear-gradient(140deg,#386aea,#060552); box-shadow: 0 8px 22px rgba(6,5,82,.15); }
+.zetruv-profile-hero h2 { margin: 8px 0 0; color: #151627; font-size: 22px; line-height: 1.3; }
+.zetruv-profile-hero p { margin: 0; font-size: 13px; line-height: 1.5; color: #62697a; overflow-wrap: anywhere; }
+.zetruv-profile-verified { display: inline-flex; gap: 5px; align-items: center; color: #1b8a57; font-size: 12px; }
+.zetruv-profile-actions { display: grid; gap: 11px; }
+.zetruv-profile-actions > a { display: flex; align-items: center; gap: 14px; padding: 14px 15px; border: 1px solid #e0e3eb; border-radius: 15px; background: #fff; color: #1c2033; min-height: 76px; }
+.zetruv-profile-actions > a:hover { border-color: #a4b6f4; background: #fbfcff; }
+.zetruv-profile-actions > a:focus-visible,.zetruv-edit-round:focus-visible,.zetruv-profile-signout:focus-visible { outline: 2px solid #365ddd; outline-offset: 2px; }
+.zetruv-profile-actions > a > span:nth-child(2) { display: grid; flex: 1; gap: 4px; min-width: 0; }
+.zetruv-profile-actions strong { font-size: 14px; }
+.zetruv-profile-actions small { color: #747b8b; font-size: 12px; line-height: 1.4; }
+.zetruv-profile-actions__icon { width: 43px; height: 43px; flex: none; display: grid; place-items: center; background: #edf2ff; border-radius: 50%; color: #1636b2; }
+.zetruv-profile-actions > a > svg:last-child { flex: none; color: #9ba2b0; }
+.zetruv-profile-signout { justify-self: start; margin-top: 11px; padding: 13px 16px; display: inline-flex; align-items: center; gap: 9px; border: 0; background: transparent; color: #b02f47; font-size: 13px; font-weight: 600; cursor: pointer; }
+.zetruv-account-form,.zetruv-address-form { display: grid; gap: 15px; padding: clamp(18px,3vw,26px); border: 1px solid #e0e3eb; border-radius: 18px; background: #fff; }
+.zetruv-account-form label,.zetruv-address-field { display: grid; gap: 7px; color: #252b3e; font-size: 13px; font-weight: 600; }
+.zetruv-account-form input,.zetruv-address-field :is(input,select,textarea) { width: 100%; min-width: 0; min-height: 42px; padding: 11px 12px; border: 1px solid #d9dfed; border-radius: 10px; background: #fff; color: #202436; font-size: 13px; font-weight: 400; font-family: inherit; }
+.zetruv-address-field textarea { resize: vertical; line-height: 1.5; }
+.zetruv-account-form input:disabled,.zetruv-address-field input:read-only { color: #535a6c; background: #f5f6fb; }
+.zetruv-account-form input:focus-visible,.zetruv-address-field :is(input,select,textarea):focus-visible { outline: 2px solid #4169e5; outline-offset: 1px; }
+.zetruv-address-field b { color: #c93c52; }
+.zetruv-form-note,.zetruv-address-destination > p { margin: 0; font-size: 12px; font-weight: 400; line-height: 1.5; color: #687083; }
+.zetruv-form-error { color: #af1f42; font-size: 13px; line-height: 1.5; }
+.zetruv-form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+.zetruv-form-actions .account-btn { min-width: 120px; min-height: 43px; }
+.zetruv-address-list { display: grid; gap: 14px; }
+.zetruv-address-card { min-width: 0; padding: 20px; border: 1px solid #dde2ee; border-radius: 18px; background: #fff; }
+.zetruv-address-card__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.zetruv-address-card__label { display: inline-flex; gap: 10px; align-items: center; color: #1b1c30; }
+.zetruv-address-card__label svg { color: #152e9e; }
+.zetruv-address-card__label strong { font-size: 16px; }
+.zetruv-address-default { display: inline-flex; gap: 5px; align-items: center; padding: 5px 10px; border-radius: 20px; color: #137c48; background: #e9f8ef; font-size: 12px; font-weight: 650; }
+.zetruv-address-card__recipient { margin: 18px 0 6px; font-weight: 650; font-size: 14px; }
+.zetruv-address-card__address { margin: 0; max-width: 700px; color: #515a6b; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.zetruv-address-card__note { color: #70798b; font-size: 12px; }
+.zetruv-address-card__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; padding-top: 13px; border-top: 1px solid #eff1f6; }
+.zetruv-address-card__actions :is(a,button) { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 5px 1px; color: #0d287c; font-size: 12px; font-weight: 650; cursor: pointer; }
+.zetruv-address-card__actions .zetruv-address-card__delete { margin-left: auto; color: #ac3950; }
+.zetruv-address-card__primary-text { margin-right: auto; color: #747e90; font-size: 12px; }
+.zetruv-address-add { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; border: 1px dashed #a8b7eb; border-radius: 16px; background: #f8faff; color: #152b87; font-weight: 650; font-size: 13px; }
+.zetruv-address-add:hover { background: #eef3ff; }
+.zetruv-address-empty { display: flex; align-items: center; flex-direction: column; gap: 12px; min-height: 330px; padding: 30px 18px; text-align: center; border: 1px solid #e0e3eb; border-radius: 20px; background: #fff; }
+.zetruv-address-empty img { width: min(200px,65%); height: auto; }
+.zetruv-address-empty h2 { margin: 0; font-size: 20px; }
+.zetruv-address-empty p { max-width: 380px; margin: 0 0 6px; color: #697285; font-size: 13px; line-height: 1.6; }
+.zetruv-address-empty .account-btn { gap: 7px; min-height: 44px; }
+.zetruv-address-form__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.zetruv-address-destination { position: relative; display: grid; gap: 8px; padding: 14px; border: 1px solid #d8e0f8; border-radius: 14px; background: #f9fbff; }
+.zetruv-address-suggestions { display: grid; margin: 0; padding: 5px; max-height: 265px; overflow-y: auto; list-style: none; background: #fff; border: 1px solid #d9e0f0; border-radius: 12px; }
+.zetruv-address-suggestions button { display: flex; gap: 10px; align-items: center; width: 100%; padding: 10px; border: 0; border-radius: 9px; background: #fff; color: #1b2444; text-align: left; font-size: 13px; cursor: pointer; }
+.zetruv-address-suggestions button:hover { background: #f0f3ff; }
+.zetruv-address-selected { display: flex; align-items: center; gap: 5px; color: #157949 !important; }
+.zetruv-address-pinpoint { display: grid; gap: 10px; padding: 15px; border: 1px solid #e0e5ef; border-radius: 13px; }
+.zetruv-address-pinpoint > div { display: flex; align-items: center; gap: 10px; }
+.zetruv-address-pinpoint > div > svg { flex: none; color: #172f9e; }
+.zetruv-address-pinpoint > div > span { display: grid; gap: 4px; }
+.zetruv-address-pinpoint strong { font-size: 13px; }
+.zetruv-address-pinpoint small,.zetruv-address-pinpoint p { margin: 0; color: #6a7286; font-size: 12px; line-height: 1.45; }
+.zetruv-address-pinpoint button { justify-self: start; }
+.zetruv-address-checkbox { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; }
+.zetruv-address-checkbox input { width: 16px; height: 16px; accent-color: #060552; }
+.account-sidebar__profile { display: block; }
+.account-sidebar__profile:hover { background: #f5f7ff; border-radius: 11px; }
+.account-sidebar__profile-top > svg:last-child { margin-left: auto; color: #8a93a8; }
+@media (max-width: 860px) {
+  .account-layout--overview .account-main { width: 100%; }
+  .account-sidebar__nav { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (max-width: 620px) {
+  .zetruv-profile-hero { padding: 22px 12px; }
+  .zetruv-address-form__grid { grid-template-columns: minmax(0,1fr); }
+  .zetruv-address-header { flex-wrap: wrap; }
+  .zetruv-address-header > .account-btn { width: 100%; }
+  .zetruv-address-card { padding: 15px; }
+  .zetruv-profile-actions > a { padding: 12px; gap: 10px; }
+  .zetruv-profile-actions__icon { width: 39px; height: 39px; }
+  .zetruv-form-actions > * { flex: 1; }
+}

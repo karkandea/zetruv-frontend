@@ -1,6 +1,6 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useEffect, useId, useState } from 'react'
-import { ArrowLeft, ArrowRight, Package, RefreshCw, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, Package, RefreshCw, Star } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
@@ -81,12 +81,13 @@ export default function CustomerOrdersPage({ orderId }) {
   const copy = useStorefrontCopy()
   const accessToken = useCustomerSession()?.accessToken
   const [authMode, setAuthMode] = useState(null)
-  const group = new URLSearchParams(window.location.search).get('group') === 'history' ? 'history' : 'active'
+  const queryGroup = new URLSearchParams(window.location.search).get('group')
+  const group = ['active', 'completed', 'history'].includes(queryGroup) ? queryGroup : 'active'
   const listUrl = window.location.pathname === '/account/orders' || orderId ? '/account/orders' : '/order-status'
   const login = <button type="button" className="account-btn account-btn--primary" aria-haspopup="dialog" onClick={() => setAuthMode('login')}>{copy.login}</button>
 
   return <AccountShell active="orders">
-    {orderId && <a className="customer-orders-back" href={group === 'history' ? '/account/orders?group=history' : '/account/orders'}><ArrowLeft size={16} aria-hidden="true" /> {copy.myOrders}</a>}
+    {orderId && <a className="customer-orders-back" href={group === 'active' ? '/account/orders' : '/account/orders?group=' + group}><ArrowLeft size={16} aria-hidden="true" /> {copy.myOrders}</a>}
     <PageHeader title={orderId ? copy.customerOrderDetailTitle : copy.myOrders} />
     {accessToken && <CustomerOrdersContent key={accessToken} token={accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />}
     {!orderId && <a className="customer-orders-guest" href={guestLookupUrl}>{copy.checkGuestOrder} <ArrowRight size={15} aria-hidden="true" /></a>}
@@ -137,11 +138,11 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
         {(item.canReview || item.reviewStatus) && <OrderItemReview key={item.id} item={item} token={token} />}
       </>} />
   } else if (!current.data.items.length) {
-    body = <OrderMessage title={offset ? copy.noOrdersOnThisPage : group === 'history' ? copy.noPastOrders : copy.noActiveOrders}>
+    body = <OrderMessage title={offset ? copy.noOrdersOnThisPage : group === 'active' ? copy.noActiveOrders : 'Belum ada pesanan pada kategori ini'}>
       {offset === 0 && group === 'active' && <a className="account-btn account-btn--primary" href="/search">{copy.browseProducts}</a>}
     </OrderMessage>
   } else {
-    body = <ul className="customer-orders-list" aria-label={group === 'history' ? copy.pastOrders : copy.activeOrders}>
+    body = <ul className="customer-orders-list" aria-label={group === 'active' ? copy.activeOrders : group === 'completed' ? 'Pesanan selesai' : 'Riwayat batal atau refund'}>
       {current.data.items.map(order => <li key={order.id}><OrderCard order={order} group={group} /></li>)}
     </ul>
   }
@@ -149,12 +150,14 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
   return <>
     {!orderId && <div className="customer-orders-toolbar">
       <nav aria-label={copy.orderFilters} className="customer-orders-tabs">
-        <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>{copy.activeOrders}</a>
-        <a href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>{copy.pastOrders}</a>
+        <a href="/cart">Keranjang</a>
+        <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>Berlangsung</a>
+        <a href={`${listUrl}?group=completed`} aria-current={group === 'completed' ? 'page' : undefined}>Selesai</a>
       </nav>
       <button type="button" className="account-btn account-btn--outline" onClick={refresh}><RefreshCw size={15} aria-hidden="true" /> {copy.refreshOrders}</button>
     </div>}
     {body}
+    {!orderId && <a className="customer-orders-history-link" href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>Lihat pesanan dibatalkan / refund</a>}
     {!orderId && (offset > 0 || current?.data?.hasMore) && <nav className="customer-orders-pagination" aria-label={copy.orderPages}>
       <button type="button" className="account-btn account-btn--outline" disabled={offset === 0} onClick={() => setOffset(value => value - pageSize)}>{copy.previous}</button>
       <span>{copy.page} {offset / pageSize + 1}</span>
@@ -167,6 +170,7 @@ function OrderCard({ order, group }) {
   const copy = useStorefrontCopy()
   const language = useNavbarLanguage()
   const item = order.firstItem
+  const [open, setOpen] = useState(false)
   return <article className="customer-order-card">
     <div className="customer-order-card__header">
       <h2>{order.orderNumber}</h2>
@@ -179,14 +183,20 @@ function OrderCard({ order, group }) {
         <span>{[item?.variantName, `${order.itemCount} ${order.itemCount === 1 ? copy.singleOrderItem : copy.items}`].filter(Boolean).join(' · ')}</span>
       </div>
     </div>
-    <div className="customer-order-card__statuses">
+    <button type="button" className="customer-order-card__expand" aria-expanded={open} onClick={() => setOpen(v => !v)}>
+      <span className={group === 'active' ? 'customer-order-card__badge is-ongoing' : 'customer-order-card__badge'}>
+        {orderStatusLabel(order.status, copy)}
+      </span>
+      <span>Lihat status <ChevronDown size={16} aria-hidden="true" /></span>
+    </button>
+    {open && <div className="customer-order-card__statuses">
       <span>{copy.orderStatus} · <strong>{orderStatusLabel(order.status, copy)}</strong></span>
       <span>{copy.payment2} · <strong>{paymentStatusLabel(order, copy)}</strong></span>
       {order.hasFulfillmentIssue && <span className="customer-order-card__issue">{copy.orderFulfillmentProblem}</span>}
-    </div>
+    </div>}
     <div className="customer-order-card__footer">
       <strong>{money(order.grandTotal, order.currency)}</strong>
-      <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'history' ? '?group=history' : ''}`} aria-label={formatCopy(copy.orderDetailLink, { number: order.orderNumber })}>{copy.viewDetails} <ArrowRight size={15} aria-hidden="true" /></a>
+      <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'active' ? '' : '?group=' + group}`} aria-label={formatCopy(copy.orderDetailLink, { number: order.orderNumber })}>{copy.viewDetails} <ArrowRight size={15} aria-hidden="true" /></a>
     </div>
   </article>
 }

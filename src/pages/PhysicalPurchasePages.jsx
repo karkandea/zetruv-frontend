@@ -1,8 +1,9 @@
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { formatCopy } from '../services/storefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
-import { ShoppingCart } from 'lucide-react'
+import { Check, MapPin, ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
 import { readCustomerSession, setCustomerSession } from '../services/customerCartSync'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
@@ -461,6 +462,10 @@ export function PhysicalCartPage() {
     <div className="physical-shell">
       <Navbar homepageMobileMenu />
       <main className="physical-cart">
+        <nav className="zetruv-cart-switch" aria-label="Jenis keranjang">
+          <a href="/cart">{copy.digitalCart}</a>
+          <a href="/cart?flow=physical" aria-current="page">{copy.merchandiseCart}</a>
+        </nav>
         {item ? (
           <>
             <header className="physical-cart__heading">
@@ -539,7 +544,55 @@ function PhysicalFlowUnavailable({ title, description }) {
 
 export function PhysicalCheckoutPage() {
   const copy = useStorefrontCopy()
-  return <PhysicalFlowUnavailable title={copy.merchandiseCheckout} description={copy.checkoutWillBeAvailableOnceShippingAddresses} />
+  const session = readCustomerSession()
+  const [addresses, setAddresses] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+  const [error, setError] = useState('')
+  const item = readPhysicalCart()
+  useEffect(() => {
+    if (!session?.accessToken) { setAddresses([]); return }
+    const controller = new AbortController()
+    apiRequest('/me/addresses', { cache: 'no-store', signal: controller.signal,
+      headers: { Authorization: 'Bearer ' + session.accessToken } })
+      .then(data => {
+        if (controller.signal.aborted) return
+        const rows = data.items || []
+        setAddresses(rows)
+        setSelectedId(id => rows.some(x => x.id === id) ? id : rows.find(x => x.isDefault)?.id || rows[0]?.id || null)
+      }).catch(e => { if (!controller.signal.aborted) setError(e.message || 'Alamat gagal dimuat.') })
+    return () => controller.abort()
+  }, [session?.accessToken])
+  const selected = addresses?.find(a => a.id === selectedId)
+  return <div className="physical-shell">
+    <Navbar variant="account" />
+    <main className="physical-checkout">
+      <header><h1>{copy.merchandiseCheckout}</h1><p>Pilih alamat penerima untuk pengiriman merchandise.</p></header>
+      <section className="physical-shipping-addresses" aria-labelledby="shipping-address-title">
+        <div className="physical-shipping-addresses__heading"><h2 id="shipping-address-title"><MapPin size={21}/> Alamat pengiriman</h2><a href="/account/addresses/add">+ Tambah alamat</a></div>
+        {!session ? <p>Masuk untuk memilih alamat pengiriman.</p>
+          : error ? <p role="alert">{error}</p>
+          : addresses === null ? <p role="status">Memuat alamat tersimpan…</p>
+          : addresses.length === 0 ? <div className="physical-shipping-addresses__empty"><img src="/assets/account/address-empty.svg" alt=""/><p>Belum ada alamat. Tambahkan alamat sebelum checkout merchandise.</p><a className="physical-btn physical-btn--outline" href="/account/addresses/add">Tambah alamat</a></div>
+          : <div className="physical-shipping-addresses__choices">
+              {addresses.map(a => <label className="physical-shipping-addresses__choice" key={a.id} data-selected={a.id === selectedId}>
+                <input type="radio" name="shipping-address" value={a.id} checked={a.id === selectedId} onChange={() => setSelectedId(a.id)}/>
+                <span><strong>{a.label} {a.isDefault && <small>(Utama)</small>}</strong><b>{a.recipientName} · {a.recipientPhone}</b><span>{[a.fullAddress, a.subdistrict, a.district, a.city, a.province, a.postalCode].filter(Boolean).join(', ')}</span></span>
+                {a.id === selectedId && <Check size={18} color="#18653f" aria-hidden="true"/>}
+              </label>)}
+            </div>}
+        {selected && <p className="physical-shipping-addresses__notice"><Check size={16}/> Alamat terpilih: {selected.label}. Layanan ongkir belum dapat dihitung sampai integrasi kurir aktif.</p>}
+      </section>
+      <section className="physical-flow-unavailable" role="status">
+        <strong>{copy.unableToProceed}</strong>
+        <p>Checkout fisik belum diaktifkan. Alamat disimpan aman di akun, tetapi ongkir, pilihan kurir, dan pembuatan pesanan memerlukan integrasi pengiriman dan pembayaran yang sudah terverifikasi.</p>
+        {item && <div className="physical-flow-unavailable__item">
+          <img src={item.image || jerseyCard} alt="" />
+          <div><strong>{item.name}</strong><span>{item.color} · {item.size} · {item.qty} item</span><span>Subtotal {rupiah(item.price * item.qty)} (belum termasuk ongkir)</span></div>
+        </div>}
+        <a className="physical-btn" href="/cart?flow=physical">Kembali ke keranjang</a>
+      </section>
+    </main>
+  </div>
 }
 
 export function PhysicalPaymentPage() {

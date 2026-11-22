@@ -194,3 +194,10 @@ img { display: block; max-width: 100%; }
 /* Navbar search only submits terms of three or more characters. */
 .navbar .searchbox { position:relative; }
 .navbar-search-warning { position:absolute; z-index:140; top:calc(100% + 7px); left:8px; min-width:220px; padding:8px 12px; border-radius:9px; border:1px solid #dfe3ec; background:#fff; box-shadow:0 4px 16px rgba(1,1,84,.13); color:#010154; font-size:10px; line-height:16px; white-space:nowrap; }
+
+/* Shared cart segmented navigation for digital and merchandise carts. */
+.zetruv-cart-switch { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px; width: fit-content; max-width: 100%; margin: 12px 0 18px; padding: 4px; background: #eff2fb; border: 1px solid #dee5f6; border-radius: 12px; }
+.zetruv-cart-switch a { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; border-radius: 9px; font-size: 12px; font-weight: 650; color: #4e5879; text-decoration: none; }
+.zetruv-cart-switch a[aria-current='page'] { background: #fff; box-shadow: 0 2px 8px #142b7a14; color: #060552; }
+.zetruv-cart-switch a:focus-visible { outline: 2px solid #365ddd; outline-offset: 2px; }
+@media (max-width: 600px) { .zetruv-cart-switch { display: flex; width: 100%; } .zetruv-cart-switch a { flex: 1; padding: 0 8px; } }

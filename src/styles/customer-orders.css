@@ -119,3 +119,25 @@
 }
 .customer-review__status { margin-top: 10px; font-weight: 600; }
 .customer-review p[role="alert"] { color: #a22525; }
+
+/* Three choice pills from the orders reference, with collapsed status card. */
+.customer-orders-tabs { display: flex; flex: 1; flex-wrap: wrap; gap: 8px; }
+.customer-orders-tabs a { min-height: 37px; padding: 8px 14px; border: 1px solid #e3e7ef; border-radius: 999px; background: #fff; color: #28304a; font-size: 12px; font-weight: 600; }
+.customer-orders-tabs a[aria-current='page'] { border-color: #152e9e; background: #1038b2; color: #fff; }
+.customer-orders-tabs a:hover:not([aria-current='page']) { background: #f0f3ff; }
+.customer-orders-history-link { justify-self: start; margin-top: 2px; color: #5a6381; font-size: 12px; }
+.customer-orders-history-link[aria-current='page'] { font-weight: 700; color: #0a2d9a; }
+.customer-order-card { gap: 11px; border: 1px solid #e0e5ef; border-radius: 16px; }
+.customer-order-card__expand { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 8px 0; border: 0; border-top: 1px solid #f0f1f7; background: transparent; cursor: pointer; }
+.customer-order-card__expand > span:last-child { display: inline-flex; align-items: center; gap: 6px; color: #555f77; font-size: 12px; }
+.customer-order-card__expand[aria-expanded='true'] > span:last-child svg { transform: rotate(180deg); }
+.customer-order-card__expand:focus-visible { outline: 2px solid #365ddd; outline-offset: 2px; }
+.customer-order-card__badge { display: inline-flex; padding: 6px 10px; border-radius: 99px; color: #178251; background: #e9f8ef; font-size: 11px; font-weight: 700; }
+.customer-order-card__badge.is-ongoing { color: #bf5b0f; background: #fff1e6; }
+@media (max-width: 600px) {
+  .customer-orders-toolbar { align-items: stretch; flex-wrap: wrap; gap: 10px; }
+  .customer-orders-toolbar > button { margin-left: auto; }
+  .customer-orders-tabs { width: 100%; justify-content: space-between; }
+  .customer-orders-tabs a { flex: 1; text-align: center; justify-content: center; }
+  .customer-order-card { padding: 14px; }
+}

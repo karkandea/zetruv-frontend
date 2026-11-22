@@ -2749,3 +2749,22 @@
 @media (prefers-reduced-motion: reduce) {
   .physical-gallery__mobile-dots button > span { transition: none; }
 }
+
+/* Saved-address selector is isolated from digital checkout and disabled courier fulfillment. */
+.physical-shipping-addresses { display: grid; gap: 14px; padding: 20px; margin: 18px 0; border: 1px solid #e0e4f0; border-radius: 18px; background: #fff; }
+.physical-shipping-addresses__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.physical-shipping-addresses__heading h2 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 18px; }
+.physical-shipping-addresses__heading > a { color: #0f329b; font-size: 13px; font-weight: 650; }
+.physical-shipping-addresses__choices { display: grid; gap: 10px; }
+.physical-shipping-addresses__choice { display: flex; align-items: flex-start; gap: 12px; padding: 15px; border: 1px solid #e0e4f1; border-radius: 12px; background: #fff; cursor: pointer; }
+.physical-shipping-addresses__choice[data-selected="true"] { border-color: #6382ed; background: #f7f9ff; }
+.physical-shipping-addresses__choice input { margin-top: 4px; accent-color: #060552; }
+.physical-shipping-addresses__choice > span { display: grid; gap: 7px; min-width: 0; flex: 1; color: #515a70; font-size: 13px; line-height: 1.5; }
+.physical-shipping-addresses__choice strong { color: #161c32; }
+.physical-shipping-addresses__choice strong small { color: #0d7a4a; }
+.physical-shipping-addresses__choice b { font-weight: 600; color: #333c53; }
+.physical-shipping-addresses__notice { display: flex; align-items: center; gap: 6px; margin: 0; color: #1b6d4d; font-size: 12px; line-height: 1.5; }
+.physical-shipping-addresses__empty { display: flex; align-items: center; flex-direction: column; gap: 10px; text-align: center; padding: 15px; }
+.physical-shipping-addresses__empty img { width: 150px; height: auto; }
+.physical-shipping-addresses__empty p { max-width: 350px; margin: 0; color: #57637c; font-size: 13px; }
+@media (max-width: 600px) { .physical-shipping-addresses { padding: 14px; } .physical-shipping-addresses__heading h2 { font-size: 16px; } }

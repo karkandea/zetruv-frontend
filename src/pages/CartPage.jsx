@@ -224,6 +224,10 @@ export default function CartPage() {
     <div className="digital-shell">
       <Navbar homepageMobileMenu />
       <main className="digital-cart-page digital-container">
+        <nav className="zetruv-cart-switch" aria-label="Jenis keranjang">
+          <a href="/cart" aria-current="page">{copy.digitalCart}</a>
+          <a href="/cart?flow=physical">{copy.merchandiseCart}</a>
+        </nav>
         {hasItems && <header className="digital-page-heading">
           <div><h1>{copy.digitalCart}</h1><p>{copy.reviewYourProductsAndDestinationAccountsBefore}</p></div>
           <a href="/search">{copy.continueShopping}</a>

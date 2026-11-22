@@ -1,16 +1,15 @@
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
-import { Bookmark, CircleCheck, Info, MapPin, ReceiptText, UserRound } from 'lucide-react'
+import { Bookmark, CircleCheck, ChevronRight, KeyRound, LogOut, MapPin, Pencil, ReceiptText, UserRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { accountIcons } from '../data/accountIcons'
-import { CUSTOMER_EVENT, readCustomerSession } from '../services/customerCartSync'
+import { CUSTOMER_EVENT, readCustomerSession, logoutCustomer, updateCustomerIdentity } from '../services/customerCartSync'
 import { apiRequest } from '../api/httpClient'
 import { readFavorites, setFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/account.css'
 
 const navItems = [
-  { key: 'account', label: 'myAccount', href: '/account', icon: UserRound },
   { key: 'orders', label: 'myOrders', href: '/account/orders', icon: ReceiptText },
   { key: 'addresses', label: 'addresses', href: '/account/addresses', icon: MapPin },
   { key: 'favorites', label: 'bookmark', href: '/account/favorites', icon: Bookmark },
@@ -31,7 +30,7 @@ export function AccountShell({ active, customer: profileCustomer, children }) {
   return (
     <div className="account-page">
       <Navbar variant="account" homepageMobileMenu />
-      <main className="account-layout">
+      <main className={`account-layout${active === 'account' ? ' account-layout--overview' : ''}`}>
         <AccountSidebar active={active} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />
         <section className="account-main">{children}</section>
       </main>
@@ -45,15 +44,16 @@ function AccountSidebar({ active, customer }) {
   const email = customer?.email || copy.signedOut
   return (
     <aside className="account-sidebar">
-      <div className="account-sidebar__profile">
+      <a className="account-sidebar__profile" href="/account">
         <div className="account-sidebar__profile-top">
           <span className="account-avatar account-avatar--small">{name.slice(0, 1).toUpperCase()}</span>
           <div>
             <strong>{name}</strong>
             <span title={email}>{email}</span>
           </div>
+          <ChevronRight size={16} aria-hidden="true" />
         </div>
-      </div>
+      </a>
       <div className="account-sidebar__rule" />
       <nav className="account-sidebar__nav" aria-label={copy.accountNavigation}>
         {navItems.map(({ key, label, href, icon: Icon }) => (
@@ -85,103 +85,127 @@ function InfoRow({ label, value }) {
   )
 }
 
-export function AccountOverviewPage() {
-  const copy = useStorefrontCopy()
-  const accessToken = useCustomerSession()?.accessToken
-  const [profile, setProfile] = useState(null)
-  const state = !accessToken ? 'guest' : profile?.token === accessToken ? profile.state : 'loading'
-  const customer = state === 'ready' ? profile.customer : null
 
+function useRemoteProfile() {
+  const accessToken = useCustomerSession()?.accessToken
+  const [result, setResult] = useState(null)
   useEffect(() => {
-    if (!accessToken) { setProfile(null); return }
+    if (!accessToken) { setResult(null); return }
     const controller = new AbortController()
-    apiRequest('/auth/me', {
-      cache: 'no-store', signal: controller.signal,
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }).then((result) => {
-      if (!controller.signal.aborted) setProfile({ token: accessToken, state: 'ready', customer: result })
-    }).catch((error) => {
-      if (!controller.signal.aborted) {
-        setProfile({ token: accessToken, state: error.status === 401 || error.status === 403 ? 'expired' : 'error' })
-      }
-    })
+    apiRequest('/auth/me', { cache: 'no-store', signal: controller.signal,
+      headers: { Authorization: 'Bearer ' + accessToken } })
+      .then(customer => { if (!controller.signal.aborted) setResult({ accessToken, customer }) })
+      .catch(error => { if (!controller.signal.aborted) setResult({ accessToken, error }) })
     return () => controller.abort()
   }, [accessToken])
+  return { token: accessToken, customer: result?.accessToken === accessToken ? result?.customer : null,
+    error: result?.accessToken === accessToken ? result?.error : null,
+    loading: Boolean(accessToken && result?.accessToken !== accessToken) }
+}
 
-  return (
-    <AccountShell active="account" customer={customer}>
-      <PageHeader id="account-settings" title={copy.myAccount} description={copy.accountDetailsUsedForYourZetruvPurchases} />
-      {state === 'loading' ? (
-        <LoadingRegion label={copy.loadingProfile}>
-          <section className="account-info-card">
-            <div className="profile-overview__identity"><Bone variant="circle" /><SkeletonLines /></div>
-            <div className="account-info-grid">
-              <SkeletonLines /><SkeletonLines /><SkeletonLines />
-            </div>
-          </section>
-        </LoadingRegion>
-      ) : state !== 'ready' ? (
-        <div className="orders-figma-empty" role="status">
-          <strong>{state === 'guest' ? copy.logInToYourAccount : state === 'expired' ? copy.yourSessionHasEnded : copy.profileCouldnTBeLoaded}</strong>
-          <p>{state === 'error' ? copy.checkYourConnectionAndReloadThePage : copy.logInWithAVerifiedAccountTo}</p>
-          <a className="account-btn account-btn--primary" href={state === 'error' ? '/account' : '/'}>{state === 'error' ? copy.tryAgain2 : copy.backToHome2}</a>
-        </div>
-      ) : (
-        <>
-          <section className="account-info-card" aria-labelledby="account-profile-title">
-            <div className="profile-overview__identity">
-              <span className="account-avatar account-avatar--large">{String(customer.name || 'A').slice(0,1).toUpperCase()}</span>
-              <div>
-                <h2 id="account-profile-title">{customer.name || copy.zetruvCustomer}</h2>
-                <span className="account-profile-status" data-verified={Boolean(customer.emailVerified)}>
-                  {customer.emailVerified && <CircleCheck size={15} aria-hidden="true" />}
-                  {customer.emailVerified ? copy.emailVerified : copy.emailUnverified}
-                </span>
-              </div>
-            </div>
-            <dl className="account-info-grid">
-              <InfoRow label={copy.fullName} value={customer.name || '—'} />
-              <InfoRow label={copy.email} value={customer.email || '—'} />
-              <InfoRow label={copy.phoneNumber2} value={copy.notAvailableYet} />
-            </dl>
-            <div className="account-note"><Info size={18} aria-hidden="true" /><span>{copy.profileOrPhoneEditingUnavailable}</span></div>
-          </section>
-        </>
-      )}
-    </AccountShell>
-  )
+export function AccountOverviewPage() {
+  const copy = useStorefrontCopy()
+  const { token, customer, loading, error } = useRemoteProfile()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
+  async function signOut() {
+    setLoggingOut(true); setLogoutError('')
+    try { await logoutCustomer(); window.location.href = '/' }
+    catch (e) { setLogoutError(e.message || 'Gagal keluar dari akun'); setLoggingOut(false) }
+  }
+  return <AccountShell active="account" customer={customer}>
+    <div className="zetruv-profile-title">
+      <h1>{copy.myAccount}</h1>
+      {customer && <a className="zetruv-edit-round" href="/account/edit" aria-label={copy.editProfile} title={copy.editProfile}><Pencil size={19} /></a>}
+    </div>
+    {!token ? <div className="orders-figma-empty"><strong>{copy.logInToYourAccount}</strong><a className="account-btn account-btn--primary" href="/"> {copy.backToHome2} </a></div>
+      : loading ? <LoadingRegion label={copy.loadingProfile}><Bone width="100%" height="200px" /></LoadingRegion>
+      : error || !customer ? <div className="orders-figma-empty"><strong>{copy.profileCouldnTBeLoaded}</strong><a href="/account" className="account-btn account-btn--outline">{copy.tryAgain2}</a></div>
+      : <>
+        <section className="zetruv-profile-hero">
+          <span className="account-avatar zetruv-profile-hero__avatar" aria-hidden="true">{customer.name?.slice(0, 1)?.toUpperCase() || 'A'}</span>
+          <h2>{customer.name}</h2>
+          <p>{[customer.email, customer.phone].filter(Boolean).join(' · ')}</p>
+          {customer.emailVerified && <span className="zetruv-profile-verified"><CircleCheck size={14} /> {copy.emailVerified}</span>}
+        </section>
+        <nav className="zetruv-profile-actions" aria-label={copy.accountNavigation}>
+          <a href="/account/password"><span className="zetruv-profile-actions__icon"><KeyRound size={22}/></span><span><strong>Password</strong><small>Ubah password melalui verifikasi email</small></span><ChevronRight size={18}/></a>
+          <a href="/account/orders"><span className="zetruv-profile-actions__icon"><ReceiptText size={22}/></span><span><strong>{copy.myOrders}</strong><small>Pantau transaksi dan pesanan kamu</small></span><ChevronRight size={18}/></a>
+          <a href="/account/addresses"><span className="zetruv-profile-actions__icon"><MapPin size={22}/></span><span><strong>{copy.addresses}</strong><small>Simpan alamat untuk merchandise</small></span><ChevronRight size={18}/></a>
+          <a href="/account/favorites"><span className="zetruv-profile-actions__icon"><Bookmark size={22}/></span><span><strong>{copy.bookmark}</strong><small>Lihat produk yang kamu simpan</small></span><ChevronRight size={18}/></a>
+        </nav>
+        <button type="button" className="zetruv-profile-signout" onClick={signOut} disabled={loggingOut}><LogOut size={18}/>{loggingOut ? 'Keluar…' : 'Keluar dari akun'}</button>
+        {logoutError && <p role="alert">{logoutError}</p>}
+      </>}
+  </AccountShell>
 }
 
 export function AccountEditProfilePage() {
   const copy = useStorefrontCopy()
+  const { token, customer, error, loading } = useRemoteProfile()
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState('')
+  const [failure, setFailure] = useState('')
+  useEffect(() => {
+    if (customer) { setName(customer.name || ''); setPhone(customer.phone || '') }
+  }, [customer])
+  async function save(e) {
+    e.preventDefault(); setSaving(true); setFailure(''); setMessage('')
+    try {
+      const result = await apiRequest('/auth/me', {
+        method: 'PUT', headers: { Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() || null })
+      })
+      updateCustomerIdentity(result)
+      setMessage('Profil berhasil disimpan.')
+      window.location.href = '/account'
+    } catch (e) { setFailure(e.message || 'Gagal menyimpan profil') }
+    finally { setSaving(false) }
+  }
   return <AccountShell active="account">
-    <PageHeader title={copy.editProfile} description={copy.profileSettingsCanTBeSavedRight} />
-    <div className="orders-figma-empty"><strong>{copy.profileEditingIsUnavailable}</strong><p>{copy.yourProfileShowsDetailsFromYourVerified}</p><a className="account-btn account-btn--outline" href="/account">{copy.backToMyAccount}</a></div>
+    <PageHeader title={copy.editProfile} description="Perbarui nama dan nomor HP akun Zetruv." />
+    {loading ? <LoadingRegion label={copy.loadingProfile}><SkeletonLines/></LoadingRegion>
+      : error || !customer ? <p role="alert">Profil tidak tersedia. Silakan masuk kembali.</p>
+      : <form className="zetruv-account-form" onSubmit={save}>
+        <label>Nama lengkap<input required minLength={2} maxLength={120} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
+        <label>Email terverifikasi<input type="email" value={customer.email || ''} disabled /></label>
+        <p className="zetruv-form-note">Perubahan email memerlukan verifikasi ulang. Email yang sudah terverifikasi tidak dapat langsung diganti.</p>
+        <label>Nomor HP<input type="tel" placeholder="08xxxxxxxxxx" maxLength={24} value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel" /></label>
+        {failure && <p role="alert" className="zetruv-form-error">{failure}</p>}
+        {message && <p role="status">{message}</p>}
+        <div className="zetruv-form-actions"><a href="/account" className="account-btn account-btn--outline">Batal</a><button className="account-btn account-btn--primary" disabled={saving || name.trim().length < 2} type="submit">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button></div>
+      </form>}
   </AccountShell>
 }
 
-export function AccountAddressFormPage() {
-  const copy = useStorefrontCopy()
-  return <AccountShell active="addresses">
-    <PageHeader title={copy.shippingAddress} description={copy.addressForMerchandiseDelivery} />
-    <div className="orders-figma-empty"><strong>{copy.addressSavingIsUnavailable}</strong><p>{copy.savingAShippingAddressIsCurrentlyUnavailable}</p><a className="account-btn account-btn--outline" href="/account/addresses">{copy.backToAddresses}</a></div>
+export function AccountPasswordPage() {
+  const { token, customer, loading } = useRemoteProfile()
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+  async function requestReset() {
+    setBusy(true); setError('')
+    try {
+      await apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email: customer.email }) })
+      setSent(true)
+    } catch (e) { setError(e.message || 'Gagal mengirim email') }
+    finally { setBusy(false) }
+  }
+  return <AccountShell active="account">
+    <PageHeader title="Password" description="Untuk keamanan, ubah password melalui tautan verifikasi ke email akun." />
+    {loading ? <LoadingRegion label="Memuat profil"><SkeletonLines/></LoadingRegion> : !token || !customer ? <p>Silakan masuk untuk mengelola password.</p> :
+      <section className="zetruv-account-form">
+        <strong>{customer.email}</strong>
+        <p>{sent ? 'Jika email tersedia, tautan reset sudah dikirim. Periksa kotak masuk.' : 'Kirim tautan ubah password ke email terverifikasi.'}</p>
+        {error && <p role="alert" className="zetruv-form-error">{error}</p>}
+        <button type="button" className="account-btn account-btn--primary" onClick={requestReset} disabled={busy || sent}>{busy ? 'Mengirim…' : sent ? 'Tautan diminta' : 'Kirim tautan ubah password'}</button>
+      </section>}
   </AccountShell>
 }
 
-export function AccountAddressesPage() {
-  const copy = useStorefrontCopy()
-  const customer = useCustomerSession()?.customer
-  return <AccountShell active="addresses">
-    <PageHeader title={copy.addresses} description={copy.manageYourShippingAddressesForMerchandise} />
-    <div className="orders-figma-empty" role="status">
-      <strong>{customer ? copy.savedAddressesAreUnavailable : copy.logInToViewAddresses}</strong>
-      <p>{customer
-        ? copy.savingAddressesToYourAccountIsCurrently
-        : copy.logInToViewShippingAddresses}</p>
-      <a className="account-btn account-btn--outline" href="/merchandise">{copy.browseMerchandise}</a>
-    </div>
-  </AccountShell>
-}
+export { AccountAddressesPage, AccountAddressFormPage } from './CustomerAddressPages'
 
 export function AccountFavoritesPage() {
   const copy = useStorefrontCopy()
