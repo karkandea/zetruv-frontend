@@ -32,7 +32,7 @@ export default function ServiceCategories({ items = [], loading = false }) {
                 ? <Box className="service-category__image service-category__game-item-icon" aria-hidden="true" />
                 : <img className="service-category__image" src={item.image || presentation.image} alt="" decoding="async" />}
             </span>
-            <strong>{item.kind === 'GameItem' ? copy.gameItems : item.label}</strong>
+            <strong>{item.kind === 'GameItem' ? copy.gameItems : item.kind === 'TopUpGame' ? copy.topUpViaId : item.label}</strong>
             <small>{item.kind === 'Merchandise' ? copy.physicalProduct : copy.digitalProduct}</small>
           </a>
         })}
