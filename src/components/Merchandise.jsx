@@ -32,7 +32,6 @@ export default function Merchandise({ items = [], loading = false }) {
       <div className="merchandise__header">
         <div>
           <h2 id="merchandise-title">{copy.merchandise}</h2>
-          <p>{copy.jerseysKeychainsAndFanGearForYour}</p>
         </div>
         <a className="merchandise__view-all" href="/merchandise">{copy.viewAll}</a>
       </div>
