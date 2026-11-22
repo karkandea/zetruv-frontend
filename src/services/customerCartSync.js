@@ -46,6 +46,13 @@ export function setCustomerSession(response){
   announceSessionChange()
   return value
 }
+// Profile updates must preserve the verified access token and in-memory cart state.
+export function updateCustomerIdentity(customer) {
+  const current = readCustomerSession()
+  if (!current?.accessToken || !customer || current.customer?.id !== customer.id) return
+  window.sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...current, customer }))
+  window.dispatchEvent(new CustomEvent(CUSTOMER_EVENT, { detail: { authenticated: true } }))
+}
 
 function applyCustomerSession(response) {
   if(!response?.accessToken || typeof response.accessToken!=='string')
