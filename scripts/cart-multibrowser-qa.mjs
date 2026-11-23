@@ -97,7 +97,8 @@ async function login(page,email){
   await dialog.locator('input[name="email"]').fill(email)
   await dialog.locator('input[name="password"]').fill('synthetic-password')
   await dialog.getByRole('button',{name:'Masuk',exact:true}).click()
-  await page.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:20000})
+  const product = email.startsWith('alice') ? 'Alice Credits' : 'Bob Only Voucher'
+  await page.getByText(product).first().waitFor({timeout:20000})
 }
 const qa=[]
 try{
@@ -121,12 +122,13 @@ try{
     await new Promise(r=>setTimeout(r,100))
   assert.equal(users.alice.items[0].quantity,3)
   await b.getByRole('button',{name:'Tambah jumlah'}).click()
-  await b.getByText('Keranjang berubah di perangkat lain',{exact:false}).waitFor({timeout:12000})
+  await b.getByText('Keranjang perlu diperiksa',{exact:false}).waitFor({timeout:12000})
   assert.equal(users.alice.items[0].quantity,3,'stale PUT must not overwrite A')
   assert.ok(conflicts>=1)
+  await b.locator('.digital-cart-sync-review summary').click()
   b.once('dialog',d=>d.accept())
   await b.getByRole('button',{name:'Gunakan Keranjang Tersimpan'}).click()
-  await b.getByText('Keranjang tersimpan di akun Zetruv').waitFor({timeout:12000})
+  await b.locator('.digital-cart-sync-review').waitFor({state:'detached',timeout:12000})
   assert.equal(await b.locator('.digital-qty output').first().textContent(),'3')
   qa.push({scenario:'concurrent two-browser 409 and explicit server choice',status:'PASS'})
   // Account switch in same browser must never expose Alice's cart to Bob.
