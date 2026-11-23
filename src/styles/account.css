@@ -1245,18 +1245,8 @@
   .zetruv-form-actions > * { flex: 1; }
 }
 
-/* Pesanan Saya: profile summary only, no duplicated account shortcut strip. */
+/* Pesanan Saya has no account card or account shortcuts above the order list. */
 .account-layout--orders {
   grid-template-columns: minmax(0, 1fr);
   max-width: 780px;
-}
-.account-layout--orders > .account-sidebar {
-  width: 100%;
-}
-.account-layout--orders .account-sidebar__profile {
-  display: block;
-  padding: 8px;
-}
-.account-layout--orders .account-sidebar__profile-top {
-  min-height: 54px;
 }
