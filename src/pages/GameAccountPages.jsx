@@ -79,7 +79,7 @@ export function GameAccountsPage() {
 
   return (
     <div className="ga-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog"  homepageMobileMenu />
       <main className="ga-picker ga-container">
         <p className="ga-breadcrumb"><a href="/">Beranda</a><span>/</span><span>Akun Game</span></p>
         <h1>Akun Game</h1>
@@ -127,7 +127,7 @@ export function GameAccountListingPage({ gameSlug }) {
 
   return (
     <div className="ga-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog"  homepageMobileMenu />
       <main className="ga-list-page ga-container">
         <p className="ga-breadcrumb">
           <a href="/">Beranda</a><span>/</span><a href="/game-accounts">Akun Game</a><span>/</span><span>{game.name}</span>
@@ -214,7 +214,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
 
   return (
     <div className="ga-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog"  homepageMobileMenu />
       <main className="ga-detail-page">
         <section className="ga-detail-hero">
           <img className="ga-detail-hero-bg" src={gameAccountFlowAssets.dotaDetailHero} alt="" fetchPriority="high" decoding="async" />
@@ -324,7 +324,7 @@ export function GameAccountCartPage() {
 
   return (
     <div className="ga-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog"  homepageMobileMenu />
       <main className="ga-cart ga-flow-1120">
         <header>
           <h1>{copy.digitalCart}</h1>
@@ -487,7 +487,7 @@ export function GameAccountCheckoutPage() {
   if (!authenticated) {
     return (
       <div className="ga-shell">
-        <Navbar variant="loginCatalog" />
+        <Navbar variant="loginCatalog"  homepageMobileMenu />
         <main className="ga-gate-page ga-flow-1152">
           <AccountLoginGate account={account} onLoggedIn={() => setAuthenticated(true)} />
         </main>
@@ -616,7 +616,7 @@ export function GameAccountOrderDetailPage() {
 
   return (
     <div className="ga-shell">
-      <Navbar variant="loginCatalog" />
+      <Navbar variant="loginCatalog"  homepageMobileMenu />
       <main className="ga-order-detail-page">
         <div className="ga-flow-1120">
           <header className="ga-order-header">
