@@ -11,7 +11,6 @@ import { AccountShell, PageHeader, useCustomerSession } from './AccountPages'
 import { dateTime, money, OrderDetailsSkeleton, OrderStatusDetails, orderStatusLabel, paymentStatusLabel } from './SharedOrderStatusPage'
 import '../styles/customer-orders.css'
 
-const guestLookupUrl = '/order-status?guest=1'
 const pageSize = 20
 const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
 
@@ -90,7 +89,6 @@ export default function CustomerOrdersPage({ orderId }) {
     {orderId && <a className="customer-orders-back" href={group === 'active' ? '/account/orders' : '/account/orders?group=' + group}><ArrowLeft size={16} aria-hidden="true" /> {copy.myOrders}</a>}
     <PageHeader title={orderId ? copy.customerOrderDetailTitle : copy.myOrders} />
     {accessToken && <CustomerOrdersContent key={accessToken} token={accessToken} orderId={orderId} group={group} listUrl={listUrl} login={login} />}
-    {!orderId && <a className="customer-orders-guest" href={guestLookupUrl}>{copy.checkGuestOrder} <ArrowRight size={15} aria-hidden="true" /></a>}
     {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} onAuthenticated={response => {
       setCustomerSession(response)
       activateCustomerCart().catch(() => {})
@@ -150,13 +148,11 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
   return <>
     {!orderId && <div className="customer-orders-toolbar">
       <nav aria-label={copy.orderFilters} className="customer-orders-tabs">
-        <a href="/cart">Keranjang</a>
         <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>Berlangsung</a>
         <a href={`${listUrl}?group=completed`} aria-current={group === 'completed' ? 'page' : undefined}>Selesai</a>
       </nav>
     </div>}
     {body}
-    {!orderId && <a className="customer-orders-history-link" href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>Lihat pesanan dibatalkan / refund</a>}
     {!orderId && (offset > 0 || current?.data?.hasMore) && <nav className="customer-orders-pagination" aria-label={copy.orderPages}>
       <button type="button" className="account-btn account-btn--outline" disabled={offset === 0} onClick={() => setOffset(value => value - pageSize)}>{copy.previous}</button>
       <span>{copy.page} {offset / pageSize + 1}</span>
