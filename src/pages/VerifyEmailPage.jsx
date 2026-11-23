@@ -80,7 +80,7 @@ export default function VerifyEmailPage() {
   }
 
   return <div className="verify-email-page">
-    <Navbar restoreSession={!verifyingLink.current || status === 'verified'} />
+    <Navbar restoreSession={!verifyingLink.current || status === 'verified'}  homepageMobileMenu />
     <main className="verify-email-main">
       <section className="verify-email-card" aria-live="polite">
         {status === 'verifying' && <LoadingRegion className="verify-email-skeleton" label={copy.verifyingYourEmail}>

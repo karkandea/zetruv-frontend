@@ -3,6 +3,7 @@ import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
+import CartEmptyIllustration from '../components/CartEmptyIllustration'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
 import { getCatalogProduct } from '../services/catalogService'
@@ -233,29 +234,25 @@ export default function CartPage() {
           <a href="/search">{copy.continueShopping}</a>
         </header>}
 
-        {hasCustomerSession && (hasItems || hasSyncIssue || cartSync.state === 'saving') && <section className="digital-info-strip" role="status" aria-live="polite">
-          <Info size={18}/>
-          <span>{cartSync.state==='synced'?copy.yourCartIsSavedToYourZetruv:
-            cartSync.state==='saving'?copy.savingCartChanges:
-            cartSync.state==='loading'?copy.loadingAndMergingYourAccountCart:
-            ['conflict','error'].includes(cartSync.state)?(cartSync.message||copy.weCouldnTSyncYourCart): copy.loadingYourAccountCart}</span>
-          <button type="button" disabled={['saving','loading','conflict','error'].includes(cartSync.state)}
-            onClick={()=>activateCustomerCart().catch(()=>{})}>{copy.syncAgain}</button>
-        </section>}
-        {hasSyncIssue && (
-          <section className="digital-info-strip" role="alert" aria-live="assertive">
-            <CircleAlert size={18} aria-hidden="true"/>
-            <span>{copy.yourChangesHavenTBeenSavedCompare}</span>
-            <button type="button" onClick={async()=>{
-              if(!window.confirm(copy.useTheLatestSavedCartUnsavedChanges))return
-              try{await resolveCartConflict('server')}catch(e){setStatus(e.message)}
-            }}>{copy.useSavedCart}</button>
-            <button type="button" onClick={async()=>{
-              if(!window.confirm(copy.saveTheDraftFromThisDeviceItems))return
-              try{await resolveCartConflict('local')}catch(e){setStatus(e.message)}
-            }}>{copy.useDraft}</button>
-          </section>
-        )}
+        {hasCustomerSession && hasItems && cartSync.state === 'saving' &&
+          <p className="digital-cart-sync-saving" role="status">{copy.savingCartChanges}</p>}
+        {/* Keep conflict safety, but don't show raw server revisions or duplicate warning banners. */}
+        {hasSyncIssue && <details className="digital-cart-sync-review">
+          <summary><CircleAlert size={17} aria-hidden="true"/> Keranjang perlu diperiksa <span>Periksa</span></summary>
+          <div className="digital-cart-sync-review__body">
+            <p>Ada perbedaan antara keranjang di perangkat ini dan yang tersimpan di akun. Pilih yang ingin dipertahankan.</p>
+            <div className="digital-cart-sync-review__actions">
+              <button type="button" onClick={async()=>{
+                if(!window.confirm(copy.useTheLatestSavedCartUnsavedChanges))return
+                try{await resolveCartConflict('server')}catch(e){setStatus(e.message)}
+              }}>{copy.useSavedCart}</button>
+              <button type="button" onClick={async()=>{
+                if(!window.confirm(copy.saveTheDraftFromThisDeviceItems))return
+                try{await resolveCartConflict('local')}catch(e){setStatus(e.message)}
+              }}>{copy.useDraft}</button>
+            </div>
+          </div>
+        </details>}
         {hasItems && <div className="digital-info-strip">
           <Info size={18} aria-hidden="true" />
           <span>{copy.editYourGameUserIdAndZone}</span>
@@ -278,12 +275,7 @@ export default function CartPage() {
               <LoadingRegion label={copy.loadingAndMergingYourAccountCart}><SkeletonRows count={2} /></LoadingRegion>
             ) : !hasItems ? (
               <div className="digital-empty-cart">
-                <div className="digital-empty-cart__art" aria-hidden="true">
-                  <ShoppingCart className="digital-empty-cart__fallback" size={82} strokeWidth={1.1} />
-                  {/* CC0 asset: https://freesvg.org/empty-shopping-basket-vector-drawing */}
-                  <img src="https://freesvg.org/img/cesta.png" alt="" loading="lazy"
-                    onError={(event) => { event.currentTarget.hidden = true }} />
-                </div>
+                <CartEmptyIllustration />
                 <strong>{copy.yourDigitalCartIsEmpty}</strong>
                 <p>{copy.chooseATopUpVoucherOrBoosting}</p>
                 <a className="digital-empty-cart__cta" href="/search">{copy.continueShopping}</a>

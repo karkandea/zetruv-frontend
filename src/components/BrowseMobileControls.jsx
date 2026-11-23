@@ -32,7 +32,7 @@ export default function BrowseMobileControls({ activeKind, query, onQueryChange,
         {tabs.map(({ kind, label, href, icon }) => {
           const active = kind === activeKind
           const className = `browse-mobile-tab${active ? ' is-active' : ''}`
-          const content = <><span className="browse-mobile-tab__icon"><img src={icon} alt="" /></span><span>{copy[label]}</span></>
+          const content = <><span className="browse-mobile-tab__icon"><img src={icon} alt="" loading="lazy" decoding="async" /></span><span>{copy[label]}</span></>
 
           return onCategoryChange && kind !== 'Merchandise' && kind !== 'GameAccount' ? (
             <button type="button" className={className} aria-pressed={active} key={kind} onClick={() => onCategoryChange(kind)}>

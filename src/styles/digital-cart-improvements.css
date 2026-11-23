@@ -584,3 +584,53 @@
     height: 115px;
   }
 }
+
+/* A single compact reconciliation control instead of 2 technical sync banners. */
+.digital-shell .digital-cart-sync-saving {
+  margin: 6px 0 0;
+  color: #66718c;
+  font-size: 12px;
+}
+.digital-shell .digital-cart-sync-review {
+  width: 100%;
+  margin: 10px 0;
+  border: 1px solid #dce4f8;
+  border-radius: 13px;
+  background: #f8faff;
+  color: #243455;
+}
+.digital-shell .digital-cart-sync-review summary {
+  min-height: 48px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  list-style: none;
+}
+.digital-shell .digital-cart-sync-review summary::-webkit-details-marker { display:none; }
+.digital-shell .digital-cart-sync-review summary > span {
+  margin-left: auto;
+  color: #0c2b9b;
+  font-weight: 700;
+}
+.digital-shell .digital-cart-sync-review summary:focus-visible { outline: 2px solid #426de2; outline-offset: 2px; }
+.digital-shell .digital-cart-sync-review__body { padding: 0 14px 15px; }
+.digital-shell .digital-cart-sync-review__body p { margin: 0 0 12px; color: #515c76; font-size: 12px; line-height: 1.5; }
+.digital-shell .digital-cart-sync-review__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.digital-shell .digital-cart-sync-review__actions button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #162e91;
+  border-radius: 9px;
+  background: #fff;
+  color: #111d6b;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.digital-shell .digital-cart-sync-review__actions button:first-child { background: #11116a; color: #fff; }
+.digital-shell .digital-cart-sync-review__actions button:focus-visible { outline: 2px solid #496de8; outline-offset: 2px; }
+.digital-shell .digital-cart-layout--empty .digital-empty-cart__fallback { display: none; }

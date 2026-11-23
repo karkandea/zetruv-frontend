@@ -230,7 +230,7 @@ export function AccountOrderDetailPage({ orderId, state = 'unpaid' }) {
 
   return (
     <div className="order-journey-shell">
-      <Navbar variant="account" />
+      <Navbar variant="account"  homepageMobileMenu />
       <main className={`order-detail-page${showBanner ? ' has-banner' : ''}`}>
         <div className="journey-page-heading">
           <div>
@@ -368,7 +368,7 @@ export function AccountOrderTrackingPage({ orderId, state = 'transit' }) {
   const delivered = state === 'delivered'
   return (
     <div className="order-journey-shell">
-      <Navbar variant="account" />
+      <Navbar variant="account"  homepageMobileMenu />
       <main className="tracking-page">
         <header>
           <div><h1>Lacak Pesanan</h1><p>Invoice PHY-110826-0001</p></div>
@@ -415,7 +415,7 @@ export function AccountOrderTrackingPage({ orderId, state = 'transit' }) {
 export function AccountOrderUpdateLoginPage({ orderId }) {
   return (
     <div className="order-journey-shell">
-      <Navbar variant="account" />
+      <Navbar variant="account"  homepageMobileMenu />
       <main className="update-login-page">
         <header>
           <h1>Perbarui Data Login Game</h1>

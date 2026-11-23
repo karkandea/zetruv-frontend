@@ -39,3 +39,23 @@
  .ga-live-pagination span { width: 100%; }
  .ga-live-gallery { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Account game browse: vertical cards, never a horizontal carousel on phones. */
+@media (max-width: 680px) {
+  .catalog-shell--game-accounts .ga-game-grid,
+  .browse-catalog-shell .ga-account-grid.ga-live-grid {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-flow: row;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    gap: 12px;
+  }
+  .catalog-shell--game-accounts .ga-game-card,
+  .browse-catalog-shell .ga-account-card.ga-live-card {
+    width: 100%;
+    min-width: 0;
+    scroll-snap-align: none;
+  }
+}

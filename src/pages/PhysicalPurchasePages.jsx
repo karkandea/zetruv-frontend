@@ -1,7 +1,8 @@
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { formatCopy } from '../services/storefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
-import { Check, MapPin, ShoppingCart } from 'lucide-react'
+import { Check, MapPin } from 'lucide-react'
+import CartEmptyIllustration from '../components/CartEmptyIllustration'
 import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
@@ -148,7 +149,7 @@ export function PhysicalCatalogPage() {
 
   return (
     <div className="physical-shell">
-      <Navbar />
+      <Navbar  homepageMobileMenu />
       <main className="physical-catalog">
         <div className="physical-catalog-layout">
           <aside className="physical-catalog-sidebar">
@@ -243,7 +244,7 @@ function JerseyProductPage() {
 
   return (
     <div className="physical-shell">
-      <Navbar />
+      <Navbar  homepageMobileMenu />
       <main className="physical-pdp">
         <div className="physical-breadcrumb">{copy.merchandise} <span>/</span> Jersey <span>/</span> Zetruv Gaming Jersey</div>
         <div className="physical-pdp__main">
@@ -349,7 +350,7 @@ function PhysicalAccessoryProductPage({ slug }) {
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
   if (!product) {
-    return <div className="physical-shell"><Navbar /><main className="physical-pdp"><h1>{copy.productNotFound}</h1><a href="/merchandise">{copy.backToMerchandise}</a></main></div>
+    return <div className="physical-shell"><Navbar  homepageMobileMenu /><main className="physical-pdp"><h1>{copy.productNotFound}</h1><a href="/merchandise">{copy.backToMerchandise}</a></main></div>
   }
 
   const isJersey = product.category === 'Jersey'
@@ -375,7 +376,7 @@ function PhysicalAccessoryProductPage({ slug }) {
   }
 
   return <div className="physical-shell">
-    <Navbar />
+    <Navbar  homepageMobileMenu />
     <main className="physical-pdp">
       <div className="physical-breadcrumb"><a href="/merchandise">{copy.merchandise}</a> <span>/</span> {product.category} <span>/</span> {product.name}</div>
       <div className="physical-pdp__main">
@@ -511,8 +512,13 @@ export function PhysicalCartPage() {
           </>
         ) : (
           <section className="physical-cart-empty" aria-labelledby="merchandise-cart-title">
-            <h1 id="merchandise-cart-title">{formatCopy(copy.cartTitleWithCount, { cart: copy.merchandiseCart, count: 0 })}</h1>
-            <div><ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" /></div>
+            <h1 id="merchandise-cart-title">{copy.merchandiseCart}</h1>
+            <div className="physical-cart-empty__content">
+              <CartEmptyIllustration />
+              <strong>Keranjang Merchandise Masih Kosong</strong>
+              <p>Pilih merchandise favorit untuk mulai berbelanja.</p>
+              <a className="digital-empty-cart__cta" href="/merchandise">{copy.continueShopping2}</a>
+            </div>
           </section>
         )}
       </main>
@@ -525,7 +531,7 @@ function PhysicalFlowUnavailable({ title, description }) {
   const copy = useStorefrontCopy()
   const item = readPhysicalCart()
   return <div className="physical-shell">
-    <Navbar variant="account" />
+    <Navbar variant="account"  homepageMobileMenu />
     <main className="physical-checkout">
       <header><h1>{title}</h1><p>{description}</p></header>
       <section className="physical-flow-unavailable" role="status">
@@ -564,7 +570,7 @@ export function PhysicalCheckoutPage() {
   }, [session?.accessToken])
   const selected = addresses?.find(a => a.id === selectedId)
   return <div className="physical-shell">
-    <Navbar variant="account" />
+    <Navbar variant="account"  homepageMobileMenu />
     <main className="physical-checkout">
       <header><h1>{copy.merchandiseCheckout}</h1><p>Pilih alamat penerima untuk pengiriman merchandise.</p></header>
       <section className="physical-shipping-addresses" aria-labelledby="shipping-address-title">

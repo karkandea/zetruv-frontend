@@ -72,7 +72,7 @@ export default function LeaderboardPage() {
   const copy = useStorefrontCopy()
   return (
     <div className="leaderboard-shell">
-      <Navbar variant="leaderboard" />
+      <Navbar variant="leaderboard" homepageMobileMenu showMobileCart />
 
       <main className="leaderboard-main">
         <section className="leaderboard-podium" aria-label={copy.topThreeZetruvUsers}>

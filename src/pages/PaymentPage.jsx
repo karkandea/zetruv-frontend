@@ -143,7 +143,7 @@ export default function PaymentPage() {
 
   if (!context) {
     return <div className="digital-shell">
-      <Navbar variant="default" />
+      <Navbar variant="default"  homepageMobileMenu />
       <main className="payment-session-page">
         <section className="payment-session-empty" role="status">
           <AlertCircle size={32} />
@@ -170,7 +170,7 @@ export default function PaymentPage() {
   const description = copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
 
   return <div className="digital-shell">
-    <Navbar variant="default" />
+    <Navbar variant="default"  homepageMobileMenu />
     <main className="payment-session-page">
       <header className="payment-session-heading">
         <div>

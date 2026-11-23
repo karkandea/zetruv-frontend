@@ -38,6 +38,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHomepageDrawerOpen, setIsHomepageDrawerOpen] = useState(false)
+  const [closeSearchSignal, setCloseSearchSignal] = useState(0)
   const [isHomepageProductsOpen, setIsHomepageProductsOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const language = useNavbarLanguage()
@@ -270,7 +271,12 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           <img src={assets.logo} alt="Zetruv" />
         </a>
 
-        <NavbarSearch placeholder={searchPlaceholder} initialQuery={initialQuery} />
+        <NavbarSearch placeholder={searchPlaceholder} initialQuery={initialQuery}
+          closeSignal={closeSearchSignal}
+          onOpen={() => {
+            setIsHomepageDrawerOpen(false)
+            setIsMobileMenuOpen(false)
+          }} />
 
         <div className="navbar__quick-actions">
           <div ref={languageMenuRef} className={`nav-language-menu${isLanguageOpen ? ' is-open' : ''}`}>
@@ -408,7 +414,9 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           aria-controls="zetruv-homepage-mobile-nav"
           aria-expanded={isHomepageDrawerOpen}
           onClick={() => {
-            setIsHomepageDrawerOpen((open) => !open)
+            const nextOpen = !isHomepageDrawerOpen
+            setIsHomepageDrawerOpen(nextOpen)
+            if (nextOpen) setCloseSearchSignal(value => value + 1)
             setIsProductOpen(false)
             setIsCartOpen(false)
             setIsLanguageOpen(false)

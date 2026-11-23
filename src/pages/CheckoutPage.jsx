@@ -609,7 +609,7 @@ export default function CheckoutPage() {
   }
 
   return <div className="digital-shell">
-    <Navbar variant="default"/>
+    <Navbar variant="default" homepageMobileMenu />
     <main className="digital-checkout-page digital-container">
       <header className="digital-checkout-heading">
         <h1>{copy.digitalCheckout}</h1><p>{copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
