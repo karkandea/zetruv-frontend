@@ -151,6 +151,9 @@ try {
       await link.waitFor()
       assert.match(await link.getAttribute('href'),/^https:\/\/app\.sandbox\.midtrans\.com\//)
       await page.getByText('Mode Uji Coba Midtrans').waitFor()
+      // Screenshot is synthetic and contains no real payment data or credentials.
+      await page.screenshot({path:'visual-qa/midtrans-'+device+'-pending.png',
+        fullPage:true,animations:'disabled'})
       // A forged browser callback cannot override backend-confirmed Pending.
       await page.goto(origin+'/payment?transaction_status=settlement&status_code=200',
         {waitUntil:'domcontentloaded'})
