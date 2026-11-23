@@ -148,7 +148,16 @@ try {
     assert.equal(await page.getByRole('heading',{name:'Pembayaran Terkonfirmasi'}).count(),0)
     if (methodCode==='MIDTRANS_SNAP') {
       const link=page.getByRole('link',{name:/Bayar di Midtrans Sandbox/})
-      await link.waitFor()
+      const paymentView = await page.evaluate(() => {
+        const context=JSON.parse(sessionStorage.getItem('zetruv-payment-session-v1')||'null')
+        return {method:context?.methodCode,
+          linkCount:document.querySelectorAll('.payment-session-action-link').length,
+          notice:[...document.querySelectorAll('.payment-session-notice')].map(n=>n.textContent.trim()),
+          status:document.querySelector('.payment-session-status')?.textContent?.trim()?.slice(0,130),
+          sandboxGuide:!!document.querySelector('[data-testid="midtrans-sandbox-guide"]')}
+      })
+      console.log('MIDTRANS_UI_PROBE',device,JSON.stringify(paymentView))
+      await link.waitFor({timeout:10000})
       assert.match(await link.getAttribute('href'),/^https:\/\/app\.sandbox\.midtrans\.com\//)
       await page.getByText('Mode Uji Coba Midtrans').waitFor()
       // Screenshot is synthetic and contains no real payment data or credentials.
