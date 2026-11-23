@@ -164,6 +164,8 @@ try {
     // Authenticated orders restore across loads without falling back to guest tracking.
     await page.goto(site + '/order-status')
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
+    // The refreshed order card keeps detailed statuses collapsed until requested.
+    await page.getByRole('button', { name: /Lihat status/ }).first().click()
     await page.getByText('Sesi Pembayaran Kedaluwarsa', { exact: true }).waitFor()
     assert.equal(await page.locator('#sos-order-number').count(), 0)
     const orderOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
