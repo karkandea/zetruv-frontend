@@ -17,6 +17,7 @@ import '../styles/payment-session.css'
 
 const rupiah = value => 'Rp' + new Intl.NumberFormat('id-ID').format(Number(value) || 0)
 const labels = {
+  MIDTRANS_SNAP:'Midtrans (Sandbox)',
   QRIS:'QRIS', GOPAY:'GoPay',
   BCA_VA:'virtualAccount',
 }
@@ -164,7 +165,10 @@ export default function PaymentPage() {
   const active = pending && !expiredInBrowser
   const qr = active && context.methodCode === 'QRIS' && typeof payment.qrString === 'string' &&
     payment.qrString.length > 0 && payment.qrString.length <= 4096 ? payment.qrString : null
-  const url = active ? paymentLink(payment.paymentUrl) : null
+  const candidateUrl = active ? paymentLink(payment.paymentUrl) : null
+  const url = context.methodCode === 'MIDTRANS_SNAP' && candidateUrl
+    ? (new URL(candidateUrl).hostname === 'app.sandbox.midtrans.com' ? candidateUrl : null)
+    : candidateUrl
   const countdown = active ? formatPaymentCountdown(payment.expiresAt, now) : null
   const title = copy[statusText[state]?.[0]] || copy.checkingPayment
   const description = copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
@@ -203,8 +207,9 @@ export default function PaymentPage() {
                   <QRCodeSVG value={qr} size={240} level="M" marginSize={2} title={copy.qrisFromThePaymentProvider} />
                   <p>{copy.scanTheProviderSQrisCodeDon}</p>
                 </div>}
-                {url && <a className="payment-session-action-link" href={url}>
-                  {context.methodCode === 'GOPAY' ? copy.openGopayPayment : copy.openPaymentInstructions} <ExternalLink size={16} />
+                {url && <a className="payment-session-action-link" href={url} target="_self" rel="noreferrer">
+                  {context.methodCode === 'MIDTRANS_SNAP' ? copy.openMidtransSandboxPayment
+                    : context.methodCode === 'GOPAY' ? copy.openGopayPayment : copy.openPaymentInstructions} <ExternalLink size={16} />
                 </a>}
                 {!qr && !url && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.paymentInstructionsAreUnavailableCheckTheStatus}</p>}
               </> : null}

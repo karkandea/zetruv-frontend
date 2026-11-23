@@ -30,6 +30,7 @@ import '../styles/digital-account-verification.css'
 const rupiah = (v = 0) => `Rp${new Intl.NumberFormat('id-ID').format(Number(v) || 0)}`
 // Backend readiness is authoritative; no independent storefront permission flag.
 const paymentDisplay = (copy) => [
+  {code: 'MIDTRANS_SNAP', name:copy.midtransSandboxPayment, description:copy.midtransSandboxChooseMethod, icon:checkoutAssets.ewallet},
   {code: 'QRIS', name:'QRIS', description:copy.payByScanningTheQrCode, icon:checkoutAssets.qris},
   {code: 'BCA_VA', name:copy.virtualAccount, description:copy.bankTransfer, icon:checkoutAssets.virtualAccount},
   {code: 'GOPAY', name:'E-Wallet', description:copy.payWithADigitalWallet, icon:checkoutAssets.ewallet},
