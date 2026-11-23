@@ -33,14 +33,17 @@ const order = {
   createdAt:'2026-10-16T00:00:00Z',
   items:[{productName:'QA Test Voucher',variantName:'10 Credits',quantity:1,lineTotal:25000}],
 }
-const readiness = {
+const readiness = methodCode => ({
   canAcceptLivePayments:true,status:'Ready',isSandbox:true,
-  availableMethods:[{code:'QRIS',name:'QRIS',paymentFee:0}],
-}
-const payment = state => ({
+  availableMethods:[{code:methodCode,name:methodCode==='MIDTRANS_SNAP'?'Midtrans (Sandbox)':'QRIS',paymentFee:0}],
+})
+const payment = (state, methodCode, redirectHost) => ({
   orderId,state,canRetry:false,hasActivePaymentSession:state==='Pending',
   expiresAt:'2099-01-01T00:00:00Z',
-  qrString:state==='Pending'?'synthetic-qris-string':null,
+  qrString:state==='Pending'&&methodCode==='QRIS'?'synthetic-qris-string':null,
+  paymentUrl:state==='Pending'&&methodCode==='MIDTRANS_SNAP'
+    ? 'https://' + redirectHost + '/snap/v2/vtweb/SYNTHETIC-NO-REAL-PAYMENT'
+    : null,
   checkedAt:'2026-10-16T00:00:00Z',
 })
 const json = (route, status, data) => route.fulfill({
@@ -50,14 +53,17 @@ const json = (route, status, data) => route.fulfill({
 })
 
 try {
-  for (const [device,viewport] of [
-    ['desktop',{width:1440,height:900}],['mobile',{width:390,height:844}],
+  for (const [methodCode,device,viewport] of [
+    ['QRIS','desktop',{width:1440,height:900}],
+    ['QRIS','mobile',{width:390,height:844}],
+    ['MIDTRANS_SNAP','desktop',{width:1440,height:900}],
+    ['MIDTRANS_SNAP','mobile',{width:390,height:844}],
   ]) {
     const ctx=await browser.newContext({viewport})
     await ctx.addInitScript(() => localStorage.setItem('zetruv-navbar-language', 'id'))
     const page=await ctx.newPage()
     let orderPosts=0,paymentPosts=0,paymentGets=0
-    let remotePayment='Pending', methodsAvailable=true
+    let remotePayment='Pending', methodsAvailable=true, redirectHost='app.sandbox.midtrans.com'
     await page.addInitScript(({accessToken})=>{
       if(!sessionStorage.getItem('qa-checkout-seeded')){
         sessionStorage.setItem('zetruv-customer-session-v1', JSON.stringify({
@@ -79,7 +85,7 @@ try {
       if(path.endsWith('/catalog/products/qa-voucher')&&req.method()==='GET')
         return json(route,200,product)
       if(path.endsWith('/checkout/payment-options')&&req.method()==='GET')
-        return json(route,200,methodsAvailable?readiness:{canAcceptLivePayments:false,isSandbox:true,availableMethods:[],status:'NoSupportedMethods'})
+        return json(route,200,methodsAvailable?readiness(methodCode):{canAcceptLivePayments:false,isSandbox:true,availableMethods:[],status:'NoSupportedMethods'})
       if(path.endsWith('/me/cart')&&req.method()==='GET'){
         assert.equal(req.headers().authorization,'Bearer '+accessToken)
         return json(route,200,{items:[line],revision:'rev-1'})
@@ -100,13 +106,13 @@ try {
       if(path.endsWith('/checkout/orders/'+orderId+'/payment')&&req.method()==='POST'){
         paymentPosts++
         assert.equal(req.headers()['x-order-access-token'],grant)
-        assert.equal(url.searchParams.get('methodCode'),'QRIS')
-        return json(route,200,payment('Pending'))
+        assert.equal(url.searchParams.get('methodCode'),methodCode)
+        return json(route,200,payment('Pending',methodCode,redirectHost))
       }
       if(path.endsWith('/checkout/orders/'+orderId+'/payment')&&req.method()==='GET'){
         paymentGets++
         assert.equal(req.headers()['x-order-access-token'],grant)
-        return json(route,200,payment(remotePayment))
+        return json(route,200,payment(remotePayment,methodCode,redirectHost))
       }
       return json(route,404,{message:'Unrelated test API not enabled'})
     })
@@ -118,7 +124,7 @@ try {
     await page.getByRole('heading',{name:'Checkout Digital'}).waitFor()
     await page.getByText('QA Test Voucher').first().waitFor()
     await page.locator('#checkout-phone').fill('081234567890')
-    await page.getByRole('button',{name:'QRIS',exact:false}).first().click()
+    await page.getByRole('button',{name:methodCode==='MIDTRANS_SNAP'?'Midtrans (Sandbox)':'QRIS',exact:false}).first().click()
     const pay=page.getByRole('button',{name:'Bayar Sekarang'})
     await pay.waitFor()
     assert.equal(await pay.isDisabled(),false,'verified catalog, synced cart, sandbox methods should allow pay')
@@ -132,7 +138,7 @@ try {
     await page.reload()
     await page.getByText('QA Test Voucher').first().waitFor()
     await page.locator('#checkout-phone').fill('081234567890')
-    await page.getByRole('button',{name:'QRIS',exact:false}).first().click()
+    await page.getByRole('button',{name:methodCode==='MIDTRANS_SNAP'?'Midtrans (Sandbox)':'QRIS',exact:false}).first().click()
     await page.getByRole('button',{name:'Bayar Sekarang'}).click()
     await page.waitForURL('**/payment',{timeout:20000})
     await page.getByRole('heading',{name:'Menunggu Pembayaran'}).waitFor({timeout:15000})
@@ -140,6 +146,23 @@ try {
     assert.equal(paymentPosts,1,'only one payment session should be created')
     assert.ok(paymentGets>=1)
     assert.equal(await page.getByRole('heading',{name:'Pembayaran Terkonfirmasi'}).count(),0)
+    if (methodCode==='MIDTRANS_SNAP') {
+      const link=page.getByRole('link',{name:/Bayar di Midtrans Sandbox/})
+      await link.waitFor()
+      assert.match(await link.getAttribute('href'),/^https:\/\/app\.sandbox\.midtrans\.com\//)
+      await page.getByText('Mode Uji Coba Midtrans').waitFor()
+      // A forged browser callback cannot override backend-confirmed Pending.
+      await page.goto(origin+'/payment?transaction_status=settlement&status_code=200',
+        {waitUntil:'domcontentloaded'})
+      await page.getByRole('heading',{name:'Menunggu Pembayaran'}).waitFor()
+      assert.equal(paymentPosts,1,'untrusted return query must not initiate payment')
+      redirectHost='evil.example'
+      await page.getByRole('button',{name:'Periksa Status'}).click()
+      await page.getByText(/Instruksi pembayaran belum tersedia/).waitFor()
+      assert.equal(await page.getByRole('link',{name:/Bayar di Midtrans Sandbox/}).count(),0,
+        'untrusted redirect host must not be clickable')
+      redirectHost='app.sandbox.midtrans.com'
+    }
     await page.reload()
     await page.getByRole('heading',{name:'Menunggu Pembayaran'}).waitFor()
     assert.equal(orderPosts,1,'refresh never creates a second order')
@@ -154,7 +177,7 @@ try {
     }))
     assert.ok(!info.includes('081234567890'))
     assert.ok(!info.includes('synthetic-password'))
-    console.log('PASS',device,'payment deep link guard, backend method gate, one order+payment, refresh, pending->Paid by server')
+    console.log('PASS',methodCode,device,'checkout method gate, Midtrans sandbox redirect, return, refresh, server-only Paid')
     await ctx.close()
   }
 } finally {
