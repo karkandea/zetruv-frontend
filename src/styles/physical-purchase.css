@@ -2768,3 +2768,68 @@
 .physical-shipping-addresses__empty img { width: 150px; height: auto; }
 .physical-shipping-addresses__empty p { max-width: 350px; margin: 0; color: #57637c; font-size: 13px; }
 @media (max-width: 600px) { .physical-shipping-addresses { padding: 14px; } .physical-shipping-addresses__heading h2 { font-size: 16px; } }
+
+/* Match the digital cart empty state exactly: one basket graphic, one message, one CTA. */
+.physical-cart-empty { padding: 18px; }
+.physical-cart-empty > .physical-cart-empty__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 385px;
+  padding: 34px 16px 42px;
+  text-align: center;
+}
+.physical-cart-empty .digital-empty-cart__art {
+  position: relative;
+  width: 190px;
+  height: 164px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 34px;
+  background: radial-gradient(circle at 50% 45%, #eef1ff 0%, #f7f8ff 55%, transparent 74%);
+}
+.physical-cart-empty .digital-empty-cart__art img {
+  display: block;
+  width: 144px;
+  height: 138px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.physical-cart-empty .digital-empty-cart__art img[hidden] { display: none; }
+.physical-cart-empty__content > strong {
+  color: #17172b;
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.4;
+  font-weight: 700;
+}
+.physical-cart-empty__content > p {
+  max-width: 360px;
+  margin: 8px 0 0;
+  color: #73798b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.physical-cart-empty__content .digital-empty-cart__cta {
+  min-width: 165px;
+  min-height: 44px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 24px;
+  padding: 10px 22px;
+  border-radius: 11px;
+  background: #060552;
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+}
+.physical-cart-empty__content .digital-empty-cart__cta:hover { background: #18187a; }
+@media(max-width:560px) {
+  .physical-cart-empty > .physical-cart-empty__content { min-height: 340px; padding: 30px 8px; }
+  .physical-cart-empty .digital-empty-cart__art { width: 150px; height: 140px; margin-bottom: 12px; }
+  .physical-cart-empty .digital-empty-cart__art img { width: 125px; height: 115px; }
+}
