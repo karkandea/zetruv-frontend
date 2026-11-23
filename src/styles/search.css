@@ -938,3 +938,115 @@
     font-weight: 650;
   }
 }
+
+/* Browse game favorites: image + game name only, swipable horizontally, no side-by-side list. */
+.search-page--browse .favorite-games { min-width: 0; }
+.search-page--browse .favorite-games__grid {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 12px;
+}
+.search-page--browse .favorite-games__grid::-webkit-scrollbar { display: none; }
+.search-page--browse .favorite-game { flex: 0 0 clamp(116px, 27%, 145px); scroll-snap-align: start; }
+.search-page--browse .favorite-game__link {
+  height: 100%;
+  min-height: 155px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 9px;
+  padding: 8px;
+  border: 1px solid #e3e5f0;
+  border-radius: 15px;
+  text-align: left;
+  background: #fff;
+}
+.search-page--browse .favorite-game__cover {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  flex: none;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #f3f5fc;
+}
+.search-page--browse .favorite-game__cover img { width: 100%; height: 100%; object-fit: cover; }
+.search-page--browse .favorite-game__link strong { font-size: 12px; line-height: 1.4; -webkit-line-clamp: 2; }
+@media (max-width: 900px) {
+  .search-page--browse .favorite-games__grid {
+    display: flex;
+    grid-template-columns: none;
+    margin-inline: 0;
+    scroll-padding-inline: 2px;
+  }
+  .search-page--browse .favorite-game { flex-basis: clamp(108px, 34vw, 146px); }
+  .search-page--browse .favorite-game__link { min-height: 141px; }
+}
+/* Catalog categories: swipe rail of compact square icons with their labels BELOW. */
+@media (max-width: 900px) {
+  .browse-mobile-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 3px 1px 13px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+  }
+  .browse-mobile-tab {
+    flex: 0 0 93px;
+    width: 93px;
+    min-height: 104px;
+    padding: 10px 6px 8px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+    border: 1px solid #e3e5f0;
+    border-radius: 15px;
+    background: #fff;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.25;
+    scroll-snap-align: start;
+  }
+  .browse-mobile-tab__icon {
+    width: 55px;
+    height: 55px;
+    flex: 0 0 55px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: #f5f6fa;
+  }
+  .browse-mobile-tab__icon img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+  .browse-mobile-tab > span:last-child {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+    font-weight: 600;
+  }
+  .browse-mobile-tab.is-active {
+    color: #010154;
+    border-color: #a5b4f1;
+    background: #eff2ff;
+    box-shadow: 0 3px 9px rgba(4, 20, 96, .08);
+  }
+}
