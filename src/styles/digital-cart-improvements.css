@@ -634,3 +634,12 @@
 .digital-shell .digital-cart-sync-review__actions button:first-child { background: #11116a; color: #fff; }
 .digital-shell .digital-cart-sync-review__actions button:focus-visible { outline: 2px solid #496de8; outline-offset: 2px; }
 .digital-shell .digital-cart-layout--empty .digital-empty-cart__fallback { display: none; }
+
+/* Mobile cart: focus on the cart-type switch, items and payment summary.
+   Retain the checkout safety warning, item-specific errors and all desktop guidance. */
+@media (max-width: 767px) {
+  .digital-shell .digital-page-heading,
+  .digital-shell .digital-info-strip--account-help {
+    display: none;
+  }
+}

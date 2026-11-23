@@ -177,16 +177,21 @@ export default function CartPage() {
   const itemCount = cartCount(items)
   const isChecking = (item) => isCartCatalogPending(item, catalogProducts, catalogErrors)
   const checkingCatalog = items.some(isChecking)
-  const problems = items.map(item => ({
-    key: item.cartKey,
-    message: item.serverLineId && item.isAvailable===false
-      ? copy.productStockOrAccountVerificationHasExpired
-      : isChecking(item) ? ''
-      : item.fulfillmentMethod === 'MANUAL_LOGIN' &&
-      !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
-        ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
-        : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements : getCartItemProblem(item, requirements, copy),
-  })).filter(problem => problem.message)
+  const problems = items.map(item => {
+    const checking = isChecking(item)
+    const loginUnavailable = !checking && item.fulfillmentMethod === 'MANUAL_LOGIN' &&
+      !viaLoginServiceStatus(catalogProducts[item.productSlug], item, serviceReadiness[item.productSlug]).available
+    return {
+      key: item.cartKey,
+      // A blocked Via Login service is more specific than the server's generic
+      // isAvailable flag. Show one primary reason, never conflicting duplicates.
+      message: checking ? ''
+        : loginUnavailable ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
+        : item.serverLineId && item.isAvailable === false ? copy.productStockOrAccountVerificationHasExpired
+        : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements
+        : getCartItemProblem(item, requirements, copy),
+    }
+  }).filter(problem => problem.message)
   const canCheckout = hasItems && problems.length === 0 && !checkingCatalog &&
     (!hasCustomerSession || cartSync.state==='synced')
   const editing = items.find((item) => item.cartKey === editingKey) || null
@@ -253,7 +258,7 @@ export default function CartPage() {
             </div>
           </div>
         </details>}
-        {hasItems && <div className="digital-info-strip">
+        {hasItems && <div className="digital-info-strip digital-info-strip--account-help">
           <Info size={18} aria-hidden="true" />
           <span>{copy.editYourGameUserIdAndZone}</span>
         </div>}
@@ -289,11 +294,11 @@ export default function CartPage() {
                   const checking = isChecking(item)
                   const loginUnavailable = !checking && item.fulfillmentMethod==='MANUAL_LOGIN' &&
                     !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
-                  const issue = item.serverLineId && item.isAvailable===false
-                    ? copy.thisProductStockOrDestinationAccountIs
-                    : checking ? ''
+                  const issue = checking ? ''
                     : loginUnavailable ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
-                    : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements : getCartItemProblem(item, requirements, copy)
+                    : item.serverLineId && item.isAvailable === false ? copy.thisProductStockOrDestinationAccountIs
+                    : catalogErrors[item.productSlug] ? copy.weCouldnTLoadTheAccountRequirements
+                    : getCartItemProblem(item, requirements, copy)
                   const isAccount = item.fulfillmentMethod === 'AUTO_ID'
                   const target = item.accountFields || {}
                   return (
@@ -381,7 +386,7 @@ export default function CartPage() {
               {readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}
             </button>
             {problems.length > 0 ? (
-              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails} {problems[0].message}</p>
+              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails}</p>
             ) : checkingCatalog ? <p role="status">{copy.verifyingTheCatalogBeforeCheckout}</p>
               : <p>{copy.pricesAndPromotionsWillBeCheckedAgain}</p>}
             {status && <p className="digital-cart-summary__success" role="status"><CheckCircle2 size={15} />{status}</p>}
