@@ -185,6 +185,13 @@ export default function PaymentPage() {
         <span className="payment-session-method">{context.methodCode === 'BCA_VA' ? copy.virtualAccount : labels[context.methodCode] || context.methodCode}</span>
       </header>
 
+      {context.methodCode === 'MIDTRANS_SNAP' && <aside className="payment-session-midtrans-guide" role="note" data-testid="midtrans-sandbox-guide">
+        <ShieldCheck size={21} aria-hidden="true" />
+        <div>
+          <strong>{copy.midtransSandboxNoticeTitle}</strong>
+          <p>{copy.midtransSandboxNoticeText}</p>
+        </div>
+      </aside>}
       <div className="payment-session-layout">
         <section className="payment-session-card payment-session-instructions" aria-live="polite">
           {loading ? <LoadingRegion label={copy.checkingTheLatestPaymentStatus}>
