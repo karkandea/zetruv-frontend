@@ -386,7 +386,7 @@ export default function CartPage() {
               {readCustomerSession() ? copy.continueToCheckout : copy.logInToCheckOut}
             </button>
             {problems.length > 0 ? (
-              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails} {problems[0].message}</p>
+              <p className="digital-cart-summary__warning" role="alert"><CircleAlert size={15} aria-hidden="true" />{copy.reviewOrderDetails}</p>
             ) : checkingCatalog ? <p role="status">{copy.verifyingTheCatalogBeforeCheckout}</p>
               : <p>{copy.pricesAndPromotionsWillBeCheckedAgain}</p>}
             {status && <p className="digital-cart-summary__success" role="status"><CheckCircle2 size={15} />{status}</p>}
