@@ -34,3 +34,24 @@
 .payment-session-empty>svg{color:#6d809c}.payment-session-empty h1{font-size:28px;margin:16px 0 8px}
 .payment-session-empty p{color:#64748b;line-height:1.6}.payment-session-empty .payment-session-actions{justify-content:center}
 @media(max-width:850px){.payment-session-page{padding:95px 16px 60px}.payment-session-layout{grid-template-columns:1fr}.payment-session-heading{align-items:flex-start}.payment-session-card{padding:22px}.payment-session-status h2{font-size:21px}}
+
+/* Midtrans redirect: keep test-mode context on screen when the shopper
+   returns from the external provider. Trust only the backend status. */
+.payment-session-midtrans-guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  margin: 0 0 18px;
+  border: 1px solid #ccd9f3;
+  border-radius: 13px;
+  background: #f5f8ff;
+  color: #253765;
+}
+.payment-session-midtrans-guide svg { flex: 0 0 auto; margin-top: 2px; }
+.payment-session-midtrans-guide strong { display: block; font-size: 13px; font-weight: 700; }
+.payment-session-midtrans-guide p { margin: 5px 0 0; font-size: 12px; line-height: 1.6; }
+@media (max-width: 600px) {
+  .payment-session-midtrans-guide { padding: 11px 12px; gap: 9px; margin-bottom: 12px; }
+}
