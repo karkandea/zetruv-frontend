@@ -1,7 +1,8 @@
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { formatCopy } from '../services/storefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
-import { Check, MapPin, ShoppingCart } from 'lucide-react'
+import { Check, MapPin } from 'lucide-react'
+import CartEmptyIllustration from '../components/CartEmptyIllustration'
 import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
@@ -511,8 +512,13 @@ export function PhysicalCartPage() {
           </>
         ) : (
           <section className="physical-cart-empty" aria-labelledby="merchandise-cart-title">
-            <h1 id="merchandise-cart-title">{formatCopy(copy.cartTitleWithCount, { cart: copy.merchandiseCart, count: 0 })}</h1>
-            <div><ShoppingCart size={32} strokeWidth={1.6} aria-hidden="true" /></div>
+            <h1 id="merchandise-cart-title">{copy.merchandiseCart}</h1>
+            <div className="physical-cart-empty__content">
+              <CartEmptyIllustration />
+              <strong>Keranjang Merchandise Masih Kosong</strong>
+              <p>Pilih merchandise favorit untuk mulai berbelanja.</p>
+              <a className="digital-empty-cart__cta" href="/merchandise">{copy.continueShopping2}</a>
+            </div>
           </section>
         )}
       </main>
