@@ -325,3 +325,28 @@
     font-size: 11px;
   }
 }
+
+/* The ranking page uses the same shared nav, responsive drawer and support launcher.
+   Avoid containing the fixed assistance button in a clipped page shell. */
+.leaderboard-shell {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+.leaderboard-shell > .contact-fab {
+  position: fixed;
+  z-index: 40;
+  top: 56%;
+  right: 26px;
+  bottom: auto;
+}
+@media (max-width: 1024px) {
+  .leaderboard-shell > .contact-fab {
+    top: auto;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    right: 14px;
+  }
+  .leaderboard-main { padding-top: 98px; }
+}
+@media (max-width: 600px) {
+  .leaderboard-main { padding-top: 86px; }
+}
