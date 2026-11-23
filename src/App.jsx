@@ -41,8 +41,14 @@ function AccountOrderUnavailablePage() {
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  const params = new URLSearchParams(window.location.search)
   const page = <StorefrontRoute path={path} />
-  return isOrderRoute(path) ? <RequireOrderSession>{page}</RequireOrderSession> : page
+  // Explicit guest lookup is public and uses order-number + contact verification.
+  // It must not be hidden behind the customer session gate.
+  const publicGuestLookup = (path === '/order-status' || path === '/track-order') &&
+    params.get('guest') === '1'
+  return isOrderRoute(path) && !publicGuestLookup
+    ? <RequireOrderSession>{page}</RequireOrderSession> : page
 }
 
 function StorefrontRoute({ path }) {
