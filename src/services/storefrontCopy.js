@@ -749,6 +749,9 @@ const messages = {
   buyNow: ["Buy Now","Beli Sekarang","Beli Sekarang"],
   backToAccountListings: ["Back to Account Listings","Kembali ke Daftar Akun","Kembali ke Senarai Akaun"],
   // Checkout and payment
+  midtransSandboxPayment: ["Midtrans (Sandbox)","Midtrans (Sandbox)","Midtrans (Sandbox)"],
+  midtransSandboxChooseMethod: ["Choose QRIS, bank transfer, or e-wallet securely on Midtrans.","Pilih QRIS, transfer bank, atau e-wallet di halaman aman Midtrans.","Pilih QRIS, pindahan bank atau e-dompet dengan selamat di Midtrans."],
+  openMidtransSandboxPayment: ["Pay on Midtrans Sandbox","Bayar di Midtrans Sandbox","Bayar di Midtrans Sandbox"],
   payByScanningTheQrCode: ["Pay by scanning the QR code","Bayar dengan memindai kode QR","Bayar dengan mengimbas kod QR"],
   virtualAccount: ["Virtual Account","Virtual Account","Akaun Maya"],
   bankTransfer: ["Bank transfer","Transfer bank","Pindahan bank"],
