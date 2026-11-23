@@ -71,7 +71,7 @@ function SearchSkeleton({ query, showSkeleton }) {
   )
 }
 
-export default function NavbarSearch({ placeholder, initialQuery = '' }) {
+export default function NavbarSearch({ placeholder, initialQuery = '', closeSignal = 0, onOpen }) {
   const copy = useStorefrontCopy()
   const searchId = useId()
   const popupId = `${searchId}-suggestions`
@@ -211,6 +211,13 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
     inputRef.current?.focus()
   }
 
+  useEffect(() => {
+    if (closeSignal === 0) return
+    setIsOpen(false)
+    setActiveIndex(-1)
+    inputRef.current?.blur()
+  }, [closeSignal])
+
   function toggleMobileSearch() {
     if (isOpen) {
       setIsOpen(false)
@@ -218,6 +225,8 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
       return
     }
 
+    // One open overlay at a time. Close the mobile drawer before focusing search.
+    onOpen?.()
     // Reveal and focus during the same tap so mobile Safari opens the keyboard.
     flushSync(() => setIsOpen(true))
     inputRef.current?.focus()
@@ -266,8 +275,8 @@ export default function NavbarSearch({ placeholder, initialQuery = '' }) {
             setActiveIndex(-1)
             setIsOpen(true)
           }}
-          onFocus={() => setIsOpen(true)}
-          onClick={() => setIsOpen(true)}
+          onFocus={() => { onOpen?.(); setIsOpen(true) }}
+          onClick={() => { onOpen?.(); setIsOpen(true) }}
           onKeyDown={handleInputKey}
           placeholder={placeholder}
           aria-label={copy.searchGamesVouchersOrProducts}
