@@ -1,6 +1,6 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useEffect, useId, useState } from 'react'
-import { ArrowLeft, ArrowRight, ChevronDown, Package, RefreshCw, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, Package, Star } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
@@ -154,7 +154,6 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
         <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>Berlangsung</a>
         <a href={`${listUrl}?group=completed`} aria-current={group === 'completed' ? 'page' : undefined}>Selesai</a>
       </nav>
-      <button type="button" className="account-btn account-btn--outline" onClick={refresh}><RefreshCw size={15} aria-hidden="true" /> {copy.refreshOrders}</button>
     </div>}
     {body}
     {!orderId && <a className="customer-orders-history-link" href={`${listUrl}?group=history`} aria-current={group === 'history' ? 'page' : undefined}>Lihat pesanan dibatalkan / refund</a>}

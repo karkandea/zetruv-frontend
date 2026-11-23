@@ -30,15 +30,15 @@ export function AccountShell({ active, customer: profileCustomer, children }) {
   return (
     <div className="account-page">
       <Navbar variant="account" homepageMobileMenu />
-      <main className={`account-layout${active === 'account' ? ' account-layout--overview' : ''}`}>
-        <AccountSidebar active={active} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />
+      <main className={`account-layout${active === 'account' ? ' account-layout--overview' : ''}${active === 'orders' ? ' account-layout--orders' : ''}`}>
+        <AccountSidebar active={active} hideNavigation={active === 'orders'} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />
         <section className="account-main">{children}</section>
       </main>
     </div>
   )
 }
 
-function AccountSidebar({ active, customer }) {
+function AccountSidebar({ active, customer, hideNavigation = false }) {
   const copy = useStorefrontCopy()
   const name = customer?.name || copy.visitor
   const email = customer?.email || copy.signedOut
@@ -54,15 +54,17 @@ function AccountSidebar({ active, customer }) {
           <ChevronRight size={16} aria-hidden="true" />
         </div>
       </a>
-      <div className="account-sidebar__rule" />
-      <nav className="account-sidebar__nav" aria-label={copy.accountNavigation}>
-        {navItems.map(({ key, label, href, icon: Icon }) => (
-          <a aria-current={key === active ? 'page' : undefined} href={href} key={key}>
-            <Icon size={19} aria-hidden="true" />
-            <span>{copy[label]}</span>
-          </a>
-        ))}
-      </nav>
+      {!hideNavigation && <>
+        <div className="account-sidebar__rule" />
+        <nav className="account-sidebar__nav" aria-label={copy.accountNavigation}>
+          {navItems.map(({ key, label, href, icon: Icon }) => (
+            <a aria-current={key === active ? 'page' : undefined} href={href} key={key}>
+              <Icon size={19} aria-hidden="true" />
+              <span>{copy[label]}</span>
+            </a>
+          ))}
+        </nav>
+      </>}
     </aside>
   )
 }
