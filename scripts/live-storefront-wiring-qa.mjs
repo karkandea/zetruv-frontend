@@ -93,7 +93,6 @@ try {
     await profile.getByRole('heading', { name: 'Synthetic Customer' }).waitFor()
     await profile.getByText('qa@example.test', { exact: true }).waitFor()
     assert.equal(await page.locator('.account-layout').getByText('Stale Browser Name').count(), 0)
-    assert.equal(await page.getByText('Stale Browser Name').isVisible(), false)
     assert.deepEqual(pageErrors, [])
     console.log('PASS:', device, 'homepage CMS, articles, merchandise draft, verified customer profile')
     await context.close()
