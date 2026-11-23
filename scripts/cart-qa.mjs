@@ -110,8 +110,13 @@ try{
     const secondTab = await ctx.newPage()
     await secondTab.goto(urls + '/cart')
     await secondTab.getByText('Synthetic 10 Credits').first().waitFor()
-    await page.getByRole('button',{name:'Menu akun'}).click()
-    await page.getByRole('button',{name:'Keluar',exact:true}).click()
+    if (device === 'mobile') {
+      await page.locator('.navbar__hamburger').click()
+      await page.locator('.navbar__mobile-logout').getByRole('button',{name:/Keluar/}).click()
+    } else {
+      await page.getByRole('button',{name:'Menu akun'}).click()
+      await page.getByRole('button',{name:'Keluar',exact:true}).click()
+    }
     await secondTab.waitForFunction(() => !sessionStorage.getItem('zetruv-customer-session-v1'))
     await secondTab.close()
     await page.getByText('Keranjang Digital Masih Kosong').waitFor({timeout:12000})
