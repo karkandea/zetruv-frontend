@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar'
 import MerchandiseCard, { MerchandiseCardSkeletons } from '../components/MerchandiseCard'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, ArrowDownUp, ChevronDown } from 'lucide-react'
 import { getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/physical-purchase.css'
@@ -46,16 +46,25 @@ export function LivePhysicalCatalogPage() {
     event.preventDefault()
   }
 
+  const sortControl = <label className="merch-sort-control">
+    <ArrowDownUp size={17} aria-hidden="true" />
+    <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
+      <option value="newest">{copy.catalogOrder}</option>
+      <option value="low">{copy.lowestPrice}</option>
+      <option value="high">{copy.highestPrice}</option>
+    </select>
+    <ChevronDown size={15} aria-hidden="true" />
+  </label>
+
   return (
-    <CatalogPage browseLanding activeKind="Merchandise" query={query} onQueryChange={setQuery} onSubmit={search}>
-      <CatalogSearch browse label={copy.searchGamesOrCategories} query={query} onQueryChange={setQuery} onSubmit={search} />
-      <div className="catalog-header catalog-header--browse-sort">
+    <CatalogPage browseLanding activeKind="Merchandise" query={query} onQueryChange={setQuery} onSubmit={search} tabletSearchAction={sortControl}>
+      <div className="merch-catalog-search-row">
+        <CatalogSearch browse label={copy.searchGamesOrCategories} query={query} onQueryChange={setQuery} onSubmit={search} />
+        {sortControl}
+      </div>
+      <div className="catalog-header merch-catalog-mobile-header">
         <h2 className="browse-list-title catalog-heading">{copy.merchandise}</h2>
-        <select className="catalog-sort" value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
-          <option value="newest">{copy.catalogOrder}</option>
-          <option value="low">{copy.lowestPrice}</option>
-          <option value="high">{copy.highestPrice}</option>
-        </select>
+        <div className="merch-mobile-sort">{sortControl}</div>
       </div>
       {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
         <div className="catalog-merch-grid">

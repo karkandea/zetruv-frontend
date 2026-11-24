@@ -200,13 +200,13 @@ function FavoriteGames({ products }) {
   )
 }
 
-function CatalogCard({ product, categoryLabel, onRemoveFavorite }) {
+export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOverride, favoriteIdOverride }) {
   const copy = useStorefrontCopy()
-  const href = productHref(product)
+  const href = hrefOverride || productHref(product)
   const available = product.isAvailable !== false
   const showItemPrice = product.kind === 'GameItem' && product.minPrice != null
-  const favoriteId = product.kind === 'Merchandise'
-    ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`
+  const favoriteId = favoriteIdOverride || (product.kind === 'Merchandise'
+    ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`)
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 

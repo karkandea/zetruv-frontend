@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
+import { CatalogCard } from './SearchPage'
 import { saveGameAccountCart } from '../data/gameAccountCatalog'
 import { getCatalogGames, getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { accountPrice, accountProductHref, getAccountAttributes, summarizeAccountAttributes } from '../services/gameAccountPresentation'
@@ -138,17 +139,15 @@ export function GameAccountsPage() {
     <CatalogSearch browse label={copy.searchGamesOrCategories} query={query} onQueryChange={setQuery} onSubmit={search} />
     <h2 className="browse-list-title catalog-heading">{copy.gameAccounts}</h2>
     {loading ? <LoadingRegion label={copy.loadingGames}>
-      <div className="ga-game-grid">
-        <SkeletonItems className="ga-game-card"><Bone variant="thumb" className="ga-live-placeholder" /><SkeletonLines /></SkeletonItems>
+      <div className="search-game-grid search-game-grid--browse-primary account-browse-grid">
+        <SkeletonItems className="search-game-card" count={6}><Bone variant="thumb" className="search-game-card__thumb" /><SkeletonLines /></SkeletonItems>
       </div>
     </LoadingRegion> : error ? <StateMessage>{error}</StateMessage>
       : visibleGames.length === 0 ? <StateMessage>{copy.noGamesFound}</StateMessage>
-      : <div className="ga-game-grid">{visibleGames.map((game) =>
-        <a className="ga-game-card ga-live-game-link" key={game.id} href={`/game-accounts/${encodeURIComponent(game.slug)}`}>
-          <GameArtwork image={game.imageUrl} name={game.name} />
-          <span><strong className="catalog-card-title">{game.name}</strong><small className="catalog-card-meta">{game.publisher || copy.gameAccount}</small></span>
-          <ChevronRight size={20} />
-        </a>)}</div>}
+      : <div className="search-game-grid search-game-grid--browse-primary account-browse-grid">{visibleGames.map((game) =>
+        <CatalogCard key={game.id} product={{ ...game, kind: 'GameAccount', thumbnailUrl: game.imageUrl }}
+          categoryLabel={copy.gameAccounts} hrefOverride={`/game-accounts/${encodeURIComponent(game.slug)}`}
+          favoriteIdOverride={`catalog:GameAccountGame:${game.slug}`} />)}</div>}
   </CatalogPage>
 }
 
