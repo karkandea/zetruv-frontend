@@ -19,7 +19,7 @@ export function CatalogSearch({ query, onQueryChange, onSubmit, label, browse = 
   )
 }
 
-export default function CatalogPage({ activeKind, query, onQueryChange, onSubmit, children, className = '', browseLanding = false }) {
+export default function CatalogPage({ activeKind, query, onQueryChange, onSubmit, children, className = '', browseLanding = false, tabletSearchAction }) {
   const [supportOpen, setSupportOpen] = useState(false)
   const copy = useStorefrontCopy()
 
@@ -32,7 +32,7 @@ export default function CatalogPage({ activeKind, query, onQueryChange, onSubmit
           <h1 className="catalog-title"><span className="browse-title--desktop">{copy.browseCategories}</span><span className="browse-title--mobile">{copy.browse}</span></h1>
           <p className="search-page__intro catalog-subtitle">{copy.findTheGameTopUpMethodOr}</p>
           <section className="search-catalog search-catalog--browse" aria-label={copy.browseZetruvCategories}>
-            <BrowseMobileControls activeKind={activeKind} query={query} onQueryChange={onQueryChange} onSubmit={onSubmit} />
+            <BrowseMobileControls activeKind={activeKind} query={query} onQueryChange={onQueryChange} onSubmit={onSubmit} tabletSearchAction={tabletSearchAction} />
             <CatalogSidebar activeKind={activeKind} onSupport={() => setSupportOpen(true)} />
             <div className="search-catalog__content search-catalog__content--browse catalog-content">{children}</div>
           </section>

@@ -1,14 +1,14 @@
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
-import { searchAssets } from '../data/searchAssets'
+import CategoryIcon from './CategoryIcon'
 
 const categories = [
-  { kind: 'TopUpGame', label: 'gameTopUpById', icon: searchAssets.categoryPlayerId, href: '/search' },
-  { kind: 'TopUpLogin', label: 'gameTopUpByLogin', icon: searchAssets.categoryLogin, href: '/search?kind=TopUpLogin' },
-  { kind: 'GameVoucher', label: 'gameVouchers', icon: searchAssets.categoryItems, href: '/search?kind=GameVoucher' },
-  { kind: 'Joki', label: 'gameBoosting', icon: searchAssets.categoryJoki || searchAssets.categoryItems, href: '/search?kind=Joki' },
-  { kind: 'GameAccount', label: 'gameAccounts', icon: searchAssets.categoryAccounts, href: '/game-accounts' },
-  { kind: 'GameItem', label: 'gameItems', icon: searchAssets.categoryItems, href: '/search?kind=GameItem' },
-  { kind: 'Merchandise', label: 'merchandise', icon: searchAssets.categoryMerchandise, href: '/merchandise' },
+  { kind: 'TopUpGame', label: 'gameTopUpById', href: '/search' },
+  { kind: 'TopUpLogin', label: 'gameTopUpByLogin', href: '/search?kind=TopUpLogin' },
+  { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher' },
+  { kind: 'Joki', label: 'gameBoosting', href: '/search?kind=Joki' },
+  { kind: 'GameAccount', label: 'gameAccounts', href: '/game-accounts' },
+  { kind: 'GameItem', label: 'gameItems', href: '/search?kind=GameItem' },
+  { kind: 'Merchandise', label: 'merchandise', href: '/merchandise' },
 ]
 
 export default function CatalogSidebar({ activeKind, definitions, loginMode = false, onCategoryChange, onSupport }) {
@@ -18,12 +18,12 @@ export default function CatalogSidebar({ activeKind, definitions, loginMode = fa
     <aside className={loginMode ? 'search-sidebar' : 'search-sidebar search-sidebar--browse'} aria-label={copy.productCategories2}>
       <h2 className="catalog-heading">{loginMode ? copy.categories3 : copy.categories2}</h2>
       <nav className="search-category-list">
-        {categories.map(({ kind, label, icon, href }) => {
+        {categories.map(({ kind, label, href }) => {
           const definition = definitions?.find((item) => item.kind === kind)
           const active = kind === activeKind
           const className = active ? 'search-category active' : 'search-category'
           const content = <>
-            <span className="search-category__icon"><img src={definition?.icon || icon} alt="" /></span>
+            <span className="search-category__icon"><CategoryIcon kind={kind} /></span>
             <span>{definition?.label || copy[label]}</span>
             {active && <i aria-hidden="true" />}
           </>
