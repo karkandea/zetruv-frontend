@@ -14,7 +14,7 @@ let cms = true
 if (local) await context.route('**/api/v1/**', async route => {
  const path = new URL(route.request().url()).pathname.replace('/api/v1','')
  let json = []
- if (path === '/homepage') json = cms ? { heroes:[cmsBanner], latestArticles:[cmsArticle], serviceCategories:[{id:'cat1', name:'Kategori Produk CMS', kind:'TopUpGame'}] } : {}
+ if (path === '/homepage') json = cms ? { heroes:[cmsBanner], latestArticles:[cmsArticle], serviceCategories:[{id:'cat1', name:'Kategori Produk CMS', kind:'Merchandise'},{id:'cat2',name:'Top Up CMS',kind:'TopUpGame'}] } : {}
  if (path === '/articles') json = { items:[cmsArticle], totalPages:1 }
  if (path === '/catalog/categories') json = [{ id:'category1', kind:'TopUpGame', name:'Kategori Katalog CMS' }]
  if (path === '/catalog/products') json = { items:[], totalPages:1 }
@@ -38,6 +38,8 @@ for (const [language, a] of Object.entries(locales)) {
   await waitHeading(cmsBanner.title)
   await page.getByRole('link',{name:cmsBanner.primaryCtaLabel,exact:true}).waitFor()
   await page.getByText('Kategori Produk CMS',{exact:true}).waitFor()
+  // TopUpGame has an intentionally localized storefront label, not the CMS name.
+  await page.locator('.service-category[href="/search?kind=TopUpGame"]').waitFor()
   await waitHeading(cmsArticle.title)
   await page.getByText('Kategori CMS',{exact:true}).waitFor()
  }
