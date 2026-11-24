@@ -47,16 +47,16 @@ export function LivePhysicalCatalogPage() {
   }
 
   return (
-    <CatalogPage activeKind="Merchandise" query={query} onQueryChange={setQuery} onSubmit={search}>
-      <header className="catalog-header">
-        <h1 className="catalog-title">{copy.merchandise}</h1>
+    <CatalogPage browseLanding activeKind="Merchandise" query={query} onQueryChange={setQuery} onSubmit={search}>
+      <CatalogSearch browse label={copy.searchGamesOrCategories} query={query} onQueryChange={setQuery} onSubmit={search} />
+      <div className="catalog-header catalog-header--browse-sort">
+        <h2 className="browse-list-title catalog-heading">{copy.merchandise}</h2>
         <select className="catalog-sort" value={sort} onChange={(event) => setSort(event.target.value)} aria-label={copy.sortMerchandise}>
           <option value="newest">{copy.catalogOrder}</option>
           <option value="low">{copy.lowestPrice}</option>
           <option value="high">{copy.highestPrice}</option>
         </select>
-      </header>
-      <CatalogSearch label={copy.searchGamesOrProducts} query={query} onQueryChange={setQuery} onSubmit={search} />
+      </div>
       {state === 'loading' && <LoadingRegion label={copy.loadingMerchandise}>
         <div className="catalog-merch-grid">
           <MerchandiseCardSkeletons count={4} />

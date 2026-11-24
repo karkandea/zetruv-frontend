@@ -134,14 +134,9 @@ export function GameAccountsPage() {
   function search(event) {
     event.preventDefault()
   }
-  return <CatalogPage className="catalog-shell--game-accounts" activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
-    <header className="catalog-header">
-      <div>
-        <h1 className="catalog-title">{copy.gameAccounts}</h1>
-        <p className="catalog-subtitle">{copy.chooseAGameToSeeAvailableAccount}</p>
-      </div>
-    </header>
-    <CatalogSearch label={copy.searchGames2} query={query} onQueryChange={setQuery} onSubmit={search} />
+  return <CatalogPage browseLanding activeKind="GameAccount" query={query} onQueryChange={setQuery} onSubmit={search}>
+    <CatalogSearch browse label={copy.searchGamesOrCategories} query={query} onQueryChange={setQuery} onSubmit={search} />
+    <h2 className="browse-list-title catalog-heading">{copy.gameAccounts}</h2>
     {loading ? <LoadingRegion label={copy.loadingGames}>
       <div className="ga-game-grid">
         <SkeletonItems className="ga-game-card"><Bone variant="thumb" className="ga-live-placeholder" /><SkeletonLines /></SkeletonItems>
