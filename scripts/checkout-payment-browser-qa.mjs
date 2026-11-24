@@ -2,6 +2,8 @@
 // A server-confirmed state is the only source of payment truth.
 import { chromium } from 'playwright'
 import assert from 'node:assert/strict'
+import { mkdirSync } from 'node:fs'
+mkdirSync('visual-qa', { recursive: true })
 
 const origin = 'http://127.0.0.1:4178'
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
