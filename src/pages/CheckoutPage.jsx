@@ -339,7 +339,7 @@ export default function CheckoutPage() {
   const blockedLoginItems=useMemo(()=>items.filter(item=>
     item.fulfillmentMethod==='MANUAL_LOGIN' &&
     !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available
-  ),[items,catalog])
+  ),[items,catalog,serviceReadiness])
 
   const checkoutIssues=useMemo(()=>{
     const result=[]
