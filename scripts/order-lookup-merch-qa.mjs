@@ -68,6 +68,17 @@ try {
     await page.route('**/api/v1/orders/lookup', async route => {
       const payload = route.request().postDataJSON()
       requests.push(payload)
+      if (payload.orderNumber === 'ZTR-QA-LOGIN') {
+        return route.fulfill({ json: {
+          ...fakeOrder, orderNumber: 'ZTR-QA-LOGIN', paymentState: 'Paid',
+          paymentStatus: 'Paid', status: 'Processing', hasFulfillmentIssue: true,
+          items: ['Processing', 'Completed', 'Failed'].map((fulfillmentStatus, index) => ({
+            id: 'synthetic-login-'+index, kind: 'TopUpLogin',
+            productName: 'Synthetic Top Up '+index, variantName: 'QA package',
+            fulfillmentStatus, quantity: 1, lineTotal: 25000,
+          })),
+        } })
+      }
       if (payload.orderNumber === 'NO-MATCH') {
         return route.fulfill({ status: 404, contentType: 'application/json',
           body: JSON.stringify({ message: 'Order was not found for the supplied details.' }) })
@@ -109,6 +120,17 @@ try {
     assert.equal(requests[2].customerPhone, null)
     await page.getByRole('button', { name: /Cek Pesanan Lain/ }).click()
     assert.equal(await page.getByText('Synthetic QA Voucher').count(), 0)
+
+    // Paid login top-ups must distinguish operator processing, completed
+    // delivery, and support-required status without exposing account secrets.
+    await page.locator('#sos-order-number').fill('ZTR-QA-LOGIN')
+    await page.locator('#sos-contact').fill('synthetic@example.test')
+    await page.getByRole('button', { name: 'Cek Status Pesanan' }).click()
+    await page.getByText('Menunggu operator berwenang menyelesaikan top up.', { exact: true }).waitFor()
+    await page.getByText('Operator telah mencatat penyelesaian. Periksa saldo di game kamu.', { exact: true }).waitFor()
+    await page.getByText(/Top up memerlukan bantuan/).waitFor()
+    assert.equal(await page.getByText('synthetic-sensitive-token-must-not-render').count(), 0)
+    assert.equal(requests.length, 4)
 
     // A legacy query alias must not reveal seeded order details either.
     await page.goto(site + '/order-status?flow=account&view=completed')
@@ -189,7 +211,7 @@ try {
     await page.getByRole('button', { name: 'Tampilkan Kode Voucher' }).click()
     await page.getByText('SYNTHETIC-VOUCHER-QA').waitFor()
     assert.equal(revealRequests, 1)
-    assert.equal(requests.length, 3, 'account flow must not use guest lookup')
+    assert.equal(requests.length, 4, 'account flow must not use guest lookup')
     await page.route(`**/api/v1/me/orders/${fakeOrder.orderId}`, route => route.fulfill({ status: 404, json: {} }))
     await page.getByRole('button', { name: 'Perbarui Status' }).click()
     await page.getByRole('heading', { name: 'Pesanan Tidak Ditemukan' }).waitFor()
