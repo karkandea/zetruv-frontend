@@ -28,7 +28,7 @@ try {
     const page = await ctx.newPage()
     let requests = []
     let account = null
-    let history = false
+    let completed = false
     let listFailure = false
     let revealRequests = 0
 
@@ -44,10 +44,10 @@ try {
       assert.equal(route.request().headers().authorization, 'Bearer ' + accessToken)
       if (listFailure) return route.fulfill({ status: 503, json: {} })
       const group = new URL(route.request().url()).searchParams.get('group')
-      const items = (group === 'history') === history ? [{
+      const items = (group === 'completed') === completed ? [{
         id: fakeOrder.orderId, orderNumber: fakeOrder.orderNumber,
         createdAt: fakeOrder.createdAt, grandTotal: fakeOrder.grandTotal, currency: 'IDR',
-        status: history ? 'Completed' : 'Pending', paymentState: history ? 'Paid' : 'Expired',
+        status: completed ? 'Completed' : 'Pending', paymentState: completed ? 'Paid' : 'Expired',
         firstItem: fakeOrder.items[0], itemCount: 1,
       }] : []
       return route.fulfill({ json: { items, hasMore: false } })
@@ -85,7 +85,8 @@ try {
     assert.equal(await page.getByText('#ZTR-260906-1842').count(), 0, 'demo order must be absent')
     assert.equal(await page.getByText('PAID', { exact: true }).count(), 0, 'payment never pre-populated')
     assert.equal(requests.length, 0, 'no automatic lookup or PII request')
-    await page.getByRole('link', { name: /Cek Pesanan Sebagai Tamu/ }).click()
+    // The guest lookup remains accessible by URL; the redundant account-page link was removed.
+    await page.goto(site + '/order-status?guest=1')
     await page.getByRole('heading', { name: 'Cek Pesanan Tamu' }).waitFor()
     await page.locator('#sos-order-number').fill('NO-MATCH')
     await page.locator('#sos-contact').fill('synthetic@example.test')
@@ -160,24 +161,27 @@ try {
     await page.getByText('Belum Bisa Diproses').waitFor()
     assert.ok(await page.evaluate(() => Boolean(sessionStorage.getItem('zetruv-physical-cart-v1'))))
 
-    // Authenticated history restores across page loads and never falls back to guest tracking.
+    // Authenticated orders restore across loads without falling back to guest tracking.
     await page.goto(site + '/order-status')
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
+    // The refreshed order card keeps detailed statuses collapsed until requested.
+    await page.getByRole('button', { name: /Lihat status/ }).first().click()
     await page.getByText('Sesi Pembayaran Kedaluwarsa', { exact: true }).waitFor()
     assert.equal(await page.locator('#sos-order-number').count(), 0)
     const orderOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     assert.ok(orderOverflow <= 2, device + ' order page horizontal overflow: ' + orderOverflow)
+    assert.equal(await page.getByRole('button', { name: 'Perbarui', exact: true }).count(), 0)
     listFailure = true
-    await page.getByRole('button', { name: 'Perbarui', exact: true }).click()
+    await page.reload()
     await page.getByRole('heading', { name: 'Pesanan Belum Bisa Dimuat' }).waitFor()
     assert.equal(await page.getByRole('heading', { name: fakeOrder.orderNumber }).count(), 0)
     listFailure = false
     await page.getByRole('button', { name: 'Coba Lagi' }).click()
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
-    history = true
-    await page.getByRole('button', { name: 'Perbarui', exact: true }).click()
+    completed = true
+    await page.reload()
     await page.getByRole('heading', { name: 'Belum Ada Pesanan Aktif' }).waitFor()
-    await page.getByRole('link', { name: 'Riwayat', exact: true }).click()
+    await page.getByRole('link', { name: 'Selesai', exact: true }).click()
     await page.getByRole('link', { name: 'Lihat detail ' + fakeOrder.orderNumber }).click()
     await page.getByRole('heading', { name: 'Detail Pesanan' }).waitFor()
     await page.getByText('Dibayar', { exact: true }).waitFor()
@@ -190,7 +194,7 @@ try {
     await page.getByRole('button', { name: 'Perbarui Status' }).click()
     await page.getByRole('heading', { name: 'Pesanan Tidak Ditemukan' }).waitFor()
     assert.equal(await page.getByText('SYNTHETIC-VOUCHER-QA').count(), 0)
-    console.log('PASS:', device, 'guest lookup, authenticated active/history and detail, voucher reveal, retry, unavailable order, merchandise regression')
+    console.log('PASS:', device, 'guest lookup, authenticated active/completed and detail, voucher reveal, retry, unavailable order, merchandise regression')
     await ctx.close()
   }
 } finally {

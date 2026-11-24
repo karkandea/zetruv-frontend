@@ -750,6 +750,8 @@ const messages = {
   backToAccountListings: ["Back to Account Listings","Kembali ke Daftar Akun","Kembali ke Senarai Akaun"],
   // Checkout and payment
   midtransSandboxPayment: ["Midtrans (Sandbox)","Midtrans (Sandbox)","Midtrans (Sandbox)"],
+  midtransSandboxNoticeTitle: ["Midtrans Test Mode","Mode Uji Coba Midtrans","Mod Ujian Midtrans"],
+  midtransSandboxNoticeText: ["This uses sandbox, not real money. Open Midtrans, choose a test payment method, then return here to check the confirmed status.","Ini mode sandbox, bukan uang sungguhan. Buka Midtrans, pilih metode pembayaran uji coba, lalu kembali ke sini untuk memeriksa status yang telah dikonfirmasi.","Ini mod sandbox, bukan wang sebenar. Buka Midtrans, pilih kaedah ujian dan kembali ke sini untuk semak status pembayaran."],
   midtransSandboxChooseMethod: ["Choose QRIS, bank transfer, or e-wallet securely on Midtrans.","Pilih QRIS, transfer bank, atau e-wallet di halaman aman Midtrans.","Pilih QRIS, pindahan bank atau e-dompet dengan selamat di Midtrans."],
   openMidtransSandboxPayment: ["Pay on Midtrans Sandbox","Bayar di Midtrans Sandbox","Bayar di Midtrans Sandbox"],
   payByScanningTheQrCode: ["Pay by scanning the QR code","Bayar dengan memindai kode QR","Bayar dengan mengimbas kod QR"],

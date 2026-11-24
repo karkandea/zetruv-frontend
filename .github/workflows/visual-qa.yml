@@ -26,10 +26,24 @@ jobs:
           npx playwright install chromium
       - name: Serve PR build locally
         run: |
-          npm run preview -- --host 127.0.0.1 --port 4178 > /tmp/zetruv-visual-preview.log 2>&1 &
-          for n in $(seq 1 30); do curl -fsS http://127.0.0.1:4178/ >/dev/null && exit 0; sleep 1; done
+          # Strict port binding prevents a stale, unrelated preview from giving
+          # a false PASS while this PR's Vite process silently fails to bind.
+          npm run preview -- --host 127.0.0.1 --port 4178 --strictPort > /tmp/zetruv-visual-preview.log 2>&1 &
+          preview_pid=$!
+          sleep 1
+          for n in $(seq 1 30); do
+            if ! kill -0 "$preview_pid" 2>/dev/null; then
+              echo 'FAIL: PR preview exited before QA could run.'
+              cat /tmp/zetruv-visual-preview.log
+              exit 1
+            fi
+            if curl -fsS http://127.0.0.1:4178/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
           cat /tmp/zetruv-visual-preview.log
           exit 1
+      - name: Digital checkout and payment state E2E (synthetic server only)
+        run: node scripts/checkout-payment-browser-qa.mjs
       - name: Capture desktop and mobile before/after
         run: node scripts/visual-qa.mjs
       - name: Synthetic cart auth/merge/refresh/logout UI test
@@ -46,8 +60,6 @@ jobs:
         run: node scripts/live-storefront-wiring-qa.mjs
       - name: Real auth API contract on mock browser - email and reset-token flows
         run: node scripts/auth-reset-browser-qa.mjs
-      - name: Digital checkout and payment state E2E (synthetic server only)
-        run: node scripts/checkout-payment-browser-qa.mjs
       - name: Storefront locale switching and CMS content
         run: node scripts/storefront-localization-qa.mjs
       - name: QA evidence summary
