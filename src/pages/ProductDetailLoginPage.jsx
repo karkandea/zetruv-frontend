@@ -315,6 +315,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       <>
                         {!selected && serviceStatus.available && <p className="login-product-summary__hint">{copy.chooseAnAvailablePackageFirst}</p>}
                         {selected && !available && <p className="login-product-summary__hint">{copy.thisPackageIsCurrentlyUnavailable}</p>}
+                        {selected && available && !serviceStatus.available && <p className="login-product-summary__hint" role="status">{copy.viaLoginReadinessNotice}</p>}
                       </>
                     }
                     feedback={
