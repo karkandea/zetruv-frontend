@@ -749,6 +749,11 @@ const messages = {
   buyNow: ["Buy Now","Beli Sekarang","Beli Sekarang"],
   backToAccountListings: ["Back to Account Listings","Kembali ke Daftar Akun","Kembali ke Senarai Akaun"],
   // Checkout and payment
+  viaLoginReadinessNotice: ["This service is not ready for checkout yet. You can save the package to your cart.","Layanan ini belum siap untuk checkout. Kamu masih bisa menyimpan paket di keranjang.","Perkhidmatan ini belum sedia untuk pembayaran. Anda masih boleh menyimpan pakej dalam troli."],
+  viaLoginAwaitPayment: ["Processing starts only after payment is confirmed.","Proses dimulai setelah pembayaran terkonfirmasi.","Proses bermula selepas bayaran disahkan."],
+  viaLoginOperatorQueue: ["Waiting for an authorized operator to complete your top-up.","Menunggu operator berwenang menyelesaikan top up.","Menunggu operator yang dibenarkan menyelesaikan tambah nilai."],
+  viaLoginFinished: ["The operator has recorded completion. Check your in-game balance.","Operator telah mencatat penyelesaian. Periksa saldo di game kamu.","Operator telah merekodkan penyelesaian. Semak baki dalam permainan."],
+  viaLoginNeedsSupport: ["This top-up requires support. Contact support using your order number; do not send passwords or verification codes.","Top up memerlukan bantuan. Hubungi bantuan dengan nomor pesanan; jangan kirim password atau kode verifikasi.","Tambah nilai memerlukan bantuan. Hubungi sokongan dengan nombor pesanan; jangan hantar kata laluan atau kod pengesahan."],
   midtransSandboxPayment: ["Midtrans (Sandbox)","Midtrans (Sandbox)","Midtrans (Sandbox)"],
   midtransSandboxNoticeTitle: ["Midtrans Test Mode","Mode Uji Coba Midtrans","Mod Ujian Midtrans"],
   midtransSandboxNoticeText: ["This uses sandbox, not real money. Open Midtrans, choose a test payment method, then return here to check the confirmed status.","Ini mode sandbox, bukan uang sungguhan. Buka Midtrans, pilih metode pembayaran uji coba, lalu kembali ke sini untuk memeriksa status yang telah dikonfirmasi.","Ini mod sandbox, bukan wang sebenar. Buka Midtrans, pilih kaedah ujian dan kembali ke sini untuk semak status pembayaran."],

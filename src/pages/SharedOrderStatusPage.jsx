@@ -83,6 +83,13 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
             <strong>{item.productName}</strong>
             <span>{item.variantName || item.gameName || copy.zetruvProduct} · {Number(item.quantity) || 1} {copy.items}</span>
             <small>{stateLabel(stateKey(item.fulfillmentStatus, FULFILLMENT_STATES), copy, copy.pending)}</small>
+            {item.kind === 'TopUpLogin' && <small>{!isPaid ? copy.viaLoginAwaitPayment : ({
+              pending: copy.viaLoginOperatorQueue,
+              processing: copy.viaLoginOperatorQueue,
+              completed: copy.viaLoginFinished,
+              failed: copy.viaLoginNeedsSupport,
+              cancelled: copy.cancelled,
+            }[stateKey(item.fulfillmentStatus, FULFILLMENT_STATES)] || copy.unknown)}</small>}
             {item.target && <div className="sos-lookup-target">
               {item.target.accountDisplayName && <span>{item.target.accountDisplayName}</span>}
               {Object.entries(item.target.fields || {}).map(([key, value]) => (

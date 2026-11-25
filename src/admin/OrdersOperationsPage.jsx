@@ -68,13 +68,16 @@ function FulfillmentControls({ item, paid, busy, onSave }) {
   const [status, setStatus] = useState(allowed[0] || '')
   const [reference, setReference] = useState(item.fulfillmentReference || '')
   const [message, setMessage] = useState(item.fulfillmentMessage || '')
+  const isLogin = item.fulfillmentMethod === 'MANUAL_LOGIN'
+  const needsEvidence = isLogin && status === 'Completed'
   if (!paid || !allowed.length || item.productKind === 'GameVoucher') return null
   return <details className="ops-item-controls"><summary>Perbarui Proses <ChevronDown size={14} /></summary>
     <form onSubmit={(event) => { event.preventDefault(); onSave({ status, reference, message }) }}>
       <label>Tindakan Selanjutnya<select value={status} onChange={(event) => setStatus(event.target.value)} required>{allowed.map((option) => <option key={option} value={option}>{PROCESS_LABELS[option] || option}</option>)}</select></label>
-      <label>Referensi Penyelesaian (opsional)<input maxLength={180} value={reference} onChange={(event) => setReference(event.target.value)} placeholder="Nomor referensi hasil proses" /></label>
+      {isLogin && <p className="ops-hint">Gunakan jalur pemenuhan yang disetujui publisher. Cocokkan paket dan akun tujuan, dokumentasikan hasil sebelum/sesudah tanpa data rahasia, dan catat referensi transaksi resmi. Jangan meminta OTP atau akses email pelanggan.</p>}
+      <label>{needsEvidence ? 'Referensi bukti penyelesaian (wajib)' : 'Referensi Penyelesaian (opsional)'}<input maxLength={180} required={needsEvidence} value={reference} onChange={(event) => setReference(event.target.value)} placeholder="Nomor referensi hasil proses" /></label>
       <label>Catatan Operasional (opsional)<input maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Alasan atau informasi penanganan" /></label>
-      <button className="ops-primary" type="submit" disabled={busy || !allowed.includes(status)}>{busy ? 'Menyimpan…' : 'Simpan Perubahan'}</button>
+      <button className="ops-primary" type="submit" disabled={busy || !allowed.includes(status) || (needsEvidence && !reference.trim())}>{busy ? 'Menyimpan…' : 'Simpan Perubahan'}</button>
     </form>
   </details>
 }
