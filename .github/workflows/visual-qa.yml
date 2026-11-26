@@ -52,6 +52,8 @@ jobs:
         run: node scripts/catalog-loading-qa.mjs
       - name: Joki catalog, cart and checkout regression (desktop/mobile)
         run: node scripts/joki-catalog-qa.mjs
+      - name: Game Item catalog, stock, checkout and paid-only contact (synthetic desktop/mobile)
+        run: node scripts/game-item-catalog-qa.mjs
       - name: Multi-browser concurrency 409 and account-isolation UI test
         run: node scripts/cart-multibrowser-qa.mjs
       - name: Verified order lookup and merchandise guest-cart flow (desktop/mobile)
