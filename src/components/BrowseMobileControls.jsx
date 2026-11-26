@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'
+import { useLayoutEffect, useRef } from 'react'
 import CategoryIcon from './CategoryIcon'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 
@@ -14,6 +15,17 @@ const tabs = [
 
 export default function BrowseMobileControls({ activeKind, query, onQueryChange, onSubmit, onCategoryChange, showSearch = true, tabletSearchAction }) {
   const copy = useStorefrontCopy()
+  const railRef = useRef(null)
+  useLayoutEffect(() => {
+    const rail = railRef.current
+    const active = rail?.querySelector('.is-active')
+    if (!rail || !active || !rail.clientWidth) return
+    const railBounds = rail.getBoundingClientRect()
+    const activeBounds = active.getBoundingClientRect()
+    if (activeBounds.left < railBounds.left || activeBounds.right > railBounds.right) {
+      rail.scrollLeft += activeBounds.left - railBounds.left - (rail.clientWidth - active.clientWidth) / 2
+    }
+  }, [activeKind])
 
   return (
     <div className="browse-mobile-controls">
@@ -28,7 +40,7 @@ export default function BrowseMobileControls({ activeKind, query, onQueryChange,
           aria-label={copy.searchGamesOrProducts}
         />
       </form>{tabletSearchAction && <div className="browse-tablet-search-action">{tabletSearchAction}</div>}</div>}
-      <nav className="browse-mobile-tabs" aria-label={copy.productCategories2}>
+      <nav ref={railRef} className="browse-mobile-tabs" aria-label={copy.productCategories2}>
         {tabs.map(({ kind, label, href }) => {
           const active = kind === activeKind
           const className = `browse-mobile-tab${active ? ' is-active' : ''}`
