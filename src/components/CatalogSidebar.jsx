@@ -19,11 +19,12 @@ export default function CatalogSidebar({ activeKind, definitions, loginMode = fa
       <h2 className="catalog-heading">{loginMode ? copy.categories3 : copy.categories2}</h2>
       <nav className="search-category-list">
         {categories.map(({ kind, label, href }) => {
+          const definition = definitions?.find((item) => item.kind === kind)
           const active = kind === activeKind
           const className = active ? 'search-category active' : 'search-category'
           const content = <>
             <span className="search-category__icon"><CategoryIcon kind={kind} /></span>
-            <span>{copy[label]}</span>
+            <span>{definition?.label || copy[label]}</span>
             {active && <i aria-hidden="true" />}
           </>
           return onCategoryChange && kind !== 'Merchandise' && kind !== 'GameAccount'
