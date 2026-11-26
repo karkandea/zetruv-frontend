@@ -17,11 +17,12 @@ function displayGameName(name) {
 }
 
 function MiniItem({ item, href }) {
-  const artwork = item.image || gameArtwork[identifyHomepageGame(item.name)] || assets.homepageCategoryAccount
+  const fallback = gameArtwork[identifyHomepageGame(item.name)] || assets.homepageCategoryAccount
+  const artwork = item.image || fallback
   const Tag = href ? 'a' : 'article'
   return (
     <Tag className="mini-game" href={href}>
-      <span className="mini-game__image"><img src={artwork} alt="" loading="lazy" decoding="async" /></span>
+      <span className="mini-game__image"><img src={artwork} alt="" loading="lazy" decoding="async" onError={(event) => { if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback }} /></span>
       <span>{href ? displayGameName(item.name) : item.name}</span>
     </Tag>
   )
