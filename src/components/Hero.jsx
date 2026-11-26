@@ -18,7 +18,7 @@ function emptyBanner(copy) {
 export function mapCmsHeroes(items = []) {
   return items.filter((item) => item?.id && item?.title).map((item) => ({
     id: item.id, theme: 'welcome', title: item.title, description: item.subtitle?.trim(),
-    artwork: item.imageUrl || null,
+    artwork: item.imageUrl || assets.homepageHeroArtwork,
     actions: [
       item.primaryCtaLabel && item.primaryCtaUrl && { label: item.primaryCtaLabel, href: item.primaryCtaUrl },
       item.secondaryCtaLabel && item.secondaryCtaUrl && { label: item.secondaryCtaLabel, href: item.secondaryCtaUrl, secondary: true },
@@ -122,6 +122,10 @@ export default function Hero({ items = [], loading = false }) {
                   alt=""
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   decoding="async"
+                  onError={(event) => {
+                    const image = event.currentTarget
+                    if (image.src !== new URL(assets.homepageHeroArtwork, window.location.origin).href) image.src = assets.homepageHeroArtwork
+                  }}
                 />
               )}
               {banner.images && (
