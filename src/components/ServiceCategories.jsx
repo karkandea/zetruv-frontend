@@ -34,7 +34,7 @@ export default function ServiceCategories({ items = [], loading = false }) {
               <img className="service-category__ring" src={assets.homepageCategoryRing} alt="" decoding="async" />
               <CategoryIcon kind={item.kind} className="service-category__image" />
             </span>
-            <strong>{copy[categoryLabels[item.kind]] || item.label}</strong>
+            <strong>{['TopUpGame', 'GameItem'].includes(item.kind) ? copy[categoryLabels[item.kind]] : item.label || copy[categoryLabels[item.kind]]}</strong>
             <small>{item.kind === 'Merchandise' ? copy.physicalProduct : copy.digitalProduct}</small>
           </a>
         })}
