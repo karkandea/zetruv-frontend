@@ -5,14 +5,13 @@ import BrowseMobileControls from './BrowseMobileControls'
 import CatalogSidebar from './CatalogSidebar'
 import Navbar from './Navbar'
 import SupportChat from './SupportChat'
-import { searchAssets } from '../data/searchAssets'
 
 export function CatalogSearch({ query, onQueryChange, onSubmit, label, browse = false }) {
   const copy = useStorefrontCopy()
 
   return (
     <form className="catalog-search catalog-search--desktop" role="search" aria-label={label} onSubmit={onSubmit}>
-      {browse ? <img src={searchAssets.searchIcon} alt="" /> : <Search size={18} aria-hidden="true" />}
+      <Search size={18} aria-hidden="true" />
       <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={label} aria-label={label} />
       <button type="submit">{browse ? copy.search2 : copy.search3}</button>
     </form>
