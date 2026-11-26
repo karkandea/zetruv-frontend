@@ -1,6 +1,7 @@
 import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
+import { Info, Minus, Plus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import { searchAssets } from '../data/searchAssets'
@@ -167,7 +168,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
                 </button>
               ))}
             </div>
-            {voucher && <div className="special-product-note"><b>i</b><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
+            {voucher && <div className="special-product-note"><Info size={18} aria-hidden="true" /><span>{copy.checkThatTheVoucherRegionMatchesYour}</span></div>}
             <ProductReviews product={manual ? product : { slug }} />
           </section>
 
@@ -175,7 +176,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
             <h2>{copy.summary}</h2>
             <div className="special-product-selected">
               <div><strong>{selected.name}</strong><span>{rupiah(entry.unitPrice)} / item</span></div>
-              {voucher && <div className="special-product-qty"><button onClick={() => setQuantity((v) => Math.max(1, v - 1))}>−</button><strong>{quantity}</strong><button onClick={() => setQuantity((v) => Math.min(9, v + 1))}>+</button></div>}
+              {voucher && <div className="special-product-qty"><button type="button" aria-label={copy.decreaseQuantity} disabled={quantity <= 1} onClick={() => setQuantity((v) => Math.max(1, v - 1))}><Minus size={16} aria-hidden="true" /></button><strong aria-live="polite">{quantity}</strong><button type="button" aria-label={copy.increaseQuantity} disabled={quantity >= 9} onClick={() => setQuantity((v) => Math.min(9, v + 1))}><Plus size={16} aria-hidden="true" /></button></div>}
             </div>
             <div className="special-summary-row"><span>{copy.subtotal}</span><strong>{rupiah(pricing.subtotal)}</strong></div>
             {pricing.discount > 0 && <div className="special-summary-row"><span>{copy.discount}</span><strong>−{rupiah(pricing.discount)}</strong></div>}

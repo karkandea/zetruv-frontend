@@ -421,7 +421,7 @@ function AccountLoginGate({ account, onLoggedIn }) {
             <label>{copy.password}
               <span className="ga-password">
                 <input type={passwordVisible ? 'text' : 'password'} placeholder="••••••••" required />
-                <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} aria-label={copy.showPassword3}>
+                <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} aria-label={passwordVisible ? copy.hidePassword : copy.showPassword3} aria-pressed={passwordVisible}>
                   {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </span>

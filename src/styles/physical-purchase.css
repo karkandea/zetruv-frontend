@@ -2833,3 +2833,10 @@
   .physical-cart-empty .digital-empty-cart__art { width: 150px; height: 140px; margin-bottom: 12px; }
   .physical-cart-empty .digital-empty-cart__art img { width: 125px; height: 115px; }
 }
+
+/* Merchandise PDP: align existing Lucide controls without changing layout. */
+.physical-purchase-panel .physical-save { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.physical-purchase-panel .physical-save svg { flex-shrink: 0; }
+.physical-purchase-panel .physical-qty button:disabled { opacity: .45; cursor: not-allowed; }
+.physical-purchase-panel .physical-qty button:focus-visible { outline: 2px solid var(--navy, #010154); outline-offset: -3px; }
+.physical-purchase-panel .physical-save:focus-visible { outline: 2px solid var(--navy, #010154); outline-offset: 2px; }

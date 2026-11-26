@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar'
 import MerchandiseCard, { MerchandiseCardSkeletons } from '../components/MerchandiseCard'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import CatalogPage, { CatalogSearch } from '../components/CatalogPage'
-import { Bookmark, ArrowDownUp, ChevronDown } from 'lucide-react'
+import { Bookmark, ArrowDownUp, ChevronDown, Minus, Plus } from 'lucide-react'
 import { getCatalogProduct, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, toggleFavorite, subscribeFavorites } from '../services/favoritesService'
 import '../styles/physical-purchase.css'
@@ -200,12 +200,12 @@ export function LivePhysicalProductPage({ slug }) {
           </button>)}</div>
           {variants.length === 0 && <p>{copy.thereAreNoActiveOptions}</p>}
           <div className="physical-qty-save">
-            <div className="physical-qty"><button type="button" onClick={() => { setQty((v) => Math.max(1, v - 1)); setAdded(false) }}>−</button><span>{qty}</span><button type="button" onClick={() => { setQty((v) => Math.min(stockLimit, v + 1)); setAdded(false) }}>+</button></div>
-            <button className={saved ? 'physical-save is-saved' : 'physical-save'} type="button" aria-pressed={saved} onClick={() => setSaved(toggleFavorite({
+            <div className="physical-qty"><button type="button" aria-label={copy.decreaseQuantity} disabled={!canAdd || qty <= 1} onClick={() => { setQty((v) => Math.max(1, v - 1)); setAdded(false) }}><Minus size={16} aria-hidden="true" /></button><span aria-live="polite">{qty}</span><button type="button" aria-label={copy.increaseQuantity} disabled={!canAdd || qty >= stockLimit} onClick={() => { setQty((v) => Math.min(stockLimit, v + 1)); setAdded(false) }}><Plus size={16} aria-hidden="true" /></button></div>
+            <button className={saved ? 'physical-save is-saved' : 'physical-save'} type="button" aria-pressed={saved} aria-label={formatCopy(saved ? copy.removeBookmark : copy.addBookmark, { product: product.name })} onClick={() => setSaved(toggleFavorite({
               id: favoriteId, name: product.name, type: 'Merchandise',
               price: unitPrice != null ? rupiah(unitPrice) : copy.priceUnavailable,
               href: `/merchandise/${product.slug}`, image: images[0],
-            }))}>{saved ? '♥ Tersimpan' : '♡ Favorit'}</button>
+            }))}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />{copy.favorites}</button>
           </div>
           <div className="physical-shipping-estimate" role="note"><strong>{copy.merchandiseCartIsADraft}</strong><span>{copy.checkoutShippingAndPaymentForMerchandiseAre}</span></div>
           {added && <p role="status" className="physical-add-confirmation">{copy.draft} {product.name} · {variant.name} · {qty} {copy.itemsSavedToYourCart}</p>}
