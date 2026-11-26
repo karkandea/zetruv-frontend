@@ -9,7 +9,9 @@ import SupportChat from '../components/SupportChat'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogCategories, getCatalogProducts } from '../services/catalogService'
 import { isFavorite, readFavorites, setFavorite, subscribeFavorites, toggleFavorite } from '../services/favoritesService'
-import { Bookmark, ImageOff } from 'lucide-react'
+import { Bookmark, ImageOff, Search } from 'lucide-react'
+import CategoryIcon from '../components/CategoryIcon'
+import { assets } from '../data/assets'
 import '../styles/search.css'
 import '../styles/search-login.css'
 
@@ -112,13 +114,13 @@ function fallbackProductImage(product) {
   if (product.kind === 'Merchandise') return searchAssets.categoryMerchandise
 
   const value = `${product.name || ''} ${product.gameName || ''}`.toLowerCase()
-  if (value.includes('mobile legend')) return searchAssets.mobileLegends
+  if (value.includes('mobile legend')) return assets.popularMl
   if (value.includes('pubg')) return searchAssets.pubgMobile
   if (value.includes('valorant')) return searchAssets.valorant
   if (value.includes('genshin')) return searchAssets.genshinImpact
-  if (value.includes('call of duty') || value.includes('codm')) return searchAssets.callOfDutyMobile
+  if (value.includes('call of duty') || value.includes('codm')) return assets.codm
   if (value.includes('star rail')) return searchAssets.starRail
-  return searchAssets.mobileLegends
+  return searchAssets.categoryPlayerId
 }
 
 function publisherForProduct(product, fallback) {
@@ -204,13 +206,15 @@ export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOver
   const copy = useStorefrontCopy()
   const href = hrefOverride || productHref(product)
   const available = product.isAvailable !== false
-  const showItemPrice = product.kind === 'GameItem' && product.minPrice != null
+  const showItemPrice = ['GameItem', 'Joki'].includes(product.kind) && product.minPrice != null
   const favoriteId = favoriteIdOverride || (product.kind === 'Merchandise'
     ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`)
   const [saved, setSaved] = useState(() => isFavorite(favoriteId))
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
 
   const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
+  const [failedImages, setFailedImages] = useState([])
+  const imageSource = [thumbnail, fallbackProductImage(product)].find((source) => source && !failedImages.includes(source))
   function handleBookmark() {
     const favorite = {
       id: favoriteId, name: product.name, type: categoryLabel || product.kind,
@@ -227,10 +231,7 @@ export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOver
   return (
     <article className={`search-game-card${!href && !available ? ' is-unavailable' : ''}`}>
       {href && <a className="search-game-card__link" href={href} aria-label={formatCopy(copy.viewProduct, { product: product.name })} />}
-      <img src={thumbnail} alt="" onError={(event) => {
-        const fallback = fallbackProductImage(product)
-        if (event.currentTarget.src !== new URL(fallback, window.location.origin).href) event.currentTarget.src = fallback
-      }} />
+      {imageSource ? <img src={imageSource} alt="" onError={() => setFailedImages((current) => [...current, imageSource])} /> : <span className="search-game-card__image-fallback"><CategoryIcon kind={product.kind} /></span>}
       <span className="search-game-card__copy">
         <strong className="catalog-card-title">{product.name}</strong>
         <small className="catalog-card-meta">{product.kind === 'GameItem' && product.gameName
@@ -511,12 +512,12 @@ export default function SearchPage({ mode = 'player-id' }) {
               {showFavorites && <h2 className="browse-list-title catalog-heading">{browseCategoryLabel}</h2>}
               <form className={`catalog-search ${showFavorites ? 'catalog-search--topup' : 'catalog-search--desktop'}`}
                 onSubmit={handleSearch} role="search" aria-label={copy.searchTheCatalog}>
-                <img src={searchAssets.searchIcon} alt="" />
+                <Search size={18} aria-hidden="true" />
                 <input
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrCategories}
+                  placeholder={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrProducts}
                   aria-label={isLoginMode ? copy.searchGamesOrCategories2 : copy.searchGamesOrCategories}
                 />
                 <button type="submit" disabled={queryTooShort}>{isLoginMode ? copy.search3 : copy.search2}</button>

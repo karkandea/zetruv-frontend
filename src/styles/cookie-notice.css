@@ -77,8 +77,8 @@
 
 @media (max-width: 1320px) {
   .site-shell--homepage-final:has(> .cookie-notice) > .contact-fab {
-    top: 54%;
-    bottom: auto;
+    top: auto;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--cookie-notice-height, 160px) + 10px);
   }
 }
 
@@ -86,10 +86,12 @@
   .cookie-notice {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-    padding: 14px 16px;
+    gap: 6px;
+    padding: 10px 12px;
   }
 
+  .cookie-notice h2 { font-size: 14px; margin-bottom: 2px; }
+  .cookie-notice p { font-size: 12px; line-height: 1.4; }
   .cookie-notice__actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -103,6 +105,6 @@
 
 @media (max-height: 560px) and (max-width: 1320px) {
   .site-shell--homepage-final:has(> .cookie-notice) > .contact-fab {
-    top: 36%;
+    top: auto;
   }
 }

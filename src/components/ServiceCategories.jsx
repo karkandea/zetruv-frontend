@@ -14,6 +14,9 @@ const kindPresentation = {
   GameAccount: { image: assets.homepageCategoryAccount, href: '/game-accounts' },
 }
 
+const categoryOrder = ['TopUpGame', 'TopUpLogin', 'Joki', 'GameAccount', 'GameVoucher', 'GameItem', 'Merchandise']
+const categoryLabels = { TopUpGame: 'topUpById', TopUpLogin: 'topUpByLogin', Joki: 'gameBoosting', GameAccount: 'gameAccounts', GameVoucher: 'gameVouchers', GameItem: 'gameItems', Merchandise: 'merchandise' }
+
 export default function ServiceCategories({ items = [], loading = false }) {
   const copy = useStorefrontCopy()
   return (
@@ -23,7 +26,7 @@ export default function ServiceCategories({ items = [], loading = false }) {
           <Bone variant="circle" className="service-category__icon" />
           <strong><Bone width="75%" /></strong>
           <small><Bone width="52%" /></small>
-        </SkeletonItems> : items.map((item) => {
+        </SkeletonItems> : [...items].sort((a, b) => categoryOrder.indexOf(a.kind) - categoryOrder.indexOf(b.kind)).map((item) => {
           const presentation = kindPresentation[item.kind]
           if (!presentation) return null
           return <a className="service-category" href={presentation.href} key={item.id}>
@@ -31,7 +34,7 @@ export default function ServiceCategories({ items = [], loading = false }) {
               <img className="service-category__ring" src={assets.homepageCategoryRing} alt="" decoding="async" />
               <CategoryIcon kind={item.kind} className="service-category__image" />
             </span>
-            <strong>{item.kind === 'GameItem' ? copy.gameItems : item.kind === 'TopUpGame' ? copy.topUpViaId : item.label}</strong>
+            <strong>{['TopUpGame', 'GameItem'].includes(item.kind) ? copy[categoryLabels[item.kind]] : item.label || copy[categoryLabels[item.kind]]}</strong>
             <small>{item.kind === 'Merchandise' ? copy.physicalProduct : copy.digitalProduct}</small>
           </a>
         })}

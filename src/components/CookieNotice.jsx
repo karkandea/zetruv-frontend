@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import '../styles/cookie-notice.css'
 
@@ -16,6 +16,17 @@ function hasCookieChoice() {
 export default function CookieNotice() {
   const copy = useStorefrontCopy()
   const [hasChoice, setHasChoice] = useState(hasCookieChoice)
+  const noticeRef = useRef(null)
+  useEffect(() => {
+    const notice = noticeRef.current
+    const shell = notice?.parentElement
+    if (!notice || !shell) return
+    const update = () => shell.style.setProperty('--cookie-notice-height', `${notice.offsetHeight}px`)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(notice)
+    return () => { observer.disconnect(); shell.style.removeProperty('--cookie-notice-height') }
+  }, [hasChoice])
 
   function saveChoice(choice) {
     try {
@@ -29,7 +40,7 @@ export default function CookieNotice() {
   if (hasChoice) return null
 
   return (
-    <aside className="cookie-notice" aria-labelledby="cookie-notice-title">
+    <aside ref={noticeRef} className="cookie-notice" aria-labelledby="cookie-notice-title">
       <div className="cookie-notice__content">
         <h2 id="cookie-notice-title">{copy.cookieNoticeTitle}</h2>
         <p>{copy.cookieNoticeText} <a href="/cookies-policy">{copy.cookiePolicy}</a></p>

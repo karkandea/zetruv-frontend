@@ -2,11 +2,11 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import CategoryIcon from './CategoryIcon'
 
 const categories = [
-  { kind: 'TopUpGame', label: 'gameTopUpById', href: '/search' },
-  { kind: 'TopUpLogin', label: 'gameTopUpByLogin', href: '/search?kind=TopUpLogin' },
-  { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher' },
+  { kind: 'TopUpGame', label: 'topUpById', href: '/search' },
+  { kind: 'TopUpLogin', label: 'topUpByLogin', href: '/search?kind=TopUpLogin' },
   { kind: 'Joki', label: 'gameBoosting', href: '/search?kind=Joki' },
   { kind: 'GameAccount', label: 'gameAccounts', href: '/game-accounts' },
+  { kind: 'GameVoucher', label: 'gameVouchers', href: '/search?kind=GameVoucher' },
   { kind: 'GameItem', label: 'gameItems', href: '/search?kind=GameItem' },
   { kind: 'Merchandise', label: 'merchandise', href: '/merchandise' },
 ]
