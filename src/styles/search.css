@@ -1050,3 +1050,16 @@
     box-shadow: 0 3px 9px rgba(4, 20, 96, .08);
   }
 }
+
+/* Targeted mobile catalog polish; preserve the desktop cards and saved-game carousel. */
+.search-game-card__image-fallback { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; background: #edf0f7; }
+.search-game-card__image-fallback svg { width: 28px; height: 28px; }
+.catalog-search > svg { flex-shrink: 0; color: var(--navy); }
+@media (max-width: 900px) {
+  .search-page--browse .search-catalog--with-favorites .browse-list-title { margin-top: 16px; }
+  .search-page--browse .favorite-games:has(.favorite-games__empty) > h2 { margin-bottom: 4px; }
+  .search-page--browse .search-catalog--with-favorites :is(.search-game-grid--browse-primary,.search-game-grid--browse-more) { gap: 0; }
+  .search-page--browse .search-catalog--with-favorites .search-game-card { min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #e0e3ef; border-radius: 0; background: transparent; }
+  .search-page--browse .search-game-card .catalog-card-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .search-catalog--with-favorites .catalog-search--topup > button { min-width: 54px; padding-inline: 10px; }
+}
