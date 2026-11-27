@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { Bone, LoadingRegion, SkeletonItems, SkeletonPanel } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -23,16 +24,18 @@ export function LivePhysicalCatalogPage() {
   const copy = useStorefrontCopy()
   const [products, setProducts] = useState([])
   const [state, setState] = useState('loading')
+  const [retry, setRetry] = useState(0)
   const [sort, setSort] = useState('newest')
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
+    setState('loading')
     getCatalogProducts({ kind: 'Merchandise', pageSize: 50, signal: controller.signal })
       .then((page) => { if (!controller.signal.aborted) { setProducts(page.items || []); setState('ready') } })
       .catch(() => { if (!controller.signal.aborted) setState('error') })
     return () => controller.abort()
-  }, [])
+  }, [retry])
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -71,11 +74,9 @@ export function LivePhysicalCatalogPage() {
           <MerchandiseCardSkeletons count={4} />
         </div>
       </LoadingRegion>}
-      {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheMerchandiseCatalog}</p>}
-      {state === 'ready' && visible.length === 0 && <p role="status">{query.trim()
-        ? copy.noProductsMatchYourSearch
-        : copy.noMerchandiseHasBeenPublishedInThe}</p>}
-      {state === 'ready' && <div className="catalog-merch-grid">{visible.map((product) => <MerchandiseCard product={product} key={product.id} />)}</div>}
+      {state === 'error' && <StorefrontState kind="error" title={copy.weCouldnTLoadTheMerchandiseCatalog} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} />}
+      {state === 'ready' && visible.length === 0 && <StorefrontState kind={query.trim() ? 'search' : 'empty'} title={query.trim() ? copy.noProductsMatchYourSearch : copy.noMerchandiseHasBeenPublishedInThe} action={query.trim() ? copy.clearSearch : undefined} onAction={() => setQuery('')} href={!query.trim() ? '/search' : undefined} linkLabel={copy.browseProducts} />}
+      {state === 'ready' && visible.length > 0 && <div className="catalog-merch-grid">{visible.map((product) => <MerchandiseCard product={product} key={product.id} />)}</div>}
     </CatalogPage>
   )
 }
@@ -84,6 +85,7 @@ export function LivePhysicalProductPage({ slug }) {
   const copy = useStorefrontCopy()
   const [product, setProduct] = useState(null)
   const [state, setState] = useState('loading')
+  const [retry, setRetry] = useState(0)
   const [variantId, setVariantId] = useState('')
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -95,7 +97,8 @@ export function LivePhysicalProductPage({ slug }) {
   useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
   useEffect(() => {
     const controller = new AbortController()
-    getCatalogProduct(slug).then((data) => {
+    setState('loading')
+    getCatalogProduct(slug, { signal: controller.signal }).then((data) => {
       if (controller.signal.aborted) return
       if (data.kind !== 'Merchandise') { setState('not-found'); return }
       setProduct(data)
@@ -106,7 +109,7 @@ export function LivePhysicalProductPage({ slug }) {
       if (!controller.signal.aborted) setState(error.status === 404 ? 'not-found' : 'error')
     })
     return () => controller.abort()
-  }, [slug])
+  }, [slug, retry])
 
   if (state === 'loading') return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart /><main className="physical-pdp">
     <LoadingRegion label={copy.loadingProduct}>
@@ -121,9 +124,8 @@ export function LivePhysicalProductPage({ slug }) {
     </LoadingRegion>
   </main></div>
 
-  if (state !== 'ready') return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart /><main className="physical-pdp" role="status">
-    <h1>{state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3}</h1>
-    <a href="/merchandise">{copy.backToMerchandise}</a>
+  if (state !== 'ready') return <div className="physical-shell browse-catalog-shell"><Navbar homepageMobileMenu showMobileCart /><main className="physical-pdp">
+    <StorefrontState kind={state === 'not-found' ? 'empty' : 'error'} title={state === 'not-found' ? copy.productNotFound : copy.productCouldnTBeLoaded3} action={state === 'error' ? copy.tryAgain3 : undefined} onAction={() => setRetry(n => n + 1)} href="/merchandise" linkLabel={copy.backToMerchandise} />
   </main></div>
 
   const variants = product.variants || []
