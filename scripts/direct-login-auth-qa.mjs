@@ -8,6 +8,25 @@ try{
   let signedIn=false, failLogin=true, mutations=0
   const session={accessToken:'synthetic-browser-qa-token-no-real-session-00000',expiresAt:new Date(Date.now()+3600000).toISOString(),customer:{id:'a0000000-0000-0000-0000-000000000001',name:'QA',email:'qa@example.test'}}
   const respond=(route,status,data)=>route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':base,'access-control-allow-credentials':'true','access-control-allow-headers':'content-type,authorization','access-control-allow-methods':'GET,POST,OPTIONS'},body:JSON.stringify(data)})
+  // Preview is not an allowed DEV CORS origin. Use public read-only DEV
+  // fixtures via Node, then fulfil browser requests with preview CORS headers.
+  const products={}
+  for(const slug of ['efootball-mobile','call-of-duty-mobile']){
+   const response=await fetch('https://api-dev.zetruv.com/api/v1/catalog/products/'+slug)
+   assert.ok(response.ok,'Public DEV product '+slug)
+   products[slug]=await response.json()
+  }
+  await page.route('**/api/v1/catalog/products/**',route=>{
+   const slug=new URL(route.request().url()).pathname.split('/').pop()
+   if(route.request().method()==='OPTIONS')return respond(route,200,{})
+   return respond(route,products[slug]?200:404,products[slug]||{message:'not found'})
+  })
+  await page.route('**/api/v1/checkout/manual-login/readiness/**',route=>{
+   if(route.request().method()==='OPTIONS')return respond(route,200,{})
+   const id=new URL(route.request().url()).pathname.split('/').pop()
+   return respond(route,200,{productId:id,available:true,status:'SandboxTest',fulfillmentMode:'CmsManualAfterPaid'})
+  })
+  await page.route('**/api/v1/checkout/payment-options',route=>respond(route,200,{canAcceptLivePayments:true,status:'Ready',isSandbox:true,availableMethods:[{code:'MIDTRANS_SNAP',name:'Midtrans (Sandbox)',paymentFee:0}]}))
   await page.route('**/api/v1/auth/session',route=>route.request().method()==='OPTIONS'?respond(route,200,{}):respond(route,signedIn?200:401,signedIn?session:{message:'not authenticated'}))
   await page.route('**/api/v1/auth/login',route=>{
    if(route.request().method()==='OPTIONS')return respond(route,200,{})
