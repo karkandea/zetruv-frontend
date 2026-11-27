@@ -68,6 +68,11 @@
 }
 .merch-card__bookmark:hover,
 .merch-card__bookmark[aria-pressed='true'] { background: #edf0ff; }
+.merch-card__bookmark::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+@media (hover: hover) {
+  .merch-card:has(.merch-card__link:hover) { border-color: #a0abe4; }
+}
+.merch-card__link:active { background: #f6f7fb; }
 .merch-card__bookmark:focus-visible { outline: 2px solid #7189ee; outline-offset: 2px; }
 
 .merch-card__body {
