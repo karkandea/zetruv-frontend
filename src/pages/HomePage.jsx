@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
@@ -35,6 +36,7 @@ export default function HomePage() {
   const [session, setSession] = useState(readCustomerSession)
   const token = session?.accessToken || null
   const [hasError, setHasError] = useState(false)
+  const [retry, setRetry] = useState(0)
   const [loading, setLoading] = useState(true)
   const [supportOpen, setSupportOpen] = useState(false)
 
@@ -47,6 +49,7 @@ export default function HomePage() {
   useEffect(() => {
     let active = true
     setLoading(true)
+    setHasError(false)
     // Personal purchases are not included in the public homepage response.
     const request = token
       ? getPersonalHomepage(token).catch((error) => {
@@ -67,7 +70,7 @@ export default function HomePage() {
         console.error('Homepage API unavailable.', error)
       })
     return () => { active = false }
-  }, [token])
+  }, [token, retry])
 
   const recent = token && token === loadedFor && !hasError ? data.recentPurchases : []
 
@@ -79,7 +82,7 @@ export default function HomePage() {
         onAuthenticated={() => setSession(readCustomerSession())}
       />
       <main>
-        {hasError && <p role="alert" style={{ textAlign: 'center', padding: 16 }}>{copy.weCouldnTLoadTheHomepagePlease}</p>}
+        {hasError && <div style={{maxWidth: 1100, margin:'16px auto', padding:'0 16px'}}><StorefrontState compact kind="error" title={copy.weCouldnTLoadTheHomepagePlease} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} href="/search" linkLabel={copy.browseProducts} /></div>}
         {loading && <p className="skeleton-status" role="status">{copy.loadingTheZetruvHomepage}</p>}
         <div className={loading ? 'skeleton-content' : undefined} inert={loading} aria-hidden={loading || undefined}>
           <Hero items={data.heroes} loading={loading} />
