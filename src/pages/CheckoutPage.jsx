@@ -443,7 +443,7 @@ function DigitalCheckoutPage() {
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const loginOnly=items.length>0 && allCreds.length===items.length
   const sandboxLogin=allCreds.some(item=>viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest)
-  const chooseHref=directLogin && items[0] ? '/product/'+encodeURIComponent(items[0].productSlug)+'/login?variant='+encodeURIComponent(items[0].variantId) : '/cart'
+  const chooseHref=directLogin && items[0] ? '/product/'+encodeURIComponent(items[0].productSlug)+'/login?from=checkout&variant='+encodeURIComponent(items[0].variantId)+'&quantity='+encodeURIComponent(items[0].quantity) : '/cart'
   const firstAccountIssue=items.map(item=>{
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest) return null
