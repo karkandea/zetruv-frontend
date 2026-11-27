@@ -3,6 +3,7 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import AuthModal from '../components/AuthModal'
 import ProductBenefits from '../components/ProductBenefits'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import ProductOrderDock from '../components/ProductOrderDock'
@@ -11,8 +12,8 @@ import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
 import { selectLinkedVariant } from '../services/flashSaleFlow'
 import { addCartItem, awaitCartPersistence, supportsCartQuantity, cartItemLimit } from '../services/cartService' 
-import { saveDirectLoginCheckout } from '../services/directLoginCheckout'
-import { getCartSyncStatus } from '../services/customerCartSync'
+import { saveDirectLoginCheckout, readDirectLoginCheckout, clearDirectLoginCheckout } from '../services/directLoginCheckout'
+import { getCartSyncStatus, readCustomerSession, restoreCustomerSession, setCustomerSession } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness } from '../services/digitalPurchaseCapabilities'
@@ -89,6 +90,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
   const [isAdding, setIsAdding] = useState(false)
   const [reloadCount, setReloadCount] = useState(0)
   const addGuard = useRef(false)
+  const [purchaseAuthMode, setPurchaseAuthMode] = useState(null)
+  const purchaseAuthPending = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -189,7 +192,13 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       }
       if (buyNow) {
         saveDirectLoginCheckout(item)
-        window.location.assign('/checkout?flow=direct-login')
+        // Restore an existing cookie-backed session before asking for sign-in.
+        if (!readCustomerSession()) await restoreCustomerSession().catch(() => {})
+        if (readCustomerSession()) window.location.assign('/checkout?flow=direct-login')
+        else {
+          purchaseAuthPending.current = true
+          setPurchaseAuthMode('login')
+        }
         return
       }
       addCartItem(item)
@@ -204,9 +213,25 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
     }
   }
 
+  function closePurchaseAuth() {
+    if (purchaseAuthPending.current) clearDirectLoginCheckout()
+    purchaseAuthPending.current = false
+    setPurchaseAuthMode(null)
+  }
+
+  function continuePurchase(response) {
+    // AuthModal calls onClose after success; don't discard the selected package.
+    setCustomerSession(response)
+    if (!purchaseAuthPending.current) return
+    purchaseAuthPending.current = false
+    if (readDirectLoginCheckout()) window.location.assign('/checkout?flow=direct-login')
+    else setError(copy.chooseAnAvailablePackageFirst)
+  }
+
   return (
     <div className="login-product-shell">
       <Navbar variant="loginCatalog" homepageMobileMenu />
+      {purchaseAuthMode && <AuthModal mode={purchaseAuthMode} onModeChange={setPurchaseAuthMode} onClose={closePurchaseAuth} onAuthenticated={continuePurchase} />}
       <main className="login-product-page product-detail-page">
         {status === 'loading' && (
           <ProductSkeleton label={copy.loadingPackagesFromTheCatalog} hero="login-product-hero"
