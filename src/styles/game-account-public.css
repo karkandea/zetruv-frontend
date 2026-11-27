@@ -26,3 +26,7 @@
   .homepage-accounts__header > a { width: auto; padding-inline: 16px; }
   .homepage-accounts__row { grid-template-columns: 1fr; }
 }
+
+.ga-stock-tabs button:not(.active):hover,.ga-live-pagination button:not(:disabled):hover { background: #edf0ff; }
+.ga-live-pagination button:disabled,.ga-primary-cta:disabled { opacity: .55; cursor: not-allowed; }
+.ga-shell :is(.ga-stock-tabs button,.ga-live-pagination button,.ga-primary-cta,.ga-live-card,.catalog-sort):focus-visible { outline: 2px solid #7189ee; outline-offset: 2px; }
