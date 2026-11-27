@@ -16,7 +16,7 @@ export function viaLoginServiceStatus(product, item = {}, readiness) {
     product?.id === readiness?.productId &&
     readiness?.available === true &&
     readiness?.fulfillmentMode === 'CmsManualAfterPaid'
-  if (eligible) return {available: true, reason: '', sandboxTest: readiness.status === 'SandboxTest'}
+  if (eligible) return readiness.status === 'SandboxTest' ? {available: true, reason: '', sandboxTest: true} : {available: true, reason: ''}
   return {
     available: false,
     reason: 'Top Up via Login untuk game ini belum dapat diproses. Silakan pilih layanan lain.',
