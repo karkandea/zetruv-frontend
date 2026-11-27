@@ -1,6 +1,7 @@
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
+import { useDialogInteraction } from '../hooks/useDialogInteraction'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -62,7 +63,7 @@ const renderLoginField = (field, value, onChange, visible, toggle, disabled, err
           disabled={disabled} aria-invalid={Boolean(error)}
           onChange={e => onChange(e.target.value)} />
         {field.type === 'Password' && (
-          <button type="button" disabled={disabled} aria-label={visible ? copy.hidePassword : copy.showPassword} onClick={toggle}>
+          <button type="button" disabled={disabled} aria-label={visible ? copy.hidePassword : copy.showPassword} aria-pressed={visible} onClick={toggle}>
             {visible ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
@@ -221,8 +222,10 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
+  const dialogRef = useRef(null)
+  useDialogInteraction(dialogRef, onClose)
   return <div className="checkout-auth-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
-    <form className="checkout-auth-modal" role="dialog" aria-modal="true" aria-label={copy.logInToZetruv}
+    <form ref={dialogRef} tabIndex={-1} className="checkout-auth-modal" role="dialog" aria-modal="true" aria-label={copy.logInToZetruv}
       onSubmit={async e=>{
         e.preventDefault();if(busy)return;setBusy(true);setError('')
         try { const response=await authenticateCheckoutCustomer(email,password)
@@ -232,7 +235,7 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
       }}>
       <div className="checkout-auth-modal__head"><strong>{copy.logInToYourZetruvAccount}</strong><button type="button" aria-label={copy.close} onClick={onClose}><X size={18}/></button></div>
       <p>{copy.logInWithYourVerifiedZetruvAccount}</p>
-      <label>{copy.zetruvEmail}<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
+      <label>{copy.zetruvEmail}<input data-initial-focus type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
       <label>{copy.zetruvPassword}<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
       {error && <p role="alert" className="checkout-field-error">{error}</p>}
       <button type="submit" disabled={busy}>{busy ? copy.verifying : copy.loginAndContinue}</button>

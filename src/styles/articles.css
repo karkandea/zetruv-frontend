@@ -567,3 +567,13 @@
     line-height: 42px;
   }
 }
+
+/* Scoped editorial interaction polish. */
+.article-index-tools > label .article-search-clear { width: 36px; height: 36px; min-width: 36px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; }
+.article-index-tools > label .article-search-clear:hover { background: #edf0ff; }
+.article-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 32px; }
+.article-pagination button, .article-list-state button { min-height: 40px; padding: 8px 16px; border: 1px solid #dce1ee; border-radius: 8px; background: #fff; color: #010154; cursor: pointer; }
+.article-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.article-pagination button:not(:disabled):hover, .article-list-state button:hover, .article-index-tools button[aria-pressed="false"]:hover, .article-share-rail button:hover { background: #edf0ff; }
+.article-shell :is(.article-pagination button,.article-list-state button,.article-index-tools button,.article-share-rail button,.article-related-grid a):focus-visible { outline: 2px solid #7189ee; outline-offset: 2px; }
+.article-list-state { display: grid; justify-items: center; gap: 12px; padding: 24px; }

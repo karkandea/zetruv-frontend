@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/storefront-interactions-20261127]
+    branch: [dev, fix/storefront-detail-interactions-20261127]
 
 steps:
   - name: frontend-build-test

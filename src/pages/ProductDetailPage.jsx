@@ -204,7 +204,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
 
         <div className="product-detail-container product-detail-layout">
           <section className="product-selection-panel">
-            <div className="product-selection-heading"><h2>{copy.chooseAnItem}</h2><div className="product-category-tabs"><button className="active" type="button">{product.category?.name || copy.topUp}</button></div></div>
+            <div className="product-selection-heading"><h2>{copy.chooseAnItem}</h2><div className="product-category-tabs"><button className="active" type="button" aria-pressed="true" tabIndex={-1}>{product.category?.name || copy.topUp}</button></div></div>
             {selectionWarning && <p className="pdp-variant-warning" role="status">{selectionWarning}</p>}
             <div className="sku-grid" ref={packageGridRef}>
               {product.variants.map((item, index) => (
@@ -215,6 +215,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
                   <span className="sku-card__copy">
                     <strong>{item.name}</strong>
                     <small>{rupiah(item.effectivePrice ?? item.price)}{item.isOnSale && Number(item.price) > Number(item.effectivePrice) && <del className="pdp-original-price">{rupiah(item.price)}</del>}</small>
+                    {item.isAvailable === false && <small className="sku-card__availability">{copy.unavailable2}</small>}
                   </span>
                   {item.isOnSale && <span className="sku-flash"><Flame size={12} fill="#f0592c" />{copy.flashSale}</span>}
                 </button>

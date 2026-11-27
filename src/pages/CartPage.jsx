@@ -1,6 +1,7 @@
 import { Bone, LoadingRegion, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
+import { useDialogInteraction } from '../hooks/useDialogInteraction'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import CartEmptyIllustration from '../components/CartEmptyIllustration'
@@ -65,22 +66,14 @@ function AccountEditModal({ item, requirements, onClose, onSave }) {
   })
   const fields = requirements || []
   const invalid = checkCartDestination({ ...item, accountFields: value }, fields, copy)
-  useEffect(() => {
-    const escape = (event) => { if (event.key === 'Escape') onClose() }
-    document.addEventListener('keydown', escape)
-    const before = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = before
-      document.removeEventListener('keydown', escape)
-    }
-  }, [onClose])
+  const dialogRef = useRef(null)
+  useDialogInteraction(dialogRef, onClose)
 
   return (
     <div className="digital-cart-modal-backdrop" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose()
     }}>
-      <section className="digital-cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-edit-title">
+      <section ref={dialogRef} tabIndex={-1} className="digital-cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-edit-title">
         <header className="digital-cart-modal__header">
           <div><h2 id="cart-edit-title">{copy.editDestinationAccount}</h2><p>{item.productName} · {item.variantName}</p></div>
           <button type="button" aria-label={copy.closeDialog} onClick={onClose}><X size={19} aria-hidden="true" /></button>
@@ -92,7 +85,7 @@ function AccountEditModal({ item, requirements, onClose, onSave }) {
                 {field.label}{!field.required && <span> {copy.optional}</span>}
                 <input type="text" required={field.required} maxLength={field.maxLength}
                   inputMode={field.type === 'Number' ? 'numeric' : 'text'}
-                  autoComplete="off" autoFocus={field.slot === 'userId'}
+                  autoComplete="off" data-initial-focus={field.slot === 'userId' ? '' : undefined}
                   placeholder={field.placeholder || field.label}
                   value={value[field.slot] || ''}
                   onChange={(event) => setValue((current) => ({ ...current, [field.slot]: event.target.value }))}

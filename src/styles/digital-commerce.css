@@ -265,3 +265,8 @@
     text-align: left;
   }
 }
+
+.checkout-auth-modal :is(button,input):focus-visible, .digital-cart-modal :is(button,input):focus-visible { outline: 2px solid #7189ee; outline-offset: 2px; }
+.checkout-auth-modal__head button, .digital-cart-modal__header > button { min-width: 40px; min-height: 40px; border-radius: 8px; }
+.checkout-auth-modal__head button:hover, .digital-cart-modal__header > button:hover { background: #edf0ff; }
+.checkout-auth-modal, .digital-cart-modal { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }

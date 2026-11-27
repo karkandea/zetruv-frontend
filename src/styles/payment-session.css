@@ -55,3 +55,7 @@
 @media (max-width: 600px) {
   .payment-session-midtrans-guide { padding: 11px 12px; gap: 9px; margin-bottom: 12px; }
 }
+
+.payment-session-page :is(.payment-session-actions a,.payment-session-actions button,.payment-session-action-link,.payment-session-back):focus-visible { outline: 2px solid #365ddd; outline-offset: 3px; }
+.payment-session-actions .is-secondary:not(:disabled):hover { background: #edf2fa; }
+.payment-session-actions :is(a,button):not(.is-secondary):not(:disabled):hover,.payment-session-action-link:hover { filter: brightness(1.1); }
