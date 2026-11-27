@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -136,9 +137,9 @@ export function ArticlesPage() {
               </SkeletonItems>
             </div>
           </LoadingRegion>}
-          {state === 'error' && <div className="article-list-state" role="alert"><p>{copy.weCouldnTLoadTheArticlesPlease}</p><button type="button" onClick={() => setRetry(n => n + 1)}>{copy.tryAgain3}</button></div>}
-          {state === 'ready' && articles.length === 0 && <p role="status">{copy.noPublishedArticlesMatchYourSearch}</p>}
-          {state === 'ready' && <div className="article-grid">{articles.map((article) => <ArticleCard article={article} key={article.id} />)}</div>}
+          {state === 'error' && <StorefrontState kind="error" title={copy.weCouldnTLoadTheArticlesPlease} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} />}
+          {state === 'ready' && articles.length === 0 && <StorefrontState kind={search || category ? 'search' : 'empty'} title={copy.noPublishedArticlesMatchYourSearch} action={search || category ? copy.clearFilters : undefined} onAction={() => { setQuery(''); setSearch(''); setCategory(''); setPage(1) }} href={!search && !category ? '/' : undefined} linkLabel={copy.backToHome} />}
+          {state === 'ready' && articles.length > 0 && <div className="article-grid">{articles.map((article) => <ArticleCard article={article} key={article.id} />)}</div>}
           {state === 'ready' && result.totalPages > 1 && <nav aria-label={copy.articlePages} className="article-pagination">
             <button type="button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>{copy.previous}</button>
             <span aria-live="polite">{copy.page} {formatCopy(copy.of, { current: page, total: result.totalPages })}</span>
@@ -169,6 +170,7 @@ export function ArticleDetailPage({ slug }) {
   const [related, setRelated] = useState([])
   const [state, setState] = useState('loading')
   const [copied, setCopied] = useState(false)
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -185,7 +187,7 @@ export function ArticleDetailPage({ slug }) {
       if (!controller.signal.aborted) setState(error.status === 404 ? 'not-found' : 'error')
     })
     return () => controller.abort()
-  }, [slug])
+  }, [slug, retry])
 
   const date = article?.publishedAt ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeZone: 'Asia/Jakarta' }).format(new Date(article.publishedAt)) : ''
 
@@ -202,9 +204,8 @@ export function ArticleDetailPage({ slug }) {
           <article className="article-reading-column"><SkeletonItems count={4}><SkeletonLines /></SkeletonItems></article>
         </div></section>
       </LoadingRegion>}
-      {state !== 'ready' && state !== 'loading' && <section className="article-latest-section"><div className="article-section-inner" role="status">
-        {state === 'not-found' ? copy.theArticleWasNotFoundOrHas : copy.weCouldnTLoadTheArticlePlease}
-        <p><a href="/articles">{copy.backToArticles}</a></p>
+      {state !== 'ready' && state !== 'loading' && <section className="article-latest-section"><div className="article-section-inner">
+        <StorefrontState kind={state === 'not-found' ? 'empty' : 'error'} title={state === 'not-found' ? copy.theArticleWasNotFoundOrHas : copy.weCouldnTLoadTheArticlePlease} action={state === 'error' ? copy.tryAgain3 : undefined} onAction={() => setRetry(n => n + 1)} href="/articles" linkLabel={copy.backToArticles} />
       </div></section>}
       {state === 'ready' && <>
         <section className="article-detail-header"><div className="article-detail-header__inner">
