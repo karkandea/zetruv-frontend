@@ -4,7 +4,7 @@ import { assets } from '../data/assets'
 import AuthModal from './AuthModal'
 import NavbarSearch from './NavbarSearch'
 import HelpCenterDialog from './HelpCenterDialog'
-import { ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Newspaper, Settings, ShoppingBag, ShoppingCart, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
+import { Check, ChevronDown, ClipboardList, Gamepad2, Home, LifeBuoy, LogIn, LogOut, Newspaper, Settings, ShoppingBag, ShoppingCart, Trophy, UserRound, UserRoundPlus } from 'lucide-react'
 import { NAVBAR_COPY, NAVBAR_LANGUAGES } from '../services/navbarLanguage'
 import { setNavbarLanguage, useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import { cartCount, onCartChange, readCart } from '../services/cartService'
@@ -82,10 +82,14 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
   const homeActive = variant === 'default' || isLoginCatalog || isHomeLoggedIn
 
   const [activeNav, setActiveNav] = useState(() => {
+    const path = window.location.pathname
+    if (path === '/search' || /^\/(product|game|game-accounts|merchandise)(\/|$)/.test(path)) return 'product'
+    if (/^\/(order-status|track-order)(\/|$)/.test(path)) return 'transaction'
+    if (path === '/') return 'home'
     if (isLeaderboard) return 'leaderboard'
     if (isArticle) return 'article'
     if (isCatalog) return 'product'
-    if (homeActive) return 'home'
+    if (homeActive && path === '/') return 'home'
     return ''
   })
 
@@ -178,6 +182,9 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
+        if (event.target.closest?.('.product-dropdown')) productMenuRef.current?.querySelector('.navlinks__product')?.focus()
+        if (event.target.closest?.('.nav-cart-menu .cart-dropdown')) cartMenuRef.current?.querySelector('.nav-cart-trigger')?.focus()
+        if (event.target.closest?.('#navbar-language-dropdown')) languageButtonRef.current?.focus()
         if (event.target.closest?.('#navbar-account-dropdown')) accountButtonRef.current?.focus()
         setIsAccountOpen(false)
         if (event.target.closest?.('#zetruv-homepage-mobile-nav')) homepageMenuButtonRef.current?.focus()
@@ -276,6 +283,10 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
           onOpen={() => {
             setIsHomepageDrawerOpen(false)
             setIsMobileMenuOpen(false)
+            setIsProductOpen(false)
+            setIsLanguageOpen(false)
+            setIsCartOpen(false)
+            setIsAccountOpen(false)
           }} />
 
         <div className="navbar__quick-actions">
@@ -326,7 +337,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
                 >
                   <img src={assets[option.flag]} alt="" />
                   <span><strong>{option.name}</strong><small>{option.badge}</small></span>
-
+                  {language === option.code && <Check size={16} className="nav-language-option__check" aria-hidden="true" />}
                 </button>
               ))}
             </div>
@@ -351,7 +362,7 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <span>{cartLabel}</span>
               {cartCount(cartItems) + physicalCartCount > 0 && <b className="nav-cart-count">{cartCount(cartItems) + physicalCartCount}</b>}
             </button>
-            <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen}>
+            <div className="cart-dropdown" role="menu" aria-hidden={!isCartOpen} inert={!isCartOpen}>
               <a className="navbar-control" href="/cart" role="menuitem" onClick={() => setIsCartOpen(false)}>
                 <ShoppingCart className="nav-cart-menu__icon" size={18} aria-hidden="true" />
                 <span><strong>{t.digitalCart}</strong><small>{copy.topUpsVouchersBoostingGameAccounts}</small></span>
@@ -489,21 +500,25 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <a
                 href="/search"
                 className={`navbar-control navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
-                aria-haspopup="true"
+                aria-controls="navbar-product-dropdown"
                 aria-expanded={isProductOpen}
                 aria-current={activeNav === 'product' ? 'page' : undefined}
                 onClick={(event) => {
                   event.preventDefault()
-                  setActiveNav('product')
                   setIsProductOpen((open) => !open)
                   setIsLanguageOpen(false)
+                  setIsCartOpen(false)
                   setIsMobileMenuOpen(false)
                   setIsAccountOpen(false)
+                  setCloseSearchSignal(value => value + 1)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === ' ') { event.preventDefault(); event.currentTarget.click() }
                 }}
               >
                 {productLabel} <img src={assets.navDown} alt="" />
               </a>
-              <div className="product-dropdown" aria-label={copy.productCategories} aria-hidden={!isProductOpen}>
+              <div id="navbar-product-dropdown" className="product-dropdown" aria-label={copy.productCategories} aria-hidden={!isProductOpen} inert={!isProductOpen}>
                 {productLinks.map((link) => (
                   <a className="navbar-control" href={link.href} key={link.label}>
                     <span>{link.href === '/search?kind=GameItem' ? copy.gameItems : link.href === '/game-accounts' ? copy.gameAccounts : t.products[link.label] || link.label}</span>
