@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { formatCopy } from '../services/storefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
@@ -554,9 +555,11 @@ export function PhysicalCheckoutPage() {
   const [addresses, setAddresses] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   const item = readPhysicalCart()
   useEffect(() => {
     if (!session?.accessToken) { setAddresses([]); return }
+    setError(''); setAddresses(null)
     const controller = new AbortController()
     apiRequest('/me/addresses', { cache: 'no-store', signal: controller.signal,
       headers: { Authorization: 'Bearer ' + session.accessToken } })
@@ -567,7 +570,7 @@ export function PhysicalCheckoutPage() {
         setSelectedId(id => rows.some(x => x.id === id) ? id : rows.find(x => x.isDefault)?.id || rows[0]?.id || null)
       }).catch(e => { if (!controller.signal.aborted) setError(e.message || 'Alamat gagal dimuat.') })
     return () => controller.abort()
-  }, [session?.accessToken])
+  }, [session?.accessToken, retry])
   const selected = addresses?.find(a => a.id === selectedId)
   return <div className="physical-shell">
     <Navbar variant="account"  homepageMobileMenu />
@@ -576,7 +579,7 @@ export function PhysicalCheckoutPage() {
       <section className="physical-shipping-addresses" aria-labelledby="shipping-address-title">
         <div className="physical-shipping-addresses__heading"><h2 id="shipping-address-title"><MapPin size={21}/> Alamat pengiriman</h2><a href="/account/addresses/add">+ Tambah alamat</a></div>
         {!session ? <p>Masuk untuk memilih alamat pengiriman.</p>
-          : error ? <p role="alert">{error}</p>
+          : error ? <StorefrontState compact kind="error" title={copy.weCouldnTLoadTheCatalogPlease} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} />
           : addresses === null ? <p role="status">Memuat alamat tersimpan…</p>
           : addresses.length === 0 ? <div className="physical-shipping-addresses__empty"><img src="/assets/account/address-empty.svg" alt=""/><p>Belum ada alamat. Tambahkan alamat sebelum checkout merchandise.</p><a className="physical-btn physical-btn--outline" href="/account/addresses/add">Tambah alamat</a></div>
           : <div className="physical-shipping-addresses__choices">
