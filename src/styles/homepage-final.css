@@ -1436,7 +1436,6 @@
 
 .site-shell--homepage-final .product-dropdown a:active {
   background: rgba(255,255,255,.14);
-  transform: scale(.99);
 }
 
 /* 2) Category cards: exact 126px geometry so artwork and both text rows are visible. */
@@ -1464,11 +1463,12 @@
 .site-shell--homepage-final .service-categories--homepage-final .service-category:hover {
   border-color: #bfc6dc;
   box-shadow: 0 8px 22px rgba(6,5,82,.08);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .site-shell--homepage-final .service-categories--homepage-final .service-category:active {
-  transform: translateY(0) scale(.99);
+  transform: none;
+  background: #f3f4ff;
 }
 
 /* 3) Joki card captions sit over the artwork so Figma's 5px backdrop blur is visible. */
