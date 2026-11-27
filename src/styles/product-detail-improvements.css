@@ -238,3 +238,10 @@
 .pdp-variant-warning { margin: 14px 0 0; padding: 12px 14px; border: 1px solid #efc185; border-radius: 12px; background: #fff7e8; color: #83501b; font-size: 13px; line-height: 1.5; }
 .product-detail-page .sku-card__copy .pdp-original-price { margin-left: 8px; color: #999; font-size: 11px; font-weight: 400; }
 .product-detail-page .sku-card.active .sku-card__copy .pdp-original-price { color: #e7dfe9; }
+
+/* Preserve SKU geometry across idle, hover, active and keyboard states. */
+.sku-card:not(:disabled):not(.active):hover { border-color: #a0abe4; background: #f6f7ff; }
+.sku-card:focus-visible { outline: 2px solid #7189ee; outline-offset: -3px; }
+.sku-card:disabled { cursor: not-allowed; opacity: .55; }
+.sku-card__availability { color: #656b7b; font-weight: 500; }
+.product-category-tabs > button[aria-pressed="true"] { cursor: default; }
