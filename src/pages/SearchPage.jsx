@@ -592,11 +592,11 @@ export default function SearchPage({ mode = 'player-id' }) {
                 </div>
               </LoadingRegion>}
               {searchState !== 'results' && searchState !== 'loading' && (
-                <StorefrontState compact kind={searchState === 'error' ? 'error' : submittedQuery || queryTooShort ? 'search' : 'empty'}
-                  title={searchState === 'min' ? copy.enterAtLeast3CharactersToSearch2 : searchState === 'error' ? copy.weCouldnTLoadTheCatalogPlease : submittedQuery ? copy.noProductsMatchYourSearch : copy.noProductsFoundInThisCategory}
-                  action={searchState === 'error' ? copy.tryAgain3 : searchState === 'empty' && submittedQuery ? copy.clearSearch : undefined}
+                <StorefrontState compact kind={searchState === 'error' ? 'error' : submittedQuery || letterFiltering || queryTooShort ? 'search' : 'empty'}
+                  title={searchState === 'min' ? copy.enterAtLeast3CharactersToSearch2 : searchState === 'error' ? copy.weCouldnTLoadTheCatalogPlease : submittedQuery || letterFiltering ? copy.noProductsMatchYourSearch : copy.noProductsFoundInThisCategory}
+                  action={searchState === 'error' ? copy.tryAgain3 : searchState === 'empty' && (submittedQuery || letterFiltering) ? copy.clearFilters : undefined}
                   onAction={searchState === 'error' ? () => setRetry(n => n + 1) : () => { setQuery(''); setSubmittedQuery(''); setLetterFiltering(false) }}
-                  href={searchState === 'empty' && !submittedQuery ? '/' : undefined} linkLabel={copy.backToHome} />
+                  href={searchState === 'empty' && !submittedQuery && !letterFiltering ? '/' : undefined} linkLabel={copy.backToHome} />
               )}
               {showFavorites && removedFavorite && (
                 <div className="favorite-games__undo">
