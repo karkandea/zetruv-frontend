@@ -37,8 +37,8 @@ const fallbackImages = {
 }
 const clean = (value) => String(value ?? '').trim()
 
-function itemContext(item, copy) {
-  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return copy.enterGameAccountInformationAtCheckoutIf
+function itemContext(item, copy, serviceStatus) {
+  if (item.fulfillmentMethod === 'MANUAL_LOGIN') return serviceStatus?.sandboxTest ? copy.loginPurchaseCartHint : copy.enterGameAccountInformationAtCheckoutIf
   if (item.fulfillmentMethod === 'VOUCHER_CODE') return copy.theVoucherCodeWillBeSentAfter
   if (item.productKind === 'GameItem') return copy.gameItemDeliveryAfterPayment
   if (item.productKind === 'Joki') return copy.manualServiceAfterPayment
@@ -285,8 +285,8 @@ export default function CartPage() {
                   const lineTotal = Number(item.unitPrice || 0) * qty
                   const allowsQuantity = supportsCartQuantity(item)
                   const checking = isChecking(item)
-                  const loginUnavailable = !checking && item.fulfillmentMethod==='MANUAL_LOGIN' &&
-                    !viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug]).available
+                  const loginStatus = viaLoginServiceStatus(catalogProducts[item.productSlug],item,serviceReadiness[item.productSlug])
+                  const loginUnavailable = !checking && item.fulfillmentMethod==='MANUAL_LOGIN' && !loginStatus.available
                   const issue = checking ? ''
                     : loginUnavailable ? `${copy.serviceTemporarilyUnavailable}. ${copy.removeThisPackageToContinue}`
                     : item.serverLineId && item.isAvailable === false ? copy.thisProductStockOrDestinationAccountIs
@@ -314,7 +314,7 @@ export default function CartPage() {
                               <Pencil size={13} aria-hidden="true" /> {copy.edit}
                             </button>
                           </div>
-                        ) : <p>{itemContext(item, copy)}</p>}
+                        ) : <p>{itemContext(item, copy, loginStatus)}</p>}
                         {checking && !issue && <LoadingRegion className="digital-cart-item__checking" label={copy.checkingProductRequirementsAndAccountDetails}><Bone width="70%" /></LoadingRegion>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
                         {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
