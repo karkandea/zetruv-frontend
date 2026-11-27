@@ -64,6 +64,8 @@ jobs:
         run: node scripts/auth-reset-browser-qa.mjs
       - name: Storefront navigation interaction regression
         run: node scripts/storefront-interactions-qa.mjs
+      - name: Detail page interaction regression
+        run: node scripts/detail-interactions-qa.mjs
       - name: Storefront locale switching and CMS content
         run: node scripts/storefront-localization-qa.mjs
       - name: QA evidence summary
