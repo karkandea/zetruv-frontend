@@ -1,0 +1,13 @@
+.storefront-state { box-sizing:border-box; width:100%; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:180px; padding:26px 16px; text-align:center; border:1px solid #e0e3eb; border-radius:14px; background:#fff; color:#25283b; }
+.storefront-state--compact { min-height:0; padding:18px 14px; }
+.storefront-state__icon { display:grid; place-items:center; width:48px; height:48px; border-radius:12px; background:#eef0ff; color:#010154; }
+.storefront-state--error .storefront-state__icon { background:#fff0ee; color:#a93a32; }
+.storefront-state > strong { font-size:14px; line-height:1.5; font-weight:600; overflow-wrap:anywhere; }
+.storefront-state > p { margin:0; max-width:46ch; font-size:12px; line-height:1.6; color:#656b7b; }
+.storefront-state__actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+.storefront-state__actions :is(button,a) { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:8px 14px; border:1px solid #dce1ee; border-radius:8px; background:#fff; color:#010154; font:inherit; font-size:12px; font-weight:600; text-decoration:none; cursor:pointer; }
+.storefront-state__actions button { background:#010154; color:#fff; border-color:#010154; }
+.storefront-state__actions button:hover { background:#202074; }
+.storefront-state__actions a:hover { background:#eef0ff; }
+.storefront-state__actions :is(button,a):focus-visible { outline:2px solid #7189ee; outline-offset:2px; }
+@media(max-width:600px){ .storefront-state { min-height:150px; padding:20px 12px; } .storefront-state--compact { min-height:0; padding:14px 12px; } }
