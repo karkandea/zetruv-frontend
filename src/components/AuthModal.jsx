@@ -1,6 +1,7 @@
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDialogInteraction } from '../hooks/useDialogInteraction'
 import { assets } from '../data/assets'
 import { ArrowLeft } from 'lucide-react'
 import { authenticateCheckoutCustomer } from '../services/checkoutGatewayService'
@@ -51,22 +52,7 @@ export default function AuthModal({ mode = 'login', onModeChange, onClose, onAut
   const maskedResetEmail = useMemo(() => maskEmail(resetEmail, copy.theEmailAddressYouEntered), [resetEmail, copy])
   const maskedRegisterEmail = useMemo(() => maskEmail(registerEmail, copy.theEmailAddressYouEntered), [registerEmail, copy])
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') onClose?.()
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    requestAnimationFrame(() => dialogRef.current?.focus())
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onClose])
+  useDialogInteraction(dialogRef, onClose)
 
   useEffect(() => {
     setPasswordVisible(false)
