@@ -264,7 +264,7 @@ function RequireDirectCheckoutSession({ children }) {
   const back=draft ? '/product/'+encodeURIComponent(draft.productSlug)+'/login' : '/search?kind=TopUpLogin'
   return <div className="digital-shell">
     <Navbar variant="default" homepageMobileMenu />
-    <main className={`digital-checkout-page digital-container${loginOnly ? " login-purchase-checkout" : ""}`}>
+    <main className="digital-checkout-page digital-container">
       <header className="digital-checkout-heading"><h1>{copy.digitalCheckout}</h1></header>
       <div className="digital-checkout-empty" role="status">
         {restoring ? copy.verifying : draft ? copy.logInToYourAccount : copy.chooseAnAvailablePackageFirst}
@@ -667,7 +667,7 @@ function DigitalCheckoutPage() {
 
   return <div className="digital-shell">
     <Navbar variant="default" homepageMobileMenu />
-    <main className="digital-checkout-page digital-container">
+    <main className={`digital-checkout-page digital-container${loginOnly ? " login-purchase-checkout" : ""}`}>
       <header className="digital-checkout-heading">
         <h1>{copy.digitalCheckout}</h1><p>{loginOnly ? copy.loginPurchaseReview : copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
       </header>
