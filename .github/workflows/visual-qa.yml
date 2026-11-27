@@ -62,6 +62,8 @@ jobs:
         run: node scripts/live-storefront-wiring-qa.mjs
       - name: Real auth API contract on mock browser - email and reset-token flows
         run: node scripts/auth-reset-browser-qa.mjs
+      - name: Storefront navigation interaction regression
+        run: node scripts/storefront-interactions-qa.mjs
       - name: Storefront locale switching and CMS content
         run: node scripts/storefront-localization-qa.mjs
       - name: QA evidence summary
