@@ -5,6 +5,7 @@ import { useDialogInteraction } from '../hooks/useDialogInteraction'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import AuthModal from '../components/AuthModal'
 import { readDirectLoginCheckout, saveDirectLoginCheckout, clearDirectLoginCheckout } from '../services/directLoginCheckout'
 import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, removeCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
@@ -22,7 +23,7 @@ import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import { storePaymentContext } from '../services/paymentSession'
-import { readCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
+import { readCustomerSession, restoreCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
 import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
@@ -244,7 +245,42 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
   </div>
 }
 
+function RequireDirectCheckoutSession({ children }) {
+  const copy = useStorefrontCopy()
+  const [session,setSession] = useState(readCustomerSession)
+  const [restoring,setRestoring] = useState(!session)
+  const [authMode,setAuthMode] = useState('login')
+  useEffect(()=>{
+    let active=true
+    const update=()=>{if(active)setSession(readCustomerSession())}
+    window.addEventListener(CUSTOMER_EVENT,update)
+    restoreCustomerSession().catch(()=>{}).finally(()=>{if(active){update();setRestoring(false)}})
+    return ()=>{active=false;window.removeEventListener(CUSTOMER_EVENT,update)}
+  },[])
+  if(session?.accessToken) return children
+  const draft=readDirectLoginCheckout()
+  const back=draft ? '/product/'+encodeURIComponent(draft.productSlug)+'/login' : '/search?kind=TopUpLogin'
+  return <div className="digital-shell">
+    <Navbar variant="default" homepageMobileMenu />
+    <main className="digital-checkout-page digital-container">
+      <header className="digital-checkout-heading"><h1>{copy.digitalCheckout}</h1></header>
+      <div className="digital-checkout-empty" role="status">
+        {restoring ? copy.verifying : draft ? copy.logInToYourAccount : copy.chooseAnAvailablePackageFirst}
+        {!restoring && draft && <button type="button" onClick={()=>setAuthMode('login')}>{copy.login}</button>}
+        <a href={back}>{copy.chooseAProduct}</a>
+      </div>
+    </main>
+    {!restoring && draft && authMode && <AuthModal mode={authMode} onModeChange={setAuthMode}
+      onClose={()=>setAuthMode(null)} onAuthenticated={response=>setCustomerSession(response)} />}
+  </div>
+}
+
 export default function CheckoutPage() {
+  const direct = new URLSearchParams(window.location.search).get('flow')==='direct-login'
+  return direct ? <RequireDirectCheckoutSession><DigitalCheckoutPage /></RequireDirectCheckoutSession> : <DigitalCheckoutPage />
+}
+
+function DigitalCheckoutPage() {
   const copy = useStorefrontCopy()
   const [directLogin]=useState(()=>new URLSearchParams(window.location.search).get('flow')==='direct-login')
   const [items,setItems]=useState(()=>directLogin ? [readDirectLoginCheckout()].filter(Boolean) : readCart())
