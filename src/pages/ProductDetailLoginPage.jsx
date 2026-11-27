@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
+import { LoginPurchaseProgress, LoginPurchaseNotice } from '../components/LoginPurchaseProgress'
 import ProductBenefits from '../components/ProductBenefits'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import ProductOrderDock from '../components/ProductOrderDock'
@@ -88,6 +89,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
   const [notice, setNotice] = useState(false)
   const [selectionWarning, setSelectionWarning] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  const [purchaseAction,setPurchaseAction] = useState('')
   const [reloadCount, setReloadCount] = useState(0)
   const addGuard = useRef(false)
   const [purchaseAuthMode, setPurchaseAuthMode] = useState(null)
@@ -167,6 +169,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
     if (!canAdd || addGuard.current || (buyNow && !serviceStatus.available)) return
     addGuard.current = true
     setIsAdding(true)
+    setPurchaseAction(buyNow?'buy':'cart')
     setNotice(false)
     setError('')
     try {
@@ -210,6 +213,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
     } finally {
       addGuard.current = false
       setIsAdding(false)
+      setPurchaseAction('')
     }
   }
 
@@ -277,8 +281,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
             <div className="login-product-body">
               <div className="login-product-container login-product-layout">
                 <section className="login-package-panel" aria-labelledby="login-packages-heading">
+                  <LoginPurchaseProgress current={0}/>
                   <h2 id="login-packages-heading">{copy.chooseAPackage}</h2>
                   <p className="login-package-description">{copy.chooseAPackageForYourGameAccount}</p>
+                  {serviceStatus.sandboxTest && <LoginPurchaseNotice/>}
                   {selectionWarning && <p className="login-variant-warning" role="status"><CircleAlert size={16} aria-hidden="true" />{selectionWarning}</p>}
                   <div className="login-package-grid">
                     {product.variants.map((variant, index) => {
@@ -303,10 +309,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       )
                     })}
                   </div>
-                  {serviceStatus.available && (
+                  {serviceStatus.available && !serviceStatus.sandboxTest && (
                     <div className="login-product-info-banner">
                       <Info size={17} aria-hidden="true" />
-                      <div><p>{serviceStatus.sandboxTest ? 'DEV Sandbox: paket ini hanya untuk simulasi pembayaran dan fulfillment. Akun dummy digunakan otomatis saat checkout.' : copy.weLlAskForYourGameAccount}</p></div>
+                      <div><p>{copy.weLlAskForYourGameAccount}</p></div>
                     </div>
                   )}
                   <ProductReviews product={product} />
@@ -337,12 +343,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                     action={
                       <div className="login-product-actions">
                         <button type="button" className="login-product-add login-product-cart" disabled={!canAdd} onClick={() => addToCart(false)}>
-                          {isAdding ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
+                          {purchaseAction==='cart' ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
                             : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
-                          <span>{isAdding ? 'Menambahkan...' : copy.addToCart}</span>
+                          <span>{purchaseAction==='cart' ? copy.loginPurchaseAdding : copy.addToCart}</span>
                         </button>
                         <button type="button" className="login-product-add login-product-buy" disabled={!canAdd || !serviceStatus.available} onClick={() => addToCart(true)}>
-                          <span>{copy.buyNow}</span><ArrowRight size={17} aria-hidden="true" />
+                          <span>{purchaseAction==='buy' ? copy.loginPurchaseOpening : copy.buyNow}</span>{purchaseAction==='buy' ? <LoaderCircle className="login-product-spin" size={17} aria-hidden="true"/> : <ArrowRight size={17} aria-hidden="true" />}
                         </button>
                       </div>
                     }
@@ -375,7 +381,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                         <div className="login-selected-package">
                           <div className="login-selected-package__info">
                             <strong>{selected.name}</strong>
-                            <span>{rupiah(unitPrice)} / item</span>
+                            <span>{rupiah(unitPrice)} / {copy.product.toLowerCase()}</span>
                           </div>
                         </div>
                         {quantityCapable && (
