@@ -1,3 +1,4 @@
+import { LoginPurchaseProgress, LoginPurchaseNotice } from '../components/LoginPurchaseProgress'
 import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -17,7 +18,7 @@ import '../styles/payment-session.css'
 
 const rupiah = value => 'Rp' + new Intl.NumberFormat('id-ID').format(Number(value) || 0)
 const labels = {
-  MIDTRANS_SNAP:'Midtrans (Sandbox)',
+  MIDTRANS_SNAP:'Midtrans',
   QRIS:'QRIS', GOPAY:'GoPay',
   BCA_VA:'virtualAccount',
 }
@@ -170,8 +171,9 @@ export default function PaymentPage() {
     ? (new URL(candidateUrl).hostname === 'app.sandbox.midtrans.com' ? candidateUrl : null)
     : candidateUrl
   const countdown = active ? formatPaymentCountdown(payment.expiresAt, now) : null
-  const title = copy[statusText[state]?.[0]] || copy.checkingPayment
-  const description = copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
+  const testPayment = isDev && context.methodCode === 'MIDTRANS_SNAP'
+  const title = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestSuccess : copy[statusText[state]?.[0]] || copy.checkingPayment
+  const description = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestPaid : copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
 
   return <div className="digital-shell">
     <Navbar variant="default"  homepageMobileMenu />
@@ -179,13 +181,14 @@ export default function PaymentPage() {
       <header className="payment-session-heading">
         <div>
           <a className="payment-session-back" href="/order-status"><ArrowLeft size={16} /> {copy.checkOrder2}</a>
-          <h1>{copy.completeYourPayment}</h1>
+          <h1>{state==='Paid' ? title : copy.completeYourPayment}</h1>
           <p>{copy.orderNumber2} <strong>{context.orderNumber}</strong></p>
         </div>
         <span className="payment-session-method">{context.methodCode === 'BCA_VA' ? copy.virtualAccount : labels[context.methodCode] || context.methodCode}</span>
       </header>
 
-      {context.methodCode === 'MIDTRANS_SNAP' && <aside className="payment-session-midtrans-guide" role="note" data-testid="midtrans-sandbox-guide">
+      <LoginPurchaseProgress current={2}/>
+      {testPayment && <aside className="payment-session-midtrans-guide" role="note" data-testid="midtrans-sandbox-guide">
         <ShieldCheck size={21} aria-hidden="true" />
         <div>
           <strong>{copy.midtransSandboxNoticeTitle}</strong>
@@ -235,7 +238,7 @@ export default function PaymentPage() {
 
         <aside className="payment-session-card payment-session-summary">
           <h2>{copy.orderSummary}</h2>
-          <p>{copy.yourInvoiceIsIssuedOnceCheckoutIs}</p>
+          
           <div className="payment-session-lines">
             {context.items.map((item, index) => <div key={index} className="payment-session-line">
               <div><strong>{item.productName}</strong><span>{item.variantName} · {item.quantity} {copy.items}</span></div>
@@ -243,7 +246,7 @@ export default function PaymentPage() {
             </div>)}
           </div>
           <div className="payment-session-total"><span>{copy.orderTotal}</span><strong>{rupiah(context.grandTotal)}</strong></div>
-          <small>{copy.weLlUpdateThePaymentStatusOnce}</small>
+          {state!=='Paid' && <small>{copy.weLlUpdateThePaymentStatusOnce}</small>}
         </aside>
       </div>
     </main>
