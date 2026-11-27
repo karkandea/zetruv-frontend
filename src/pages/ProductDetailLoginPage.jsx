@@ -274,7 +274,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                   {serviceStatus.available && (
                     <div className="login-product-info-banner">
                       <Info size={17} aria-hidden="true" />
-                      <div><p>{copy.weLlAskForYourGameAccount}</p></div>
+                      <div><p>{serviceStatus.sandboxTest ? 'DEV Sandbox: paket ini hanya untuk simulasi pembayaran dan fulfillment. Akun dummy digunakan otomatis saat checkout.' : copy.weLlAskForYourGameAccount}</p></div>
                     </div>
                   )}
                   <ProductReviews product={product} />
