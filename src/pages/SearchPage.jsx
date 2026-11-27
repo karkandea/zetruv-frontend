@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -312,6 +313,7 @@ export default function SearchPage({ mode = 'player-id' }) {
   const [loadingCatalog, setLoadingCatalog] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [catalogError, setCatalogError] = useState('')
+  const [retry, setRetry] = useState(0)
   const [supportOpen, setSupportOpen] = useState(false)
   const [removedFavorite, setRemovedFavorite] = useState(null)
 
@@ -373,7 +375,7 @@ export default function SearchPage({ mode = 'player-id' }) {
 
     loadProducts()
     return () => { cancelled = true }
-  }, [activeKind, submittedQuery, globalResults])
+  }, [activeKind, submittedQuery, globalResults, retry])
 
   const categoryDefinitions = useMemo(() => CATEGORY_ORDER.map((kind) => {
     const presentation = CATEGORY_PRESENTATION[kind]
@@ -563,7 +565,7 @@ export default function SearchPage({ mode = 'player-id' }) {
                       ))}
                     </div>
                   ) : (
-                    <div className="search-empty search-empty--browse">{copy.noProductsFoundInThisCategory}</div>
+                    null
                   )}
 
                   {(isLoginMode ? moreProducts : browseMoreProducts).length > 0 && (
@@ -590,11 +592,11 @@ export default function SearchPage({ mode = 'player-id' }) {
                 </div>
               </LoadingRegion>}
               {searchState !== 'results' && searchState !== 'loading' && (
-                <div className="search-empty search-empty--browse search-empty--state">
-                  {searchState === 'min' && copy.enterAtLeast3CharactersToSearch2}
-                  {searchState === 'error' && copy.weCouldnTLoadTheCatalogPlease}
-                  {searchState === 'empty' && copy.noProductsMatchYourSearch}
-                </div>
+                <StorefrontState compact kind={searchState === 'error' ? 'error' : submittedQuery || letterFiltering || queryTooShort ? 'search' : 'empty'}
+                  title={searchState === 'min' ? copy.enterAtLeast3CharactersToSearch2 : searchState === 'error' ? copy.weCouldnTLoadTheCatalogPlease : submittedQuery || letterFiltering ? copy.noProductsMatchYourSearch : copy.noProductsFoundInThisCategory}
+                  action={searchState === 'error' ? copy.tryAgain3 : searchState === 'empty' && (submittedQuery || letterFiltering) ? copy.clearFilters : undefined}
+                  onAction={searchState === 'error' ? () => setRetry(n => n + 1) : () => { setQuery(''); setSubmittedQuery(''); setLetterFiltering(false) }}
+                  href={searchState === 'empty' && !submittedQuery && !letterFiltering ? '/' : undefined} linkLabel={copy.backToHome} />
               )}
               {showFavorites && removedFavorite && (
                 <div className="favorite-games__undo">

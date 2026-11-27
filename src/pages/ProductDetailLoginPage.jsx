@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { ProductSkeleton } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -103,10 +104,10 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       .then(async (data) => {
         if (!active) return
         if (data.kind !== 'TopUpLogin' || data.fulfillmentMethod !== 'MANUAL_LOGIN') {
-          throw new Error(copy.thisProductDoesNotSupportTopUp)
+          setStatus('not-found'); return
         }
         if (!Array.isArray(data.variants) || data.variants.length === 0) {
-          throw new Error(copy.noPackagesAreAvailableInTheCatalog)
+          setStatus('empty'); return
         }
         setProduct(data)
         const selection = selectLinkedVariant(data.variants, initialVariantId)
@@ -123,7 +124,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
       .catch((reason) => {
         if (!active) return
         setError(copy.weCouldnTLoadTheCatalog)
-        setStatus('error')
+        setStatus(reason.status === 404 ? 'not-found' : 'error')
       })
     return () => { active = false }
   }, [slug, initialVariantId, reloadCount])
@@ -207,13 +208,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
             body="login-product-body" container="login-product-container" layout="login-product-layout" panel="login-package-panel"
             grid="login-package-grid" card="login-package-card" aside="login-product-summary" />
         )}
-        {status === 'error' && (
-          <section className="login-product-loading" role="alert">
-            <CircleAlert size={23} aria-hidden="true" />
-            <strong>{copy.productCouldnTBeLoaded2}</strong>
-            <p>{error}</p>
-            <button type="button" onClick={() => setReloadCount((n) => n + 1)}>{copy.tryAgain2}</button>
-          </section>
+        {['error', 'empty', 'not-found'].includes(status) && (
+          <section className="login-product-loading"><StorefrontState kind={status === 'error' ? 'error' : 'empty'} title={status === 'empty' ? copy.noPackagesAreAvailableInTheCatalog : status === 'not-found' ? copy.productNotFound : error || copy.productCouldnTBeLoaded2} action={status === 'error' ? copy.tryAgain3 : undefined} onAction={() => setReloadCount(n => n + 1)} href="/search?kind=TopUpLogin" linkLabel={copy.backToCatalog} /></section>
         )}
         {status === 'ready' && product && (
           <>

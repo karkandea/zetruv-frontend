@@ -1,6 +1,8 @@
 import { Bone, LoadingRegion, ProductSkeleton, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useState } from 'react'
+import StorefrontState from '../components/StorefrontState'
+import { hasBackend } from '../api/httpClient'
 import { ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
@@ -111,12 +113,14 @@ export function GameAccountsPage() {
   const [games, setGames] = useState([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
     let active = true
+    setLoading(true); setError('')
     getCatalogGames().then((rows) => {
       if (!active) return
-      const merged = [...DUMMY_GAMES]
+      const merged = hasBackend ? [] : [...DUMMY_GAMES]
       ;(rows || []).forEach((game) => {
         const index = merged.findIndex((item) => item.slug === game.slug)
         if (index >= 0) merged[index] = { ...merged[index], ...game }
@@ -124,10 +128,10 @@ export function GameAccountsPage() {
       })
       setGames(merged)
     })
-      .catch(() => { if (active) { setGames(DUMMY_GAMES); setError('') } })
+      .catch(() => { if (active) { setGames(hasBackend ? [] : DUMMY_GAMES); setError(hasBackend ? copy.weCouldnTLoadTheCatalogPlease : '') } })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [retry])
   const visibleGames = useMemo(
     () => games.filter((game) => `${game.name} ${game.publisher || ''}`.toLowerCase().includes(query.trim().toLowerCase())),
     [games, query],
@@ -142,8 +146,8 @@ export function GameAccountsPage() {
       <div className="search-game-grid search-game-grid--browse-primary account-browse-grid">
         <SkeletonItems className="search-game-card" count={6}><Bone variant="thumb" className="search-game-card__thumb" /><SkeletonLines /></SkeletonItems>
       </div>
-    </LoadingRegion> : error ? <StateMessage>{error}</StateMessage>
-      : visibleGames.length === 0 ? <StateMessage>{copy.noGamesFound}</StateMessage>
+    </LoadingRegion> : error ? <StorefrontState kind="error" title={error} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} />
+      : visibleGames.length === 0 ? <StorefrontState kind={query ? 'search' : 'empty'} title={copy.noGamesFound} action={query ? copy.clearSearch : undefined} onAction={() => setQuery('')} href={!query ? '/search' : undefined} linkLabel={copy.browseProducts} />
       : <div className="search-game-grid search-game-grid--browse-primary account-browse-grid">{visibleGames.map((game) =>
         <CatalogCard key={game.id} product={{ ...game, kind: 'GameAccount', thumbnailUrl: game.imageUrl }}
           categoryLabel={copy.gameAccounts} hrefOverride={`/game-accounts/${encodeURIComponent(game.slug)}`}
@@ -153,7 +157,7 @@ export function GameAccountsPage() {
 
 export function GameAccountListingPage({ gameSlug }) {
   const copy = useStorefrontCopy()
-  const [game, setGame] = useState(() => DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
+  const [game, setGame] = useState(() => !hasBackend ? DUMMY_GAMES.find((item) => item.slug === gameSlug) || null : null)
   const [products, setProducts] = useState([])
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
@@ -164,48 +168,48 @@ export function GameAccountListingPage({ gameSlug }) {
   const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
     let active = true
     getCatalogGames().then((rows) => {
       if (!active) return
-      const source = [...DUMMY_GAMES]
+      const source = hasBackend ? [] : [...DUMMY_GAMES]
       ;(rows || []).forEach((game) => {
         const index = source.findIndex((item) => item.slug === game.slug)
         if (index >= 0) source[index] = { ...source[index], ...game }
         else source.push(game)
       })
-      setGame(source.find((item) => item.slug === gameSlug) || DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
+      setGame(source.find((item) => item.slug === gameSlug) || null)
     }).catch(() => {
       if (active) {
-        setGame(DUMMY_GAMES.find((item) => item.slug === gameSlug) || null)
-        setError('')
+        setGame(!hasBackend ? DUMMY_GAMES.find((item) => item.slug === gameSlug) || null : null)
       }
     })
     return () => { active = false }
-  }, [gameSlug])
+  }, [gameSlug, retry])
   useEffect(() => {
     let active = true
     setLoading(true); setError('')
     getCatalogProducts({ kind: 'GameAccount', game: gameSlug, search: submittedQuery, page, pageSize: 24 })
       .then((result) => {
         if (!active) return
-        const fallback = DUMMY_ACCOUNTS[gameSlug] || []
-        const rows = result.items?.length ? result.items : fallback
+        const fallback = hasBackend ? [] : DUMMY_ACCOUNTS[gameSlug] || []
+        const rows = hasBackend ? (result.items || []) : (result.items?.length ? result.items : fallback)
         setProducts(rows)
         setTotalPages(result.items?.length ? (result.totalPages || 1) : 1)
         setTotalItems(result.items?.length ? (result.totalItems || rows.length) : rows.length)
       }).catch(() => {
         if (active) {
-          const rows = DUMMY_ACCOUNTS[gameSlug] || []
+          const rows = hasBackend ? [] : DUMMY_ACCOUNTS[gameSlug] || []
           setProducts(rows)
           setTotalPages(1)
           setTotalItems(rows.length)
-          setError('')
+          setError(hasBackend ? copy.weCouldnTLoadTheCatalogPlease : '')
         }
       })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [gameSlug, submittedQuery, page])
+  }, [gameSlug, submittedQuery, page, retry])
   const visible = useMemo(() => {
     const filtered = products.filter((item) => tab === 'all' ||
       (tab === 'available' ? item.isAvailable : !item.isAvailable))
@@ -244,8 +248,8 @@ export function GameAccountListingPage({ gameSlug }) {
           <div className="ga-account-copy"><SkeletonLines /></div>
         </SkeletonItems>
       </div>
-    </LoadingRegion> : error ? <StateMessage>{error}</StateMessage>
-      : visible.length === 0 ? <StateMessage>{copy.noAccountsMatchTheseFilters}</StateMessage>
+    </LoadingRegion> : error ? <StorefrontState kind="error" title={error} action={copy.tryAgain3} onAction={() => setRetry(n => n + 1)} />
+      : visible.length === 0 ? <StorefrontState kind={submittedQuery || tab !== 'all' ? 'search' : 'empty'} title={copy.noAccountsMatchTheseFilters} action={submittedQuery || tab !== 'all' || page > 1 ? copy.clearFilters : undefined} onAction={() => { setQuery(''); setSubmittedQuery(''); setTab('all'); setPage(1) }} href="/game-accounts" linkLabel={copy.backToAccountListings} />
       : <div className="ga-account-grid ga-live-grid">{visible.map((item) => {
         const attributes = getAccountAttributes(item.accountDetails, { cardOnly: true, limit: 3 })
         const href = accountProductHref(item)
@@ -279,6 +283,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
     let active = true
     setLoading(true); setError('')
@@ -289,16 +294,17 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
       setProduct(data)
     }).catch((err) => {
       if (!active) return
-      const fallback = dummyAccountFor(gameSlug, accountSlug)
+      const fallback = !hasBackend ? dummyAccountFor(gameSlug, accountSlug) : null
       if (fallback) {
         setProduct({ ...fallback, reviewCount: 0 })
         setError('')
       } else {
-        setError(copy.weCouldnTLoadTheAccountDetails)
+        setProduct(null)
+        setError(err.status === 404 ? copy.accountListingNotFound : copy.weCouldnTLoadTheAccountDetails)
       }
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [gameSlug, accountSlug])
+  }, [gameSlug, accountSlug, retry])
   const attributes = getAccountAttributes(product?.accountDetails)
   const variant = product?.variants?.find((item) => item.isAvailable) || product?.variants?.[0]
   const price = variant?.effectivePrice ?? variant?.price
@@ -332,7 +338,7 @@ export function GameAccountDetailPage({ gameSlug, accountSlug }) {
       <ProductSkeleton label={copy.loadingAccountDetails} hero="ga-detail-hero ga-live-hero"
         heroContent="ga-detail-hero-content" cover="ga-hero-thumb" heroCopy="ga-detail-hero-copy"
         layout="ga-detail-layout" panel="ga-detail-card ga-live-detail" aside="ga-purchase-card ga-live-purchase" />
-    </main> : error || !product ? <main className="ga-detail-page ga-container"><StateMessage>{error || copy.listingNotFound}</StateMessage></main>
+    </main> : error || !product ? <main className="ga-detail-page ga-container"><StorefrontState kind={error === copy.weCouldnTLoadTheAccountDetails ? 'error' : 'empty'} title={error || copy.listingNotFound} action={error === copy.weCouldnTLoadTheAccountDetails ? copy.tryAgain3 : undefined} onAction={() => setRetry(n => n + 1)} href="/game-accounts" linkLabel={copy.backToAccountListings} /></main>
       : <main className="ga-detail-page">
         <section className="ga-detail-hero ga-live-hero">
           {product.images?.[0]?.url && <img className="ga-detail-hero-bg" src={product.images[0].url} alt="" />}

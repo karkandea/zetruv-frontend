@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { Bone, ProductSkeleton } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -70,9 +71,9 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
         return
       }
       if (data.kind !== 'TopUpGame' || data.slug !== slug)
-        throw new Error(copy.thisProductDoesNotMatchTheCatalog)
+        { setCatalogStatus('not-found'); return }
       if (!Array.isArray(data.variants) || data.variants.length === 0)
-        throw new Error(copy.noPackagesAreAvailableForThisProduct)
+        { setCatalogStatus('empty'); return }
       setProduct(data)
       const selection = selectLinkedVariant(data.variants, initialVariantId)
       setSelectedId(selection.variant?.id || '')
@@ -82,7 +83,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
     }).catch((error) => {
       if (!active) return
       setCatalogError(copy.weCouldnTLoadTheProductCatalog)
-      setCatalogStatus('error')
+      setCatalogStatus(error.status === 404 ? 'not-found' : 'error')
     })
     return () => { active = false }
   }, [slug, initialVariantId, retryCount])
@@ -173,10 +174,8 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
           container="product-detail-container" layout="product-detail-layout" panel="product-selection-panel"
           grid="sku-grid" card="sku-card" aside="product-order-panel pdp-order-sidebar" />
       </main> : <main className="product-detail-page pdp-data-state">
-        <div className="product-detail-container pdp-data-state__content" role="alert">
-          <h1>{copy.productCouldnTBeLoaded}</h1>
-          <p>{catalogError || copy.thisProductIsCurrentlyUnavailableInThe}</p>
-          <div className="pdp-data-state__actions"><button type="button" onClick={() => setRetryCount((count) => count + 1)}>{copy.tryAgain3}</button><a href="/search">{copy.backToCatalog}</a></div>
+        <div className="product-detail-container pdp-data-state__content">
+          <StorefrontState kind={catalogStatus === 'error' ? 'error' : 'empty'} title={catalogStatus === 'empty' ? copy.noPackagesAreAvailableForThisProduct : catalogStatus === 'not-found' ? copy.productNotFound : catalogError || copy.thisProductIsCurrentlyUnavailableInThe} action={catalogStatus === 'error' ? copy.tryAgain3 : undefined} onAction={() => setRetryCount(n => n + 1)} href="/search" linkLabel={copy.backToCatalog} />
         </div>
       </main>}
     </div>

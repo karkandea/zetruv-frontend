@@ -1,3 +1,4 @@
+import StorefrontState from '../components/StorefrontState'
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -653,7 +654,7 @@ export default function CheckoutPage() {
                 idValidation={idValidations[item.cartKey]}
                 serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug])} onRemove={removeBlockedItem}
                 productProblem={issue} priceProblem={price ? priceChangeExplanation(price, copy) : ''}/>
-            }) : <div className="digital-checkout-empty">{copy.yourCartIsEmpty2} <a href="/search">{copy.chooseAProduct}</a></div>}
+            }) : <StorefrontState compact title={copy.yourCartIsEmpty2} href="/search" linkLabel={copy.chooseAProduct} />}
           </div>
           {changes.length>0 && <div className="checkout-price-change" role="alert">
             <AlertCircle size={17} aria-hidden="true"/>
