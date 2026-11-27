@@ -118,7 +118,11 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         const selection = selectLinkedVariant(data.variants, initialVariantId)
         setSelectedId((selection.variant && selection.variant.isAvailable ? selection.variant : firstAvailableVariant(data))?.id || '')
         if (selection.invalidSelection) setSelectionWarning(copy.thisFlashSaleOptionIsNoLonger2)
-        else if (initialVariantId && !selection.variant?.isOnSale) setSelectionWarning(copy.theFlashSaleForThisPackageHas)
+        else if (initialVariantId && !selection.variant?.isOnSale && new URLSearchParams(window.location.search).get('from') !== 'checkout') setSelectionWarning(copy.theFlashSaleForThisPackageHas)
+        if(new URLSearchParams(window.location.search).get('from')==='checkout' && selection.variant?.isAvailable){
+          const requested=Number(new URLSearchParams(window.location.search).get('quantity'))
+          if(Number.isInteger(requested)&&requested>0)setQuantity(Math.min(requested,cartItemLimit({maxQuantity:selection.variant.stockQuantity??99})))
+        }
         // Shopping-cart eligibility depends on the SKU, not the fulfillment
         // readiness gate. Resolve that gate separately for later checkout.
         setStatus('ready')
