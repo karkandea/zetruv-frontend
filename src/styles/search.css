@@ -330,7 +330,9 @@
   color: #595f70; cursor: pointer;
 }
 .search-game-card__favorite.is-saved { color: var(--navy); border-color: #b9c5fc; }
-.search-game-card__favorite:hover, .search-game-card__favorite:focus-visible { outline: 2px solid #a0b2ff; outline-offset: 1px; }
+.search-game-card__favorite:hover { background: #edf0ff; color: var(--navy); }
+.search-game-card__favorite:focus-visible { outline: 2px solid #7189ee; outline-offset: 1px; }
+.search-game-card:has(.search-game-card__favorite:hover) { transform: none; }
 .search-game-card.is-unavailable { opacity: .58; }
 
 

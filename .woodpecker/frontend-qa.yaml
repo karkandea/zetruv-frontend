@@ -1,0 +1,15 @@
+# DEV/PR build gate. Deployment stays with the existing release runner until
+# a restricted Woodpecker deployment identity has been verified.
+when:
+  - event: pull_request
+    branch: dev
+  - event: [push, manual]
+    branch: [dev, fix/storefront-interactions-20261127]
+
+steps:
+  - name: frontend-build-test
+    image: node:22-bookworm-slim
+    commands:
+      - node --version
+      - if test -f package-lock.json; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+      - npm run build:all:dev

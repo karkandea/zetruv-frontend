@@ -172,6 +172,7 @@
 }
 
 .homepage-hero-card__arrow {
+  position: relative;
   width: 30px;
   height: 30px;
   display: grid;
@@ -185,6 +186,7 @@
   transition: background .18s ease;
 }
 
+.homepage-hero-card__arrow::before { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
 .homepage-hero-card__arrow:hover {
   background: rgba(255,255,255,.22);
 }
@@ -196,6 +198,7 @@
 }
 
 .homepage-hero-card__dot {
+  position: relative;
   width: 9px;
   height: 6px;
   padding: 0;
@@ -206,6 +209,8 @@
   transition: width .25s ease, background .25s ease;
 }
 
+.homepage-hero-card__dot::before { content: ''; position: absolute; inset: -10px -2px; }
+.homepage-hero-card__dot:hover { background: rgba(255,255,255,.8); }
 .homepage-hero-card__dot.is-active {
   width: 23px;
   background: #fff;

@@ -191,7 +191,7 @@ export default function NavbarSearch({ placeholder, initialQuery = '', closeSign
     if (isOpen && showResults && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
       event.preventDefault()
       const delta = event.key === 'ArrowDown' ? 1 : -1
-      setActiveIndex((index) => (index + delta + options.length) % options.length)
+      setActiveIndex((index) => index < 0 ? (delta > 0 ? 0 : options.length - 1) : (index + delta + options.length) % options.length)
       return
     }
     if (event.key === 'Enter' && isOpen && showResults && activeIndex >= 0) {
@@ -200,6 +200,15 @@ export default function NavbarSearch({ placeholder, initialQuery = '', closeSign
       if (item) window.location.assign(searchProductHref(item))
     }
   }
+
+  useEffect(() => {
+    if (!isOpen || activeIndex < 0) return
+    const popup = document.getElementById(popupId)
+    const item = document.getElementById(`${popupId}-option-${activeIndex}`)
+    if (!popup || !item) return
+    const a = popup.getBoundingClientRect(), b = item.getBoundingClientRect()
+    if (b.top < a.top || b.bottom > a.bottom) popup.scrollTop += b.top < a.top ? b.top - a.top : b.bottom - a.bottom
+  }, [activeIndex, isOpen, popupId])
 
   function clearQuery() {
     setQuery('')
@@ -233,7 +242,9 @@ export default function NavbarSearch({ placeholder, initialQuery = '', closeSign
   }
 
   return (
-    <div className="navbar-search" ref={containerRef}>
+    <div className="navbar-search" ref={containerRef} onBlur={(event) => {
+      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) { setIsOpen(false); setActiveIndex(-1) }
+    }}>
       <button
         ref={triggerRef}
         className="navbar-search__trigger"
