@@ -2,7 +2,7 @@ import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Clock, Copy, Search } from 'lucide-react'
+import { ArrowRight, Clock, Copy, Search, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { apiRequest } from '../api/httpClient'
@@ -47,6 +47,7 @@ export function ArticlesPage() {
   const [page, setPage] = useState(1)
   const [result, setResult] = useState({ items: [], totalPages: 0 })
   const [state, setState] = useState('loading')
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setSearch(query.trim()); setPage(1) }, 250)
@@ -75,7 +76,7 @@ export function ArticlesPage() {
       if (!controller.signal.aborted) setState('error')
     })
     return () => controller.abort()
-  }, [search, category, page])
+  }, [search, category, page, retry])
 
   const articles = result.items
   const showFeatured = page === 1 && !category && !search
@@ -89,7 +90,7 @@ export function ArticlesPage() {
           <h1 id="article-index-title">{copy.articlesGuides}</h1>
           <p>{copy.articlesPublishedByTheZetruvTeam}</p>
           <div className="article-index-tools">
-            <label><Search size={17} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchArticles} aria-label={copy.searchArticles} /></label>
+            <label><Search size={17} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.searchArticles} aria-label={copy.searchArticles} />{query && <button className="article-search-clear" type="button" aria-label={copy.clearSearch} onClick={(event) => { setQuery(''); setSearch(''); setPage(1); event.currentTarget.parentElement.querySelector('input')?.focus() }}><X size={16} aria-hidden="true" /></button>}</label>
             <div>
               <button type="button" aria-pressed={!category} onClick={() => { setCategory(''); setPage(1) }}>{copy.all}</button>
               {categories.map((item) => <button type="button" aria-pressed={category === item.slug} onClick={() => { setCategory(item.slug); setPage(1) }} key={item.id}>{item.name}</button>)}
@@ -135,12 +136,12 @@ export function ArticlesPage() {
               </SkeletonItems>
             </div>
           </LoadingRegion>}
-          {state === 'error' && <p role="alert">{copy.weCouldnTLoadTheArticlesPlease}</p>}
+          {state === 'error' && <div className="article-list-state" role="alert"><p>{copy.weCouldnTLoadTheArticlesPlease}</p><button type="button" onClick={() => setRetry(n => n + 1)}>{copy.tryAgain3}</button></div>}
           {state === 'ready' && articles.length === 0 && <p role="status">{copy.noPublishedArticlesMatchYourSearch}</p>}
           {state === 'ready' && <div className="article-grid">{articles.map((article) => <ArticleCard article={article} key={article.id} />)}</div>}
-          {state === 'ready' && result.totalPages > 1 && <nav aria-label={copy.articlePages} style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 32 }}>
+          {state === 'ready' && result.totalPages > 1 && <nav aria-label={copy.articlePages} className="article-pagination">
             <button type="button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>{copy.previous}</button>
-            <span>{copy.page} {formatCopy(copy.of, { current: page, total: result.totalPages })}</span>
+            <span aria-live="polite">{copy.page} {formatCopy(copy.of, { current: page, total: result.totalPages })}</span>
             <button type="button" disabled={page >= result.totalPages} onClick={() => setPage((value) => value + 1)}>{copy.next}</button>
           </nav>}
         </div>
