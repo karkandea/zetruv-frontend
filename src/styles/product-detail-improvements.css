@@ -245,3 +245,6 @@
 .sku-card:disabled { cursor: not-allowed; opacity: .55; }
 .sku-card__availability { color: #656b7b; font-weight: 500; }
 .product-category-tabs > button[aria-pressed="true"] { cursor: default; }
+
+.product-detail-page .sku-card:disabled .sku-card__copy { gap: 2px; }
+.product-detail-page .sku-card:disabled .sku-card__availability { font-size: 10px; line-height: 12px; }
