@@ -11,6 +11,7 @@ import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { getCatalogProduct } from '../services/catalogService'
 import { selectLinkedVariant } from '../services/flashSaleFlow'
 import { addCartItem, awaitCartPersistence, supportsCartQuantity, cartItemLimit } from '../services/cartService' 
+import { saveDirectLoginCheckout } from '../services/directLoginCheckout'
 import { getCartSyncStatus } from '../services/customerCartSync'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import { viaLoginServiceStatus } from '../services/digitalServiceAvailability'
@@ -159,8 +160,8 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
     setNotice(false)
   }
 
-  async function addToCart() {
-    if (!canAdd || addGuard.current) return
+  async function addToCart(buyNow = false) {
+    if (!canAdd || addGuard.current || (buyNow && !serviceStatus.available)) return
     addGuard.current = true
     setIsAdding(true)
     setNotice(false)
@@ -168,7 +169,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
     try {
       // Guest cart is local; authenticated cart is persisted to server before success.
       await new Promise((resolve) => window.requestAnimationFrame(resolve))
-      addCartItem({
+      const item = {
         accountKey: 'checkout-required',
         productId: product.id,
         productSlug: product.slug,
@@ -185,7 +186,13 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         regularPrice,
         quantity: quantityCapable ? quantity : 1,
         maxQuantity: limit,
-      })
+      }
+      if (buyNow) {
+        saveDirectLoginCheckout(item)
+        window.location.assign('/checkout?flow=direct-login')
+        return
+      }
+      addCartItem(item)
       await awaitCartPersistence()
       if(getCartSyncStatus().state==='error')throw Error(copy.yourCartCouldnTBeSaved)
       setNotice(true)
@@ -304,10 +311,13 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                     )}
                     action={
                       <div className="login-product-actions">
-                        <button type="button" className="login-product-add" disabled={!canAdd} onClick={addToCart}>
+                        <button type="button" className="login-product-add login-product-cart" disabled={!canAdd} onClick={() => addToCart(false)}>
                           {isAdding ? <LoaderCircle className="login-product-spin" size={18} aria-hidden="true" />
                             : <ShoppingCart size={18} strokeWidth={1.9} aria-hidden="true" />}
                           <span>{isAdding ? 'Menambahkan...' : copy.addToCart}</span>
+                        </button>
+                        <button type="button" className="login-product-add login-product-buy" disabled={!canAdd || !serviceStatus.available} onClick={() => addToCart(true)}>
+                          <span>{copy.buyNow}</span><ArrowRight size={17} aria-hidden="true" />
                         </button>
                       </div>
                     }

@@ -508,3 +508,13 @@
 .login-package-card:not(:disabled):not(.active):hover { border-color: #a0abe4; background: #f6f7ff; }
 .login-package-card:focus-visible { outline: 2px solid #7189ee; outline-offset: -3px; }
 .login-package-card:disabled { cursor: not-allowed; }
+
+/* Keep the immediate purchase primary and the cart action secondary. */
+.login-product-shell .login-product-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.login-product-shell .login-product-actions .login-product-cart:not(:disabled) { color: #05055c; background: #fff; border-color: #05055c; }
+.login-product-shell .login-product-actions .login-product-cart:not(:disabled):hover { background: #f0f2ff; }
+@media (max-width: 767px) {
+  .login-product-shell .product-order-dock__footer .login-product-actions { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: 8px; }
+  .login-product-shell .product-order-dock__footer .login-summary-total { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+  .login-product-shell .product-order-dock__footer .login-product-actions button { min-height:44px; }
+}

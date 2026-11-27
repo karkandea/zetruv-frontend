@@ -5,6 +5,7 @@ import { useDialogInteraction } from '../hooks/useDialogInteraction'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { readDirectLoginCheckout, saveDirectLoginCheckout, clearDirectLoginCheckout } from '../services/directLoginCheckout'
 import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, removeCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
@@ -245,7 +246,8 @@ function CustomerLoginDialog({ onClose, onSuccess }) {
 
 export default function CheckoutPage() {
   const copy = useStorefrontCopy()
-  const [items,setItems]=useState(readCart)
+  const [directLogin]=useState(()=>new URLSearchParams(window.location.search).get('flow')==='direct-login')
+  const [items,setItems]=useState(()=>directLogin ? [readDirectLoginCheckout()].filter(Boolean) : readCart())
   const [catalog,setCatalog]=useState({})
   const [serviceReadiness,setServiceReadiness]=useState({})
   const [idValidations,setIdValidations]=useState({})
@@ -279,7 +281,9 @@ export default function CheckoutPage() {
   const attempt=useRef(null)
   const processingRef=useRef(false)
 
-  useEffect(()=>onCartChange(newItems=>{
+  useEffect(()=>{
+    if(directLogin) return
+    return onCartChange(newItems=>{
     setItems(newItems)
     setIdValidations(Object.fromEntries(newItems.filter(x=>x.gameAccountValidationId)
       .map(x=>[x.cartKey,{validationId:x.gameAccountValidationId,expiresAt:x.validationExpiresAt}])))
@@ -288,7 +292,7 @@ export default function CheckoutPage() {
     setVoucherState('idle')
     setOrder(null)
     setPayment(null)
-  }),[])
+  })},[directLogin])
 
   useEffect(()=>{
     const handler=()=>{
@@ -347,7 +351,7 @@ export default function CheckoutPage() {
   const checkoutIssues=useMemo(()=>{
     const result=[]
     if(!items.length)result.push(copy.yourCartIsEmpty)
-    if(customer && cartSync.state!=='synced')
+    if(!directLogin && customer && cartSync.state!=='synced')
       result.push(copy.yourAccountCartHasnTSyncedReview)
     if(!phoneNormalized)result.push(copy.enterAValidIndonesianWhatsappNumber)
     if(catalogState!=='ready')result.push(copy.theProductCatalogCouldnTBeVerified)
@@ -396,7 +400,7 @@ export default function CheckoutPage() {
     if(total<=0)result.push(copy.thePaymentTotalMustBeGreaterThan)
     return [...new Set(result)]
   },[items,phoneNormalized,catalog,catalogState,problems,changes,sharing,values,allowedCredentials,
-      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync,copy])
+      voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync,copy,directLogin])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
@@ -454,12 +458,15 @@ export default function CheckoutPage() {
     }
   }
   const confirmPriceChange=()=>{
-    acceptCartPriceChanges(changes)
+    if(directLogin){
+      const item=items[0], change=changes.find(c=>c.key===item?.cartKey)
+      if(change){try{setItems([saveDirectLoginCheckout({...item,unitPrice:change.newPrice,regularPrice:change.regularPrice})])}catch{setError(copy.weCouldnTVerifyTheCatalog);return}}
+    }else acceptCartPriceChanges(changes)
     setError('')
     setVoucher(null);setVoucherState('idle')
   }
   const removeBlockedItem=(item)=>{
-    removeCartItem(item.cartKey)
+    if(directLogin){clearDirectLoginCheckout();setItems([])}else removeCartItem(item.cartKey)
     setError('')
   }
   const jumpToIssue=()=>{
@@ -554,6 +561,7 @@ export default function CheckoutPage() {
       // response can be recovered using GET without issuing another payment.
       storePaymentContext(created, method)
       clearCheckoutAttempt();setPendingAttempt(null)
+      if(directLogin)clearDirectLoginCheckout()
       setPaymentState('starting')
       try {
         const session=await startOrderPayment(created,method)
@@ -597,6 +605,7 @@ export default function CheckoutPage() {
       const existing=await recoverVerifiedCheckoutOrder(token,saved.key)
       storePaymentContext(existing,saved.methodCode)
       clearCheckoutAttempt();setPendingAttempt(null)
+      if(directLogin)clearDirectLoginCheckout()
       window.location.assign('/payment')
     }catch(e){
       if(e.status===404){
@@ -619,7 +628,7 @@ export default function CheckoutPage() {
     <Navbar variant="default" homepageMobileMenu />
     <main className="digital-checkout-page digital-container">
       <header className="digital-checkout-heading">
-        <h1>{copy.digitalCheckout}</h1><p>{copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
+        <h1>{copy.digitalCheckout}</h1><p>{directLogin ? copy.buyNow + ' · ' + copy.reviewTheDestinationAccountPaymentMethodAnd : copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
       </header>
       {pendingAttempt && <section role="alert" className="checkout-price-change" style={{marginBottom:20}}>
         <AlertCircle size={20}/><div><strong>{copy.previousCheckoutIsUnconfirmed}</strong>
@@ -656,7 +665,7 @@ export default function CheckoutPage() {
                 idValidation={idValidations[item.cartKey]}
                 serviceStatus={viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug])} onRemove={removeBlockedItem}
                 productProblem={issue} priceProblem={price ? priceChangeExplanation(price, copy) : ''}/>
-            }) : <div className="digital-checkout-empty">{copy.yourCartIsEmpty2} <a href="/search">{copy.chooseAProduct}</a></div>}
+            }) : <div className="digital-checkout-empty">{directLogin ? copy.chooseAnAvailablePackageFirst : copy.yourCartIsEmpty2} <a href="/search">{copy.chooseAProduct}</a></div>}
           </div>
           {changes.length>0 && <div className="checkout-price-change" role="alert">
             <AlertCircle size={17} aria-hidden="true"/>
@@ -770,7 +779,7 @@ export default function CheckoutPage() {
         // No automatic payment on login; the user reconfirms pricing/targets.
         if(authPurpose==='recover')recoverInterruptedOrder(result.accessToken)
         else {
-          setError(copy.youReLoggedInOnceYourCart)
+          setError(directLogin ? '' : copy.youReLoggedInOnceYourCart)
           activateCustomerCart().catch(()=>{})
         }
       }}/>}

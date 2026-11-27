@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/manual-login-dev-sandbox-readiness]
+    branch: [dev, fix/via-login-buy-now]
 
 steps:
   - name: frontend-build-test
