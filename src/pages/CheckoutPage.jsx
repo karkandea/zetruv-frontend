@@ -167,7 +167,7 @@ function CheckoutProduct({
         <div className="checkout-product__account">
           <div className="checkout-product__account-title">
             <strong>{copy.gameAccountForThisPackage}</strong>
-            <span>{copy.useYourGameAccountDetailsHere}</span>
+            <span>{serviceStatus?.sandboxTest ? 'DEV Sandbox — simulasi saja, tanpa akun game asli.' : copy.useYourGameAccountDetailsHere}</span>
           </div>
           {!serviceStatus?.available ? (
             <div className="checkout-service-unavailable" role="status">
@@ -181,7 +181,7 @@ function CheckoutProduct({
                 <a href="/search">{copy.browseOtherProducts2} <ArrowRight size={14} aria-hidden="true" /></a>
               </div>
             </div>
-          ) : <>
+          ) : serviceStatus?.sandboxTest ? <p className="checkout-product__security" role="status"><ShieldAlert size={15} aria-hidden="true"/> Akun dummy QA otomatis digunakan. Jangan masukkan password atau OTP game asli.</p> : <>
           {options?.length > 0 && (
             <label className="checkout-product__share">
               <input type="checkbox" checked={Boolean(sibling)}
@@ -376,7 +376,7 @@ export default function CheckoutPage() {
         }else{
           const fields=checkoutFields(product,'LoginCredential')
           const key=matchingAccountSource(items,item,sharing)
-          const message=validateCheckoutAccount(fields,values[key],copy)
+          const message=viaLoginServiceStatus(product,item,serviceReadiness[item.productSlug]).sandboxTest ? null : validateCheckoutAccount(fields,values[key],copy)
           if(message)result.push(`${item.gameName||item.productName}: ${message}`)
           if(!allowedCredentials)result.push(copy.gameAccountInformationCanTBeEntered)
         }
@@ -401,6 +401,7 @@ export default function CheckoutPage() {
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const firstAccountIssue=items.map(item=>{
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
+    if(item.fulfillmentMethod==='MANUAL_LOGIN' && viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest) return null
     if(item.productKind === 'GameItem'){
       const fields = checkoutFields(catalog[item.productSlug], 'OrderDelivery')
       const reason = fields.length && validateCheckoutAccount(fields, values[item.cartKey], copy)
@@ -527,7 +528,9 @@ export default function CheckoutPage() {
             data.gameAccountValidationId=idValidations[item.cartKey]?.validationId
           if(item.fulfillmentMethod==='MANUAL_LOGIN'){
             const key=matchingAccountSource(items,item,sharing)
-            data.loginCredentials=Object.fromEntries(
+            const sandbox = viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest
+            if(sandbox && !freshMethods.isSandbox) throw new CheckoutError('Sandbox QA requires a sandbox payment gateway.')
+            data.loginCredentials=sandbox ? {email:'qa-player@example.test', password:'Zetruv-QA-Only-2026!', nickname:'Zetruv QA'} : Object.fromEntries(
               checkoutFields(freshCatalog[item.productSlug],'LoginCredential')
                 .map(f=>[f.key,String(values[key]?.[f.slot]||'').trim()]))
           }
