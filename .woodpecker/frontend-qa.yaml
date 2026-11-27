@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/via-login-buy-now]
+    branch: [dev, fix/via-login-auth-first]
 
 steps:
   - name: frontend-build-test
