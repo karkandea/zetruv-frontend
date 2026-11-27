@@ -496,7 +496,9 @@ export default function Navbar({ variant = 'default', onAuthenticated, homepageM
               <img src={assets.home} alt="" />{t.home}
             </a>
 
-            <div ref={productMenuRef} className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`}>
+            <div ref={productMenuRef} className={`nav-product-menu${isProductOpen ? ' is-open' : ''}`} onBlur={(event) => {
+              if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setIsProductOpen(false)
+            }}>
               <a
                 href="/search"
                 className={`navbar-control navlinks__product${activeNav === 'product' || isProductOpen ? ' active' : ''}`}
