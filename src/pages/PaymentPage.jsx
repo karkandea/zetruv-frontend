@@ -10,7 +10,7 @@ import Navbar from '../components/Navbar'
 import { apiRequest } from '../api/httpClient'
 import { restoreCustomerSession, readCustomerSession } from '../services/customerCartSync'
 import {
-  getCheckoutPaymentOptions, getOrderPaymentStatus, startOrderPayment,
+  getCheckoutPaymentOptions, getOrderPaymentStatus, refreshOrderPaymentStatus, startOrderPayment,
 } from '../services/checkoutGatewayService'
 import {
   readPaymentContext, normalizePaymentState, mayInitiatePayment,
@@ -82,12 +82,12 @@ export default function PaymentPage() {
   const retryFlight = useRef(false)
   const expiredChecked = useRef(new Set())
 
-  const refreshStatus = useCallback(async (quiet = false) => {
+  const refreshStatus = useCallback(async (quiet = false, provider = false) => {
     if (!context || statusFlight.current) return
     statusFlight.current = true
     if (!quiet) setRefreshing(true)
     try {
-      const response = await getOrderPaymentStatus({
+      const response = await (provider ? refreshOrderPaymentStatus : getOrderPaymentStatus)({
         id:context.orderId, orderAccessToken:context.orderAccessToken,
       })
       const verified = normalizePaymentState(response, context.orderId)
@@ -130,6 +130,13 @@ export default function PaymentPage() {
       refreshStatus(true)
     }
   }, [payment?.state, payment?.expiresAt, now, refreshStatus])
+
+  useEffect(() => {
+    if (payment?.state !== 'Pending') return
+    const onReturn = () => { if (document.visibilityState === 'visible') refreshStatus(true, true) }
+    document.addEventListener('visibilitychange', onReturn)
+    return () => document.removeEventListener('visibilitychange', onReturn)
+  }, [payment?.state, refreshStatus])
 
   const retryPayment = async () => {
     if (!context || !mayInitiatePayment(payment) || retryFlight.current || statusFlight.current) return
@@ -212,6 +219,9 @@ export default function PaymentPage() {
   const title = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestSuccess : copy[statusText[state]?.[0]] || copy.checkingPayment
   const description = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestPaid : copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
 
+  const checkStatusButton = <button type="button" disabled={refreshing || retrying} className="payment-session-check-status is-secondary"
+    onClick={() => refreshStatus(false, true)}><RefreshCw size={16} /> {refreshing ? copy.checking : copy.checkStatus}</button>
+
   return <div className="digital-shell">
     <Navbar variant="default"  homepageMobileMenu />
     <main className="payment-session-page" ref={pageRef}>
@@ -246,26 +256,28 @@ export default function PaymentPage() {
                 {qrImage && <div className="payment-session-qr payment-session-native-qr">
                   <strong>{copy.nativeQrisAmount} <span>{rupiah(context.grandTotal)}</span></strong>
                   <img src={qrImage} alt={copy.qrisFromThePaymentProvider} width="240" height="240" referrerPolicy="no-referrer"/>
+                  {checkStatusButton}
                   <p>{copy.nativeQrisSandboxInstruction}</p>
                   <a className="payment-session-action-link" href={QRIS_SIMULATOR_URL} target="_blank" rel="noopener noreferrer">{copy.nativeQrisSimulator} <ExternalLink size={16}/></a>
                   <button type="button" className="payment-session-copy-qr" onClick={async()=>{try{await navigator.clipboard.writeText(qrImage);setCopiedQr(true);setError('')}catch{setError(copy.nativeQrisCopyError)}}}>{copiedQr?copy.copied:copy.nativeQrisCopyLink}</button>
                 </div>}
                 {qr && <div className="payment-session-qr">
                   <QRCodeSVG value={qr} size={240} level="M" marginSize={2} title={copy.qrisFromThePaymentProvider} />
+                  {checkStatusButton}
                   <p>{copy.scanTheProviderSQrisCodeDon}</p>
                 </div>}
                 {url && <a className="payment-session-action-link" href={url} target="_self" rel="noreferrer">
                   {isMidtransMethod(context.methodCode) ? copy.openMidtransSandboxPayment
                     : context.methodCode === 'GOPAY' ? copy.openGopayPayment : copy.openPaymentInstructions} <ExternalLink size={16} />
                 </a>}
+                {!qr && !qrImage && <div className="payment-session-actions payment-session-check-inline">{checkStatusButton}</div>}
                 {!qr && !qrImage && !url && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.paymentInstructionsAreUnavailableCheckTheStatus}</p>}
               </> : null}
               {expiredInBrowser && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.thePaymentWindowHasEndedCheckThe}</p>}
               {payment && <p className="payment-session-checked"><ShieldCheck size={15} /> {copy.statusFromZetruvLastChecked} {new Date(payment.checkedAt || now).toLocaleTimeString('id-ID')}.</p>}
               {error && payment && <p className="payment-session-notice" role="alert">{error}</p>}
               <div className="payment-session-actions">
-                <button type="button" disabled={refreshing || retrying} className="is-secondary"
-                  onClick={() => refreshStatus()}><RefreshCw size={16} /> {refreshing ? 'Memeriksa...' : copy.checkStatus}</button>
+                {!active && state !== 'Paid' && checkStatusButton}
                 {mayInitiatePayment(payment) && <button type="button" disabled={retrying || refreshing}
                   onClick={retryPayment}>{retrying ? copy.contactingThePaymentProvider2 : state === 'NotStarted' ? copy.startPayment : copy.tryPayingAgain}</button>}
                 {state === 'Paid' && <a href={`/account/orders/${context.orderId}`}>{copy.viewOrderStatus}</a>}

@@ -81,3 +81,5 @@
 .payment-session-copy-qr{min-height:44px;padding:8px 14px;text-decoration:none;border:1px solid #dce1ee;border-radius:8px}
 @media(max-width:850px){.payment-session-page{padding-top:var(--payment-top-space,128px)}}
 @media(max-width:420px){.payment-session-line{grid-template-columns:48px minmax(0,1fr);gap:8px 11px}.payment-session-thumb{width:48px;height:48px;grid-row:span 2;align-self:start}.payment-session-line-price{grid-column:2;padding-top:0}.payment-session-heading{gap:12px}.payment-session-card{padding:18px}}
+
+.payment-session-check-status{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:1px solid #ccd8e8;border-radius:9px;background:#fff;color:#05055c;font:600 13px inherit;cursor:pointer}.payment-session-check-status:disabled{opacity:.55;cursor:not-allowed}.payment-session-check-status:focus-visible{outline:2px solid #365ddd;outline-offset:3px}.payment-session-qr .payment-session-check-status{width:min(100%,240px)}.payment-session-check-inline{margin:12px 0 0}
