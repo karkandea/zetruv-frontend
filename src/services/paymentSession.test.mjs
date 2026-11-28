@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   PAYMENT_CONTEXT_KEY, storePaymentContext, readPaymentContext,
   clearPaymentContext, normalizePaymentState, mayInitiatePayment,
-  paymentLink, formatPaymentCountdown, isMidtransMethod, midtransPaymentLink,
+  paymentLink, formatPaymentCountdown, isMidtransMethod, midtransPaymentLink, midtransQrisImage,
 } from './paymentSession.js'
 
 const storage = () => {
@@ -71,4 +71,11 @@ test('Midtrans channel redirects stay on exact sandbox Snap origin and path',()=
   assert.equal(midtransPaymentLink('https://app.sandbox.midtrans.com/snap/v4/other/abc'),null)
   assert.ok(midtransPaymentLink('https://app.sandbox.midtrans.com/snap/v2/vtweb/abc-123'))
   for(const url of ['https://app.midtrans.com/snap/v3/redirection/abc','https://app.sandbox.midtrans.com.evil.test/snap/v3/redirection/abc','https://app.sandbox.midtrans.com/other','https://app.sandbox.midtrans.com:444/snap/v3/redirection/abc']) assert.equal(midtransPaymentLink(url),null)
+})
+
+test('native QRIS only accepts exact provider image endpoint, never as a redirect',()=>{
+  const image='https://api.sandbox.midtrans.com/v2/qris/12345678-1234-4234-8234-123456789012/qr-code'
+  assert.equal(midtransQrisImage(image),image)
+  assert.equal(midtransPaymentLink(image),null)
+  for(const url of [image.replace('api.sandbox.midtrans.com','evil.test'),image.replace('/qr-code','/status'),image+'?x=1',image.replace('api.sandbox.midtrans.com','api.midtrans.com')]) assert.equal(midtransQrisImage(url),null)
 })
