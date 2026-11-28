@@ -11,7 +11,7 @@ import {
 } from '../services/checkoutGatewayService'
 import {
   readPaymentContext, normalizePaymentState, mayInitiatePayment,
-  formatPaymentCountdown, paymentLink,
+  formatPaymentCountdown, paymentLink, isMidtransMethod, midtransPaymentLink,
 } from '../services/paymentSession'
 import '../styles/digital-commerce.css'
 import '../styles/payment-session.css'
@@ -167,11 +167,11 @@ export default function PaymentPage() {
   const qr = active && context.methodCode === 'QRIS' && typeof payment.qrString === 'string' &&
     payment.qrString.length > 0 && payment.qrString.length <= 4096 ? payment.qrString : null
   const candidateUrl = active ? paymentLink(payment.paymentUrl) : null
-  const url = context.methodCode === 'MIDTRANS_SNAP' && candidateUrl
-    ? (new URL(candidateUrl).hostname === 'app.sandbox.midtrans.com' ? candidateUrl : null)
+  const url = isMidtransMethod(context.methodCode) && candidateUrl
+    ? midtransPaymentLink(candidateUrl)
     : candidateUrl
   const countdown = active ? formatPaymentCountdown(payment.expiresAt, now) : null
-  const testPayment = isDev && context.methodCode === 'MIDTRANS_SNAP'
+  const testPayment = isDev && isMidtransMethod(context.methodCode)
   const title = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestSuccess : copy[statusText[state]?.[0]] || copy.checkingPayment
   const description = testPayment && state==='Paid' ? copy.loginPurchasePaymentTestPaid : copy[statusText[state]?.[1]] || copy.weReCheckingTheLatestPaymentStatus
 
@@ -184,7 +184,7 @@ export default function PaymentPage() {
           <h1>{state==='Paid' ? title : copy.completeYourPayment}</h1>
           <p>{copy.orderNumber2} <strong>{context.orderNumber}</strong></p>
         </div>
-        <span className="payment-session-method">{context.methodCode === 'BCA_VA' ? copy.virtualAccount : labels[context.methodCode] || context.methodCode}</span>
+        <span className="payment-session-method">{context.methodCode === 'BCA_VA' ? copy.virtualAccount : labels[context.methodCode] || (isMidtransMethod(context.methodCode) ? context.methodCode.replace('MIDTRANS_','').replace('OTHER_QRIS','QRIS').replaceAll('_',' ') : context.methodCode)}</span>
       </header>
 
       <LoginPurchaseProgress current={2}/>
@@ -218,7 +218,7 @@ export default function PaymentPage() {
                   <p>{copy.scanTheProviderSQrisCodeDon}</p>
                 </div>}
                 {url && <a className="payment-session-action-link" href={url} target="_self" rel="noreferrer">
-                  {context.methodCode === 'MIDTRANS_SNAP' ? copy.openMidtransSandboxPayment
+                  {isMidtransMethod(context.methodCode) ? copy.openMidtransSandboxPayment
                     : context.methodCode === 'GOPAY' ? copy.openGopayPayment : copy.openPaymentInstructions} <ExternalLink size={16} />
                 </a>}
                 {!qr && !url && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.paymentInstructionsAreUnavailableCheckTheStatus}</p>}
