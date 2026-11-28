@@ -100,3 +100,13 @@ export function midtransPaymentLink(url) {
       ? parsed.href : null
   } catch { return null }
 }
+
+export function midtransQrisImage(url) {
+  try {
+    const parsed = new URL(url)
+    return parsed.origin === 'https://api.sandbox.midtrans.com' &&
+      !parsed.username && !parsed.password && !parsed.search && !parsed.hash &&
+      /^\/v2\/(?:qris|gopay)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/qr-code$/i.test(parsed.pathname)
+      ? parsed.href : null
+  } catch { return null }
+}

@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/single-payment-channel-row]
+    branch: [dev, fix/midtrans-native-qris]
 
 steps:
   - name: frontend-build-test

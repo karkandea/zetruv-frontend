@@ -59,3 +59,5 @@
 .payment-session-page :is(.payment-session-actions a,.payment-session-actions button,.payment-session-action-link,.payment-session-back):focus-visible { outline: 2px solid #365ddd; outline-offset: 3px; }
 .payment-session-actions .is-secondary:not(:disabled):hover { background: #edf2fa; }
 .payment-session-actions :is(a,button):not(.is-secondary):not(:disabled):hover,.payment-session-action-link:hover { filter: brightness(1.1); }
+
+.payment-session-native-qr{gap:12px;margin:22px auto}.payment-session-native-qr>strong{display:flex;align-items:center;flex-direction:column;gap:5px;color:#556278;font-size:13px;font-weight:500}.payment-session-native-qr>strong span{font-size:26px;color:#05055c;font-weight:700}.payment-session-native-qr img{display:block;width:240px;height:240px;max-width:100%;object-fit:contain;background:#fff;border:1px solid #e2e6ef;border-radius:8px}.payment-session-native-qr p{margin:0}.payment-session-native-qr .payment-session-action-link{margin-top:0}.payment-session-copy-qr{background:none;border:0;color:#05055c;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
