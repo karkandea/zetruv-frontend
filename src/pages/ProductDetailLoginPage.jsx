@@ -1,4 +1,5 @@
 import { ProductSkeleton } from '../components/Skeleton'
+import { groupLoginVariants } from '../services/groupLoginVariants'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart } from 'lucide-react'
@@ -287,10 +288,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                 <section className="login-package-panel" aria-labelledby="login-packages-heading">
                   <LoginPurchaseProgress current={0}/>
                   <h2 id="login-packages-heading">{copy.chooseAPackage}</h2>
-                  <p className="login-package-description">{copy.chooseAPackageForYourGameAccount}</p>
+                  <p className="login-package-description">{product.shortDescription?.trim() || copy.chooseAPackageForYourGameAccount}</p>
                   {selectionWarning && <p className="login-variant-warning" role="status"><CircleAlert size={16} aria-hidden="true" />{selectionWarning}</p>}
                   <div className="login-package-grid">
-                    {product.variants.map((variant, index) => {
+                    {groupLoginVariants(product.variants).flatMap(group => [
+                      ...(group.label ? [<h3 className="login-package-group-title" key={'group:' + group.label}>{group.label === '__ungrouped__' ? copy.loginOtherPackages : group.label}</h3>] : []),
+                      ...group.items.map(({ variant, index }) => {
                       const active = selectedId === variant.id
                       const purchasable = variant.isAvailable &&
                         (variant.stockQuantity == null || Number(variant.stockQuantity) > 0)
@@ -305,12 +308,12 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                           </span>
                           <span className="login-package-card__copy">
                             <strong>{variant.name}</strong>
-                            <small>{rupiah(variant.effectivePrice ?? variant.price)}{variant.isOnSale && Number(variant.price) > Number(variant.effectivePrice) && <del className="login-variant-old-price">{rupiah(variant.price)}</del>}</small>
+                            <small>{rupiah(variant.effectivePrice ?? variant.price)}{Math.max(Number(variant.compareAtPrice || 0), Number(variant.price || 0)) > Number(variant.effectivePrice ?? variant.price) && <del className="login-variant-old-price">{rupiah(Math.max(Number(variant.compareAtPrice || 0), Number(variant.price || 0)))}</del>}</small>
                             {!purchasable && <em>{copy.unavailable2}</em>}
                           </span>
                         </button>
                       )
-                    })}
+                    })])}
                   </div>
                   {serviceStatus.available && !serviceStatus.sandboxTest && (
                     <div className="login-product-info-banner">
@@ -318,6 +321,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                       <div><p>{copy.weLlAskForYourGameAccount}</p></div>
                     </div>
                   )}
+                  {product.description?.trim() && <section className="login-product-detail-copy"><h2>{copy.loginProductDetails}</h2><p>{product.description}</p></section>}
                   <ProductReviews product={product} />
                 </section>
 

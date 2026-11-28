@@ -1,0 +1,6 @@
+ .admin-field--invalid input,.admin-field--invalid textarea,.admin-field--invalid select{border-color:#d13e43!important;background:#fffafa!important}
+.admin-field--invalid input:focus,.admin-field--invalid textarea:focus,.admin-field--invalid select:focus{box-shadow:0 0 0 3px #fee4e6!important}
+.admin-field .catalog-inline-error{color:#b4232c!important;font-size:12px!important;font-weight:500!important}
+.catalog-required{color:#b4232c}.admin-field .catalog-character-count{text-align:right;font-variant-numeric:tabular-nums}
+.catalog-login-preview{display:grid;gap:10px}.catalog-login-preview .search-game-card{max-width:360px;min-height:82px}.catalog-login-preview .search-game-card__favorite:disabled{opacity:1;cursor:default}.catalog-login-preview .catalog-muted{margin:0}
+.catalog-login-detail-preview{display:grid;gap:8px;padding:14px;border:1px solid #e3e5f0;border-radius:12px;background:#fbfbfd;overflow-wrap:anywhere}.catalog-login-detail-preview small{color:#707070}.catalog-login-detail-preview p{margin:0;font-size:12px;white-space:pre-wrap;color:#333}.catalog-login-detail-preview>div{border-top:1px solid #e3e5f0;padding-top:12px;display:grid;gap:7px}

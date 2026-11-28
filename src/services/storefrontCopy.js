@@ -1,5 +1,7 @@
 // Customer-facing interface text. Product and editorial content comes from the API.
 const messages = {
+  loginProductDetails: ["Product Details","Detail Produk","Butiran Produk"],
+  loginOtherPackages: ["Other Packages","Paket Lainnya","Pakej Lain"],
   // Game account checkout
   reviewYourSelectedAccountBeforeCheckout: ["Review your selected account before checkout.","Periksa akun yang dipilih sebelum checkout.","Semak akaun yang dipilih sebelum pembayaran."],
   label1AccountSelected: ["1 account selected","1 akun dipilih","1 akaun dipilih"],

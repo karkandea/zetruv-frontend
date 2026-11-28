@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { cloneElement, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cmsRequest, getAdminSession, loginAdmin, logoutAdmin } from './api'
 import ProviderMappingPage from './ProviderMappingPage'
 import { GameAccountSchemaEditor, GameAccountListingEditor } from './GameAccountEditor'
@@ -28,6 +28,9 @@ import './order-destination.css'
 import './catalog-ux.css'
 import './product-editor-tabs.css'
 import './product-variant-table.css'
+import { CatalogCard } from '../pages/SearchPage'
+import { productLoginErrors, variantLoginErrors, catalogServerField } from './catalogLoginValidation'
+import './catalog-login-validation.css'
 
 const STOREFRONT_URL = (import.meta.env.VITE_STOREFRONT_URL || '').replace(/\/$/, '')
 
@@ -83,11 +86,14 @@ function useRoute() {
   return [route, (next) => { window.location.hash = `/${next}` }]
 }
 
-function Field({ label, hint, children, wide = false }) {
-  return <label className={`admin-field${wide ? ' admin-field--wide' : ''}`}>
-    <span>{label}</span>
-    {children}
+function Field({ label, hint, children, wide = false, error, count, required = false }) {
+  const errorId = useId()
+  return <label className={`admin-field${wide ? ' admin-field--wide' : ''}${error ? ' admin-field--invalid' : ''}`}>
+    <span>{label}{required && <b className="catalog-required"> *</b>}</span>
+    {error ? cloneElement(children, { 'aria-invalid': true, 'aria-describedby': errorId }) : children}
+    {error && <small id={errorId} className="catalog-inline-error" role="alert">{error}</small>}
     {hint && <small>{hint}</small>}
+    {count && <small className="catalog-character-count">{count}</small>}
   </label>
 }
 
@@ -453,7 +459,7 @@ function GameForm({ item, onDone, onCancel, onDirtyChange }) {
 
 function VariantEditor({ productId, detail, onReload, section = 'variants' }) {
   const [editing, setEditing] = useState(undefined); const [imageEditing, setImageEditing] = useState(undefined); const [fieldEditing, setFieldEditing] = useState(undefined); const [voucherVariant, setVoucherVariant] = useState(null); const [error, setError] = useState('')
-  async function saveVariant(form, id, assets = [], markHandled) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, iconUrl: form.iconUrl?.trim() || null, rankFrom: form.rankFrom?.trim() || null, rankTo: form.rankTo?.trim() || null, rankFromIconUrl: form.rankFromIconUrl?.trim() || null, rankToIconUrl: form.rankToIconUrl?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); await discardCatalogAssets(assets.filter(a => ![form.rankFromIconUrl, form.rankToIconUrl].includes(a.url)), form.iconUrl); markHandled?.(); setEditing(undefined); onReload() } catch (err) { setError(err.message) } }
+  async function saveVariant(form, id, assets = [], markHandled) { const managedVoucherStock = detail.kind === 'GameVoucher'; const body = { name: form.name, sku: form.sku, price: Number(form.price), compareAtPrice: numberOrNull(form.compareAtPrice), stockQuantity: managedVoucherStock ? 0 : numberOrNull(form.stockQuantity), weightGrams: numberOrNull(form.weightGrams), groupName: form.groupName?.trim() || null, iconUrl: form.iconUrl?.trim() || null, rankFrom: form.rankFrom?.trim() || null, rankTo: form.rankTo?.trim() || null, rankFromIconUrl: form.rankFromIconUrl?.trim() || null, rankToIconUrl: form.rankToIconUrl?.trim() || null, isActive: form.isActive, sortOrder: Number(form.sortOrder || 0) }; try { await cmsRequest(id ? `/catalog/products/${productId}/variants/${id}` : `/catalog/products/${productId}/variants`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); await discardCatalogAssets(assets.filter(a => ![form.rankFromIconUrl, form.rankToIconUrl].includes(a.url)), form.iconUrl); markHandled?.(); setEditing(undefined); onReload() } catch (err) { if (detail.kind === 'TopUpLogin') throw err; setError(err.message) } }
   async function saveImage(form, id, assets = [], markHandled) { try { await cmsRequest(id ? `/catalog/products/${productId}/images/${id}` : `/catalog/products/${productId}/images`, { method: id ? 'PUT' : 'POST', body: JSON.stringify({ url: form.url, altText: form.altText || null, sortOrder: Number(form.sortOrder || 0) }) }); await discardCatalogAssets(assets, form.url); markHandled?.(); setImageEditing(undefined); onReload() } catch (err) { setError(err.message) } }
   async function saveInputField(form, id) {
     const scope = detail.kind === 'GameItem' ? 'OrderDelivery' : detail.fulfillmentMethod === 'AUTO_ID' ? 'AccountValidation' : 'LoginCredential'
@@ -495,32 +501,36 @@ function VariantForm({ item, kind, siblings = [], onSave, onCancel }) {
   const markAssetsHandled = useCatalogAssetCleanup(assets)
   const [imageReady, setImageReady] = useState(!item?.iconUrl)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [saving, setSaving] = useState(false)
+  const login = kind === 'TopUpLogin'
   const [acknowledgePrice, setAcknowledgePrice] = useState(false)
   const priceWarning = variantPriceWarning({ ...form, id: item?.id }, siblings)
-  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); if (['price', 'name', 'groupName'].includes(key)) setAcknowledgePrice(false) }
-  return <form className="admin-form-grid" onSubmit={(e) => { e.preventDefault(); setError(''); if (form.iconUrl && !imageReady) { setError('Ikon belum dapat dimuat. Ganti atau hapus ikon sebelum menyimpan.'); return } if (priceWarning && !acknowledgePrice) { setError('Periksa dan konfirmasi peringatan harga sebelum menyimpan varian.'); return } onSave(form, assets, markAssetsHandled) }}>
-    <Field label="Nama Varian"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: 86 Diamonds" /></Field>
+  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setFieldErrors(old => ({ ...old, [key]: '', ...(key === 'price' ? { compareAtPrice: '' } : {}) })); if (['price', 'name', 'groupName'].includes(key)) setAcknowledgePrice(false) }
+  return <form className="admin-form-grid" noValidate={login} onSubmit={async (e) => { e.preventDefault(); if (saving) return; setError(''); if (login) { const errors = variantLoginErrors(form, siblings, item?.id); setFieldErrors(errors); if (Object.keys(errors).length) return } if (form.iconUrl && !imageReady) { setError('Ikon belum dapat dimuat. Ganti atau hapus ikon sebelum menyimpan.'); return } if (priceWarning && !acknowledgePrice) { setError('Periksa dan konfirmasi peringatan harga sebelum menyimpan varian.'); return } setSaving(true); try { await onSave(login ? { ...form, name: form.name.trim(), sku: form.sku.trim().toUpperCase() } : form, assets, markAssetsHandled) } catch (cause) { const key = catalogServerField(cause.message); if (key) setFieldErrors({ [key]: key === 'sku' && /exists/i.test(cause.message) ? 'SKU sudah digunakan oleh varian lain.' : cause.message }); else setError(cause.message) } finally { setSaving(false) } }}>
+    <Field label="Nama Varian" required={login} error={fieldErrors.name} count={login && `${form.name?.length || 0}/60`} hint={login ? 'Jumlah dan satuan paket, contoh: 60 Genesis Crystals.' : undefined}><TextInput maxLength={login ? Math.max(60, item?.name?.length || 0) : 180} value={form.name} onChange={(e) => set('name', e.target.value)} required placeholder="Contoh: 86 Diamonds" /></Field>
     {kind === 'Joki' && <>
       <Field label="Rank awal (opsional)"><TextInput maxLength={80} value={form.rankFrom || ''} required={Boolean(form.rankTo)} onChange={e => set('rankFrom', e.target.value)} placeholder="Epic V" /></Field>
       <Field label="Target rank (opsional)"><TextInput maxLength={80} value={form.rankTo || ''} required={Boolean(form.rankFrom)} onChange={e => set('rankTo', e.target.value)} placeholder="Legend V" /></Field>
       {form.rankFrom && form.rankTo && ['rankFromIconUrl','rankToIconUrl'].map((key,index) => <section key={key} className="catalog-variant-icon-panel"><CatalogImageField title={index ? 'Ikon target rank' : 'Ikon rank awal'} compact uploadPath="/media/catalog/variant-icon" value={form[key] || ''} onChange={url => set(key,url)} onUploaded={asset => setAssets(old => [...old,asset])} /><Button tone="ghost" onClick={() => set(key,'')}>Hapus ikon</Button></section>)}
     </>}
-    <Field label="Kode SKU" hint="Kode unik varian untuk stok dan transaksi."><TextInput value={form.sku} onChange={(e) => set('sku', e.target.value)} required /></Field>
-    {kind !== 'Merchandise' && <Field label="Kelompok Paket (opsional)" hint="Contoh: Diamonds, Starlight, UC."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} /></Field>}
-    <Field label="Harga Jual"><TextInput type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field>
+    <Field label="Kode SKU" required={login} error={fieldErrors.sku} hint={login ? 'Kode internal unik seluruh katalog. Contoh: GI-LOGIN-60. Jangan ubah kode yang sudah dipakai tanpa kebutuhan operasional.' : 'Kode unik varian untuk stok dan transaksi.'}><TextInput maxLength={100} value={form.sku} onChange={(e) => set('sku', login ? e.target.value.toUpperCase() : e.target.value)} required placeholder={login ? 'GI-LOGIN-60' : undefined} /></Field>
+    {kind !== 'Merchandise' && <Field label="Kelompok Paket (opsional)" error={fieldErrors.groupName} count={login && `${form.groupName?.length || 0}/80`} hint="Contoh: Diamonds, Starlight, UC. Kosongkan jika tidak perlu pengelompokan."><TextInput maxLength={80} value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)} /></Field>}
+    <Field label="Harga Jual" required={login} error={fieldErrors.price} hint={login ? "Nominal rupiah yang dibayar pelanggan." : undefined}><TextInput type="number" min={login ? 1 : 0} step={login ? 1 : undefined} value={form.price} onChange={(e) => set('price', e.target.value)} required /></Field>
     {priceWarning && <div className="catalog-price-advice" role="status"><AlertTriangle size={18} /><div><strong>Periksa pola harga varian</strong><p>{priceWarning}</p><label><input type="checkbox" checked={acknowledgePrice} onChange={(e) => setAcknowledgePrice(e.target.checked)} /> Saya sudah memeriksa harga ini dan ingin melanjutkan.</label></div></div>}
     <section className="catalog-variant-icon-panel">
       <CatalogImageField title="Ikon Varian (opsional)" value={form.iconUrl || ''} uploadPath="/media/catalog/variant-icon" compact onChange={(url) => { set('iconUrl', url); setError('') }} onUploaded={(asset) => setAssets((old) => [...old, asset])} onValidityChange={setImageReady} />
       <p className="catalog-muted">Ikon ditampilkan di pilihan paket pada toko. Dioptimasi otomatis menjadi WebP, maksimal 256 px dan target 100 KB.</p>
       {form.iconUrl && <Button tone="ghost" onClick={() => { set('iconUrl', ''); setImageReady(true); setError('') }}>Hapus Ikon Varian</Button>}
     </section>
-    <Field label="Harga Coret (opsional)"><TextInput type="number" min="0" value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>
-    <Field label="Stok" hint={kind === 'GameVoucher' ? 'Stok mengikuti daftar kode voucher terenkripsi.' : kind === 'GameAccount' ? 'Setiap akun game adalah satu produk unik.' : 'Kosongkan untuk stok tanpa batas.'}>
+    <Field label="Harga Coret (opsional)" error={fieldErrors.compareAtPrice} hint={login ? "Harga referensi asli; harus lebih besar dari harga jual." : undefined}><TextInput type="number" min="0" step={login ? 1 : undefined} value={form.compareAtPrice ?? ''} onChange={(e) => set('compareAtPrice', e.target.value)} /></Field>
+    <Field label="Stok" error={fieldErrors.stockQuantity} hint={kind === 'GameVoucher' ? 'Stok mengikuti daftar kode voucher terenkripsi.' : kind === 'GameAccount' ? 'Setiap akun game adalah satu produk unik.' : 'Kosongkan untuk stok tanpa batas.'}>
       <TextInput type="number" min="0" value={kind === 'GameVoucher' ? 0 : kind === 'GameAccount' ? 1 : form.stockQuantity ?? ''} disabled={kind === 'GameVoucher' || kind === 'GameAccount'} onChange={(e) => set('stockQuantity', e.target.value)} />
     </Field>
     {kind === 'Merchandise' && <Field label="Berat Barang (gram)"><TextInput type="number" min="0" value={form.weightGrams ?? ''} onChange={(e) => set('weightGrams', e.target.value)} /></Field>}
     <Field label="Penayangan"><Toggle checked={form.isActive} onChange={(v) => set('isActive', v)} label="Varian Aktif" /></Field>
-    <div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Batal</Button><button className="admin-button admin-button--primary">Simpan Varian</button></div>
+    <ErrorBox error={error} />
+    <div className="admin-form-actions"><Button tone="ghost" onClick={onCancel}>Batal</Button><button className="admin-button admin-button--primary" disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan Varian'}</button></div>
   </form>
 }
 function ImageForm({ item, onSave, onCancel }) {
@@ -575,13 +585,16 @@ function ProductEditor({ item, categories, games, onDone }) {
   const markAssetsHandled = useCatalogAssetCleanup(assets)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+  const login = form.kind === 'TopUpLogin'
+  const game = games.find(entry => entry.id === form.gameId)
   const [imageReady, setImageReady] = useState(!initial.thumbnailUrl)
   const dirty = JSON.stringify(form) !== JSON.stringify(savedForm)
   const tabHasChanges = (tab) => isProductTabDirty(savedForm, form, tab)
   const tabDirty = tabHasChanges(activeTab)
   const tabs = [['information', 'Informasi'], ['variants', 'Harga & Varian (' + (detail?.variants?.length ?? 0) + ')'], ['images', 'Gambar'], ['inputs', 'Isian Pembeli (' + (detail?.inputFields?.length ?? 0) + ')'], ['publishing', 'Penayangan']]
   useCatalogUnsavedGuard(dirty)
-  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setError('') }
+  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setError(''); setFieldErrors(old => ({ ...old, [key]: '' })) }
   async function loadDetail() { if (!item?.id) return; try { setDetail(await cmsRequest(`/catalog/products/${item.id}`)) } catch (cause) { setError(cause.message) } }
   useEffect(() => { loadDetail() }, [item?.id])
   const lockedKind = Boolean(item?.id && (detail?.variants?.length || item.activeVariantCount))
@@ -589,7 +602,7 @@ function ProductEditor({ item, categories, games, onDone }) {
   function categoryChanged(id) {
     const category = categories.find((value) => value.id === id)
     if (!category) return
-    setForm((old) => ({ ...old, categoryId: id, kind: category.kind }))
+    setForm((old) => ({ ...old, categoryId: id, kind: category.kind })); setFieldErrors({})
   }
   async function cancel() {
     if (dirty && !window.confirm('Perubahan produk belum disimpan. Yakin ingin kembali?')) return
@@ -600,18 +613,24 @@ function ProductEditor({ item, categories, games, onDone }) {
   function resetTab() {
     const keys = PRODUCT_EDITOR_FIELDS[activeTab] || []
     setForm((previous) => ({ ...previous, ...Object.fromEntries(keys.map((key) => [key, savedForm[key]])) }))
-    setError(''); setNotice('')
+    setError(''); setNotice(''); setFieldErrors({})
     if (activeTab === 'images') setImageReady(!savedForm.thumbnailUrl)
   }
   async function save(event) {
-    event.preventDefault(); setError(''); setNotice(''); setBusy(true)
+    event.preventDefault(); setError(''); setNotice('')
+    if (login && activeTab === 'information') {
+      const errors = productLoginErrors(form, availableCategories, games)
+      setFieldErrors(errors)
+      if (Object.keys(errors).length) return
+    }
+    setBusy(true)
     if (activeTab === 'images' && form.thumbnailUrl && !imageReady) { setError('Gambar produk tidak dapat dimuat. Unggah gambar pengganti.'); setBusy(false); return }
     const nextSaved = item ? mergeProductTab(savedForm, form, activeTab) : { ...form }
     const fulfillmentMethod = fulfillmentForKind(nextSaved.kind)
     const payload = {
       categoryId: nextSaved.categoryId, gameId: nextSaved.gameId || null, name: String(nextSaved.name || '').trim(),
-      slug: item?.slug || slugify(nextSaved.name), shortDescription: nextSaved.shortDescription || null,
-      description: nextSaved.description || null, thumbnailUrl: nextSaved.thumbnailUrl || null, kind: nextSaved.kind,
+      slug: item?.slug || slugify(nextSaved.name), shortDescription: nextSaved.shortDescription?.trim() || null,
+      description: nextSaved.description?.trim() || null, thumbnailUrl: nextSaved.thumbnailUrl || null, kind: nextSaved.kind,
       fulfillmentMethod, requiresGameAccountValidation: fulfillmentMethod === 'AUTO_ID',
       isActive: nextSaved.isActive, isFeatured: nextSaved.isFeatured, sortOrder: Number(nextSaved.sortOrder || 0),
     }
@@ -631,7 +650,7 @@ function ProductEditor({ item, categories, games, onDone }) {
         markAssetsHandled()
         onDone(result)
       }
-    } catch (cause) { setError(cause.message) }
+    } catch (cause) { const key = login && activeTab === 'information' && catalogServerField(cause.message); if (key) setFieldErrors({ [key]: /slug already exists/i.test(cause.message) ? 'Nama menghasilkan alamat produk yang sudah digunakan. Pilih nama lain.' : cause.message }); else setError(cause.message) }
     finally { setBusy(false) }
   }
   return <div className="admin-page catalog-product-editor">
@@ -640,34 +659,34 @@ function ProductEditor({ item, categories, games, onDone }) {
       {item?.slug && STOREFRONT_URL && <a className="catalog-store-link" href={STOREFRONT_URL + searchProductHref({ ...item, ...savedForm })} target="_blank" rel="noreferrer"><ExternalLink size={15} /> Lihat di Toko</a>}
     </header>
     <nav className="catalog-editor-tabs" role="tablist" aria-label="Bagian produk">
-      {tabs.map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={activeTab === value} className={activeTab === value ? 'is-active' : ''} disabled={!item && value !== 'information'} title={!item && value !== 'information' ? 'Buat produk pada tab Informasi terlebih dahulu.' : undefined} onClick={() => { setActiveTab(value); setError(''); setNotice('') }}>{label}{item && tabHasChanges(value) && <span className="catalog-tab-dirty" title="Belum disimpan" />}</button>)}
+      {tabs.map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={activeTab === value} className={activeTab === value ? 'is-active' : ''} disabled={!item && value !== 'information'} title={!item && value !== 'information' ? 'Buat produk pada tab Informasi terlebih dahulu.' : undefined} onClick={() => { setActiveTab(value); setError(''); setNotice(''); setFieldErrors({}) }}>{label}{item && tabHasChanges(value) && <span className="catalog-tab-dirty" title="Belum disimpan" />}</button>)}
     </nav>
     {!item && <p className="catalog-editor-guidance">Simpan informasi produk terlebih dahulu untuk membuka pengaturan harga, gambar, isian pembeli, dan penayangan.</p>}
     <ErrorBox error={error} /><Notice message={notice} />
-    {!['variants', 'inputs'].includes(activeTab) && <form onSubmit={save} className="catalog-product-form">
+    {!['variants', 'inputs'].includes(activeTab) && <form onSubmit={save} noValidate={login && activeTab === "information"} className="catalog-product-form">
 
       <div className={'catalog-product-grid is-' + activeTab}>
         <div className="catalog-form-stack">
           {activeTab === 'information' && <section className="catalog-form-card"><h2>Informasi Produk</h2>
-            <Field label="Nama Produk"><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required maxLength={180} placeholder="Contoh: Mobile Legends: Bang Bang" /></Field>
-            <Field label="Kategori"><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} required options={availableCategories.map((value) => ({ value: value.id, label: value.name }))} /></Field>
+            <Field label="Nama Produk" required={login} error={fieldErrors.name} count={login && `${form.name?.length || 0}/80`} hint={login ? 'Nama yang tampil pada kartu katalog customer.' : undefined}><TextInput value={form.name} onChange={(e) => set('name', e.target.value)} required maxLength={login ? Math.max(80, item?.name?.length || 0) : 180} placeholder="Contoh: Mobile Legends: Bang Bang" /></Field>
+            <Field label="Kategori" required={login} error={fieldErrors.categoryId}><Select value={form.categoryId} onChange={(e) => categoryChanged(e.target.value)} required options={availableCategories.map((value) => ({ value: value.id, label: value.name }))} /></Field>
             <p className="catalog-field-note">Jenis produk: <strong>{PRODUCT_LABELS[form.kind]}</strong>{lockedKind && ' · Tidak dapat diubah karena sudah memiliki varian.'}</p>
-            <Field label="Game" hint={form.kind === 'GameAccount' ? 'Wajib untuk akun game yang dijual.' : 'Pilih game terkait jika ada.'}>
-              <Select required={['GameAccount', 'GameItem'].includes(form.kind)} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
+            <Field label="Game" required={login} error={fieldErrors.gameId} hint={login ? 'Game menentukan publisher dan informasi terkait di toko.' : form.kind === 'GameAccount' ? 'Wajib untuk akun game yang dijual.' : 'Pilih game terkait jika ada.'}>
+              <Select required={['GameAccount', 'GameItem', 'TopUpLogin'].includes(form.kind)} value={form.gameId || ''} onChange={(e) => set('gameId', e.target.value)} options={[{ value: '', label: 'Pilih game' }, ...games.map((value) => ({ value: value.id, label: value.name }))]} />
             </Field>
-            <Field label="Deskripsi Singkat (opsional)"><TextArea rows={3} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Tulis keunggulan utama produk…" /></Field>
-            <Field label="Detail Produk"><TextArea rows={6} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi untuk pelanggan…" /></Field>
+            <Field label={login ? 'Deskripsi Singkat' : 'Deskripsi Singkat (opsional)'} required={login} error={fieldErrors.shortDescription} count={login && `${form.shortDescription?.length || 0}/160`} hint={login ? '10–160 karakter. Ringkasan layanan di atas pilihan paket.' : undefined}><TextArea rows={3} maxLength={login ? Math.max(160, item?.shortDescription?.length || 0) : 500} required={login} value={form.shortDescription || ''} onChange={(e) => set('shortDescription', e.target.value)} placeholder="Tulis keunggulan utama produk…" /></Field>
+            <Field label={login ? 'Detail Produk (opsional)' : 'Detail Produk'} error={fieldErrors.description} count={login && `${form.description?.length || 0}/2000`} hint={login ? 'Informasi tambahan, proses, estimasi, syarat atau batasan; tampil sebelum ulasan jika diisi.' : undefined}><TextArea rows={6} maxLength={login ? Math.max(2000, item?.description?.length || 0) : undefined} value={form.description || ''} onChange={(e) => set('description', e.target.value)} placeholder="Informasi untuk pelanggan…" /></Field>
           </section>}
 
 
         </div>
         <div className="catalog-form-stack">
           {activeTab === 'images' && <section className="catalog-form-card"><CatalogImageField title="Gambar Utama Produk" value={form.thumbnailUrl} onChange={(value) => set('thumbnailUrl', value)} onValidityChange={setImageReady} onUploaded={(asset) => setAssets((old) => [...old, asset])} /></section>}
-          {activeTab === 'information' && <section className="catalog-form-card"><h2>Pratinjau Produk</h2><div className="catalog-customer-preview">
+          {activeTab === 'information' && <section className="catalog-form-card"><h2>Pratinjau Produk</h2>{login ? <div className="catalog-login-preview"><p className="catalog-muted">Kartu katalog customer</p><div className="search-page--browse"><div className="search-catalog--with-favorites"><CatalogCard preview product={{ ...form, name: form.name || 'Nama Produk', gameName: game?.name, gamePublisher: game?.publisher, isAvailable: true }} categoryLabel={PRODUCT_LABELS[form.kind]} /></div></div><p className="catalog-muted">Halaman detail • sebelum pilihan paket</p><div className="catalog-login-detail-preview"><strong>{game?.name || form.name || 'Nama game'}</strong><small>{game?.publisher || 'Publisher'}</small>{form.shortDescription && <p>{form.shortDescription}</p>}{form.description && <div><b>Detail Produk</b><p>{form.description}</p></div>}</div><p className="catalog-muted">Preview mengikuti perubahan yang belum disimpan.</p></div> : <><div className="catalog-customer-preview">
             <div className="catalog-customer-preview-image">{form.thumbnailUrl ? <img src={form.thumbnailUrl} alt="" /> : <Package size={27} />}</div>
             <div><strong>{form.name || 'Nama Produk'}</strong><small>{PRODUCT_LABELS[form.kind] || 'Jenis produk'} · {categories.find((entry) => entry.id === form.categoryId)?.name || 'Kategori'}</small>
               <span>{form.isActive ? 'Tampil di toko' : 'Disembunyikan dari toko'}{form.isFeatured && ' · Unggulan'}</span></div>
-          </div><p className="catalog-muted">Pratinjau kartu akan mengikuti perubahan yang belum disimpan.</p></section>}
+          </div><p className="catalog-muted">Pratinjau kartu akan mengikuti perubahan yang belum disimpan.</p></>}</section>}
 
           {activeTab === 'publishing' && <section className="catalog-form-card"><h2>Penayangan</h2>
             <p className="catalog-muted">Atur apakah produk dapat ditemukan pelanggan dan ditampilkan sebagai unggulan.</p>
