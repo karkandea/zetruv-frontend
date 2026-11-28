@@ -355,6 +355,7 @@ const messages = {
   loginPurchaseContactHint: ["We’ll use this number for order updates.","Nomor ini digunakan untuk informasi pesanan.","Nombor ini digunakan untuk maklumat pesanan."],
   loginPurchaseAdding: ["Adding…","Menambahkan…","Menambah…"],
   loginPurchaseOpening: ["Continuing…","Melanjutkan…","Meneruskan…"],
+  cartChangedReview: ["Your cart has changed. Review the latest items before paying.","Keranjang berubah. Periksa kembali produk sebelum membayar.","Troli berubah. Semak item terkini sebelum membayar."],
   orderSummary: ["Order Summary","Ringkasan Pesanan","Ringkasan Pesanan"],
   summary: ["Summary","Ringkasan","Ringkasan"],
   continueToCheckout: ["Continue to Checkout","Lanjut ke Checkout","Teruskan ke Pembayaran"],
