@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   PAYMENT_CONTEXT_KEY, storePaymentContext, readPaymentContext,
   clearPaymentContext, normalizePaymentState, mayInitiatePayment,
-  paymentLink, formatPaymentCountdown,
+  paymentLink, formatPaymentCountdown, isMidtransMethod, midtransPaymentLink,
 } from './paymentSession.js'
 
 const storage = () => {
@@ -61,4 +61,12 @@ test('redirect must be HTTPS and expiry countdown uses provider timestamp',()=>{
   assert.equal(formatPaymentCountdown('2026-10-13T10:01:05Z',Date.parse('2026-10-13T10:00:00Z')),'00:01:05')
   assert.equal(formatPaymentCountdown('2026-10-13T10:00:00Z',Date.parse('2026-10-13T10:01:00Z')),'00:00:00')
   assert.equal(formatPaymentCountdown(null),null)
+})
+
+test('Midtrans channel redirects stay on exact sandbox Snap origin and path',()=>{
+  assert.equal(isMidtransMethod('MIDTRANS_OTHER_QRIS'),true)
+  assert.equal(isMidtransMethod('QRIS'),false)
+  assert.ok(midtransPaymentLink('https://app.sandbox.midtrans.com/snap/v3/redirection/abc-123'))
+  assert.ok(midtransPaymentLink('https://app.sandbox.midtrans.com/snap/v2/vtweb/abc-123'))
+  for(const url of ['https://app.midtrans.com/snap/v3/redirection/abc','https://app.sandbox.midtrans.com.evil.test/snap/v3/redirection/abc','https://app.sandbox.midtrans.com/other','https://app.sandbox.midtrans.com:444/snap/v3/redirection/abc']) assert.equal(midtransPaymentLink(url),null)
 })
