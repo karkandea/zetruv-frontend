@@ -23,7 +23,8 @@ import {
 import { checkoutAssets } from '../data/checkoutAssets'
 import { checkoutActionHint, viaLoginServiceStatus } from '../services/digitalServiceAvailability'
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
-import { storePaymentContext } from '../services/paymentSession'
+import PaymentChannelPicker from '../components/PaymentChannelPicker'
+import { storePaymentContext, isMidtransMethod, midtransPaymentLink } from '../services/paymentSession'
 import { readCustomerSession, restoreCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
 import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
@@ -606,6 +607,8 @@ function DigitalCheckoutPage() {
         const session=await startOrderPayment(created,method)
         setPayment(session)
         setPaymentState('pending') // Only backend reconciliation can confirm Paid.
+        const redirect = isMidtransMethod(method) && midtransPaymentLink(session?.paymentUrl)
+        if (redirect) { window.location.assign(redirect); return }
       } catch {
         // Payment may have been created before the network error. The Payment
         // page performs a read-only status lookup and offers explicit retry.
@@ -745,7 +748,7 @@ function DigitalCheckoutPage() {
           <h2>{copy.paymentMethod}</h2>
           {methodsState === 'loading' ? <LoadingRegion label={copy.checkingPaymentMethods}>
             <div className="digital-payment-methods"><SkeletonRows count={displayMethods.length} /></div>
-          </LoadingRegion> : <div className="digital-payment-methods">
+          </LoadingRegion> : showLiveMethods && readiness.availableMethods.every(m=>m.group && isMidtransMethod(m.code)) ? <PaymentChannelPicker methods={readiness.availableMethods} selected={method} disabled={processing} onSelect={code=>{setMethod(code);setError('')}}/> : <div className="digital-payment-methods">
             {(showLiveMethods ? readiness.availableMethods.map(m=>({
               ...displayMethods.find(x=>x.code===m.code),...m,
               name:displayMethods.find(x=>x.code===m.code)?.name||m.name||m.code,
