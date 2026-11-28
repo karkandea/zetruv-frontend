@@ -202,15 +202,15 @@ function FavoriteGames({ products }) {
   )
 }
 
-export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOverride, favoriteIdOverride }) {
+export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOverride, favoriteIdOverride, preview = false }) {
   const copy = useStorefrontCopy()
-  const href = hrefOverride || productHref(product)
+  const href = preview ? undefined : hrefOverride || productHref(product)
   const available = product.isAvailable !== false
   const showItemPrice = ['GameItem', 'Joki'].includes(product.kind) && product.minPrice != null
   const favoriteId = favoriteIdOverride || (product.kind === 'Merchandise'
     ? `merchandise:${product.slug}` : `catalog:${product.kind}:${product.slug || product.id}`)
-  const [saved, setSaved] = useState(() => isFavorite(favoriteId))
-  useEffect(() => subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId])
+  const [saved, setSaved] = useState(() => !preview && isFavorite(favoriteId))
+  useEffect(() => preview ? undefined : subscribeFavorites(() => setSaved(isFavorite(favoriteId))), [favoriteId, preview])
 
   const thumbnail = product.thumbnailUrl || fallbackProductImage(product)
   const [failedImages, setFailedImages] = useState([])
@@ -247,7 +247,7 @@ export function CatalogCard({ product, categoryLabel, onRemoveFavorite, hrefOver
       </span>
       <button type="button" className={`search-game-card__favorite${saved ? ' is-saved' : ''}`}
         aria-label={saved ? formatCopy(copy.removeBookmark, { product: product.name }) : formatCopy(copy.addBookmark, { product: product.name })}
-        aria-pressed={saved}
+        aria-pressed={saved} disabled={preview}
         title={onRemoveFavorite && saved ? copy.removeFavoriteGame : undefined}
         onClick={handleBookmark}>
         <Bookmark size={19} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />

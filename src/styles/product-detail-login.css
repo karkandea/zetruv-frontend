@@ -684,3 +684,7 @@
     margin-top: 8px;
   }
 }
+
+.login-product-detail-copy{border-top:1px solid #e3e5f0;padding-top:20px;margin-top:20px;overflow-wrap:anywhere}.login-product-detail-copy h2{font-size:16px;margin:0 0 8px}.login-product-detail-copy p{white-space:pre-wrap;font-size:14px;line-height:1.6;margin:0;color:#454b5c}
+
+.login-package-group-title{grid-column:1/-1;margin:8px 0 0;font-size:14px;font-weight:650;color:#363b50}
