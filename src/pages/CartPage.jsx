@@ -228,10 +228,6 @@ export default function CartPage() {
           <a href="/cart" aria-current="page">{copy.digitalCart}</a>
           <a href="/cart?flow=physical">{copy.merchandiseCart}</a>
         </nav>
-        {hasItems && <header className="digital-page-heading">
-          <div><h1>{copy.digitalCart}</h1><p>{copy.reviewYourProductsAndDestinationAccountsBefore}</p></div>
-          <a href="/search">{copy.continueShopping}</a>
-        </header>}
 
         {hasCustomerSession && hasItems && cartSync.state === 'saving' &&
           <p className="digital-cart-sync-saving" role="status">{copy.savingCartChanges}</p>}
@@ -258,7 +254,7 @@ export default function CartPage() {
             <div className="digital-cart-list-head">
               {hasItems ? (
                 <>
-                  <strong id="digital-cart-title">{formatCopy(copy.cartProducts, { count: items.length })}</strong>
+                  <h1 id="digital-cart-title">{formatCopy(copy.cartProducts, { count: items.length })}</h1>
                   <span>{itemCount} {copy.items}</span>
                 </>
               ) : (
