@@ -472,6 +472,7 @@ const messages = {
   backToZetruv: ["Back to Zetruv","Kembali ke Zetruv","Kembali ke Zetruv"],
   bookmark: ["Bookmarks", "Bookmark", "Penanda Buku"],
   backToBoosting: ["Back to Game Boosting", "Kembali ke Joki Game", "Kembali ke Khidmat Joki"],
+  manualServiceNoticeTiming: ["After payment is confirmed","Setelah pembayaran terkonfirmasi","Selepas bayaran disahkan"],
   manualServiceNoticeTitle: ["Manual processing","Diproses manual","Diproses secara manual"],
   manualServiceNoticeBody: ["The Zetruv team processes your order after payment is confirmed.","Tim Zetruv memproses pesanan setelah pembayaran terkonfirmasi.","Pasukan Zetruv memproses pesanan selepas bayaran disahkan."],
   manualServiceAfterPayment: ["We process this service manually after payment is confirmed.", "Layanan diproses manual setelah pembayaran terkonfirmasi.", "Perkhidmatan diproses secara manual selepas bayaran disahkan."],
