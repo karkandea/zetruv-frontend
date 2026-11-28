@@ -472,6 +472,8 @@ const messages = {
   backToZetruv: ["Back to Zetruv","Kembali ke Zetruv","Kembali ke Zetruv"],
   bookmark: ["Bookmarks", "Bookmark", "Penanda Buku"],
   backToBoosting: ["Back to Game Boosting", "Kembali ke Joki Game", "Kembali ke Khidmat Joki"],
+  manualServiceNoticeTitle: ["Manual processing","Diproses manual","Diproses secara manual"],
+  manualServiceNoticeBody: ["The Zetruv team processes your order after payment is confirmed.","Tim Zetruv memproses pesanan setelah pembayaran terkonfirmasi.","Pasukan Zetruv memproses pesanan selepas bayaran disahkan."],
   manualServiceAfterPayment: ["We process this service manually after payment is confirmed.", "Layanan diproses manual setelah pembayaran terkonfirmasi.", "Perkhidmatan diproses secara manual selepas bayaran disahkan."],
   packageAlreadyInCart: ["This package is already in your cart.", "Paket ini sudah ada di keranjang.", "Pakej ini sudah ada dalam troli anda."],
   cartNotSynced: ["Your cart hasn’t synced. Review your cart and try again.", "Keranjang akun belum tersinkron. Periksa keranjang lalu coba lagi.", "Troli anda belum disegerakkan. Semak troli dan cuba lagi."],

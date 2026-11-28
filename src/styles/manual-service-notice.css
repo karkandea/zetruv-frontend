@@ -1,0 +1,23 @@
+.manual-service-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+  background: #f6f7fa;
+  border: 1px solid #e3e6ee;
+  border-radius: 8px;
+  color: #38445c;
+  text-align: left;
+  min-width: 0;
+}
+.manual-service-notice > svg { flex: none; color: #05055c; margin-top: 1px; }
+.manual-service-notice > div { min-width: 0; }
+.manual-service-notice strong { display: block; color: #222c45; font-size: 13px; line-height: 1.4; font-weight: 600; }
+.manual-service-notice p { margin: 3px 0 0; font-size: 12px; line-height: 1.55; color: #515b70; overflow-wrap: anywhere; }
+.manual-service-notice--compact { padding: 0; margin: 6px 0 0; border: 0; border-radius: 0; background: none; gap: 6px; }
+.manual-service-notice--compact p { margin: 0; }
+@media (max-width: 560px) {
+  .manual-service-notice { padding: 10px 12px; gap: 8px; }
+  .manual-service-notice--compact { padding: 0; gap: 6px; }
+}
