@@ -483,7 +483,8 @@
   .digital-shell .digital-info-strip { font-size: 10px; }
   .digital-cart-modal-backdrop { padding: 12px; }
   .digital-cart-undo { gap: 8px; padding: 10px 11px; font-size: 11px; }
-  .digital-shell .digital-cart-list-head strong { font-size: 14px; }
+  .digital-shell .digital-cart-list-head strong,
+  .digital-shell .digital-cart-list-head h1 { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .digital-shell .digital-cart-fee-help [role="tooltip"] { transition: none; }

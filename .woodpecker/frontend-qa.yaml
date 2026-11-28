@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/cart-remove-redundant-notices]
+    branch: [dev, fix/cart-header-service-polish]
 
 steps:
   - name: frontend-build-test
