@@ -1,3 +1,4 @@
+import PurchasedProductValue from '../components/PurchasedProductValue'
 import { Bone, LoadingRegion, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -293,7 +294,7 @@ export default function CartPage() {
                       <div className="digital-cart-item__copy">
                         <span className="digital-cart-item__badge">{item.productKind === 'GameItem' ? copy.gameItems : item.productKind === 'Joki' ? copy.gameBoosting : copy[methodLabel[item.fulfillmentMethod]] || copy.digitalProduct}</span>
                         <h2>{['Joki', 'GameItem'].includes(item.productKind) ? item.productName : item.gameName || item.productName}</h2>
-                        <strong className="digital-cart-item__variant">{item.variantName}</strong>
+                        <PurchasedProductValue item={item} variant={catalogProducts[item.productSlug]?.variants?.find(v => v.id === item.variantId)} />
                         <span className="digital-cart-item__unit">{copy.unitPrice} {rupiah(Number(item.unitPrice) || 0)}</span>
 
                         {isAccount ? (

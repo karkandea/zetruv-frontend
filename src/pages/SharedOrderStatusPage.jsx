@@ -1,3 +1,4 @@
+import PurchasedProductValue from '../components/PurchasedProductValue'
 import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
@@ -81,7 +82,7 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
           {item.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" loading="lazy" /> : <span className="sos-lookup-item__fallback"><PackageSearch size={24} aria-hidden="true" /></span>}
           <div className="sos-lookup-item__copy">
             <strong>{item.productName}</strong>
-            <span>{item.variantName || item.gameName || copy.zetruvProduct} · {Number(item.quantity) || 1} {copy.items}</span>
+            <PurchasedProductValue item={item} />{Number(item.quantity) > 1 && <span>×{item.quantity}</span>}
             <small>{stateLabel(stateKey(item.fulfillmentStatus, FULFILLMENT_STATES), copy, copy.pending)}</small>
             {item.kind === 'TopUpLogin' && <small>{!isPaid ? copy.viaLoginAwaitPayment : ({
               pending: copy.viaLoginOperatorQueue,

@@ -147,7 +147,7 @@ export default function ProductDetailPage({ slug = 'mobile-legends', initialVari
       thumbnailUrl: gameArt,
       gameName: product.game?.name || product.name,
       variantId: selected.id,
-      variantName: selected.name,
+      variantName: selected.name, variantIconUrl: selected.iconUrl, rankFrom: selected.rankFrom, rankTo: selected.rankTo, rankFromIconUrl: selected.rankFromIconUrl, rankToIconUrl: selected.rankToIconUrl,
       unitPrice,
       regularPrice,
       quantity: 1,

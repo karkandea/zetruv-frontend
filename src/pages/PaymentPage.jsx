@@ -1,3 +1,4 @@
+import PurchasedProductValue from '../components/PurchasedProductValue'
 import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
@@ -281,7 +282,7 @@ export default function PaymentPage() {
               const thumb=paymentThumbnail(item.thumbnailUrl)
               return <article key={index} className="payment-session-line">
                 <span className="payment-session-thumb">{thumb?<img src={thumb} alt="" onError={e=>{e.currentTarget.hidden=true}}/>:null}<Package size={22} aria-hidden="true"/></span>
-                <div className="payment-session-item-copy">{category&&<small className="payment-session-item-category">{category}</small>}<strong>{item.productName}</strong><span>{item.variantName} · {item.quantity} {copy.items}</span></div>
+                <div className="payment-session-item-copy">{category&&<small className="payment-session-item-category">{category}</small>}<strong>{item.productName}</strong><PurchasedProductValue item={item} />{item.quantity > 1 && <span>×{item.quantity}</span>}</div>
                 <strong className="payment-session-line-price">{rupiah(item.lineTotal)}</strong>
               </article>
             })}
