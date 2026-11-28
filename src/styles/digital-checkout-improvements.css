@@ -443,3 +443,9 @@
 @media (prefers-reduced-motion: reduce) {
   .digital-shell .checkout-spinner { animation: none; }
 }
+
+/* Promo belongs to payment, directly above its price breakdown. */
+.digital-shell .digital-payment-panel .digital-voucher { margin: 18px 0; padding: 15px 0; border-top: 1px solid #e8eaf2; border-bottom: 1px solid #e8eaf2; }
+.digital-shell .digital-payment-panel .digital-voucher > div { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.digital-shell .digital-payment-panel .digital-voucher > div button { padding: 0 14px; }
+.digital-shell .digital-payment-panel .digital-voucher input { width: 100%; box-sizing: border-box; border: 1px solid #dee0eb; }
