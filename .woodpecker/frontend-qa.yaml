@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/midtrans-native-qris]
+    branch: [dev, fix/payment-summary-simulator]
 
 steps:
   - name: frontend-build-test
