@@ -252,10 +252,6 @@ export default function CartPage() {
             </div>
           </div>
         </details>}
-        {hasItems && <div className="digital-info-strip digital-info-strip--account-help">
-          <Info size={18} aria-hidden="true" />
-          <span>{copy.editYourGameUserIdAndZone}</span>
-        </div>}
 
         <div className={`digital-cart-layout${hasItems ? '' : ' digital-cart-layout--empty'}`}>
           <section className="digital-cart-list-card" aria-labelledby="digital-cart-title">
@@ -349,12 +345,6 @@ export default function CartPage() {
               </div>
             )}
 
-            {items.some(item => item.fulfillmentMethod === 'MANUAL_LOGIN') && (
-              <div className="digital-login-cart-rule">
-                <strong>{copy.topUpByLogin}</strong>
-                <p>{copy.removeUnavailableTopUpByLoginPackages}</p>
-              </div>
-            )}
           </section>
 
           {hasItems && <aside className="digital-cart-summary" aria-labelledby="cart-summary-title">
