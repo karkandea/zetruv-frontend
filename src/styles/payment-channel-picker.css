@@ -15,3 +15,5 @@
 .payment-channel-option.is-active .payment-channel-radio:after{content:"";position:absolute;inset:3px;border-radius:50%;background:#05055c}
 .payment-channel-option:disabled{opacity:.55;cursor:not-allowed}
 .payment-channel-picker button:focus-visible{outline:2px solid #344cbb;outline-offset:-2px}
+
+.payment-channel-logo{width:42px;height:24px;object-fit:contain;flex:none}.payment-channel-icon{width:42px;flex:none;color:#505d7c}.payment-channel-name{flex:1;min-width:0;overflow-wrap:anywhere}
