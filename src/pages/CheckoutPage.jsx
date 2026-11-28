@@ -765,9 +765,6 @@ function DigitalCheckoutPage() {
               </button>
             })}
           </div>}
-          {readiness?.isSandbox && <p className="checkout-gateway-state" role="status">
-            <Info size={16}/>{copy.testModeThisTransactionUsesNoReal}
-          </p>}
           {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">{copy.weCouldnTLoadPaymentMethods} <button type="button" onClick={refreshMethods}>{copy.tryAgain3}</button></p>
             : methodsState==='ready' && !readiness?.canAcceptLivePayments?
               <p className="checkout-gateway-state" role="status"><Info size={16}/>{copy.paymentMethodsAreUnavailablePleaseTryAgain}</p>:null}
@@ -785,6 +782,7 @@ function DigitalCheckoutPage() {
           {error && <p role="alert" className="digital-checkout-error">{error}</p>}
           <button className="digital-pay-button" type="button" disabled={!valid||processing||Boolean(pendingAttempt && (!attempt.current || pendingAttempt.key!==attempt.current.key))}
             onClick={handlePay}>{processing?<><LoaderCircle className="checkout-spinner" size={16}/>{copy.processing2}</>:copy.payNow}</button>
+          {readiness?.isSandbox && <p className="checkout-fee-note" role="note">{copy.nativePaymentSimulatorNotice}</p>}
           {!valid && guidance && <div className="checkout-blockers" role="status" aria-live="polite">
             <strong>{copy.unableToContinue}</strong>
             <span>{guidance.message}</span>
