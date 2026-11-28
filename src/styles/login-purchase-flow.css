@@ -1,0 +1,26 @@
+/* The journey is a real progress indicator, not a decorative badge. */
+.login-purchase-progress { margin: 0 0 22px; color: #5d667a; }
+.login-purchase-progress ol { display:flex; flex-wrap:wrap; align-items:center; padding:0; margin:0; list-style:none; gap:12px; }
+.login-purchase-progress li { display:flex; align-items:center; gap:7px; font-size:12px; line-height:1.4; }
+.login-purchase-progress li+li::before { content:""; width:24px; height:1px; margin-right:3px; background:#dfe3ed; }
+.login-purchase-progress__number { display:grid; place-items:center; width:23px; height:23px; border-radius:50%; border:1px solid #dfe3ed; font-variant-numeric:tabular-nums; flex:none; }
+.login-purchase-progress .is-current { color:#05055c; font-weight:700; }
+.login-purchase-progress .is-current .login-purchase-progress__number { background:#05055c; border-color:#05055c; color:white; }
+.login-purchase-progress .is-done { color:#05055c; }
+.login-purchase-progress a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.login-purchase-notice { display:flex; align-items:flex-start; gap:9px; background:#f6f7fa; color:#485267; border:1px solid #e2e5ec; padding:12px 14px; border-radius:8px; font-size:13px; line-height:1.5; margin:0 0 18px; }
+.login-purchase-notice svg { flex:none; margin-top:1px; }
+.login-product-shell .login-package-card.active { outline:2px solid #05055c; outline-offset:-2px; }
+.login-product-shell .login-package-card__copy small { font-variant-numeric:tabular-nums; }
+.login-product-shell .login-package-panel .login-purchase-progress { margin-bottom:16px; }
+.login-product-shell .login-product-actions .login-product-buy { font-size:14px; }
+.digital-shell .login-purchase-checkout .digital-checkout-heading h1 { letter-spacing:-.025em; }
+.digital-shell .login-purchase-checkout .digital-checkout-item.checkout-product { box-shadow:none; border-radius:12px; }
+.digital-shell .login-purchase-checkout .checkout-product__account--minimal { padding:10px 0 0; border-top:1px solid #e7e9ef; margin-top:12px; background:none; }
+.digital-shell .login-purchase-checkout .checkout-product__account--minimal p { margin:0; font-size:13px; color:#515c70; line-height:1.5; }
+.digital-shell .login-purchase-checkout .digital-payment-panel { box-shadow:none; border-radius:12px; }
+.digital-shell .login-purchase-edit { display:inline-flex; gap:5px; align-items:center; font-size:13px; color:#05055c; text-decoration:underline; text-underline-offset:3px; margin-bottom:12px; }
+.payment-session-page .payment-session-card { box-shadow:none; border-radius:12px; }
+.payment-session-page .payment-session-action-link,.payment-session-page .payment-session-actions a:not(.is-secondary),.payment-session-page .payment-session-actions button:not(.is-secondary){background:#05055c;border-color:#05055c}
+.payment-session-page .payment-session-method { border-radius:6px; }
+@media(max-width:560px){.login-purchase-progress ol{gap:7px}.login-purchase-progress li{gap:5px;font-size:11px}.login-purchase-progress li+li::before{width:10px;margin-right:1px}.login-purchase-progress__number{width:20px;height:20px}.login-purchase-notice{font-size:12px;padding:10px 12px}.payment-session-page .payment-session-action-link{display:flex;width:100%}.payment-session-page .payment-session-heading h1{font-size:26px}}

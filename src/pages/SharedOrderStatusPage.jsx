@@ -86,11 +86,11 @@ export function OrderStatusDetails({ order, onReset, itemAction, onRefresh }) {
             {item.kind === 'TopUpLogin' && <small>{!isPaid ? copy.viaLoginAwaitPayment : ({
               pending: copy.viaLoginOperatorQueue,
               processing: copy.viaLoginOperatorQueue,
-              completed: copy.viaLoginFinished,
+              completed: import.meta.env.MODE==='dev' ? copy.loginPurchaseTestComplete : copy.viaLoginFinished,
               failed: copy.viaLoginNeedsSupport,
               cancelled: copy.cancelled,
             }[stateKey(item.fulfillmentStatus, FULFILLMENT_STATES)] || copy.unknown)}</small>}
-            {item.target && <div className="sos-lookup-target">
+            {item.target && !(import.meta.env.MODE==='dev' && item.kind==='TopUpLogin') && <div className="sos-lookup-target">
               {item.target.accountDisplayName && <span>{item.target.accountDisplayName}</span>}
               {Object.entries(item.target.fields || {}).map(([key, value]) => (
                 <small key={key}>{key.replaceAll('_', ' ')} · {value}</small>

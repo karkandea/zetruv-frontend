@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
+import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import { readDirectLoginCheckout, saveDirectLoginCheckout, clearDirectLoginCheckout } from '../services/directLoginCheckout'
 import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, removeCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
@@ -165,11 +166,11 @@ function CheckoutProduct({
         </div>
       )}
 
-      {isLogin && (
+      {isLogin && !serviceStatus?.sandboxTest && (
         <div className="checkout-product__account">
           <div className="checkout-product__account-title">
             <strong>{copy.gameAccountForThisPackage}</strong>
-            <span>{serviceStatus?.sandboxTest ? 'DEV Sandbox — simulasi saja, tanpa akun game asli.' : copy.useYourGameAccountDetailsHere}</span>
+            <span>{copy.useYourGameAccountDetailsHere}</span>
           </div>
           {!serviceStatus?.available ? (
             <div className="checkout-service-unavailable" role="status">
@@ -183,7 +184,7 @@ function CheckoutProduct({
                 <a href="/search">{copy.browseOtherProducts2} <ArrowRight size={14} aria-hidden="true" /></a>
               </div>
             </div>
-          ) : serviceStatus?.sandboxTest ? <p className="checkout-product__security" role="status"><ShieldAlert size={15} aria-hidden="true"/> Akun dummy QA otomatis digunakan. Jangan masukkan password atau OTP game asli.</p> : <>
+          ) : <>
           {options?.length > 0 && (
             <label className="checkout-product__share">
               <input type="checkbox" checked={Boolean(sibling)}
@@ -364,7 +365,7 @@ function DigitalCheckoutPage() {
     try{
       const data=await getCheckoutPaymentOptions()
       setReadiness(data);setMethodsState('ready')
-      setMethod(current=>data.availableMethods?.some(m=>m.code===current)?current:'')
+      setMethod(current=>data.availableMethods?.some(m=>m.code===current)?current:data.canAcceptLivePayments && data.availableMethods?.length===1 ? data.availableMethods[0].code : '')
       return data
     }catch{setReadiness(null);setMethodsState('error');setMethod('');return null}
   },[])
@@ -439,6 +440,8 @@ function DigitalCheckoutPage() {
       voucherState,methodsState,readiness,methodEnabled,paymentFee,total,idValidations,serviceReadiness,customer,cartSync,copy,directLogin])
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
+  const loginOnly=items.length>0 && allCreds.length===items.length
+  const chooseHref=directLogin && items[0] ? '/product/'+encodeURIComponent(items[0].productSlug)+'/login?from=checkout&variant='+encodeURIComponent(items[0].variantId)+'&quantity='+encodeURIComponent(items[0].quantity) : '/cart'
   const firstAccountIssue=items.map(item=>{
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest) return null
@@ -572,7 +575,7 @@ function DigitalCheckoutPage() {
           if(item.fulfillmentMethod==='MANUAL_LOGIN'){
             const key=matchingAccountSource(items,item,sharing)
             const sandbox = viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest
-            if(sandbox && !freshMethods.isSandbox) throw new CheckoutError('Sandbox QA requires a sandbox payment gateway.')
+            if(sandbox && !freshMethods.isSandbox) throw new CheckoutError(copy.loginPurchasePayUnavailable)
             data.loginCredentials=sandbox ? {email:'qa-player@example.test', password:'Zetruv-QA-Only-2026!', nickname:'Zetruv QA'} : Object.fromEntries(
               checkoutFields(freshCatalog[item.productSlug],'LoginCredential')
                 .map(f=>[f.key,String(values[key]?.[f.slot]||'').trim()]))
@@ -662,10 +665,11 @@ function DigitalCheckoutPage() {
 
   return <div className="digital-shell">
     <Navbar variant="default" homepageMobileMenu />
-    <main className="digital-checkout-page digital-container">
+    <main className={`digital-checkout-page digital-container${loginOnly ? " login-purchase-checkout" : ""}`}>
       <header className="digital-checkout-heading">
-        <h1>{copy.digitalCheckout}</h1><p>{directLogin ? copy.buyNow + ' · ' + copy.reviewTheDestinationAccountPaymentMethodAnd : copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
+        <h1>{copy.digitalCheckout}</h1><p>{loginOnly ? copy.loginPurchaseReview : copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
       </header>
+      {loginOnly && <LoginPurchaseProgress current={1} chooseHref={chooseHref}/>}
       {pendingAttempt && <section role="alert" className="checkout-price-change" style={{marginBottom:20}}>
         <AlertCircle size={20}/><div><strong>{copy.previousCheckoutIsUnconfirmed}</strong>
           <p>{copy.thePageMayHaveReloadedBeforeThe}</p>
@@ -678,6 +682,7 @@ function DigitalCheckoutPage() {
       <div className="digital-checkout-layout">
         <section className="digital-checkout-order">
           <h2>{copy.orderSummary}</h2>
+          {directLogin && items.length>0 && <a className="login-purchase-edit" href={chooseHref}><Pencil size={14} aria-hidden="true"/>{copy.loginPurchaseEdit}</a>}
           <div className="digital-checkout-items">
             {items.length && catalogState === 'loading' ? <LoadingRegion label={copy.loadingCatalog}>
               {items.map(item => <div className="digital-checkout-item checkout-product" key={item.cartKey}>
@@ -720,7 +725,7 @@ function DigitalCheckoutPage() {
             </label>
             {(phoneTouched || formTouched) && !phoneNormalized
               ? <small className="checkout-field-error">{copy.useAValidIndonesianPhoneNumberFor}</small>
-              : <small>{copy.weLlUseThisNumberForOrder} {phoneNormalized && `Format: ${phoneNormalized}`}</small>}
+              : <small>{copy.loginPurchaseContactHint}</small>}
           </div>
           <div className="digital-voucher">
             <label htmlFor="checkout-voucher">{copy.voucherCode}</label>
@@ -765,9 +770,9 @@ function DigitalCheckoutPage() {
               <p className="checkout-gateway-state" role="status"><Info size={16}/>{copy.paymentMethodsAreUnavailablePleaseTryAgain}</p>:null}
           <div className="digital-checkout-prices">
             <div><span>{copy.productSubtotal}</span><strong>{rupiah(linePricing.subtotal)}</strong></div>
-            <div><span>{copy.productDiscount}</span><strong>−{rupiah(linePricing.discount)}</strong></div>
+            {linePricing.discount>0 && <div><span>{copy.productDiscount}</span><strong>−{rupiah(linePricing.discount)}</strong></div>}
             {voucher && <div className="is-discount"><span>{copy.voucher} {voucher.code}</span><strong>−{rupiah(voucherDiscount)}</strong></div>}
-            <div><span>{copy.serviceFee} <Info size={13} title={copy.theServiceFeeWillAppearWhenAvailable}/></span><strong>—</strong></div>
+            <div><span>{copy.serviceFee} <Info size={13} title={copy.theServiceFeeWillAppearWhenAvailable}/></span><strong>{rupiah(linePricing.serviceFee)}</strong></div>
             <div><span>{copy.paymentFee} <Info size={13} title={copy.theFeeDependsOnThePaymentMethod}/></span>
               <strong>{paymentFee==null?'—':rupiah(paymentFee)}</strong></div>
           </div>
