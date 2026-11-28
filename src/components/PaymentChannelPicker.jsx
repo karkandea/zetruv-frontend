@@ -3,6 +3,10 @@ import { ChevronDown, QrCode, Wallet, Landmark, Store, CreditCard, CalendarClock
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
 import '../styles/payment-channel-picker.css'
 
+const logos = {
+  MIDTRANS_GOPAY:'gopay',MIDTRANS_DANA:'dana',MIDTRANS_OVO:'ovo',MIDTRANS_SHOPEEPAY:'shopeepay',
+  MIDTRANS_BCA_VA:'bca',MIDTRANS_BNI_VA:'bni',MIDTRANS_BRI_VA:'bri',MIDTRANS_DANAMON_VA:'danamon',
+}
 const groups = [
   ['qris','QRIS','QRIS','QRIS',QrCode],
   ['wallet','E-Wallet','E-Wallet','E-Dompet',Wallet],
@@ -29,7 +33,7 @@ export default function PaymentChannelPicker({methods,selected,onSelect,disabled
         {open && <div className="payment-channel-group__rows" role="group" aria-label={title}>
           {rows.map(m=><button type="button" key={m.code} className={'payment-channel-option'+(selected===m.code?' is-active':'')} aria-pressed={selected===m.code} disabled={disabled||m.paymentFee==null}
             onClick={()=>onSelect(m.code)}>
-            <span>{m.name}</span><span className="payment-channel-radio" aria-hidden="true"/>
+            {logos[m.code] ? <img className="payment-channel-logo" src={'/assets/footer/payment-'+logos[m.code]+'.png'} alt=""/> : <Icon className="payment-channel-icon" size={18} aria-hidden="true"/>}<span className="payment-channel-name">{m.name}</span><span className="payment-channel-radio" aria-hidden="true"/>
           </button>)}
         </div>}
       </section>
