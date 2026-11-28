@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, CircleAlert, Info, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import CartEmptyIllustration from '../components/CartEmptyIllustration'
 import Navbar from '../components/Navbar'
+import ManualServiceNotice from '../components/ManualServiceNotice'
 import AuthModal from '../components/AuthModal'
 import { getCatalogProduct } from '../services/catalogService'
 import { activateCustomerCart, refreshCustomerCart, readCustomerSession, setCustomerSession, getCartSyncStatus, resolveCartConflict, CART_SYNC_EVENT } from '../services/customerCartSync'
@@ -314,7 +315,7 @@ export default function CartPage() {
                               <Pencil size={13} aria-hidden="true" /> {copy.edit}
                             </button>
                           </div>
-                        ) : <p>{itemContext(item, copy, loginStatus)}</p>}
+                        ) : item.productKind === 'Joki' ? <ManualServiceNotice compact /> : <p>{itemContext(item, copy, loginStatus)}</p>}
                         {checking && !issue && <LoadingRegion className="digital-cart-item__checking" label={copy.checkingProductRequirementsAndAccountDetails}><Bone width="70%" /></LoadingRegion>}
                         {issue && <p className="digital-cart-item__warning"><CircleAlert size={13} aria-hidden="true" />{issue}</p>}
                         {loginUnavailable && <div className="digital-cart-item__unavailable-actions">
