@@ -96,7 +96,7 @@ export function midtransPaymentLink(url) {
     const parsed = new URL(url)
     return parsed.origin === 'https://app.sandbox.midtrans.com' &&
       !parsed.username && !parsed.password &&
-      /^\/snap\/(?:v3\/redirection|v2\/vtweb)\/[A-Za-z0-9_-]+\/?$/.test(parsed.pathname)
+      /^\/snap\/(?:v[34]\/redirection|v2\/vtweb)\/[A-Za-z0-9_-]+\/?$/.test(parsed.pathname)
       ? parsed.href : null
   } catch { return null }
 }
