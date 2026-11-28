@@ -191,7 +191,7 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
         gameName: product.game?.name || product.name,
         variantId: selected.id,
         variantSku: selected.sku,
-        variantName: selected.name,
+        variantName: selected.name, variantIconUrl: selected.iconUrl, rankFrom: selected.rankFrom, rankTo: selected.rankTo, rankFromIconUrl: selected.rankFromIconUrl, rankToIconUrl: selected.rankToIconUrl,
         unitPrice,
         regularPrice,
         quantity: quantityCapable ? quantity : 1,

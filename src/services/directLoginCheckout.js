@@ -17,6 +17,7 @@ function clean(item) {
     productKind:'TopUpLogin', fulfillmentMethod:'MANUAL_LOGIN',
     productName:String(item.productName || ''), gameName:String(item.gameName || ''),
     variantName:String(item.variantName || ''), variantSku:String(item.variantSku || ''),
+    variantIconUrl:String(item.variantIconUrl || ''), rankFrom:String(item.rankFrom || ''), rankTo:String(item.rankTo || ''), rankFromIconUrl:String(item.rankFromIconUrl || ''), rankToIconUrl:String(item.rankToIconUrl || ''),
     thumbnailUrl:String(item.thumbnailUrl || ''), unitPrice,
     regularPrice:Number(item.regularPrice) > 0 ? Number(item.regularPrice) : unitPrice,
     quantity, maxQuantity, requiresGameAccountValidation:Boolean(item.requiresGameAccountValidation),

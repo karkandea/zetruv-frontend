@@ -1,3 +1,4 @@
+import PurchasedProductValue from '../components/PurchasedProductValue'
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -106,8 +107,8 @@ function CheckoutProduct({
         <div className="checkout-product__identity">
           <span className="digital-product-method">{methodLabel(item, copy)}</span>
           <strong>{['Joki', 'GameItem'].includes(item.productKind) ? item.productName : item.gameName || item.productName}</strong>
-          <span>{item.variantName}</span>
-          <small>{copy.unitPrice2} {rupiah(item.unitPrice)}{quantity > 1 ? ` · ${quantity} item` : ''}</small>
+          <PurchasedProductValue item={item} variant={product?.variants?.find(v => v.id === item.variantId)} />
+          {quantity > 1 && <small>{copy.unitPrice2} {rupiah(item.unitPrice)} · {quantity} item</small>}
         </div>
         <strong className="checkout-product__price">{rupiah(lineTotal)}<small>{copy.subtotal} {quantity > 1 ? `(${quantity} item)` : ''}</small></strong>
       </div>

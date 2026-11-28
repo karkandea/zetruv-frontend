@@ -95,3 +95,13 @@ test('payment summary persists safe display metadata and recovers old snapshots 
  assert.equal(paymentThumbnail('//example.test/game.png'),null)
  assert.equal(QRIS_SIMULATOR_URL,'https://simulator.sandbox.midtrans.com/v2/qris/index')
 })
+
+test('payment summary preserves order rank snapshot and filters unsafe icon URL',()=>{
+  const s=storage()
+  storePaymentContext({...order,items:[{...order.items[0],productKind:'Joki',rankFrom:'Epic V',rankTo:'Legend V',rankFromIconUrl:'/media/catalog/epic.webp',rankToIconUrl:'javascript:alert(1)'}]},'QRIS',s)
+  const item=readPaymentContext(s).items[0]
+  assert.equal(item.rankFrom,'Epic V')
+  assert.equal(item.rankTo,'Legend V')
+  assert.equal(item.rankFromIconUrl,'/media/catalog/epic.webp')
+  assert.equal(item.rankToIconUrl,null)
+})

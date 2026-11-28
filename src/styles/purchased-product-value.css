@@ -1,0 +1,7 @@
+.purchased-value{display:inline-flex!important;align-items:center;flex-wrap:wrap;gap:6px;max-width:100%;width:fit-content;min-width:0;font-size:13px!important;line-height:1.4;color:#343c56;font-weight:600;vertical-align:middle}
+.purchased-value .purchased-value__rank{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border:1px solid #e5e8f1;border-radius:7px;background:#f7f8fc;font:inherit;color:inherit;max-width:100%}
+.purchased-value .purchased-value__icon{width:22px;height:22px;object-fit:contain;flex:0 0 22px;border-radius:0;display:block}
+.purchased-value .purchased-value__fallback{color:#65718a;padding:2px}
+.purchased-value .purchased-value__arrow{flex:none;color:#77829a}
+.purchased-value .purchased-value__label{font:inherit;color:inherit;overflow-wrap:anywhere}
+@media(max-width:480px){.purchased-value{font-size:12px!important;gap:4px}.purchased-value .purchased-value__rank{padding:3px 5px}.purchased-value .purchased-value__icon{width:18px;height:18px;flex-basis:18px}}

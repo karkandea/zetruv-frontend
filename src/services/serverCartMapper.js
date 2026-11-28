@@ -14,7 +14,7 @@ export function serverLineToCart(row){
     productName:row.productName,productKind:row.kind,
     fulfillmentMethod:row.fulfillmentMethod,gameName:row.gameName||row.productName,
     thumbnailUrl:row.thumbnailUrl,variantId:row.productVariantId,
-    variantName:row.variantName,unitPrice:Number(row.unitPrice),
+    variantName:row.variantName,variantIconUrl:row.variantIconUrl,rankFrom:row.rankFrom,rankTo:row.rankTo,rankFromIconUrl:row.rankFromIconUrl,rankToIconUrl:row.rankToIconUrl,unitPrice:Number(row.unitPrice),
     regularPrice:Number(row.regularPrice??row.unitPrice),
     quantity:row.quantity,maxQuantity:row.stockQuantity??99,
     isAvailable:row.isAvailable,

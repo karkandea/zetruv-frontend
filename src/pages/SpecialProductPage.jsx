@@ -97,7 +97,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
     thumbnailUrl: image,
     gameName: manual ? product.game?.name || product.name : product.name,
     variantId: selected.id,
-    variantName: selected.name,
+    variantName: selected.name, variantIconUrl: selected.iconUrl, rankFrom: selected.rankFrom, rankTo: selected.rankTo, rankFromIconUrl: selected.rankFromIconUrl, rankToIconUrl: selected.rankToIconUrl,
     unitPrice: packagePrice(selected),
     regularPrice: selected.price,
     quantity,

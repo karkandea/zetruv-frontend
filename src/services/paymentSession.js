@@ -39,6 +39,10 @@ export function storePaymentContext(order, methodCode, storage = globalThis.sess
     items: (Array.isArray(order.items) ? order.items : []).map(item => ({
       productName: String(item.productName || ''),
       variantName: String(item.variantName || ''),
+      productSlug: String(item.productSlug || ''),
+      variantIconUrl: paymentThumbnail(item.variantIconUrl),
+      rankFrom: item.rankFrom || null, rankTo: item.rankTo || null,
+      rankFromIconUrl: paymentThumbnail(item.rankFromIconUrl), rankToIconUrl: paymentThumbnail(item.rankToIconUrl),
       thumbnailUrl: paymentThumbnail(item.thumbnailUrl),
       kind: String(item.productKind || item.kind || ''),
       quantity: Number(item.quantity || 1),
@@ -124,6 +128,6 @@ export function enrichPaymentItems(items, detailItems) {
   if(!Array.isArray(detailItems)) return items
   return items.map(item => {
     const match=detailItems.find(other=>other.productName===item.productName && other.variantName===item.variantName && Number(other.quantity)===Number(item.quantity))
-    return {...item, thumbnailUrl:paymentThumbnail(item.thumbnailUrl)||paymentThumbnail(match?.thumbnailUrl), kind:item.kind||String(match?.kind||match?.productKind||'')}
+    return {...item, productSlug:item.productSlug||match?.productSlug, variantIconUrl:paymentThumbnail(item.variantIconUrl)||paymentThumbnail(match?.variantIconUrl), rankFrom:item.rankFrom||match?.rankFrom, rankTo:item.rankTo||match?.rankTo, rankFromIconUrl:paymentThumbnail(item.rankFromIconUrl)||paymentThumbnail(match?.rankFromIconUrl), rankToIconUrl:paymentThumbnail(item.rankToIconUrl)||paymentThumbnail(match?.rankToIconUrl), thumbnailUrl:paymentThumbnail(item.thumbnailUrl)||paymentThumbnail(match?.thumbnailUrl), kind:item.kind||String(match?.kind||match?.productKind||'')}
   })
 }

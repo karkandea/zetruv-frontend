@@ -1,3 +1,4 @@
+import efootballCoins from '../assets/topup-currency/efootball-coins.svg'
 import mobile5 from '../assets/topup-currency/ml-diamond-5.png'
 import mobile50 from '../assets/topup-currency/ml-diamond-50.png'
 import mobile100 from '../assets/topup-currency/ml-diamond-100.png'
@@ -15,6 +16,7 @@ import starRailShards from '../assets/topup-currency/honkai-oneiric.svg'
  * The other game currencies have distinct locally bundled artwork.
  */
 const currencyArt = Object.freeze({
+  'efootball-mobile': { image: efootballCoins, label: 'eFootball Coins' },
   'pubg-mobile': { image: pubgUC, label: 'PUBG Mobile UC' },
   valorant: { image: valorantVP, label: 'Valorant Points' },
   'genshin-impact': { image: genshinCrystals, label: 'Genesis Crystals' },

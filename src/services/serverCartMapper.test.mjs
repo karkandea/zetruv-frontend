@@ -23,3 +23,13 @@ test('identical SKU different targets stay distinct and omit game password',()=>
   assert.notDeepEqual(a.accountFields,b.accountFields)
   assert.ok(!JSON.stringify([a,b]).includes('password'))
 })
+
+test('cart carries existing variant icon and structured rank values',()=>{
+  const value = serverLineToCart({kind:'Joki',variantName:'Epic V → Legend V',
+    variantIconUrl:'/media/catalog/value.webp',rankFrom:'Epic V',rankTo:'Legend V',
+    rankFromIconUrl:'/media/catalog/epic.webp',rankToIconUrl:'/media/catalog/legend.webp'})
+  assert.equal(value.variantIconUrl,'/media/catalog/value.webp')
+  assert.equal(value.rankFrom,'Epic V')
+  assert.equal(value.rankTo,'Legend V')
+  assert.equal(value.rankToIconUrl,'/media/catalog/legend.webp')
+})
