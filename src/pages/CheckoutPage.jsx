@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Info, LoaderCircle, Pencil, RefreshCw, ShieldAlert, ShoppingCart, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
-import { LoginPurchaseProgress, LoginPurchaseNotice } from '../components/LoginPurchaseProgress'
+import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import { readDirectLoginCheckout, saveDirectLoginCheckout, clearDirectLoginCheckout } from '../services/directLoginCheckout'
 import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, removeCartItem } from '../services/cartService'
 import { getCatalogProduct } from '../services/catalogService'
@@ -166,7 +166,6 @@ function CheckoutProduct({
         </div>
       )}
 
-      {isLogin && serviceStatus?.sandboxTest && <div className="checkout-product__account--minimal"><p>{copy.loginPurchaseNoAccountNeeded}</p></div>}
       {isLogin && !serviceStatus?.sandboxTest && (
         <div className="checkout-product__account">
           <div className="checkout-product__account-title">
@@ -442,7 +441,6 @@ function DigitalCheckoutPage() {
   const valid=checkoutIssues.length===0
   const allCreds=items.filter(i=>i.fulfillmentMethod==='MANUAL_LOGIN')
   const loginOnly=items.length>0 && allCreds.length===items.length
-  const sandboxLogin=allCreds.some(item=>viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).sandboxTest)
   const chooseHref=directLogin && items[0] ? '/product/'+encodeURIComponent(items[0].productSlug)+'/login?from=checkout&variant='+encodeURIComponent(items[0].variantId)+'&quantity='+encodeURIComponent(items[0].quantity) : '/cart'
   const firstAccountIssue=items.map(item=>{
     if(item.fulfillmentMethod==='MANUAL_LOGIN' && !viaLoginServiceStatus(catalog[item.productSlug],item,serviceReadiness[item.productSlug]).available) return null
@@ -672,7 +670,6 @@ function DigitalCheckoutPage() {
         <h1>{copy.digitalCheckout}</h1><p>{loginOnly ? copy.loginPurchaseReview : copy.reviewTheDestinationAccountPaymentMethodAnd}</p>
       </header>
       {loginOnly && <LoginPurchaseProgress current={1} chooseHref={chooseHref}/>}
-      {sandboxLogin && <LoginPurchaseNotice/>}
       {pendingAttempt && <section role="alert" className="checkout-price-change" style={{marginBottom:20}}>
         <AlertCircle size={20}/><div><strong>{copy.previousCheckoutIsUnconfirmed}</strong>
           <p>{copy.thePageMayHaveReloadedBeforeThe}</p>
@@ -765,7 +762,7 @@ function DigitalCheckoutPage() {
               </button>
             })}
           </div>}
-          {readiness?.isSandbox && !sandboxLogin && <p className="checkout-gateway-state" role="status">
+          {readiness?.isSandbox && <p className="checkout-gateway-state" role="status">
             <Info size={16}/>{copy.testModeThisTransactionUsesNoReal}
           </p>}
           {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">{copy.weCouldnTLoadPaymentMethods} <button type="button" onClick={refreshMethods}>{copy.tryAgain3}</button></p>
