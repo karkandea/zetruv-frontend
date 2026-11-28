@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Info, LoaderCircle, Minus, Plus, ShoppingCart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AuthModal from '../components/AuthModal'
-import { LoginPurchaseProgress, LoginPurchaseNotice } from '../components/LoginPurchaseProgress'
+import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import ProductBenefits from '../components/ProductBenefits'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import ProductOrderDock from '../components/ProductOrderDock'
@@ -288,7 +288,6 @@ export default function ProductDetailLoginPage({ slug = 'genshin-impact', initia
                   <LoginPurchaseProgress current={0}/>
                   <h2 id="login-packages-heading">{copy.chooseAPackage}</h2>
                   <p className="login-package-description">{copy.chooseAPackageForYourGameAccount}</p>
-                  {serviceStatus.sandboxTest && <LoginPurchaseNotice/>}
                   {selectionWarning && <p className="login-variant-warning" role="status"><CircleAlert size={16} aria-hidden="true" />{selectionWarning}</p>}
                   <div className="login-package-grid">
                     {product.variants.map((variant, index) => {
