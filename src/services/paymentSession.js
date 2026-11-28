@@ -87,3 +87,16 @@ export function formatPaymentCountdown(expiresAt, now = Date.now()) {
   const s = seconds % 60
   return [h,m,s].map(v => String(v).padStart(2,'0')).join(':')
 }
+
+export function isMidtransMethod(code) {
+  return typeof code === 'string' && /^MIDTRANS_[A-Z0-9_]+$/.test(code)
+}
+export function midtransPaymentLink(url) {
+  try {
+    const parsed = new URL(url)
+    return parsed.origin === 'https://app.sandbox.midtrans.com' &&
+      !parsed.username && !parsed.password &&
+      /^\/snap\/v[234]\/redirection\/[A-Za-z0-9_-]+\/?$/.test(parsed.pathname)
+      ? parsed.href : null
+  } catch { return null }
+}
