@@ -30,6 +30,7 @@ function notify(state,message=''){
     window.dispatchEvent(new CustomEvent(CART_SYNC_EVENT,{detail:status}))
 }
 export const getCartSyncStatus=()=>status
+export const getCheckoutCartRevision=()=>status.state==='synced' && isAuthenticatedCart() ? currentRevision : null
 
 export function readCustomerSession(){
   if(typeof window==='undefined')return null
