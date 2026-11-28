@@ -1,3 +1,5 @@
+import WhatsAppPhoneInput from '../components/WhatsAppPhoneInput'
+import { normalizeWhatsApp } from '../services/whatsappPhone'
 import PurchasedProductValue from '../components/PurchasedProductValue'
 import { Bone, LoadingRegion, SkeletonLines, SkeletonRows } from '../components/Skeleton'
 import { formatCopy } from '../services/storefrontCopy'
@@ -13,7 +15,7 @@ import { readCart, onCartChange, updateCartAccount, acceptCartPriceChanges, remo
 import { getCatalogProduct } from '../services/catalogService'
 import { getDigitalPricing } from '../services/digitalCartPricing'
 import {
-  checkoutFields, normalizeIndonesianWhatsApp, validateCheckoutAccount,
+  checkoutFields, validateCheckoutAccount,
   validateCheckoutField, matchingAccountSource, currentCatalogDifferences, paymentSelectionAllowed,
   priceChangeExplanation,
 } from '../services/digitalCheckoutRules'
@@ -296,6 +298,7 @@ function DigitalCheckoutPage() {
   const [methodsState,setMethodsState]=useState('loading')
   const [method,setMethod]=useState('')
   const [phone,setPhone]=useState('')
+  const [phoneCountry,setPhoneCountry]=useState('ID')
   const [phoneTouched,setPhoneTouched]=useState(false)
   const [values,setValues]=useState({})
   const [sharing,setSharing]=useState({})
@@ -373,7 +376,7 @@ function DigitalCheckoutPage() {
   },[])
   useEffect(()=>{refreshMethods()},[refreshMethods])
 
-  const phoneNormalized=normalizeIndonesianWhatsApp(phone)
+  const phoneNormalized=normalizeWhatsApp(phone,phoneCountry)
   const {changes,problems}=useMemo(()=>currentCatalogDifferences(items,catalog,copy),[items,catalog,copy])
   const linePricing=useMemo(()=>getDigitalPricing(items),[items])
   const voucherDiscount=Number(voucher?.discountAmount || 0)
@@ -725,13 +728,11 @@ function DigitalCheckoutPage() {
           </div>}
           <div className="digital-contact-block">
             <h3>{copy.contactInformation}</h3>
-            <label htmlFor="checkout-phone">{copy.whatsappNumber}
-              <input id="checkout-phone" type="tel" autoComplete="tel" inputMode="tel"
-                placeholder={copy.label08xxxxxxxxxxOr62xxxxxxxxxx} value={phone}
-                aria-invalid={phoneTouched && !phoneNormalized}
-                onBlur={()=>setPhoneTouched(true)}
-                onChange={e=>{setPhone(e.target.value);setVoucher(null);setVoucherState('idle')}}/>
-            </label>
+            <label htmlFor="checkout-phone">{copy.whatsappNumber}</label>
+            <WhatsAppPhoneInput id="checkout-phone" country={phoneCountry} value={phone}
+              invalid={(phoneTouched || formTouched) && !phoneNormalized}
+              onBlur={()=>setPhoneTouched(true)}
+              onChange={(country,value)=>{setPhoneCountry(country);setPhone(value);setVoucher(null);setVoucherState('idle')}}/>
             {(phoneTouched || formTouched) && !phoneNormalized
               ? <small className="checkout-field-error">{copy.useAValidIndonesianPhoneNumberFor}</small>
               : <small>{copy.loginPurchaseContactHint}</small>}
