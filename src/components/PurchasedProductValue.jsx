@@ -4,11 +4,14 @@ import { getTopUpCurrencyArt } from '../data/topUpCurrencyAssets'
 import { paymentThumbnail } from '../services/paymentSession'
 import '../styles/purchased-product-value.css'
 
-function ValueIcon({ url, fallback: Icon }) {
+function ValueIcon({ url, bundledArt, fallback: Icon }) {
   const safe = paymentThumbnail(url)
-  const [failed, setFailed] = useState(null)
-  return safe && safe !== failed
-    ? <img className="purchased-value__icon" src={safe} alt="" loading="lazy" decoding="async" onError={() => setFailed(safe)} />
+  // Bundled art is a trusted import (Vite may inline an SVG data URI).
+  // Never accept a data URI from an API or stored cart.
+  const [failed, setFailed] = useState([])
+  const image = safe && !failed.includes(safe) ? safe : bundledArt && !failed.includes(bundledArt) ? bundledArt : null
+  return image
+    ? <img className="purchased-value__icon" src={image} alt="" loading="lazy" decoding="async" onError={() => setFailed(old => [...old, image])} />
     : <Icon className="purchased-value__icon purchased-value__fallback" aria-hidden="true" strokeWidth={1.7} />
 }
 
@@ -30,7 +33,7 @@ export default function PurchasedProductValue({ item, variant }) {
   if (!label) return null
   const topup = ['TopUpGame','TopUpId','TopUpLogin'].includes(kind)
   const artwork = topup ? getTopUpCurrencyArt(item.productSlug, {name:label}) : null
-  const url = item.variantIconUrl || variant?.iconUrl || artwork?.image
+  const url = item.variantIconUrl || variant?.iconUrl
   const fallback = topup ? (/diamond/i.test(label) ? Gem : Coins) : kind === 'GameVoucher' ? Ticket : kind === 'Joki' ? Shield : Package
-  return <span className="purchased-value"><ValueIcon url={url} fallback={fallback}/><span className="purchased-value__label">{label}</span></span>
+  return <span className="purchased-value"><ValueIcon url={url} bundledArt={artwork?.image} fallback={fallback}/><span className="purchased-value__label">{label}</span></span>
 }
