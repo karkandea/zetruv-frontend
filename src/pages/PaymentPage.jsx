@@ -2,16 +2,18 @@ import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react'
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, RefreshCw, ShieldCheck, Package } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { apiRequest } from '../api/httpClient'
+import { restoreCustomerSession, readCustomerSession } from '../services/customerCartSync'
 import {
   getCheckoutPaymentOptions, getOrderPaymentStatus, startOrderPayment,
 } from '../services/checkoutGatewayService'
 import {
   readPaymentContext, normalizePaymentState, mayInitiatePayment,
-  formatPaymentCountdown, paymentLink, isMidtransMethod, midtransPaymentLink, midtransQrisImage,
+  formatPaymentCountdown, paymentLink, isMidtransMethod, midtransPaymentLink, midtransQrisImage, paymentThumbnail, enrichPaymentItems, QRIS_SIMULATOR_URL,
 } from '../services/paymentSession'
 import '../styles/digital-commerce.css'
 import '../styles/payment-session.css'
@@ -37,6 +39,39 @@ export default function PaymentPage() {
   const copy = useStorefrontCopy()
   const [context] = useState(() => readPaymentContext(window.sessionStorage))
   const [payment, setPayment] = useState(null)
+  const [summaryItems,setSummaryItems] = useState(()=>context?.items || [])
+  const [copiedQr,setCopiedQr]=useState(false)
+  const pageRef=useRef(null)
+
+  useLayoutEffect(()=>{
+    const main=pageRef.current
+    const nav=main?.parentElement?.querySelector('header.navbar')
+    if(!main || !nav) return
+    const measure=()=>{
+      const style=getComputedStyle(nav)
+      const top=Number.parseFloat(style.top)||0
+      main.style.setProperty('--payment-top-space', (style.position==='fixed' ? Math.max(0,nav.offsetHeight+top)+24 : 24)+'px')
+    }
+    measure()
+    const observer=new ResizeObserver(measure)
+    observer.observe(nav)
+    window.addEventListener('resize',measure)
+    return ()=>{observer.disconnect();window.removeEventListener('resize',measure)}
+  },[context])
+
+  useEffect(()=>{
+    if(!context || context.items.every(i=>i.thumbnailUrl && i.kind)) return
+    const controller=new AbortController()
+    ;(async()=>{
+      if(!readCustomerSession()?.accessToken) await restoreCustomerSession()
+      const token=readCustomerSession()?.accessToken
+      if(!token || controller.signal.aborted) return
+      const detail=await apiRequest('/me/orders/'+encodeURIComponent(context.orderId), {cache:'no-store',signal:controller.signal,headers:{Authorization:'Bearer '+token}})
+      if(!controller.signal.aborted && detail.id===context.orderId)
+        setSummaryItems(enrichPaymentItems(context.items,detail.items))
+    })().catch(()=>{})
+    return ()=>controller.abort()
+  },[context])
   const [loading, setLoading] = useState(Boolean(context))
   const [refreshing, setRefreshing] = useState(false)
   const [retrying, setRetrying] = useState(false)
@@ -146,7 +181,7 @@ export default function PaymentPage() {
   if (!context) {
     return <div className="digital-shell">
       <Navbar variant="default"  homepageMobileMenu />
-      <main className="payment-session-page">
+      <main className="payment-session-page" ref={pageRef}>
         <section className="payment-session-empty" role="status">
           <AlertCircle size={32} />
           <h1>{copy.noPaymentSession}</h1>
@@ -178,10 +213,10 @@ export default function PaymentPage() {
 
   return <div className="digital-shell">
     <Navbar variant="default"  homepageMobileMenu />
-    <main className="payment-session-page">
+    <main className="payment-session-page" ref={pageRef}>
       <header className="payment-session-heading">
         <div>
-          <a className="payment-session-back" href="/order-status"><ArrowLeft size={16} /> {copy.checkOrder2}</a>
+          <a className="payment-session-back" href="/account/orders"><ArrowLeft size={18} aria-hidden="true" /> {copy.myOrders}</a>
           <h1>{state==='Paid' ? title : copy.completeYourPayment}</h1>
           <p>{copy.orderNumber2} <strong>{context.orderNumber}</strong></p>
         </div>
@@ -211,8 +246,8 @@ export default function PaymentPage() {
                   <strong>{copy.nativeQrisAmount} <span>{rupiah(context.grandTotal)}</span></strong>
                   <img src={qrImage} alt={copy.qrisFromThePaymentProvider} width="240" height="240" referrerPolicy="no-referrer"/>
                   <p>{copy.nativeQrisSandboxInstruction}</p>
-                  <a className="payment-session-action-link" href="https://simulator.sandbox.midtrans.com/openapi/qris/index" target="_blank" rel="noopener noreferrer">{copy.nativeQrisSimulator} <ExternalLink size={16}/></a>
-                  <button type="button" className="payment-session-copy-qr" onClick={async()=>{try{await navigator.clipboard.writeText(qrImage);setError('')}catch{setError(copy.nativeQrisCopyError)}}}>{copy.nativeQrisCopyLink}</button>
+                  <a className="payment-session-action-link" href={QRIS_SIMULATOR_URL} target="_blank" rel="noopener noreferrer">{copy.nativeQrisSimulator} <ExternalLink size={16}/></a>
+                  <button type="button" className="payment-session-copy-qr" onClick={async()=>{try{await navigator.clipboard.writeText(qrImage);setCopiedQr(true);setError('')}catch{setError(copy.nativeQrisCopyError)}}}>{copiedQr?copy.copied:copy.nativeQrisCopyLink}</button>
                 </div>}
                 {qr && <div className="payment-session-qr">
                   <QRCodeSVG value={qr} size={240} level="M" marginSize={2} title={copy.qrisFromThePaymentProvider} />
@@ -241,10 +276,15 @@ export default function PaymentPage() {
           <h2>{copy.orderSummary}</h2>
           
           <div className="payment-session-lines">
-            {context.items.map((item, index) => <div key={index} className="payment-session-line">
-              <div><strong>{item.productName}</strong><span>{item.variantName} · {item.quantity} {copy.items}</span></div>
-              <strong>{rupiah(item.lineTotal)}</strong>
-            </div>)}
+            {summaryItems.map((item, index) => {
+              const category={Joki:copy.gameBoosting,TopUpLogin:copy.topUpByLogin,TopUpId:copy.topUpById,GameItem:copy.gameItems,GameAccount:copy.gameAccount,GameVoucher:copy.gameVouchers,Merchandise:copy.merchandise}[item.kind]
+              const thumb=paymentThumbnail(item.thumbnailUrl)
+              return <article key={index} className="payment-session-line">
+                <span className="payment-session-thumb">{thumb?<img src={thumb} alt="" onError={e=>{e.currentTarget.hidden=true}}/>:null}<Package size={22} aria-hidden="true"/></span>
+                <div className="payment-session-item-copy">{category&&<small className="payment-session-item-category">{category}</small>}<strong>{item.productName}</strong><span>{item.variantName} · {item.quantity} {copy.items}</span></div>
+                <strong className="payment-session-line-price">{rupiah(item.lineTotal)}</strong>
+              </article>
+            })}
           </div>
           <div className="payment-session-total"><span>{copy.orderTotal}</span><strong>{rupiah(context.grandTotal)}</strong></div>
           {state!=='Paid' && <small>{copy.weLlUpdateThePaymentStatusOnce}</small>}
