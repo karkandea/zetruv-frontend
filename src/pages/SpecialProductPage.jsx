@@ -3,6 +3,7 @@ import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
 import { useEffect, useRef, useState } from 'react'
 import { Info, Minus, Plus } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import ManualServiceNotice from '../components/ManualServiceNotice'
 import ProductReviews, { ProductRating } from '../components/ProductReviews'
 import { searchAssets } from '../data/searchAssets'
 import { getCatalogProduct } from '../services/catalogService'
@@ -153,7 +154,7 @@ function SpecialProduct({ product, slug, joki = false, gameItem = false, voucher
         <div className="special-product-layout">
           <section className="special-product-packages">
             <h2>{gameItem ? copy.chooseGameItem : joki ? copy.chooseABoostingPackage : copy.chooseAVoucherValue}</h2>
-            {(!gameItem || selectedPurchasable) && <p>{gameItem ? copy.gameItemDeliveryAfterPayment : joki ? copy.manualServiceAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>}
+            {joki ? <ManualServiceNotice /> : (!gameItem || selectedPurchasable) && <p>{gameItem ? copy.gameItemDeliveryAfterPayment : copy.theDigitalCodeWillBeSentAfter}</p>}
             {(gameItem ? !available.length : !selected) && <p role="status">{gameItem ? copy.gameItemUnavailable : copy.thereAreNoPackagesToChooseFrom}</p>}
             {voucher && available.length === 0 && (
               <p role="status" className="special-product-stock-note">{copy.voucherStockUnavailable}</p>
