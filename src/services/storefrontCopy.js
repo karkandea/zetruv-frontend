@@ -865,6 +865,7 @@ const messages = {
   label08xxxxxxxxxxOr62xxxxxxxxxx: ["08xxxxxxxxxx or +62xxxxxxxxxx","08xxxxxxxxxx atau +62xxxxxxxxxx","08xxxxxxxxxx atau +62xxxxxxxxxx"],
   useAValidIndonesianPhoneNumberFor: ["Enter a valid phone number for the selected country.","Masukkan nomor HP yang valid sesuai negara.","Masukkan nombor telefon yang sah untuk negara dipilih."],
   weLlUseThisNumberForOrder: ["We’ll use this number for order updates.","Nomor ini digunakan untuk informasi pesanan.","Nombor ini digunakan untuk kemas kini pesanan."],
+  promoVoucherCode: ["Promo code", "Kode promo", "Kod promosi"],
   voucherCode: ["Voucher Code","Kode Voucher","Kod Baucar"],
   enterVoucherCode: ["Enter voucher code","Masukkan kode voucher","Masukkan kod baucar"],
   checkTheVoucherCodeBeforeStartingPayment: ["Check the voucher code before starting payment.","Periksa kode voucher sebelum memulai pembayaran.","Semak kod baucar sebelum memulakan pembayaran."],

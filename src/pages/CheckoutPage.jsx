@@ -737,19 +737,6 @@ function DigitalCheckoutPage() {
               ? <small className="checkout-field-error">{copy.useAValidIndonesianPhoneNumberFor}</small>
               : <small>{copy.loginPurchaseContactHint}</small>}
           </div>
-          <div className="digital-voucher">
-            <label htmlFor="checkout-voucher">{copy.voucherCode}</label>
-            <div><input id="checkout-voucher" value={voucherInput} maxLength={32}
-              placeholder={copy.enterVoucherCode}
-              onChange={e=>{setVoucherInput(e.target.value);setVoucher(null);setVoucherState('idle');setVoucherMessage('')}}/>
-              <button type="button" disabled={!voucherInput.trim()||voucherState==='checking'||!items.length}
-                onClick={applyVoucher}>{voucherState==='checking'?copy.checking:copy.apply}</button></div>
-            {voucherState==='applied' ?
-              <p className="checkout-voucher-applied" role="status"><CheckCircle2 size={15}/>{voucherMessage}
-                <button type="button" onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>{copy.remove}</button></p>
-              : <small className={['invalid','expired','not-applicable','error'].includes(voucherState)?'checkout-field-error':''} role="status">
-                {voucherMessage||copy.checkTheVoucherCodeBeforeStartingPayment}</small>}
-          </div>
         </section>
         <aside className="digital-payment-panel">
           <h2>{copy.paymentMethod}</h2>
@@ -775,6 +762,19 @@ function DigitalCheckoutPage() {
           {methodsState==='error'?<p className="checkout-gateway-state checkout-gateway-state--error">{copy.weCouldnTLoadPaymentMethods} <button type="button" onClick={refreshMethods}>{copy.tryAgain3}</button></p>
             : methodsState==='ready' && !readiness?.canAcceptLivePayments?
               <p className="checkout-gateway-state" role="status"><Info size={16}/>{copy.paymentMethodsAreUnavailablePleaseTryAgain}</p>:null}
+          <div className="digital-voucher">
+            <label htmlFor="checkout-voucher">{copy.promoVoucherCode}</label>
+            <div><input id="checkout-voucher" value={voucherInput} maxLength={32} disabled={processing}
+              placeholder={copy.enterVoucherCode}
+              onChange={e=>{setVoucherInput(e.target.value);setVoucher(null);setVoucherState('idle');setVoucherMessage('')}}/>
+              <button type="button" disabled={processing||!voucherInput.trim()||voucherState==='checking'||!items.length}
+                onClick={applyVoucher}>{voucherState==='checking'?copy.checking:copy.apply}</button></div>
+            {voucherState==='applied' ?
+              <p className="checkout-voucher-applied" role="status"><CheckCircle2 size={15}/>{voucherMessage}
+                <button type="button" disabled={processing} onClick={()=>{setVoucher(null);setVoucherInput('');setVoucherState('idle')}}>{copy.remove}</button></p>
+              : <small className={['invalid','expired','not-applicable','error'].includes(voucherState)?'checkout-field-error':''} role="status">
+                {voucherMessage||copy.checkTheVoucherCodeBeforeStartingPayment}</small>}
+          </div>
           <div className="digital-checkout-prices">
             <div><span>{copy.productSubtotal}</span><strong>{rupiah(linePricing.subtotal)}</strong></div>
             {linePricing.discount>0 && <div><span>{copy.productDiscount}</span><strong>−{rupiah(linePricing.discount)}</strong></div>}

@@ -465,7 +465,6 @@ export function GameAccountCheckoutPage() {
   const game = account.game || getGame('dota-2')
   const [authenticated, setAuthenticated] = useState(() => window.sessionStorage.getItem(AUTH_PREVIEW_KEY) === '1')
   const [phone, setPhone] = useState('+62 812 3456 7890')
-  const [voucher, setVoucher] = useState('')
   const [method, setMethod] = useState('QRIS')
   const total = account.price + SERVICE_FEE
 
@@ -515,12 +514,6 @@ export function GameAccountCheckoutPage() {
               <b>{copy.guarantee} {account.warranty}</b>
             </div>
 
-            <label className="ga-voucher-label">{copy.voucherCode}</label>
-            <div className="ga-voucher">
-              <input value={voucher} onChange={(event) => setVoucher(event.target.value)} placeholder={copy.enterVoucherCode} />
-              <button type="button">{copy.apply}</button>
-            </div>
-            <p className="ga-helper">{copy.voucherDiscountsAreSubjectToTheirTerms}</p>
             <div className="ga-unique-note"><Info size={16} /><span>{copy.weLlCheckTheAvailabilityOfThis}</span></div>
 
             <div className="ga-contact">
