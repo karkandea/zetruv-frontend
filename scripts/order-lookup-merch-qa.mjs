@@ -4,7 +4,7 @@ import { chromium } from 'playwright'
 import assert from 'node:assert/strict'
 
 const site = 'http://127.0.0.1:4178'
-const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
+const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'], ...(process.env.CHROME_EXECUTABLE ? { executablePath: process.env.CHROME_EXECUTABLE } : {}) })
 const voucherItemId = 'f570c8c1-6c8e-4fb1-8fa4-e2c0345a9aab'
 const accessToken = 'synthetic-test-jwt-value-with-more-than-30-characters'
 const customer = { name: 'Synthetic Tester', email: 'synthetic@example.test' }
@@ -29,6 +29,7 @@ try {
     let requests = []
     let account = null
     let completed = false
+    let paid = false
     let listFailure = false
     let revealRequests = 0
 
@@ -47,7 +48,7 @@ try {
       const items = (group === 'completed') === completed ? [{
         id: fakeOrder.orderId, orderNumber: fakeOrder.orderNumber,
         createdAt: fakeOrder.createdAt, grandTotal: fakeOrder.grandTotal, currency: 'IDR',
-        status: completed ? 'Completed' : 'Pending', paymentState: completed ? 'Paid' : 'Expired',
+        status: completed ? 'Completed' : paid ? 'Processing' : 'Pending', paymentState: completed || paid ? 'Paid' : 'Expired',
         firstItem: fakeOrder.items[0], itemCount: 1,
       }] : []
       return route.fulfill({ json: { items, hasMore: false } })
@@ -126,8 +127,8 @@ try {
     await page.locator('#sos-order-number').fill('ZTR-QA-LOGIN')
     await page.locator('#sos-contact').fill('synthetic@example.test')
     await page.getByRole('button', { name: 'Cek Status Pesanan' }).click()
-    await page.getByText('Menunggu operator berwenang menyelesaikan top up.', { exact: true }).waitFor()
-    await page.getByText('Operator telah mencatat penyelesaian. Periksa saldo di game kamu.', { exact: true }).waitFor()
+    await page.getByText('Top up sedang diproses oleh Zetruv.', { exact: true }).waitFor()
+    await page.getByText('Pesanan uji coba selesai. Tidak ada saldo game yang ditambahkan.', { exact: true }).waitFor()
     await page.getByText(/Top up memerlukan bantuan/).waitFor()
     assert.equal(await page.getByText('synthetic-sensitive-token-must-not-render').count(), 0)
     assert.equal(requests.length, 4)
@@ -186,13 +187,19 @@ try {
     // Authenticated orders restore across loads without falling back to guest tracking.
     await page.goto(site + '/order-status')
     await page.getByRole('heading', { name: fakeOrder.orderNumber }).waitFor()
-    // The refreshed order card keeps detailed statuses collapsed until requested.
-    await page.getByRole('button', { name: /Lihat status/ }).first().click()
+    // Payment and fulfillment are independently visible.
+    assert.equal(await page.locator('.customer-order-card__state').count(), 2)
     await page.getByText('Sesi Pembayaran Kedaluwarsa', { exact: true }).waitFor()
     assert.equal(await page.locator('#sos-order-number').count(), 0)
     const orderOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     assert.ok(orderOverflow <= 2, device + ' order page horizontal overflow: ' + orderOverflow)
-    assert.equal(await page.getByRole('button', { name: 'Perbarui', exact: true }).count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Perbarui', exact: true }).count(), 1)
+    assert.equal(await page.locator('.account-sidebar').isVisible(), device === 'desktop')
+    if (device === 'desktop') { for (const key of ['account','orders','addresses','favorites']) assert.equal(await page.locator('.account-sidebar [data-nav-key='+key+']').isVisible(), true) }
+    paid = true
+    await page.getByRole('button', { name: 'Perbarui', exact: true }).click()
+    await page.locator('.customer-order-card__state').getByText('Dibayar', { exact: true }).waitFor()
+    await page.locator('.customer-order-card__state').getByText('Diproses', { exact: true }).waitFor()
     listFailure = true
     await page.reload()
     await page.getByRole('heading', { name: 'Pesanan Belum Bisa Dimuat' }).waitFor()

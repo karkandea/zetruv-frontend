@@ -141,3 +141,11 @@
   .customer-orders-tabs a { flex: 1; text-align: center; justify-content: center; }
   .customer-order-card { padding: 14px; }
 }
+
+.customer-order-card__statuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:10px;border-top:1px solid #edf0f6}
+.customer-order-card__state{display:grid;gap:5px;min-width:0}
+.customer-order-card__statuses .customer-order-card__state>span{padding:0;background:none;border-radius:0;font-size:12px;color:#606679}
+.customer-order-card__state strong{display:flex;align-items:center;gap:5px;font-size:13px;color:#34405a;font-weight:600}
+.customer-order-card__state strong.is-paid{color:#178251}
+.customer-order-card__statuses .customer-order-card__issue{grid-column:1/-1}
+.customer-orders-refresh{min-height:37px;font-size:12px;display:inline-flex;align-items:center;gap:6px}

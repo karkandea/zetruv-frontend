@@ -1,6 +1,6 @@
 import { Bone, LoadingRegion, SkeletonItems, SkeletonLines } from '../components/Skeleton'
 import { useEffect, useId, useState } from 'react'
-import { ArrowLeft, ArrowRight, ChevronDown, Package, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Package, RefreshCw, Star } from 'lucide-react'
 import { apiRequest } from '../api/httpClient'
 import AuthModal from '../components/AuthModal'
 import { useNavbarLanguage } from '../hooks/useNavbarLanguage'
@@ -102,7 +102,8 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
   const [revision, setRevision] = useState(0)
   const [result, setResult] = useState(null)
   const path = orderId ? `/me/orders/${encodeURIComponent(orderId)}` : `/me/orders?group=${group}&offset=${offset}&limit=${pageSize}`
-  const current = result?.path === path && result.revision === revision ? result : null
+  const current = result?.path === path ? result : null
+  const refreshing = !current || current.revision !== revision
   const refresh = () => setRevision(value => value + 1)
 
   useEffect(() => {
@@ -115,6 +116,15 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
     })
     return () => controller.abort()
   }, [orderId, path, revision, token])
+
+  useEffect(() => {
+    if (orderId || group !== 'active') return
+    const onVisible = () => { if (document.visibilityState === 'visible') setRevision(v => v + 1) }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pageshow', onVisible)
+    const timer = window.setInterval(onVisible, 30000)
+    return () => { document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('pageshow', onVisible); window.clearInterval(timer) }
+  }, [orderId, group])
 
   const error = current?.error
   let body
@@ -151,6 +161,7 @@ function CustomerOrdersContent({ token, orderId, group, listUrl, login }) {
         <a href={listUrl} aria-current={group === 'active' ? 'page' : undefined}>Berlangsung</a>
         <a href={`${listUrl}?group=completed`} aria-current={group === 'completed' ? 'page' : undefined}>Selesai</a>
       </nav>
+      <button type="button" className="account-btn account-btn--outline customer-orders-refresh" disabled={refreshing} onClick={refresh}><RefreshCw size={15} aria-hidden="true"/> {copy.refreshOrders}</button>
     </div>}
     {body}
     {!orderId && (offset > 0 || current?.data?.hasMore) && <nav className="customer-orders-pagination" aria-label={copy.orderPages}>
@@ -165,7 +176,8 @@ function OrderCard({ order, group }) {
   const copy = useStorefrontCopy()
   const language = useNavbarLanguage()
   const item = order.firstItem
-  const [open, setOpen] = useState(false)
+  const paid = order.paymentState === 'Paid'
+  const complete = String(order.status).toLowerCase() === 'completed' || order.status === 2
   return <article className="customer-order-card">
     <div className="customer-order-card__header">
       <h2>{order.orderNumber}</h2>
@@ -178,17 +190,11 @@ function OrderCard({ order, group }) {
         <span>{[item?.variantName, `${order.itemCount} ${order.itemCount === 1 ? copy.singleOrderItem : copy.items}`].filter(Boolean).join(' · ')}</span>
       </div>
     </div>
-    <button type="button" className="customer-order-card__expand" aria-expanded={open} onClick={() => setOpen(v => !v)}>
-      <span className={group === 'active' ? 'customer-order-card__badge is-ongoing' : 'customer-order-card__badge'}>
-        {orderStatusLabel(order.status, copy)}
-      </span>
-      <span>Lihat status <ChevronDown size={16} aria-hidden="true" /></span>
-    </button>
-    {open && <div className="customer-order-card__statuses">
-      <span>{copy.orderStatus} · <strong>{orderStatusLabel(order.status, copy)}</strong></span>
-      <span>{copy.payment2} · <strong>{paymentStatusLabel(order, copy)}</strong></span>
+    <div className="customer-order-card__statuses" aria-label={copy.orderStatus}>
+      <div className="customer-order-card__state"><span>{copy.payment2}</span><strong className={paid ? 'is-paid' : ''}>{paid && <CheckCircle2 size={15} aria-hidden="true"/>}{paymentStatusLabel(order, copy)}</strong></div>
+      <div className="customer-order-card__state"><span>{copy.orderStatus}</span><strong className={complete ? 'is-paid' : ''}>{orderStatusLabel(order.status, copy)}</strong></div>
       {order.hasFulfillmentIssue && <span className="customer-order-card__issue">{copy.orderFulfillmentProblem}</span>}
-    </div>}
+    </div>
     <div className="customer-order-card__footer">
       <strong>{money(order.grandTotal, order.currency)}</strong>
       <a className="account-btn account-btn--outline" href={`/account/orders/${order.id}${group === 'active' ? '' : '?group=' + group}`} aria-label={formatCopy(copy.orderDetailLink, { number: order.orderNumber })}>{copy.viewDetails} <ArrowRight size={15} aria-hidden="true" /></a>
