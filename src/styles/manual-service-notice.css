@@ -15,9 +15,21 @@
 .manual-service-notice > div { min-width: 0; }
 .manual-service-notice strong { display: block; color: #222c45; font-size: 13px; line-height: 1.4; font-weight: 600; }
 .manual-service-notice p { margin: 3px 0 0; font-size: 12px; line-height: 1.55; color: #515b70; overflow-wrap: anywhere; }
-.manual-service-notice--compact { padding: 0; margin: 6px 0 0; border: 0; border-radius: 0; background: none; gap: 6px; }
-.manual-service-notice--compact p { margin: 0; }
+.manual-service-notice--compact {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 7px 10px;
+  margin: 6px 0 0;
+  border: 0;
+  border-radius: 6px;
+  background: #f4f5f9;
+  gap: 8px;
+}
+.manual-service-notice--compact > svg { margin-top: 0; }
+.manual-service-notice--compact strong { font-size: 11px; line-height: 1.4; color: #333d58; }
+.manual-service-notice--compact p { margin: 2px 0 0; font-size: 11px; line-height: 1.4; color: #616b80; }
 @media (max-width: 560px) {
   .manual-service-notice { padding: 10px 12px; gap: 8px; }
-  .manual-service-notice--compact { padding: 0; gap: 6px; }
+  .manual-service-notice--compact { padding: 6px 8px; gap: 7px; }
 }
