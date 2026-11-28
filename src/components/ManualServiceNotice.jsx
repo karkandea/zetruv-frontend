@@ -4,11 +4,15 @@ import '../styles/manual-service-notice.css'
 
 export default function ManualServiceNotice({ compact = false }) {
   const copy = useStorefrontCopy()
+  if (compact) return <div className="manual-service-notice manual-service-notice--compact" role="note">
+    <Clock3 size={15} strokeWidth={1.8} aria-hidden="true" />
+    <div><strong>{copy.manualServiceNoticeTitle}</strong><p>{copy.manualServiceNoticeTiming}</p></div>
+  </div>
   return <div className={`manual-service-notice${compact ? ' manual-service-notice--compact' : ''}`} role="note">
-    <Clock3 size={compact ? 16 : 20} strokeWidth={1.8} aria-hidden="true" />
+    <Clock3 size={20} strokeWidth={1.8} aria-hidden="true" />
     <div>
-      {!compact && <strong>{copy.manualServiceNoticeTitle}</strong>}
-      <p>{compact ? copy.manualServiceAfterPayment : copy.manualServiceNoticeBody}</p>
+      <strong>{copy.manualServiceNoticeTitle}</strong>
+      <p>{copy.manualServiceNoticeBody}</p>
     </div>
   </div>
 }
