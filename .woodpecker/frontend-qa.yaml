@@ -4,7 +4,7 @@ when:
   - event: pull_request
     branch: dev
   - event: [push, manual]
-    branch: [dev, fix/payment-summary-simulator]
+    branch: [dev, fix/checkout-consume-cart]
 
 steps:
   - name: frontend-build-test
