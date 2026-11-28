@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   PAYMENT_CONTEXT_KEY, storePaymentContext, readPaymentContext,
   clearPaymentContext, normalizePaymentState, mayInitiatePayment,
-  paymentLink, formatPaymentCountdown, isMidtransMethod, midtransPaymentLink, midtransQrisImage,
+  paymentLink, formatPaymentCountdown, isMidtransMethod, midtransPaymentLink, midtransQrisImage, paymentThumbnail, enrichPaymentItems, QRIS_SIMULATOR_URL,
 } from './paymentSession.js'
 
 const storage = () => {
@@ -78,4 +78,20 @@ test('native QRIS only accepts exact provider image endpoint, never as a redirec
   assert.equal(midtransQrisImage(image),image)
   assert.equal(midtransPaymentLink(image),null)
   for(const url of [image.replace('api.sandbox.midtrans.com','evil.test'),image.replace('/qr-code','/status'),image+'?x=1',image.replace('api.sandbox.midtrans.com','api.midtrans.com')]) assert.equal(midtransQrisImage(url),null)
+})
+
+test('payment summary persists safe display metadata and recovers old snapshots without altering prices',()=>{
+ const s=storage()
+ storePaymentContext({...order,items:[{...order.items[0],thumbnailUrl:'/assets/game.png',productKind:'Joki'}]},'QRIS',s)
+ const item=readPaymentContext(s).items[0]
+ assert.equal(item.thumbnailUrl,'/assets/game.png')
+ assert.equal(item.kind,'Joki')
+ assert.equal(item.lineTotal,16500)
+ const [recovered]=enrichPaymentItems(order.items.map(({productName,variantName,quantity,lineTotal})=>({productName,variantName,quantity,lineTotal})),[{...order.items[0],kind:'Joki',thumbnailUrl:'https://example.test/game.png',lineTotal:999}])
+ assert.equal(recovered.lineTotal,16500)
+ assert.equal(recovered.kind,'Joki')
+ assert.equal(recovered.thumbnailUrl,'https://example.test/game.png')
+ assert.equal(paymentThumbnail('javascript:alert(1)'),null)
+ assert.equal(paymentThumbnail('//example.test/game.png'),null)
+ assert.equal(QRIS_SIMULATOR_URL,'https://simulator.sandbox.midtrans.com/v2/qris/index')
 })
