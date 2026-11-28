@@ -1245,10 +1245,11 @@
   .zetruv-form-actions > * { flex: 1; }
 }
 
-/* Pesanan Saya has no account card or account shortcuts above the order list. */
-.account-layout--orders {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: 780px;
+/* Reuse the shared account navigation on desktop. Mobile keeps its compact order flow. */
+@media (max-width: 860px) {
+  .account-layout--orders { grid-template-columns: minmax(0, 1fr); max-width: 780px; }
+  .account-layout--orders > .account-sidebar { display: none; }
+  .account-sidebar__nav a[data-nav-key='account'] { display: none; }
 }
 
 /* Account action states: no geometry change on hover or disabled. */

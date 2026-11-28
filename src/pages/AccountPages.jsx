@@ -10,6 +10,7 @@ import { readFavorites, setFavorite, subscribeFavorites } from '../services/favo
 import '../styles/account.css'
 
 const navItems = [
+  { key: 'account', label: 'myAccount', href: '/account', icon: UserRound },
   { key: 'orders', label: 'myOrders', href: '/account/orders', icon: ReceiptText },
   { key: 'addresses', label: 'addresses', href: '/account/addresses', icon: MapPin },
   { key: 'favorites', label: 'bookmark', href: '/account/favorites', icon: Bookmark },
@@ -31,7 +32,7 @@ export function AccountShell({ active, customer: profileCustomer, children }) {
     <div className="account-page">
       <Navbar variant="account" homepageMobileMenu />
       <main className={`account-layout${active === 'account' ? ' account-layout--overview' : ''}${active === 'orders' ? ' account-layout--orders' : ''}`}>
-        {active !== 'orders' && <AccountSidebar active={active} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />}
+        <AccountSidebar active={active} customer={profileCustomer === undefined ? sessionCustomer : profileCustomer} />
         <section className="account-main">{children}</section>
       </main>
     </div>
@@ -57,7 +58,7 @@ function AccountSidebar({ active, customer }) {
       <div className="account-sidebar__rule" />
       <nav className="account-sidebar__nav" aria-label={copy.accountNavigation}>
         {navItems.map(({ key, label, href, icon: Icon }) => (
-          <a aria-current={key === active ? 'page' : undefined} href={href} key={key}>
+          <a aria-current={key === active ? 'page' : undefined} href={href} key={key} data-nav-key={key}>
             <Icon size={19} aria-hidden="true" />
             <span>{copy[label]}</span>
           </a>
