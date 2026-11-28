@@ -182,7 +182,7 @@ export function AccountAddressFormPage({ mode = 'add' }) {
         </div>
         <div className="zetruv-address-destination">
           <label className="zetruv-address-field"><span>Cari kelurahan, kecamatan atau kode pos <b>*</b></span>
-            <input value={keyword} onChange={e => { setKeyword(e.target.value); set('rajaOngkirDeliveryId', 0) }} placeholder="Contoh: Kebayoran Baru atau 12120" aria-describedby="region-help" autoComplete="off" />
+            <input value={keyword} onChange={e => { setKeyword(e.target.value); set('rajaOngkirDeliveryId', 0) }} placeholder="Kelurahan atau kode pos" aria-describedby="region-help" autoComplete="off" />
           </label>
           <p id="region-help">Pilih hasil RajaOngkir Shipping Delivery, bukan ID dari kalkulator ongkir.</p>
           {regionState === 'loading' && <small role="status">Mencari wilayah…</small>}
@@ -202,7 +202,7 @@ export function AccountAddressFormPage({ mode = 'add' }) {
           <Field label="Kode pos" value={form.postalCode} maxLength={5} inputMode="numeric" placeholder="5 digit" onChange={v => set('postalCode', v.replace(/\D/g, '').slice(0, 5))} />
         </div>
         <label className="zetruv-address-field"><span>Alamat lengkap <b>*</b></span><textarea rows={3} required maxLength={500} placeholder="Nama jalan, nomor bangunan, RT/RW, lantai" value={form.fullAddress} onChange={e => set('fullAddress', e.target.value)} /></label>
-        <label className="zetruv-address-field"><span>Patokan / catatan kurir (opsional)</span><textarea rows={2} maxLength={250} placeholder="Contoh: pagar hitam di dekat minimarket" value={form.note} onChange={e => set('note', e.target.value)} /></label>
+        <label className="zetruv-address-field"><span>Patokan / catatan kurir (opsional)</span><textarea rows={2} maxLength={250} placeholder="Patokan lokasi rumah" value={form.note} onChange={e => set('note', e.target.value)} /></label>
         <section className="zetruv-address-pinpoint"><div><LocateFixed size={22}/><span><strong>Titik lokasi (opsional)</strong><small>Direkomendasikan untuk kurir instan. Periksa ketepatan lokasi setelah memberi izin.</small></span></div>
           <button type="button" className="account-btn account-btn--outline" onClick={useCurrentLocation}>Gunakan lokasi saat ini</button>
           {geoStatus && <p role="status">{geoStatus}</p>}
