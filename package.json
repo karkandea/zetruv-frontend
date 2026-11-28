@@ -20,7 +20,7 @@
     "test:cart": "node --test src/services/cartService.test.mjs",
     "prebuild:storefront:dev": "npm run test:navbar-language && npm run test:homepage-live && npm run test:cart && npm run test:cart-validation && npm run test:checkout && npm run test:service && node --test src/services/directLoginCheckout.test.mjs && npm run test:payment && npm run test:recovery && npm run test:server-cart && npm run test:auth",
     "test:cart-validation": "node --test src/services/digitalCartValidation.test.mjs",
-    "test:checkout": "node --test src/services/digitalCheckoutRules.test.mjs",
+    "test:checkout": "node --test src/services/digitalCheckoutRules.test.mjs src/services/whatsappPhone.test.mjs",
     "test:service": "node --test src/services/digitalServiceAvailability.test.mjs",
     "test:payment": "node --test src/services/paymentSession.test.mjs",
     "test:recovery": "node --test src/services/checkoutAttempt.test.mjs",
@@ -31,11 +31,12 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "country-flag-icons": "1.6.20",
+    "libphonenumber-js": "1.13.17",
+    "lucide-react": "latest",
+    "qrcode.react": "^4.2.0",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest",
-    "qrcode.react": "^4.2.0"
-  },
-  "devDependencies": {}
+    "vite": "latest"
+  }
 }
