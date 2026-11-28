@@ -19,3 +19,5 @@
 .payment-channel-logo{width:42px;height:24px;object-fit:contain;flex:none}.payment-channel-icon{width:42px;flex:none;color:#505d7c}.payment-channel-name{flex:1;min-width:0;overflow-wrap:anywhere}
 
 .payment-channel-option--single{width:100%;min-height:46px;padding:12px 13px;border:0;border-radius:0;gap:9px;color:#22283c}.payment-channel-option--single>svg{flex:none;color:#05055c}.payment-channel-option--single strong{font-size:12px;line-height:1.5}.payment-channel-option--single.is-active{background:#f5f6fc;box-shadow:inset 3px 0 #05055c}.payment-channel-option--single .payment-channel-logo{width:18px;height:18px;object-fit:contain}
+
+.payment-channel-selected-name{font-size:11px;color:#65718a;font-weight:400}

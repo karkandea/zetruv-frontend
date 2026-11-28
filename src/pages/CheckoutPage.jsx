@@ -25,7 +25,7 @@ import { checkoutActionHint, viaLoginServiceStatus } from '../services/digitalSe
 import { getManualLoginReadiness, verifyTopUpIdDestination } from '../services/digitalPurchaseCapabilities'
 import PaymentChannelPicker from '../components/PaymentChannelPicker'
 import { storePaymentContext, isMidtransMethod, midtransPaymentLink } from '../services/paymentSession'
-import { readCustomerSession, restoreCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
+import { readCustomerSession, restoreCustomerSession, setCustomerSession, activateCustomerCart, getCartSyncStatus, getCheckoutCartRevision, refreshCustomerCart, CUSTOMER_EVENT, CART_SYNC_EVENT } from '../services/customerCartSync'
 import { readCheckoutAttempt, preserveCheckoutAttempt, clearCheckoutAttempt } from '../services/checkoutAttempt'
 import '../styles/digital-commerce.css'
 import '../styles/digital-checkout-improvements.css'
@@ -557,13 +557,16 @@ function DigitalCheckoutPage() {
         }
       }
       if(!valid)throw new CheckoutError(copy.completeAllOrderDetailsFirst)
+      const cartRevision=directLogin?null:getCheckoutCartRevision()
+      if(!directLogin && (!cartRevision || items.some(item=>!item.serverLineId))) throw new CheckoutError(copy.cartChangedReview)
       const payload={
+        ...(directLogin?{}:{cartRevision}),
         customerName:verifiedCustomer?.name || null,
         customerEmail:verifiedCustomer?.email || null,
         customerPhone:phoneNormalized,
         voucherCode:voucher?.code || null,
         items:items.map(item=>{
-          const data={productVariantId:item.variantId,quantity:Number(item.quantity||1),expectedUnitPrice:Number(item.unitPrice)}
+          const data={productVariantId:item.variantId,quantity:Number(item.quantity||1),expectedUnitPrice:Number(item.unitPrice),...(directLogin?{}:{cartLineId:item.serverLineId})}
           if(item.productKind === 'GameItem'){
             const fields = checkoutFields(freshCatalog[item.productSlug], 'OrderDelivery')
             const message = fields.length && validateCheckoutAccount(fields, values[item.cartKey], copy)
@@ -625,6 +628,8 @@ function DigitalCheckoutPage() {
         setError(updates.length
           ? `${priceChangeExplanation(updates[0], copy)} ${copy.reviewTheChangesAndAcceptTheLatest}`
           : copy.pricingChangedReviewAndAcceptTheNew)
+      } else if(e.code==='CART_CHANGED'){
+        await refreshCustomerCart();setError(copy.cartChangedReview)
       } else setError(e instanceof CheckoutError ? e.message : copy.weCouldnTStartThePaymentPlease)
       if([400,409,422].includes(e.status)&&!order){clearCheckoutAttempt();setPendingAttempt(null)}
       setPaymentState('error')
