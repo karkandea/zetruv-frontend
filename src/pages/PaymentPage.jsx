@@ -1,4 +1,4 @@
-import { LoginPurchaseProgress, LoginPurchaseNotice } from '../components/LoginPurchaseProgress'
+import { LoginPurchaseProgress } from '../components/LoginPurchaseProgress'
 import GameItemAdminContact from '../components/GameItemAdminContact'
 import { Bone, LoadingRegion, SkeletonLines } from '../components/Skeleton'
 import { useStorefrontCopy } from '../hooks/useStorefrontCopy'
@@ -11,7 +11,7 @@ import {
 } from '../services/checkoutGatewayService'
 import {
   readPaymentContext, normalizePaymentState, mayInitiatePayment,
-  formatPaymentCountdown, paymentLink, isMidtransMethod, midtransPaymentLink,
+  formatPaymentCountdown, paymentLink, isMidtransMethod, midtransPaymentLink, midtransQrisImage,
 } from '../services/paymentSession'
 import '../styles/digital-commerce.css'
 import '../styles/payment-session.css'
@@ -166,7 +166,8 @@ export default function PaymentPage() {
   const active = pending && !expiredInBrowser
   const qr = active && context.methodCode === 'QRIS' && typeof payment.qrString === 'string' &&
     payment.qrString.length > 0 && payment.qrString.length <= 4096 ? payment.qrString : null
-  const candidateUrl = active ? paymentLink(payment.paymentUrl) : null
+  const qrImage = active && context.methodCode === 'MIDTRANS_OTHER_QRIS' ? midtransQrisImage(payment.paymentUrl) : null
+  const candidateUrl = active && !qrImage ? paymentLink(payment.paymentUrl) : null
   const url = isMidtransMethod(context.methodCode) && candidateUrl
     ? midtransPaymentLink(candidateUrl)
     : candidateUrl
@@ -188,13 +189,6 @@ export default function PaymentPage() {
       </header>
 
       <LoginPurchaseProgress current={2}/>
-      {testPayment && <aside className="payment-session-midtrans-guide" role="note" data-testid="midtrans-sandbox-guide">
-        <ShieldCheck size={21} aria-hidden="true" />
-        <div>
-          <strong>{copy.midtransSandboxNoticeTitle}</strong>
-          <p>{copy.midtransSandboxNoticeText}</p>
-        </div>
-      </aside>}
       <div className="payment-session-layout">
         <section className="payment-session-card payment-session-instructions" aria-live="polite">
           {loading ? <LoadingRegion label={copy.checkingTheLatestPaymentStatus}>
@@ -213,6 +207,13 @@ export default function PaymentPage() {
               <GameItemAdminContact paid={state === 'Paid'} phone={payment?.gameItemSupportPhone} orderNumber={context.orderNumber} />
               {active ? <>
                 {countdown !== null && <p className="payment-session-expiry"><Clock3 size={16} /> {copy.timeRemainingToPay} <strong>{countdown}</strong></p>}
+                {qrImage && <div className="payment-session-qr payment-session-native-qr">
+                  <strong>{copy.nativeQrisAmount} <span>{rupiah(context.grandTotal)}</span></strong>
+                  <img src={qrImage} alt={copy.qrisFromThePaymentProvider} width="240" height="240" referrerPolicy="no-referrer"/>
+                  <p>{copy.nativeQrisSandboxInstruction}</p>
+                  <a className="payment-session-action-link" href="https://simulator.sandbox.midtrans.com/openapi/qris/index" target="_blank" rel="noopener noreferrer">{copy.nativeQrisSimulator} <ExternalLink size={16}/></a>
+                  <button type="button" className="payment-session-copy-qr" onClick={async()=>{try{await navigator.clipboard.writeText(qrImage);setError('')}catch{setError(copy.nativeQrisCopyError)}}}>{copy.nativeQrisCopyLink}</button>
+                </div>}
                 {qr && <div className="payment-session-qr">
                   <QRCodeSVG value={qr} size={240} level="M" marginSize={2} title={copy.qrisFromThePaymentProvider} />
                   <p>{copy.scanTheProviderSQrisCodeDon}</p>
@@ -221,7 +222,7 @@ export default function PaymentPage() {
                   {isMidtransMethod(context.methodCode) ? copy.openMidtransSandboxPayment
                     : context.methodCode === 'GOPAY' ? copy.openGopayPayment : copy.openPaymentInstructions} <ExternalLink size={16} />
                 </a>}
-                {!qr && !url && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.paymentInstructionsAreUnavailableCheckTheStatus}</p>}
+                {!qr && !qrImage && !url && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.paymentInstructionsAreUnavailableCheckTheStatus}</p>}
               </> : null}
               {expiredInBrowser && <p className="payment-session-notice"><AlertCircle size={17} /> {copy.thePaymentWindowHasEndedCheckThe}</p>}
               {payment && <p className="payment-session-checked"><ShieldCheck size={15} /> {copy.statusFromZetruvLastChecked} {new Date(payment.checkedAt || now).toLocaleTimeString('id-ID')}.</p>}
