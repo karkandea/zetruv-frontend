@@ -39,6 +39,8 @@ export function storePaymentContext(order, methodCode, storage = globalThis.sess
     items: (Array.isArray(order.items) ? order.items : []).map(item => ({
       productName: String(item.productName || ''),
       variantName: String(item.variantName || ''),
+      thumbnailUrl: paymentThumbnail(item.thumbnailUrl),
+      kind: String(item.productKind || item.kind || ''),
       quantity: Number(item.quantity || 1),
       lineTotal: Number(item.lineTotal || 0),
     })),
@@ -109,4 +111,19 @@ export function midtransQrisImage(url) {
       /^\/v2\/(?:qris|gopay)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/qr-code$/i.test(parsed.pathname)
       ? parsed.href : null
   } catch { return null }
+}
+
+export const QRIS_SIMULATOR_URL = 'https://simulator.sandbox.midtrans.com/v2/qris/index'
+
+export function paymentThumbnail(value) {
+  if(typeof value !== 'string' || !value) return null
+  if(value.startsWith('/') && !value.startsWith('//') && !value.includes(String.fromCharCode(92))) return value
+  try { const u=new URL(value); return u.protocol==='https:' && !u.username && !u.password ? u.href : null } catch { return null }
+}
+export function enrichPaymentItems(items, detailItems) {
+  if(!Array.isArray(detailItems)) return items
+  return items.map(item => {
+    const match=detailItems.find(other=>other.productName===item.productName && other.variantName===item.variantName && Number(other.quantity)===Number(item.quantity))
+    return {...item, thumbnailUrl:paymentThumbnail(item.thumbnailUrl)||paymentThumbnail(match?.thumbnailUrl), kind:item.kind||String(match?.kind||match?.productKind||'')}
+  })
 }
