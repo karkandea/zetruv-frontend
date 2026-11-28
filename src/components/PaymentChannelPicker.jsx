@@ -25,6 +25,17 @@ export default function PaymentChannelPicker({methods,selected,onSelect,disabled
       const active=rows.find(m=>m.code===selected)
       const open=expanded[key] || Boolean(active)
       const title=language==='id'?id:language==='my'?my:en
+      if(rows.length===1){
+        const m=rows[0]
+        const label=key==='qris'||key==='card'?title:m.name
+        return <section className="payment-channel-group" key={key}>
+          <button type="button" className={'payment-channel-option payment-channel-option--single'+(active?' is-active':'')}
+            aria-pressed={Boolean(active)} disabled={disabled||m.paymentFee==null} onClick={()=>onSelect(m.code)}>
+            {logos[m.code] ? <img className="payment-channel-logo" src={'/assets/footer/payment-'+logos[m.code]+'.png'} alt=""/> : <Icon size={18} aria-hidden="true"/>}
+            <strong className="payment-channel-name">{label}</strong><span className="payment-channel-radio" aria-hidden="true"/>
+          </button>
+        </section>
+      }
       return <section className="payment-channel-group" key={key}>
         <button type="button" className="payment-channel-group__toggle" aria-expanded={open}
           onClick={()=>setExpanded(old=>({...old,[key]:!old[key]}))} disabled={Boolean(active)}>
